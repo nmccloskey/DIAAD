@@ -17,7 +17,7 @@ DIAAD is a small toolkit for batched dialog analysis that includes workflows for
       - evaluates and optionally reselects reliability coding
 ---
 
-## Web App (pending)
+## Web App
 
 You can use DIAAD in your browser — no installation required:
 
@@ -199,9 +199,9 @@ The POWERS coding system addresses the need to assess language abilities in conv
       - *subminimal turn (a nonce, non-canonical term)* - not classifiable as either type above
    - **collaborative repair** - sequences of turns devoted to overcoming communicative error/difficulty
 
-## Automation
+## Automation (reliability details pending)
 
-DIAAD automates as much as possible. Below are descriptions of automatability and ICC2 utterance-level reliability metrics on a stratified (by study site, mild/severe aphasia profile, and pre-/post-tx test) random selection of XX samples (XX utterances) (pending).
+DIAAD automates as much as possible. Below are descriptions of automatability and ICC2 utterance-level reliability metrics on a stratified (by study site, mild/severe aphasia profile, and pre-/post-tx test) random selection of XX samples (XX utterances).
    - **fully automated** with regex and spaCy (`en_core_web_trf`):
       - *filled pauses:*
       - *speech units:*
