@@ -31,14 +31,14 @@ def run_make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exc
         automate_POWERS=automate_POWERS
     )
 
-def run_analyze_POWERS_coding(input_dir, output_dir):
+def run_analyze_POWERS_coding(input_dir, output_dir, just_c2_POWERS):
     from .POWERS.analyze_POWERS_coding import analyze_POWERS_coding
-    analyze_POWERS_coding(input_dir=input_dir, output_dir=output_dir, reliability=False)
+    analyze_POWERS_coding(input_dir=input_dir, output_dir=output_dir, reliability=False, just_c2_POWERS=just_c2_POWERS)
 
 def run_evaluate_POWERS_reliability(input_dir, output_dir):
     from .POWERS.analyze_POWERS_coding import match_reliability_files, analyze_POWERS_coding
     match_reliability_files(input_dir=input_dir, output_dir=output_dir)
-    analyze_POWERS_coding(input_dir=input_dir, output_dir=output_dir, reliability=True)
+    analyze_POWERS_coding(input_dir=input_dir, output_dir=output_dir, reliability=True, just_c2_POWERS=False)
 
 def run_reselect_POWERS_reliability_coding(input_dir, output_dir, frac, exclude_participants, automate_POWERS):
     from .POWERS.prep_POWERS_coding_files import reselect_POWERS_reliability
@@ -59,7 +59,9 @@ def main(args):
     frac = config.get('reliability_fraction', 0.2)
     coders = config.get('coders', []) or []
     exclude_participants = config.get('exclude_participants', []) or []
+
     automate_POWERS = config.get('automate_POWERS', True)
+    just_c2_POWERS = config.get('just_c2_POWERS', False)
 
     input_dir = os.path.abspath(os.path.expanduser(input_dir))
     output_dir = os.path.abspath(os.path.expanduser(output_dir))
@@ -91,7 +93,7 @@ def main(args):
                 tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS
             )
         elif args.action == "analyze":
-            run_analyze_POWERS_coding(input_dir, output_dir)
+            run_analyze_POWERS_coding(input_dir, output_dir, just_c2_POWERS)
         elif args.action == "evaluate":
             run_evaluate_POWERS_reliability(input_dir, output_dir)
         elif args.action == "reselect":

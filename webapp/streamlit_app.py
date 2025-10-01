@@ -77,6 +77,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
         coders = config.get("coders", []) or []
         exclude_participants = config.get('exclude_participants', []) or []
         automate_POWERS = config.get('automate_POWERS', True)
+        just_c2_POWERS = config.get('just_c2_POWERS', False)
 
         # --- List all functions (single-select) ---
         all_functions = {
@@ -108,7 +109,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     )
 
                 if action == "analyze":
-                    run_analyze_POWERS_coding(input_dir, output_dir)
+                    run_analyze_POWERS_coding(input_dir, output_dir, just_c2_POWERS)
             
                 if action == "evaluate":
                     run_evaluate_POWERS_reliability(input_dir, output_dir)

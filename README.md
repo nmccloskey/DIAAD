@@ -40,10 +40,6 @@ conda activate diaad
 ```bash
 pip install git+https://github.com/nmccloskey/diaad.git@main
 ```
-
-**Requirements notes**
-- `rascal-speech` (RASCAL) is a direct dependency.
-- `numpy==1.26.4` is pinned intentionally to match RASCAL.
 ---
 
 ## Setup
