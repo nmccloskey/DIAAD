@@ -381,7 +381,7 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
     rel_files = [f for f in Path(input_dir).rglob('*POWERS_ReliabilityCoding*.xlsx')]
 
     # Match original coding and reliability files.
-    for cod in tqdm(coding_files, desc="Analyzing POWERS reliability coding..."):
+    for cod in tqdm(coding_files, desc="Reselecting POWERS reliability coding..."):
         try:
             covered_sample_ids = set()
             PCcod = pd.read_excel(cod)
@@ -390,7 +390,7 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
             logging.error(f"Failed to read file {cod}: {e}")
             continue
         for rel in rel_files:
-            if rel.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == cod.name:
+            if cod.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == rel.name:
                 try:
                     PCrel = pd.read_excel(rel)
                     logging.info(f"Processing reliability file: {rel}")
