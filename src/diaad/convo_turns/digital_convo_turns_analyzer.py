@@ -1,37 +1,56 @@
+import re
+import logging
 import numpy as np
 import pandas as pd
-import re
-import os
-import logging
-from pathlib import Path
-from collections import Counter, defaultdict
-from scipy.stats import entropy
 from tqdm import tqdm
+from pathlib import Path
+from scipy.stats import entropy
+from collections import Counter, defaultdict
 
 
-# Function to extract turn counts from a coded turn string (basic, ignores dot markers)
 def extract_turn_counts(turn_string):
     """
     Parse a coded turns string into per-speaker total turns, ignoring dot markers.
-    Example: "0.1..12.0" -> Counter({'0': 2, '1': 3, '2': 1})
+
+    Parameters
+    ----------
+    turn_string : str
+        String with coded turns, digits represent speakers and optional dots
+        represent markers. Example: "0.1..12.0".
+
+    Returns
+    -------
+    collections.Counter
+        Counts keyed by speaker ID (as str).
+
+    Examples
+    --------
+    > extract_turn_counts("0.1..12.0")
+    Counter({'0': 2, '1': 3, '2': 1})
     """
     matches = re.findall(r'(\d)', str(turn_string))
     return Counter(matches)
 
-# Function to extract turn counts with dot markers (mark1=".", mark2="..")
 def extract_turn_stats(turn_string):
     """
-    Parse a coded turns string into per-speaker totals and 1-dot/2-dot markers.
-    Examples:
-        "0.1..12.0" -> 
-            speaker "0": turns=2, mark1=1, mark2=0
-            speaker "1": turns=3, mark1=1, mark2=1
-            speaker "2": turns=1, mark1=0, mark2=0
+    Parse a coded turns string into per-speaker totals and dot-mark counts.
+
+    Parameters
+    ----------
+    turn_string : str
+        String of coded turns, digits are speakers, dots are markers.
 
     Returns
     -------
-    (turn_counts, mark1_counts, mark2_counts) : tuple of Counter
-        Counters keyed by speaker (str)
+    tuple of Counter
+        (turn_counts, mark1_counts, mark2_counts), each a Counter keyed by speaker.
+
+    Examples
+    --------
+    > extract_turn_stats("0.1..12.0")
+    (Counter({'0': 2, '1': 3, '2': 1}),
+     Counter({'1': 1}),
+     Counter({'1': 1}))
     """
     matches = re.findall(r'(\d)(\.{1,2})?', str(turn_string))
     turn_counts = Counter()
@@ -47,15 +66,45 @@ def extract_turn_stats(turn_string):
 
 
 def mean_absolute_change(series):
+    """Return mean absolute change between consecutive elements of a numeric series."""
     return np.mean(np.abs(np.diff(series)))
 
 def clinician_to_participant_ratio(group):
+    """
+    Compute the clinician-to-participant turn ratio within a group.
+
+    Parameters
+    ----------
+    group : pandas.DataFrame
+        Must contain 'speaker' and 'turns' columns. Speaker '0' is assumed
+        to be the clinician, all others are participants.
+
+    Returns
+    -------
+    float
+        Ratio of clinician turns to participant turns, or NaN if denominator is zero.
+    """
     speaker_turns = group.groupby('speaker')['turns'].sum()
     clinician_turns = speaker_turns.get('0', 0)
     participant_turns = speaker_turns.drop('0', errors='ignore').sum()
     return clinician_turns / participant_turns if participant_turns > 0 else np.nan
 
 def compute_speaker_level(df):
+    """
+    Aggregate turns and markers at the speaker level.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain at least ['group', 'speaker', 'turns'] and optionally
+        ['mark1','mark2','session','bin'].
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per speaker per group with totals, proportions, and optional
+        session/bin counts.
+    """
     agg_dict = {
         'turns': 'sum',
         'mark1': 'sum' if 'mark1' in df.columns else 'sum',
@@ -86,6 +135,21 @@ def compute_speaker_level(df):
     return speaker_level.loc[:, ~speaker_level.columns.str.match(r'^None$')]
     
 def compute_group_level(df):
+    """
+    Aggregate turns and markers at the group level.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain 'group', 'turns', 'speaker', and optionally 'mark1',
+        'mark2', 'session', 'bin'.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per group with totals, number of participants/sessions, and
+        proportions of marked turns.
+    """
     group_agg = {
         'turns': 'sum',
         'mark1': 'sum' if 'mark1' in df.columns else 'sum',
@@ -120,6 +184,24 @@ def compute_group_level(df):
     return group_level.loc[:, ~group_level.columns.str.match(r'^None$')]
 
 def compute_bin_level(df, grouping_cols):
+    """
+    Compute turn and marker proportions at the bin level.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain 'turns', 'mark1', 'mark2' and grouping identifiers.
+    grouping_cols : list of str
+        Columns used to group bins (e.g. ['group','session','bin']).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Original dataframe with added columns:
+        - proportion_of_bin_turns
+        - prop_mark1 / prop_mark2
+        - proportion_of_bin_mark1 / mark2 (if available)
+    """
     bin_level = df.copy()
     # Totals per bin grouping (e.g., ['group','session','bin'])
     bin_totals_turns = df.groupby(grouping_cols)['turns'].transform('sum')
@@ -140,6 +222,20 @@ def compute_bin_level(df, grouping_cols):
     return bin_level
 
 def compute_session_level(turn_totals):
+    """
+    Summarize turn-taking metrics at the session level.
+
+    Parameters
+    ----------
+    turn_totals : pandas.DataFrame
+        Must contain ['session','group','speaker','turns','mark1','mark2'].
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per session-group with totals, entropy of speaker turns,
+        clinician-to-participant ratio, and marker proportions.
+    """
     session_summary = (
         turn_totals.groupby(['session', 'group'])
         .agg(
@@ -173,6 +269,22 @@ def compute_session_level(turn_totals):
     return session_summary
 
 def compute_participation_level(turn_totals, has_bin=False):
+    """
+    Summarize metrics at the participant-session level.
+
+    Parameters
+    ----------
+    turn_totals : pandas.DataFrame
+        Must include ['group','session','speaker','turns','mark1','mark2'].
+    has_bin : bool, default False
+        If True, include bin-level variability (mean, std, var, CV, change).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Rows for each speaker-session with totals, proportions of session
+        turns, marker stats, and optional bin statistics.
+    """
     
     participation_level = (
         turn_totals.groupby(['group', 'session', 'speaker'], as_index=False)
@@ -224,6 +336,19 @@ def extract_sequence(turn_string):
     return re.findall(r'\d', turn_string)
 
 def build_transition_matrix(sequences):
+    """
+    Construct normalized transition matrix from turn sequences.
+
+    Parameters
+    ----------
+    sequences : list of list of str
+        Each sublist is a sequence of speaker IDs.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Square matrix with P(to_speaker | from_speaker) probabilities.
+    """
     transition_counts = defaultdict(lambda: defaultdict(int))
     for seq in sequences:
         for i in range(len(seq) - 1):
@@ -243,12 +368,19 @@ def build_transition_matrix(sequences):
 
 def compute_transition_metrics(df):
     """
-    For each group, compute a transition matrix based on the 'turns' strings,
-    and derive clinician/participant turn-taking ratios.
-    Returns:
+    Compute transition matrices and speaker ratios for each group.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must include 'group' and 'turns' (string-encoded sequences).
+
+    Returns
+    -------
+    dict
         {
-            'transition_matrices': {group_id: DataFrame},
-            'speaker_ratios': list of dicts
+            'transition_matrices': {group_id: pandas.DataFrame},
+            'speaker_ratios': pandas.DataFrame with per-group ratios
         }
     """
     speaker_matrices = {}
@@ -283,6 +415,27 @@ def compute_transition_metrics(df):
     }
 
 def _analyze_convo_turns_file(df):
+    """
+    Analyze a single conversation turns dataframe.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain at least ['group','turns'] plus optional ['session','bin'].
+
+    Returns
+    -------
+    dict
+        {
+            'speaker_level': DataFrame,
+            'group_level': DataFrame,
+            'bin_level': DataFrame (if applicable),
+            'session_level': DataFrame (if applicable),
+            'participation_level': DataFrame (if applicable),
+            'transition_matrices': dict,
+            'speaker_ratios': DataFrame
+        }
+    """
     required_cols = ['group', 'turns']
     for col in required_cols:
         if col not in df.columns:
@@ -341,6 +494,21 @@ def _analyze_convo_turns_file(df):
 
 # Summary statistics with coefficient of variation
 def summarize(df, level_name):
+    """
+    Compute summary statistics with coefficient of variation for a level.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Must contain numeric columns to summarize.
+    level_name : str
+        Name of the level (e.g. 'speaker','group') for labeling.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Summary statistics (mean, std, min, max, cv) for each metric.
+    """
     numeric = df.select_dtypes(include=[np.number])
     summary = numeric.agg(['mean', 'std', 'min', 'max']).transpose()
     summary['cv'] = summary['std'] / summary['mean']
@@ -354,10 +522,29 @@ def write_if_not_empty(df, writer, sheet_name):
         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
 def analyze_digital_convo_turns(input_dir, output_dir):
+    """
+    Run full analysis pipeline on conversation turn files.
 
-    # Collect candidate .xlsx files then filter by regex (rglob uses glob patterns, not regex)
+    Parameters
+    ----------
+    input_dir : str or Path
+        Directory to search for Convo/Conversation_Turns Excel files.
+    output_dir : str or Path
+        Directory where analysis Excel outputs are written.
+
+    Returns
+    -------
+    None
+        Writes one *_Analysis.xlsx per input file, containing:
+        - Turn counts (speaker/group/bin/session levels)
+        - Participation summaries
+        - Transition matrices and ratios
+        - Summary statistics
+    """
+
+    # Collect candidate .xlsx files then filter by regex
     name_re = re.compile(r'.*(Convo|Conversation)_?Turns.*\.xlsx$', re.IGNORECASE)
-    ct_files = [f for f in Path(input_dir).rglob('*.xlsx') if name_re.match(f.name)]
+    ct_files = [f for f in Path(input_dir).rglob('*.xlsx') if name_re.search(f.name)]
     logging.info(f"Found {len(ct_files)} files in {input_dir}.")
 
     for ct_file in tqdm(ct_files, desc="Analyzing conversation turns"):
@@ -402,7 +589,7 @@ def analyze_digital_convo_turns(input_dir, output_dir):
 
             # Save to Excel
             out_file_name = ct_file.name.replace('.xlsx', '_Analysis.xlsx')
-            final_path = os.path.join(output_dir, out_file_name)
+            final_path = Path(output_dir, out_file_name)
 
             with pd.ExcelWriter(final_path, engine='xlsxwriter') as writer:
                 write_if_not_empty(bin_level, writer, 'Bin_Level_Turns')
