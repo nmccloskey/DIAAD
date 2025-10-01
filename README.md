@@ -36,10 +36,21 @@ conda create --name diaad python=3.12
 conda activate diaad
 ```
 
-### Install from GitHub:
+### 2. Install from PyPI:
+```bash
+pip install diaad
+```
+
+### ...or from GitHub:
 ```bash
 pip install git+https://github.com/nmccloskey/diaad.git@main
 ```
+
+### 3. Install the `en_core_web_trf` model (for automating POWERS):
+```bash
+python -m spacy download en_core_web_trf
+```
+
 ---
 
 ## Setup
@@ -228,6 +239,27 @@ DIAAD automates as much as possible. Below are descriptions of automatability an
 6. **Reliability subset (optional)**  
    `diaad powers reselect` Reselects reliability coding subset if ICC2 measures fail to meet threshold (0.7 a typical minimum).
 
+---
+
+## 🧪 Testing
+
+This project uses [pytest](https://docs.pytest.org/) for its testing suite.  
+All tests are located under the `tests/` directory, organized by module/function.
+
+### Running Tests
+To run the full suite:
+
+```bash
+pytest
+```
+Run "quietly":
+```bash
+pytest -q
+```
+Run a specific test file:
+```bash
+pytest tests/test_samples/test_digital_convo_turns_analyzer.py
+```
 ---
 
 ## Status and Contact
