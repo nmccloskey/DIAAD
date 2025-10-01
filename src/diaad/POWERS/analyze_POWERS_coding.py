@@ -1,4 +1,3 @@
-import os
 import logging
 import pandas as pd
 import numpy as np
@@ -32,9 +31,10 @@ def match_reliability_files(input_dir, output_dir):
     """
 
     # Make POWERS Reliability Analysis folder.
-    POWERS_Reliability_dir = os.path.join(output_dir, 'POWERS_ReliabilityAnalysis')
+    output_dir = Path(output_dir)
+    POWERS_Reliability_dir = output_dir / "POWERS_ReliabilityAnalysis"
     try:
-        os.makedirs(POWERS_Reliability_dir, exist_ok=True)
+        POWERS_Reliability_dir.mkdir(parents=True, exist_ok=True)
         logging.info(f"Created directory: {POWERS_Reliability_dir}")
     except Exception as e:
         logging.error(f"Failed to create directory {POWERS_Reliability_dir}: {e}")
@@ -58,10 +58,10 @@ def match_reliability_files(input_dir, output_dir):
                 merged = PCcod.merge(PCrel, on=["utterance_id", "sample_id"], how="inner")
                 merged.drop(columns=[col for col in merged.columns if col.startswith("c1")], inplace=True)
 
-                merged_filename = os.path.join(POWERS_Reliability_dir, rel.name.replace("POWERS_ReliabilityCoding", "POWERS_ReliabilityCoding_Merged"))
+                merged_filename = Path(POWERS_Reliability_dir, rel.name.replace("POWERS_ReliabilityCoding", "POWERS_ReliabilityCoding_Merged"))
 
                 try:
-                    os.makedirs(os.path.dirname(merged_filename), exist_ok=True)
+                    merged_filename.parent.mkdir(parents=True, exist_ok=True)
                     merged.to_excel(merged_filename, index=False)
                     logging.info(f"Wrote merged POWERS coding & reliability file: {merged_filename}")
                 except Exception as e:
@@ -135,10 +135,11 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False):
         Results are written to Excel files in
         `{output_dir}/POWERS_CodingAnalysis`.
     """
+    output_dir = Path(output_dir)
     out_folder = "POWERS_CodingAnalysis" if not reliability else "POWERS_ReliabilityAnalysis"
-    PCanalysis_dir = os.path.join(output_dir, out_folder)
+    PCanalysis_dir = output_dir / out_folder
     try:
-        os.makedirs(PCanalysis_dir, exist_ok=True)
+        PCanalysis_dir.mkdir(parents=True, exist_ok=True)
         logging.info(f"Output directory: {PCanalysis_dir}")
     except Exception as e:
         logging.error(f"Failed to create POWERS analysis directory {PCanalysis_dir}: {e}")
@@ -183,26 +184,55 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False):
         # Speaker-level summary
         speaker_aggs = {
             **auto_summed,
-            f"{c1}_total_turns": (f"{c1}_turn_label", "nunique"),
-            f"{c2}_total_turns": (f"{c2}_turn_label", "nunique"),
-            f"{c1}_num_T": (f"{c1}_turn_type", count_value("T")),
-            f"{c2}_num_T": (f"{c2}_turn_type", count_value("T")),
-            f"{c1}_num_MT": (f"{c1}_turn_type", count_value("MT")),
-            f"{c2}_num_MT": (f"{c2}_turn_type", count_value("MT")),
-            f"{c1}_num_ST": (f"{c1}_turn_type", count_value("ST")),
-            f"{c2}_num_ST": (f"{c2}_turn_type", count_value("ST")),
+            **{
+                f"{coder}_total_turns": (f"{coder}_turn_label", "nunique")
+                for coder in coders
+            },
+            **{
+                f"{coder}_num_{ttype}": (f"{coder}_turn_type", count_value(ttype))
+                for coder in coders
+                for ttype in ["T", "MT", "ST"]
+            },
         }
 
-        speaker_df = utt_df.groupby(["sample_id", "speaker"]).agg(**speaker_aggs).reset_index()
-        speaker_df[f"{c1}_mean_turn_length"] = (
-            speaker_df[f"{c1}_speech_units_sum"] / speaker_df[f"{c1}_total_turns"]
-        )
-        speaker_df[f"{c2}_mean_turn_length"] = (
-            speaker_df[f"{c2}_speech_units_sum"] / speaker_df[f"{c2}_total_turns"]
+        speaker_df = (
+            utt_df.groupby(["sample_id", "speaker"])
+            .agg(**speaker_aggs)
+            .reset_index()
         )
 
+        # Derived ratios/means
+        for coder in coders:
+            speaker_df[f"{coder}_mean_turn_length"] = (
+                speaker_df[f"{coder}_speech_units_sum"] / speaker_df[f"{coder}_total_turns"]
+            )
+
+            # Ratios involving nouns & content words
+            for num_type, denom_list in {
+                "num_nouns": ["speech_units", "total_turns", "num_ST"],
+                "num_content_words": ["speech_units", "total_turns", "num_ST"],
+            }.items():
+                for denom in denom_list:
+                    speaker_df[f"{coder}_ratio_{num_type}_to_{denom}"] = (
+                        speaker_df[f"{coder}_{num_type}"] / speaker_df[f"{coder}_{denom}"]
+                    )
+
+            # Ratios of turn types to total turns
+            for ttype in ["ST", "MT"]:
+                speaker_df[f"{coder}_ratio_{ttype}s_to_turns"] = (
+                    speaker_df[f"{coder}_num_{ttype}"] / speaker_df[f"{coder}_total_turns"]
+                )
+
         # Dialog-level summary
-        sample_df = utt_df.groupby("sample_id").agg(**auto_summed).reset_index()
+        sample_aggs = {**auto_summed}
+
+        for coder in coders:
+            sample_aggs.update({
+                f"{coder}_num_repairs": (f"{coder}_collab_repair", "nunique"),
+                f"{coder}_prop_repairs": (f"{coder}_collab_repair", lambda x: x.notna().mean()),
+            })
+
+        sample_df = utt_df.groupby("sample_id").agg(**sample_aggs).reset_index()
 
         # Reliability at utterance level
         icc_rows = []
@@ -242,7 +272,7 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False):
         ])
 
         # Write results
-        out_file = os.path.join(
+        out_file = Path(
             PCanalysis_dir, Path(pc_file).stem.replace("Coding", "Analysis") + ".xlsx"
         )
         try:
