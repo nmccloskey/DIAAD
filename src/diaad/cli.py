@@ -12,7 +12,7 @@ def main():
 
     # powers
     powers_parser = subparsers.add_parser("powers", help="POWERS coding workflow")
-    powers_parser.add_argument("action", choices=["make", "analyze", "reselect"], help="POWERS step")
+    powers_parser.add_argument("action", choices=["make", "analyze", "evaluate", "reselect"], help="POWERS step")
 
     # global options
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to the config file")

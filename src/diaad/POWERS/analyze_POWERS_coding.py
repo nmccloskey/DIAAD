@@ -48,7 +48,7 @@ def match_reliability_files(input_dir, output_dir):
     # Match original coding and reliability files.
     for rel in tqdm(rel_files, desc="Analyzing POWERS reliability coding..."):
         for cod in coding_files:
-            if rel.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == cod.name:
+            if cod.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == rel.name:
                 try:
                     PCcod = pd.read_excel(cod)
                     PCrel = pd.read_excel(rel)
@@ -57,7 +57,8 @@ def match_reliability_files(input_dir, output_dir):
                     logging.error(f"Failed to read files {cod} or {rel}: {e}")
                     continue
     
-                merged = PCcod.merge(PCrel, on=["utterance_id", "sample_id"], how="inner")
+                PCrel_merge_cols = ["utterance_id", "sample_id"] + [col for col in PCrel.columns if col.startswith("c3")]
+                merged = PCcod.merge(PCrel[PCrel_merge_cols], on=["utterance_id", "sample_id"], how="inner")
                 merged.drop(columns=[col for col in merged.columns if col.startswith("c1")], inplace=True)
 
                 merged_filename = Path(POWERS_Reliability_dir, rel.name.replace("POWERS_ReliabilityCoding", "POWERS_ReliabilityCoding_Merged"))

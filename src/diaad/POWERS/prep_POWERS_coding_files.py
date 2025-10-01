@@ -285,7 +285,7 @@ def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
         shuffled_utt_df = pd.concat(subdfs, ignore_index=True)
 
         PCdf = shuffled_utt_df.drop(columns=[
-            col for col in ['file'] + [t for t in tiers if t not in COMM_cols] if col in shuffled_utt_df.columns
+            col for col in ['file'] + [t for t in tiers if t.lower() not in COMM_cols] if col in shuffled_utt_df.columns
             ]).copy()
         
         PCdf["c1_id"] = pd.Series(dtype="object")
