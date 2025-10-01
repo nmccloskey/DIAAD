@@ -72,11 +72,10 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
             with open(os.path.join(input_dir, file.name), "wb") as f:
                 f.write(file.read())
         # Read config values
-        tiers = run_read_tiers(config.get("tiers", {}))
+        tiers = run_read_tiers(config.get("tiers", {})) or {}
         frac = config.get("reliability_fraction", 0.2)
-        coders = config.get("coders", [])
-        blind_columns = config.get("blind_columns", [])
-        exclude_participants = config.get('exclude_participants', [])
+        coders = config.get("coders", []) or []
+        exclude_participants = config.get('exclude_participants', []) or []
         automate_POWERS = config.get('automate', True)
 
         # --- List all functions (single-select) ---

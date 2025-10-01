@@ -51,7 +51,7 @@ def main(args):
     output_dir = config.get('output_dir', 'diaad_data/output')
     
     frac = config.get('reliability_fraction', 0.2)
-    coders = config.get('coders', [])
+    coders = config.get('coders', []) or []
     exclude_participants = config.get('exclude_participants', []) or []
     automate_POWERS = config.get('automate', True)
 
@@ -59,7 +59,7 @@ def main(args):
     output_dir = os.path.abspath(os.path.expanduser(output_dir))
 
     os.makedirs(input_dir, exist_ok=True)
-    tiers = run_read_tiers(config.get('tiers', {}))
+    tiers = run_read_tiers(config.get('tiers', {})) or {}
 
     # --- Timestamped output folder ---
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
