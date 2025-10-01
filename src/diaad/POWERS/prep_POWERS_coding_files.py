@@ -1,4 +1,3 @@
-import os
 import re
 import spacy
 import random
@@ -14,6 +13,8 @@ from rascal.transcription.transcription_reliability_analysis import _clean_clan_
 POWERS_cols = [
     "id", "turn_type", "speech_units", "content_words", "num_nouns", "filled_pauses", "collab_repair", "POWERS_comment"
 ]
+coder_cols = [f"c{n}_{col}" for n in ["1", "2"] for col in POWERS_cols]
+
 COMM_cols = [
     "communication", "topic", "subject", "dialogue", "conversation"
 ]
@@ -161,35 +162,106 @@ def label_turn(utterance: str, count_content_words: int) -> str:
         return "ST"
     return "T"
 
-
-def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir,exclude_participants, automate_POWERS=True):
+def run_automation(df, coder_num):
     """
-    Generate POWERS coding and reliability files from utterance-level transcript tables.
+    Apply automated linguistic measures to a POWERS coding dataframe.
 
-    This function takes transcript-derived "Utterances.xlsx" files, assigns coders to
-    samples, and produces two types of outputs per file: (1) a POWERS coding file with
-    two primary coder columns initialized, and (2) a reliability coding file where a
-    fraction of samples are randomly selected and assigned to a third coder. Files are
-    partitioned and labeled according to tier matches, shuffled to randomize sample order,
-    and written to a structured `POWERS_Coding` subdirectory under the output directory.
-    Excluded participants receive "NA" values in coder columns.
+    Loads a spaCy transformer pipeline (en_core_web_trf) and applies:
+      - Speech unit counts
+      - Filled pause counts
+      - Content word counts (all and nouns)
+      - Turn type labeling
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing at least an "utterance" column.
+    coder_num : str or int
+        Coder identifier (e.g., "1", "2", "3"). Used to prefix new columns.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Input dataframe with added columns:
+        - c{coder_num}_speech_units
+        - c{coder_num}_filled_pauses
+        - c{coder_num}_content_words
+        - c{coder_num}_num_nouns
+        - c{coder_num}_turn_type
+    """
+
+    try:
+        NLP = NLPmodel()
+        nlp = NLP.get_nlp("en_core_web_trf")
+    except Exception as e:
+        logging.error(f"Failed to load NLP model - automation not available: {e}")
+        return df
+    
+    try:
+        df[f"c{coder_num}_speech_units"] = df["utterance"].apply(compute_speech_units)
+        df[f"c{coder_num}_filled_pauses"] = df["utterance"].apply(count_fillers)
+
+        content_counts, noun_counts, turn_types = [], [], []
+        utterances = df["utterance"].fillna("").map(_clean_clan_for_reliability)
+
+        total_its = len(utterances)
+        for doc, utt in tqdm(zip(nlp.pipe(utterances, batch_size=100, n_process=2), utterances), total=total_its, desc="Applying automation to utterances"):
+            count_content_words = count_content_words_from_doc(doc, "all")
+            content_counts.append(count_content_words)
+            noun_counts.append(count_content_words_from_doc(doc, "noun"))
+            turn_types.append(label_turn(utt, count_content_words))
+        df[f"c{coder_num}_content_words"] = content_counts
+        df[f"c{coder_num}_num_nouns"] = noun_counts
+        df[f"c{coder_num}_turn_type"] = turn_types
+        return df
+    
+    except Exception as e:
+        logging.error(f"Failed to apply automation: {e}")
+        return df
+
+def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS=True):
+    """
+    Generate POWERS coding and reliability files from utterance-level transcripts.
+
+    Steps:
+      1. Load transcript "Utterances.xlsx" files from input_dir/output_dir.
+      2. Assign two coders per sample and shuffle sample order.
+      3. Write a POWERS coding file with initialized coder columns.
+      4. Select a fraction of samples for a reliability coder, producing a
+         POWERS reliability coding file.
+      5. Optionally run automated speech measures via run_automation.
+
+    Parameters
+    ----------
+    tiers : dict
+        Mapping of tier patterns to regex objects for file labeling.
+    frac : float
+        Proportion of samples to assign for reliability coding (0-1).
+    coders : list of str
+        List of coder IDs. If fewer than 3 provided, defaults to ['1','2','3'].
+    input_dir : str or Path
+        Directory containing input Utterances.xlsx files.
+    output_dir : str or Path
+        Base directory for POWERS_Coding output.
+    exclude_participants : list
+        Speakers to exclude (filled with "NA").
+    automate_POWERS : bool, optional
+        If True, apply run_automation() to coder 1 columns.
+
+    Returns
+    -------
+    None
+        Writes Excel files to output_dir/POWERS_Coding.
     """
 
     if len(coders) < 3:
         logging.warning(f"Coders entered: {coders} do not meet minimum of 3. Using default 1, 2, 3.")
         coders = ['1', '2', '3']
 
-    POWERS_coding_dir = os.path.join(output_dir, 'POWERS_Coding')
+    output_dir = Path(output_dir)
+    POWERS_coding_dir = output_dir / "POWERS_Coding"
     logging.info(f"Writing POWERS coding files to {POWERS_coding_dir}")
     utterance_files = list(Path(input_dir).rglob("*Utterances*.xlsx")) + list(Path(output_dir).rglob("*Utterances*.xlsx"))
-
-    if automate_POWERS:
-        try:
-            NLP = NLPmodel()
-            nlp = NLP.get_nlp("en_core_web_trf")
-        except Exception as e:
-            logging.error(f"Failed to load NLP model - automation not available: {e}")
-            return
 
     for file in tqdm(utterance_files, desc="Generating POWERS coding files"):
         logging.info(f"Processing file: {file}")
@@ -219,24 +291,11 @@ def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir,exclude_
         PCdf["c1_id"] = pd.Series(dtype="object")
         PCdf["c2_id"] = pd.Series(dtype="object")
 
-        coder_cols = [f"c{n}_{col}" for n in ["1", "2"] for col in POWERS_cols]
         for col in coder_cols:
             PCdf[col] = np.where(PCdf["speaker"].isin(exclude_participants), "NA", np.nan)
         
         if automate_POWERS:
-            PCdf["c1_speech_units"] = PCdf["utterance"].apply(compute_speech_units)
-            PCdf["c1_filled_pauses"] = PCdf["utterance"].apply(count_fillers)
-
-            content_counts, noun_counts, turn_types = [], [], []
-            utterances = PCdf["utterance"].fillna("").map(_clean_clan_for_reliability)
-            for doc, utt in zip(nlp.pipe(utterances, batch_size=100, n_process=2), utterances):
-                count_content_words = count_content_words_from_doc(doc, "all")
-                content_counts.append(count_content_words)
-                noun_counts.append(count_content_words_from_doc(doc, "noun"))
-                turn_types.append(label_turn(utt, count_content_words))
-            PCdf["c1_content_words"] = content_counts
-            PCdf["c1_num_nouns"] = noun_counts
-            PCdf["c1_turn_type"] = turn_types
+            PCdf = run_automation(PCdf, "1")
 
         unique_sample_ids = list(PCdf['sample_id'].drop_duplicates(keep='first'))
         segments = segment(unique_sample_ids, n=len(coders))
@@ -263,30 +322,56 @@ def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir,exclude_
 
         lab_str = '_'.join(labels) + '_' if labels else ''
 
-        pc_filename = os.path.join(POWERS_coding_dir, *labels, lab_str + 'POWERS_Coding.xlsx')
-        rel_filename = os.path.join(POWERS_coding_dir, *labels, lab_str + 'POWERS_ReliabilityCoding.xlsx')
+        pc_filename = Path(POWERS_coding_dir, *labels, f"{lab_str}POWERS_Coding.xlsx")
+        rel_filename = Path(POWERS_coding_dir, *labels, f"{lab_str}POWERS_ReliabilityCoding.xlsx")
 
         try:
-            os.makedirs(os.path.dirname(pc_filename), exist_ok=True)
+            pc_filename.parent.mkdir(parents=True, exist_ok=True)
             PCdf.to_excel(pc_filename, index=False)
             logging.info(f"Successfully wrote POWERS coding file: {pc_filename}")
         except Exception as e:
             logging.error(f"Failed to write POWERS coding file {pc_filename}: {e}")
 
         try:
-            os.makedirs(os.path.dirname(rel_filename), exist_ok=True)
+            rel_filename.parent.mkdir(parents=True, exist_ok=True)
             reldf.to_excel(rel_filename, index=False)
             logging.info(f"Successfully wrote POWERS reliability coding file: {rel_filename}")
         except Exception as e:
             logging.error(f"Failed to write POWERS reliability coding file {rel_filename}: {e}")
 
-def reselect_POWERS_reliability(input_dir, output_dir, frac):
+
+def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participants, automate_POWERS):
+    """
+    Reselect new reliability subsets from existing POWERS coding files.
+
+    Finds POWERS_Coding and POWERS_ReliabilityCoding files, determines
+    which samples are already covered by reliability coders, and selects
+    new samples from the remaining pool. Optionally applies automation.
+
+    Parameters
+    ----------
+    input_dir : str or Path
+        Directory containing original POWERS_Coding and POWERS_ReliabilityCoding files.
+    output_dir : str or Path
+        Directory for saving POWERS_ReselectedReliability outputs.
+    frac : float
+        Fraction of samples per file to assign to reliability (0-1).
+    exclude_participants : list
+        Speakers to exclude (filled with "NA").
+    automate_POWERS : bool
+        If True, apply run_automation() to coder 3 columns.
+
+    Returns
+    -------
+    None
+        Writes new Excel reliability files to output_dir/POWERS_ReselectedReliability.
+    """
 
     output_dir = Path(output_dir)
     
     POWERS_Reselected_Reliability_dir = output_dir / "POWERS_ReselectedReliability"
     try:
-        os.makedirs(POWERS_Reselected_Reliability_dir, exist_ok=True)
+        POWERS_Reselected_Reliability_dir.mkdir(parents=True, exist_ok=True)
         logging.info(f"Created directory: {POWERS_Reselected_Reliability_dir}")
     except Exception as e:
         logging.error(f"Failed to create directory {POWERS_Reselected_Reliability_dir}: {e}")
@@ -318,13 +403,39 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac):
         if covered_sample_ids:
             all_samples = set(PCcod["sample_id"].dropna())
             available_samples = list(all_samples - covered_sample_ids)
-            rel_samples = random.sample(available_samples, k=max(1, round(len(PCcod) * frac)))
-            new_rel_df = PCcod[PCcod['sample_id'].isin(rel_samples)].copy()
+
+            if len(available_samples) == 0:
+                logging.warning(f"No available samples to reselect for {cod.name}. Skipping.")
+                continue
+            
+            num_to_select = max(1, round(len(all_samples) * float(frac)))
+            if len(available_samples) < num_to_select:
+                logging.warning(
+                    f"Not enough unused samples in {cod.name}. "
+                    f"Selecting {len(available_samples)} instead of target {num_to_select}."
+                )
+                num_to_select = len(available_samples)
+            
+            reselected_rel_samples = set(random.sample(available_samples, k=num_to_select))
+            new_rel_df = PCcod[PCcod['sample_id'].isin(reselected_rel_samples)].copy()
+
+            for col in coder_cols:
+                new_rel_df[col] = np.where(new_rel_df["speaker"].isin(exclude_participants), "NA", np.nan)
+
+            rel_drop_cols = [col for col in coder_cols if col.startswith("c2")]
+            new_rel_df.drop(columns=rel_drop_cols, inplace=True, errors='ignore')
+            
+            rename_map = {col:col.replace("1", "3") for col in coder_cols if col.startswith("c1")}
+            new_rel_df.rename(columns=rename_map, inplace=True)
+            
+            logging.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(PCcod['sample_id']))} total samples.")
+
+            if automate_POWERS:
+                new_rel_df = run_automation(new_rel_df, "3")
 
             try:
                 new_rel_filename = cod.name.replace("POWERS_Coding", "POWERS_Reselected_ReliabilityCoding")
                 new_rel_filepath = POWERS_Reselected_Reliability_dir / new_rel_filename
-                os.makedirs(new_rel_filepath, exist_ok=True)
                 new_rel_df.to_excel(new_rel_filepath, index=False)
                 logging.info(f"Successfully wrote reselected POWERS reliability coding file: {new_rel_filepath}")
             except Exception as e:

@@ -114,7 +114,9 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     run_evaluate_POWERS_reliability(input_dir, output_dir)
 
                 if action == "reselect":
-                    run_reselect_POWERS_reliability_coding(input_dir, output_dir)
+                    run_reselect_POWERS_reliability_coding(
+                        input_dir, output_dir, frac, exclude_participants, automate_POWERS
+                    )
 
             # --- Timestamped ZIP filename ---
             timestamp = datetime.now().strftime("%y%m%d_%H%M")

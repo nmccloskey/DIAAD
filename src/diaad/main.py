@@ -40,8 +40,14 @@ def run_evaluate_POWERS_reliability(input_dir, output_dir):
     match_reliability_files(input_dir=input_dir, output_dir=output_dir)
     analyze_POWERS_coding(input_dir=input_dir, output_dir=output_dir, reliability=True)
 
-def run_reselect_POWERS_reliability_coding(input_dir, output_dir):
-    ...
+def run_reselect_POWERS_reliability_coding(input_dir, output_dir, frac, exclude_participants, automate_POWERS):
+    from .POWERS.prep_POWERS_coding_files import reselect_POWERS_reliability
+    reselect_POWERS_reliability(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        frac=frac,
+        exclude_participants=exclude_participants,
+        automate_POWERS=automate_POWERS)
 
 
 def main(args):
@@ -89,7 +95,7 @@ def main(args):
         elif args.action == "evaluate":
             run_evaluate_POWERS_reliability(input_dir, output_dir)
         elif args.action == "reselect":
-            run_reselect_POWERS_reliability_coding(input_dir, output_dir)
+            run_reselect_POWERS_reliability_coding(input_dir, output_dir, frac, exclude_participants, automate_POWERS)
 
     else:
         logging.error(f"Unknown command: {args.command}")
