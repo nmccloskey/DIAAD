@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "diaad"
+version = "0.1.0"
+description = " Digital Interface for Aggregate Analysis of Dialog"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Nick McCloskey" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "numpy==1.26.4",
+    "pandas>=2.0.3",
+    "pingouin==0.5.5",
+    "PyYAML==6.0.3",
+    "rascal_speech==0.1.1",
+    "scikit_learn==1.7.2",
+    "scipy==1.16.2",
+    "spacy==3.8.7",
+    "streamlit==1.50.0",
+    "tqdm==4.67.1",
+    "openpyxl>=3.1.5",
+    "xlsxwriter>=3.2.5"
+]
+
+[project.scripts]
+diaad = "diaad.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]

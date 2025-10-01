@@ -1,0 +1,50 @@
+# Python internals
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv*/
+venv*/
+env*/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+src/diaad.egg-info/
+
+# DIAAD-specific
+diaad_data/output/
+diaad_data/input/
+
+# System files
+.DS_Store
+
+# Temporary files
+*.xlsx
+*.cha
+
+google_creds.json
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Configs
+config.yaml
+*.secrets.yaml
+
+# Cache dirs (used by tools)
+.cache/
+.mypy_cache/
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+
+# IDE/editor stuff
+.vscode/
+.idea/
+*.swp
