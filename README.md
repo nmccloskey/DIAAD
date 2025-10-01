@@ -1,23 +1,23 @@
 # DIAAD — Digital Interface for Aggregate Analysis of Dialog
 
-DIAAD is a small, focused toolkit for batched dialog analysis that includes workflows for analyzing digital conversation turns and [POWERS](https://doi.org/10.3233/ACS-2013-20107) coding. It complements (and imports) the monologic speech analysis system [RASCAL](https://github.com/nmccloskey/RASCAL). 
+DIAAD is a small toolkit for batched dialog analysis that includes workflows for analyzing digital conversation turns and [POWERS](https://doi.org/10.3233/ACS-2013-20107) coding. It complements (and imports) the monologic speech analysis system [RASCAL](https://github.com/nmccloskey/RASCAL). 
 
 ---
 
 ## Overview (more details below)
 
 - **Digital Conversation Turns Analysis**
-   - tracking turn-taking in dialogs can reveal meaningful linguistic and psychosocial patterns
+   - tracking turn-taking in dialogs can reveal meaningful linguistic and psychosocial patterns [Tuomenoksa, et al., 2020](https://doi.org/10.1080/02687038.2020.1852518)
    - recording turns with a sequence of digits enables analysis of tallies and transition probabilities (see below) 
 - **POWERS Coding**
-   - Profile of Word Errors and Retrieval in Speech (POWERS) is an aphasiological coding system for analyzing dialogic speech
+   - Profile of Word Errors and Retrieval in Speech (POWERS) is an aphasiological coding system for analyzing dialogic speech (Herbet, et al., 2013)
    - DIAAD functionalities:
       - generates coder workbooks, automating most fields
       - summarizes coding and reports ICC2 values between coders
       - evaluates and optionally reselects reliability coding
 ---
 
-## Web App
+## Web App (pending)
 
 You can use DIAAD in your browser — no installation required:
 
@@ -122,7 +122,7 @@ Instead of simple tallies, the DCT protocol records the **sequence of turns** co
 ## Coding Procedure
 
 ### 1. Speaker Assignment
-- `0` = Clinician(s) (all non-participants collapsed under this code)
+- `0` = Clinician(s) (all individuals not receiving treatment collapsed under this code)
 - `1` = Participant 1
 - `2` = Participant 2
 - Continue incrementing (`3`, `4`, …) as needed.
@@ -139,7 +139,7 @@ Marking system:
 
 ### 3. Input Coding Table Format
 - Turns are entered sequentially as a continuous string of digits and dots. 
-- Bins (~6) are recommended for some temporal granularity.
+- Bins are recommended for some temporal granularity (e.g., six 10-minute bins for a 1-hour conversation treatment session).
 
 ### Example: Digital Conversation Turns Coding Input
 
