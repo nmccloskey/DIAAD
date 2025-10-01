@@ -76,7 +76,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
         frac = config.get("reliability_fraction", 0.2)
         coders = config.get("coders", []) or []
         exclude_participants = config.get('exclude_participants', []) or []
-        automate_POWERS = config.get('automate', True)
+        automate_POWERS = config.get('automate_POWERS', True)
 
         # --- List all functions (single-select) ---
         all_functions = {

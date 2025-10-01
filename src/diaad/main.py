@@ -53,7 +53,7 @@ def main(args):
     frac = config.get('reliability_fraction', 0.2)
     coders = config.get('coders', []) or []
     exclude_participants = config.get('exclude_participants', []) or []
-    automate_POWERS = config.get('automate', True)
+    automate_POWERS = config.get('automate_POWERS', True)
 
     input_dir = os.path.abspath(os.path.expanduser(input_dir))
     output_dir = os.path.abspath(os.path.expanduser(output_dir))
