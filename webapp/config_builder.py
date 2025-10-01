@@ -14,7 +14,7 @@ def _split_values(text: str):
     return [p.strip() for p in parts if p.strip()]
 
 def build_config_ui():
-    st.subheader("🔧 Create RASCAL Config")
+    st.subheader("🔧 Create DIAAD Config")
 
     # ---- Top-level defaults for public release ----
     input_dir = st.text_input("Input directory", value="data/input")
@@ -44,9 +44,9 @@ def build_config_ui():
 **How to enter tier values**
 
 - **Multiple values**: enter as a comma- or newline-separated list of **literal** options.
-  - Example – *narrative*:
+  - Example – *setting*:
     ```
-    BrokenWindow, RefusedUmbrella, CatRescue
+    LargeGroup, SmallGroup
     ```
   These are treated as **literal choices** and combined into a regex internally.
 
@@ -56,9 +56,8 @@ def build_config_ui():
     - Lab site + digits: `(AC|BU|TU)\\d+`
     - Three uppercase letters + three digits: `[A-Z]{3}\\d{3}`
 
-- **Tier attributes**
+- **Tier attribute**
   - **Partition**: creates separate coding files and **separate reliability** calculations by that tier (e.g., by test).
-  - **Blind**: generates blind codes (for CU summaries, etc.) at analysis time.
             """
         )
         st.caption("Tip: If your regex contains commas, paste it as a single value (no commas or newlines).")
@@ -68,8 +67,8 @@ def build_config_ui():
     if "tiers" not in st.session_state:
         # Minimal public-facing defaults — users can add/modify as needed
         st.session_state.tiers = [
-            {"label": "participant_id", "values": r"\d+", "is_partition": False, "is_blind": False},
-            {"label": "conversation", "values": "LargeGroup, SmallGroup", "is_partition": False, "is_blind": False},
+            {"label": "participant_id", "values": r"\d+", "is_partition": False},
+            {"label": "conversation", "values": "LargeGroup, SmallGroup", "is_partition": False},
         ]
 
     # Interactive tier editor
@@ -83,7 +82,6 @@ def build_config_ui():
             help="If exactly one entry is provided, it will be validated as a regex."
         )
         tier["is_partition"] = cols[2].checkbox("Partition", value=tier["is_partition"], key=f"tier_partition_{i}")
-        tier["is_blind"] = cols[3].checkbox("Blind", value=tier["is_blind"], key=f"tier_blind_{i}")
 
         # Live validation: if single value, treat as regex and compile
         vals = _split_values(tier["values"])
@@ -97,7 +95,7 @@ def build_config_ui():
 
     col1, col2 = st.columns([1, 1])
     if col1.button("➕ Add Tier"):
-        st.session_state.tiers.append({"label": "", "values": "", "is_partition": False, "is_blind": False})
+        st.session_state.tiers.append({"label": "", "values": "", "is_partition": False})
     if col2.button("➖ Remove Last Tier"):
         if st.session_state.tiers:
             st.session_state.tiers.pop()
@@ -117,8 +115,6 @@ def build_config_ui():
 
         if tier.get("is_partition"):
             tier_entry["partition"] = True
-        if tier.get("is_blind"):
-            tier_entry["blind"] = True
 
         tiers_dict[name] = tier_entry
 
