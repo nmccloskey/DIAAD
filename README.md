@@ -17,6 +17,14 @@ DIAAD is a small, focused toolkit for batched dialog analysis that includes work
       - evaluates and optionally reselects reliability coding
 ---
 
+## Web App
+
+You can use DIAAD in your browser — no installation required:
+
+👉 [Launch the DIAAD Web App](https://diaad-dialog.streamlit.app/)
+
+---
+
 ## Installation
 
 We recommend installing DIAAD into a dedicated virtual environment using Anaconda:
@@ -244,7 +252,7 @@ Full details of the POWERS coding system can be found in the manual:
 
 > Herbert, R., Best, W., Hickin, J., Howard, D., & Osborne, F. (2013). Powers: Profile of word errors and retrieval in speech: An assessment tool for use with people with communication impairment. CQUniversity.
 
-If DIAAD support your work, please cite the repo:
+If DIAAD supports your work, please cite the repo:
 
 > McCloskey N. (2025). DIAAD: Digital Interface for Aggregate Analysis of Dialog. GitHub repository. https://github.com/nmccloskey/diaad
 

@@ -69,7 +69,7 @@ def build_config_ui():
         # Minimal public-facing defaults — users can add/modify as needed
         st.session_state.tiers = [
             {"label": "participant_id", "values": r"\d+", "is_partition": False, "is_blind": False},
-            {"label": "narrative", "values": "BrokenWindow, RefusedUmbrella, CatRescue", "is_partition": False, "is_blind": False},
+            {"label": "conversation", "values": "LargeGroup, SmallGroup", "is_partition": False, "is_blind": False},
         ]
 
     # Interactive tier editor
