@@ -130,7 +130,7 @@ def test_compute_reliability_with_stubbed_icc(monkeypatch, utt_df_minimal):
     assert set(icc.columns) == {"metric", "ICC2"}
     assert set(cat["metric"]) == {"turn_type", "collab_repair"}
     # Kappa is finite for turn_type because labels exist for both coders
-    kappa_turn = float(cat.loc[cat["metric"] == "turn_type", "kappa"])
+    kappa_turn = float(cat.loc[cat["metric"] == "turn_type", "kappa"].iloc[0])
     assert not math.isnan(kappa_turn)
 
 
