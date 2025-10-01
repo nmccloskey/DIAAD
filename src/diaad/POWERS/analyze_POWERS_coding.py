@@ -372,7 +372,7 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
         coders = ["c1", "c2"]
     else:
         # If your merged reliability files are stored elsewhere, change to input_dir accordingly.
-        pc_files = list(input_dir.rglob("*POWERS_ReliabilityCoding_Merged*.xlsx"))
+        pc_files = list(pc_analysis_dir.rglob("*POWERS_ReliabilityCoding_Merged*.xlsx"))
         coders = ["c2", "c3"]
     c1, c2 = coders
 
@@ -409,7 +409,8 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
                 logging.error(f"Reliability computation failed for {pc_file}: {e}")
 
         # 4) write
-        out_file = pc_analysis_dir / (pc_file.stem.replace("Coding", "Analysis") + ".xlsx")
+        to_replace = "Coding" if not reliability else "Coding_Merged"
+        out_file = pc_analysis_dir / (pc_file.stem.replace(to_replace, "Analysis") + ".xlsx")
         try:
             write_analysis_workbook(out_file, df_dict)
             logging.info(f"Wrote analysis workbook: {out_file}")
