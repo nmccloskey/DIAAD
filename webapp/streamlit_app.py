@@ -13,7 +13,8 @@ def add_src_to_sys_path():
 add_src_to_sys_path()
 
 from diaad.main import (
-    run_read_tiers, run_analyze_digital_convo_turns, 
+    run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs,
+    run_analyze_digital_convo_turns, check_for_utt_files,
     run_make_POWERS_coding_files, run_analyze_POWERS_coding, 
     run_evaluate_POWERS_reliability, run_reselect_POWERS_reliability_coding
 )
@@ -97,19 +98,24 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
             if command == "turns":
                 run_analyze_digital_convo_turns(input_dir, output_dir)
 
-            elif command == "powers" and action == "make":
-                run_make_POWERS_coding_files(
-                    tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS
-                )
+            elif command == "powers":
+                if action == "make":
+                    utt_files = check_for_utt_files(input_dir, output_dir)
+                    if not utt_files:
+                        chats = run_read_cha_files(input_dir)
+                        run_prepare_utterance_dfs(tiers, chats, output_dir)
+                    run_make_POWERS_coding_files(
+                        tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS
+                    )
 
-            elif command == "powers" and action == "analyze":
-                run_analyze_POWERS_coding(input_dir, output_dir)
+                if action == "analyze":
+                    run_analyze_POWERS_coding(input_dir, output_dir)
             
-            elif command == "powers" and action == "evaluate":
-                run_evaluate_POWERS_reliability(input_dir, output_dir)
+                if action == "evaluate":
+                    run_evaluate_POWERS_reliability(input_dir, output_dir)
 
-            elif command == "powers" and action == "reselect":
-                run_reselect_POWERS_reliability_coding(input_dir, output_dir)
+                if action == "reselect":
+                    run_reselect_POWERS_reliability_coding(input_dir, output_dir)
 
             # --- Timestamped ZIP filename ---
             timestamp = datetime.now().strftime("%y%m%d_%H%M")
