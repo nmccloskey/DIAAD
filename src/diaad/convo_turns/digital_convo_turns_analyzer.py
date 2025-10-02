@@ -601,7 +601,7 @@ def analyze_digital_convo_turns(input_dir, output_dir):
                 write_if_not_empty(speaker_ratios, writer, 'Speaker_Level_Ratios')
 
                 for name, matrix in speaker_matrices.items():
-                    sheet_name = f"Trans_Speaker_{name}"[:31]  # Excel max sheet name = 31
+                    sheet_name = f"Speaker_Matrix_{name}"[:31]  # Excel max sheet name = 31
                     matrix.to_excel(writer, sheet_name=sheet_name)
 
         except Exception as e:

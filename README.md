@@ -199,7 +199,7 @@ The `powers turns` command analyzes coded conversation turn files  and produces 
 | **Session_Level_Summary** | Session × Group  | Totals, entropy, clinician–participant ratio, marker proportions             | Session balance, clinician dominance, entropy of participation                    |
 | **Participation_Level_Turns** | Speaker × Session | Individual totals, session proportion, marker rates, bin variability stats | Engagement levels, within-session consistency, variability                        |
 | **Bin_Level_Turns**       | Speaker × Bin    | Proportion of bin turns, marker proportions within bins                      | Microstructure and temporal trends of turn-taking                                 |
-| **Trans_Speaker_* **      | Group            | Conditional probabilities of turn transitions (matrix)                       | Directionality of flow (e.g., clinician → participant vs participant → participant)|
+| **Speaker_Matrix_* **      | Group            | Conditional probabilities of turn transitions (matrix)                       | Directionality of flow (e.g., clinician → participant vs participant → participant)|
 | **Speaker_Level_Ratios**  | Group            | Participant→Participant, Participant→Clinician, Clinician→Participant ratios | Flow patterns and dominance structures across groups                              |
 | **Summary_Statistics**    | Aggregated       | Mean, std, min, max, CV for all numeric metrics                              | Central tendencies and variability across levels                                  |
 
