@@ -81,6 +81,7 @@ input_dir: diaad_data/input
 output_dir: diaad_data/output
 reliability_fraction: 0.2
 automate_POWERS: true
+just_c2_POWERS: false
 exclude_participants:
 coders:
 - '1'

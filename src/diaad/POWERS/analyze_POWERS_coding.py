@@ -5,6 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
+from diaad.utils.support_funcs import find_powers_coding_files
 
 TURN_AGG_COLS = ["speech_units", "content_words", "num_nouns", "filled_pauses"]
 
@@ -42,12 +43,12 @@ def match_reliability_files(input_dir, output_dir):
         logging.error(f"Failed to create directory {POWERS_Reliability_dir}: {e}")
         return
 
-    coding_files = [f for f in Path(input_dir).rglob('*POWERS_Coding*.xlsx')]
+    pc_files = find_powers_coding_files(input_dir, output_dir)
     rel_files = [f for f in Path(input_dir).rglob('*POWERS_ReliabilityCoding*.xlsx')]
 
     # Match original coding and reliability files.
     for rel in tqdm(rel_files, desc="Analyzing POWERS reliability coding..."):
-        for cod in coding_files:
+        for cod in pc_files:
             if cod.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == rel.name:
                 try:
                     PCcod = pd.read_excel(cod)
@@ -368,7 +369,7 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
         return
 
     if not reliability:
-        pc_files = list(input_dir.rglob("*POWERS_Coding*.xlsx"))
+        pc_files = find_powers_coding_files(input_dir, output_dir)
         coders = ["c1", "c2"]
     else:
         # If your merged reliability files are stored elsewhere, change to input_dir accordingly.

@@ -12,12 +12,14 @@ def add_src_to_sys_path():
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 add_src_to_sys_path()
 
-from diaad.main import (
-    run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs,
-    run_analyze_digital_convo_turns, check_for_utt_files,
-    run_make_POWERS_coding_files, run_analyze_POWERS_coding, 
-    run_evaluate_POWERS_reliability, run_reselect_POWERS_reliability_coding
-)
+# from diaad.main import (
+#     run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs,
+#     run_analyze_digital_convo_turns, check_for_utt_files,
+#     run_make_POWERS_coding_files, run_analyze_POWERS_coding, 
+#     run_evaluate_POWERS_reliability, run_reselect_POWERS_reliability_coding
+# )
+
+from diaad.main import *
 
 st.title("DIAAD Web App")
 
@@ -100,7 +102,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
 
             elif command == "powers":
                 if action == "make":
-                    utt_files = check_for_utt_files(input_dir, output_dir)
+                    utt_files = find_utt_files(input_dir, output_dir)
                     if not utt_files:
                         chats = run_read_cha_files(input_dir)
                         run_prepare_utterance_dfs(tiers, chats, output_dir)
