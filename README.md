@@ -118,6 +118,10 @@ diaad powers make       # prepare POWERS coding files
 diaad powers analyze    # analyze completed POWERS coding
 diaad powers evaluate   # evaluate completed POWERS reliability coding
 diaad powers reselect   # randomly reselect reliability subset
+
+# Automation validation
+diaad powers select     # randomly select subset for validating automation
+diaad powers validate   # compute reliability metrics on automated vs manual codes 
 ```
 ---
 # Digital Conversation Turns (DCT) Protocol
@@ -239,6 +243,92 @@ DIAAD automates as much as possible. Below are descriptions of automatability an
 
 6. **Reliability subset (optional)**  
    `diaad powers reselect` Reselects reliability coding subset if ICC2 measures fail to meet threshold (0.7 a typical minimum).
+
+### DIAAD Commands
+
+| Command | Function (name)                                   | Input                                        | Output                                    |
+|---------|---------------------------------------------------|----------------------------------------------|-------------------------------------------------------|
+| a       | Select transcription reliability samples (*select_transcription_reliability_samples*) | Raw `.cha` files                             | Reliability & full sample lists + template `.cha` files |
+| b       | Analyze transcription reliability (*analyze_transcription_reliability*) | Reliability `.cha` pairs                     | Agreement metrics + alignment text reports             |
+| c       | Reselect transcription reliability (*reselect_transcription_reliability_samples*) | Original + reliability transcription tables (from **a**)   | New reliability subset(s)                               |
+| d       | Prepare utterance tables (*prepare_utterance_dfs*) | Raw `.cha` files                             | Utterance spreadsheets                                |
+| e       | Make CU coding files (*make_CU_coding_files*)     | Utterance tables (from **d**)                | CU coding + reliability spreadsheets                                |
+| f       | Make timesheets (*make_timesheets*)               | Utterance tables (from **d**)                | Speaking time entry sheets                            |
+
+---
+
+## Automation Validation
+
+DIAAD includes CLI utilities to validate automatic POWERS coding against manual coding.  
+This workflow has two main steps:
+
+### 1. Select Validation Samples
+Use (stratified) random sampling to create a balanced subset of samples for manual validation.
+
+**Arguments:**
+
+- `--stratify`: Optional fields to group by (comma, space, or repeated flags) in random sample selection.
+   
+   Example: `--stratify site,test` or `--stratify site --stratify test`.
+
+- `--strata`: Number of samples to draw per stratum (default: 5).
+
+- `--seed`: Random number generator seed for reproducibility (default: 88).
+
+**Output:**
+
+- An Excel file `POWERS_validation_selection_<timestamp>.xlsx` containing the selected samples, with an assigned stratum_no column.
+
+- If POWERS coding tables exist in the input folder, labeled versions with `stratum_no` will also be written.
+
+
+```bash
+# Example
+diaad powers select \
+  --stratify site,test \
+  --strata 5 \
+  --seed 88
+```
+
+### 2. Validate Automation
+
+Merge the automatic and manual coding files for side-by-side comparison and reliability checks.
+
+**Requirements:**
+
+- Place your coding files in two subdirectories under the input folder:
+
+   - Auto/ containing automatically generated coding files
+
+   - Manual/ containing manually coded files
+
+**Arguments:**
+
+- `--selection`: Path to the selection Excel file from the previous step. Required if `stratum_no` is not already in the Manual coding files.
+
+- `--numbers`: Optional comma- or space-separated list of stratum numbers to include (e.g., `--numbers 1,2`).
+
+**Output:**
+
+- An Excel file POWERS_Coding_Auto_vs_Manual.xlsx inside a new AutomationValidation/ folder.
+This file contains paired automatic and manual codes, restricted to the requested strata if specified.
+
+```bash
+# Example
+diaad powers validate \
+  --selection diaad_powers_select_output_250930/POWERS_validation_selection_250930_1530.xlsx \
+  --numbers 1,2
+```
+
+Typical Workflow
+
+1. Run `powers select` to generate a stratified subset of samples.
+
+2. Distribute the corresponding Manual coding files to coders.
+
+3. After manual coding, run `powers validate` to merge auto vs manual annotations.
+
+4. Use the merged file to compute inter-coder reliability or other evaluation metrics.
 
 ---
 

@@ -53,8 +53,8 @@ def select_validation_samples(input_dir: str | Path,
     # Collect utterance tables
     utt_files = find_utt_files(input_dir, output_dir)
     utt_cols = ["sample_id", "file"] + stratify
-    utt_dfs = [df for uf in utt_files if (df := read_df(uf))]
-    filtered_udfs = [df for udf in utt_dfs if (df := _filter_df(udf, utt_cols))]
+    utt_dfs = [df for uf in utt_files if (df := read_df(uf)) is not None]
+    filtered_udfs = [df for udf in utt_dfs if (df := _filter_df(udf, utt_cols)) is not None]
     if not filtered_udfs:
         raise RuntimeError("No utterance files with required columns found.")
     sample_info = pd.concat(filtered_udfs, ignore_index=True)
@@ -134,8 +134,11 @@ def validate_automation(input_dir: str | Path,
     """
 
     # Collect POWERS coding files   
-    auto = [pcdf for pcf in find_powers_coding_files(input_dir / "Auto", output_dir) if (pcdf := read_df(pcf))]
-    manual = [pcdf for pcf in find_powers_coding_files(input_dir / "Manual", output_dir) if (pcdf := read_df(pcf))]
+    auto = [pcdf for pcf in find_powers_coding_files(input_dir / "Auto", output_dir)
+            if (pcdf := read_df(pcf)) is not None]
+
+    manual = [pcdf for pcf in find_powers_coding_files(input_dir / "Manual", output_dir)
+            if (pcdf := read_df(pcf)) is not None]
     
     # Pair automatic and manual codes and prep for analyze POWERS
     if not auto or not manual:
@@ -145,7 +148,7 @@ def validate_automation(input_dir: str | Path,
 
     stratum_col = ["stratum_no"] if "stratum_no" in manual_df.columns else []
     manual_cols = [c for c in manual_df.columns if c.startswith("c2_")]
-    auto_df.drop(columns=manual_cols, inplace=True)
+    auto_df.drop(columns=manual_cols, inplace=True, errors="ignore")
 
     merge_keys = ["utterance_id", "sample_id"]
     merged = auto_df.merge(manual_df[merge_keys + manual_cols  + stratum_col], on=merge_keys, how="inner")
