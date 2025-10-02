@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "diaad"
-version = "0.1.0"
+version = "0.2.0"
 description = " Digital Interface for Aggregate Analysis of Dialog"
 readme = "README.md"
 requires-python = ">=3.12"
