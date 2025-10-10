@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import argparse
 import logging
 from datetime import datetime
