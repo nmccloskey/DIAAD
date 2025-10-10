@@ -1,16 +1,16 @@
 # DIAAD — Digital Interface for Aggregate Analysis of Dialog
 
-DIAAD is a small toolkit for batched dialog analysis that includes workflows for analyzing digital conversation turns and [POWERS](https://doi.org/10.3233/ACS-2013-20107) coding. It complements (and imports) the monologic speech analysis system [RASCAL](https://github.com/nmccloskey/RASCAL). 
+DIAAD is a small toolkit for batched dialog analysis that includes workflows for analyzing digital conversation turns and [POWERS](https://doi.org/10.3233/ACS-2013-20107) coding. It complements (and imports) the monologic discourse analysis system [RASCAL](https://github.com/nmccloskey/RASCAL). 
 
 ---
 
 ## Overview (more details below)
 
 - **Digital Conversation Turns Analysis**
-   - tracking turn-taking in dialogs can reveal meaningful linguistic and psychosocial patterns [Tuomenoksa, et al., 2020](https://doi.org/10.1080/02687038.2020.1852518)
-   - recording turns with a sequence of digits enables analysis of tallies and transition probabilities (see below) 
+   - Tracking turn-taking in dialogs can reveal meaningful linguistic and psychosocial patterns ([Tuomenoksa, et al., 2020](https://doi.org/10.1080/02687038.2020.1852518)).
+   - Recording turns with a sequence of digits enables analysis of both tallies and transition probabilities (see below).
 - **POWERS Coding**
-   - Profile of Word Errors and Retrieval in Speech (POWERS) is an aphasiological coding system for analyzing dialogic speech (Herbet, et al., 2013)
+   - Profile of Word Errors and Retrieval in Speech (POWERS) is an aphasiological coding system for analyzing dialogic speech (Herbet, et al., 2013).
    - DIAAD POWERS pipeline:
       - generates coder workbooks, automating most fields
       - summarizes coding and reports ICC2 values between coders
@@ -30,7 +30,7 @@ You can use DIAAD in your browser — no installation required:
 
 ## Installation
 
-We recommend installing DIAAD into a dedicated virtual environment using Anaconda:
+A dedicated virtual environment using Anaconda is recommended:
 
 ### 1. Create and activate your environment:
 
@@ -39,13 +39,12 @@ conda create --name diaad python=3.12
 conda activate diaad
 ```
 
-### 2. Install from PyPI:
+### 2. Download DIAAD:
 ```bash
+# directly from PyPI
 pip install diaad
-```
 
-### ...or from GitHub:
-```bash
+# or from GitHub
 pip install git+https://github.com/nmccloskey/diaad.git@main
 ```
 
@@ -62,8 +61,6 @@ To prepare for running DIAAD, complete the following steps:
 
 ### 1. Create your working directory:
 
-We recommend creating a fresh project directory where you'll run your analysis.
-
 Example structure:
 ```
 your_project/
@@ -75,7 +72,7 @@ your_project/
 
 ### 2. Provide a `config.yaml` file
 
-This file specifies the directories, coders, reliability settings, and tier structure.
+This file specifies the directories, coders, settings, and tier structure.
 
 You can download the example config file from the repo or create your own like this:
 
@@ -142,7 +139,7 @@ diaad powers validate   # compute reliability metrics on automated vs manual cod
 ---
 # Digital Conversation Turns (DCT) Protocol
 
-DIAAD includes a lightweight system for analyzing **digital conversational turns** in group treatment sessions with people with aphasia.  
+DIAAD includes a lightweight system for analyzing **digital conversational turns** in group treatment sessions for people with aphasia.  
 Instead of simple tallies, the DCT protocol records the **sequence of turns** compactly, enabling analysis of turn-taking dynamics and engagement, with optional markers for capturing turn qualities (e.g., length/substantiveness).
 
 ---
@@ -161,13 +158,13 @@ For each conversational turn, enter the assigned digit for the speaker (e.g., `0
 Marking system:
 - Digits are followed by one dot `.` (mark1), two dots `..` (mark2) or no dots
 - Example usage:
-   - Add `.` if the turn is *substantial* (contains an independent clause).  is   
+   - Add `.` if the turn is *substantial* (contains an independent clause).
    - Add `..` if the turn is *monologic* (contains at least two independent clauses)
    - Add no dots otherwise, or the turn is *minimal* (brief/no full idea)
 
 ### 3. Input Coding Table Format
 - Turns are entered sequentially as a continuous string of digits and dots. 
-- Bins are recommended for some temporal granularity (e.g., six 10-minute bins for a 1-hour conversation treatment session).
+- Bins are recommended for some temporal granularity (e.g., six 10-minute bins for a 1-hour conversation/treatment session).
 - Case-insensitive file name regex `r'.*(Convo|Conversation)_?Turns.*\.xlsx$'` looks for files like `*TU_ConvoTurns.xlsx` or `*converstation_turns_2025.xlsx`
 
 ### Example: Digital Conversation Turns Coding Input
@@ -190,18 +187,37 @@ Marking system:
 ---
 
 ## Output
-The `powers turns` command analyzes coded conversation turn files  and produces an Excel workbook with multiple sheets, capturing turn-taking behavior at **bin**, **speaker**, **session**, and **group** levels, also including **transition matrices** for a detailed view of conversational dynamics.
+The `diaad turns` command analyzes coded conversation turn files  and produces an Excel workbook with multiple sheets, capturing turn-taking behavior at **bin**, **speaker**, **session**, and **group** levels, also including **transition matrices** for a detailed view of conversational dynamics.
 
-| Excel Sheet              | Level of Analysis | Data Included                                                                 | Potential Insights                                                                 |
-|---------------------------|------------------|-------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| **Speaker_Level_Turns**   | Speaker          | Total turns, dot-mark counts (mark1/mark2), proportions                      | Individual dominance, repair/overlap tendencies                                   |
-| **Group_Level_Summary**   | Group            | Group totals, num participants, num sessions, marker proportions             | Balance across groups, overall conversational style                               |
-| **Session_Level_Summary** | Session × Group  | Totals, entropy, clinician–participant ratio, marker proportions             | Session balance, clinician dominance, entropy of participation                    |
-| **Participation_Level_Turns** | Speaker × Session | Individual totals, session proportion, marker rates, bin variability stats | Engagement levels, within-session consistency, variability                        |
-| **Bin_Level_Turns**       | Speaker × Bin    | Proportion of bin turns, marker proportions within bins                      | Microstructure and temporal trends of turn-taking                                 |
-| *Speaker_Matrix_* *      | Group            | Conditional probabilities of turn transitions (matrix)                       | Directionality of flow (e.g., clinician → participant vs participant → participant)|
-| **Speaker_Level_Ratios**  | Group            | Participant→Participant, Participant→Clinician, Clinician→Participant ratios | Flow patterns and dominance structures across groups                              |
-| **Summary_Statistics**    | Aggregated       | Mean, std, min, max, CV for all numeric metrics                              | Central tendencies and variability across levels                                  |
+| Excel Sheet              | Level of Analysis | Data Included                                                                 
+|---------------------------|------------------|-------------------------------------------------------------------------------|
+| **Speaker_Level_Turns**   | Speaker          | Total turns, dot-mark counts (mark1/mark2), proportions                      |
+| **Group_Level_Summary**   | Group            | Group totals, num participants, num sessions, marker proportions             |
+| **Session_Level_Summary** | Session × Group  | Totals, entropy, clinician–participant ratio, marker proportions             |
+| **Participation_Level_Turns** | Speaker × Session | Individual totals, session proportion, marker rates, bin variability stats |
+| **Bin_Level_Turns**       | Speaker × Bin    | Proportion of bin turns, marker proportions within bins                      |
+| *Speaker_Matrix_* *      | Group            | Conditional probabilities of turn transitions (matrix)                       |
+| **Speaker_Level_Ratios**  | Group            | Participant→Participant, Participant→Clinician, Clinician→Participant ratios |
+| **Summary_Statistics**    | Aggregated       | Mean, std, min, max, CV for all numeric metrics                              |
+
+---
+
+## Analytic Opportunities
+
+- **Turn counts & proportions** per participant  
+- **Substantial vs. monologic vs. minimal** turn ratios  
+- **Transitions** (e.g., clinician → participant, participant → participant)  
+- **Speaker dominance indices**  
+- **Engagement rates** between participants  
+- **Transition matrices & dyadic graphs**  
+- **Temporal trends** (with optional bins)  
+- **Reliability**: inter-coder sequence comparisons (e.g., Levenshtein distance)  
+- **Correlation with treatment outcomes** (e.g., ACOM, WAB) for longitudinal studies  
+- **Turn quality** (marker proportions for repairs/overlaps)  
+- **Consistency over time** (bin-level variability)  
+- **Interaction structure** (flow directionality between speakers)  
+- **Individual engagement** (relative contributions across sessions)  
+- **Balance of participation/distribution metrics** (e.g., Gini index, entropy, clinician–participant ratios)  
 
 ---
 
@@ -209,7 +225,7 @@ The `powers turns` command analyzes coded conversation turn files  and produces 
 - **Turn Overlap**: current system assumes sequentialization - not uncommonly violated in group settings.  
 - **Subjectivity**: coder judgment needed for speaker boundaries and substantiality. Calibration recommended.  
 - **Binary turn length**: `mark1` vs. `mark2` is coarse; future versions may refine scale.  
-- **Scalability**: currently designed for up to 9 participants, future word may accommodate codes like `C`,`P10`, `P11`.
+- **Scalability**: currently designed for up to 9 participants, future work could accommodate codes like `C`,`P10`, `P11`.
  
 ---
 
@@ -217,7 +233,7 @@ The `powers turns` command analyzes coded conversation turn files  and produces 
 
 ## Measures
 
-The POWERS coding system addresses the need to assess language abilities in conversation for people with aphasia. DIAAD facilitates quantification of the following subset of POWERS variables for both the clinician and client (see the [POWERS](https://doi.org/10.3233/ACS-2013-20107) manual for full details): 
+The POWERS coding system addresses the need to assess language abilities (particularly lexical retrieval) in conversation for people with aphasia. DIAAD facilitates quantification of the following subset of POWERS variables for both the clinician and client (see the [POWERS](https://doi.org/10.3233/ACS-2013-20107) manual for full details): 
 
    - **filled pauses** - disfluencies like "um", "uh", "er", etc.
    - **speech units** - these more or less map onto non-punctuation tokens excluding filled pauses
@@ -245,7 +261,7 @@ DIAAD automates as much as possible. Below are descriptions of automatability an
 ## Typical Workflow
 
 1. **Tabularize utterances (if needed)**  
-   If `*Utterances*.xlsx` files aren’t present, DIAAD will call RASCAL to read `.cha` files and tabularize utterances, Assigning samples unique identifiers at the utterance and transcript levels.
+   If `*Utterances*.xlsx` files aren’t present, DIAAD will call RASCAL to read `.cha` files and tabularize utterances, assigning samples unique identifiers at the utterance and transcript levels.
 
 2. **Prepare POWERS coding files**  
    `diaad powers make` creates full dataset plus reliability coding workbooks, with most coding automated.
@@ -260,13 +276,12 @@ DIAAD automates as much as possible. Below are descriptions of automatability an
    `diaad powers evaulate` matches reliability files and runs ICC2 evaluation.
 
 6. **Reliability subset (optional)**  
-   `diaad powers reselect` Reselects reliability coding subset if ICC2 measures fail to meet threshold (0.7 a typical minimum).
+   `diaad powers reselect` eselects reliability coding subset if ICC2 measures fail to meet threshold (0.7 a typical minimum).
 
 ### Pipeline Commands
 
 | Command | Function (name)                          | Input                                 | Output                                              |
 |---------|------------------------------------------|---------------------------------------|-----------------------------------------------------|
-| turns   | Analyze digital conversation turns       | DCT coding `.xlsx` (see above)                      | Multi-sheet `.xlsx` (see above)       |
 | powers make     | Prepare POWERS coding files (*make_POWERS_coding_files*) | Either `.cha` files or utterance tables generated with RASCAL    | POWERS coding spreadsheets for coders               |
 | powers analyze  | Analyze POWERS coding (*analyze_POWERS_coding*) | Completed POWERS spreadsheets         | Turn-, speaker-, and dialog-level aggregates        |
 | powers evaluate | Evaluate POWERS reliability (*match_reliability_files*, *analyze_POWERS_coding*) | Coder 2 + Coder 3 spreadsheets        | Reliability metrics (ICC2, kappa, etc.)        |
@@ -276,7 +291,8 @@ DIAAD automates as much as possible. Below are descriptions of automatability an
 
 ## Automation Validation
 
-DIAAD includes CLI utilities to validate automatic POWERS coding against manual coding.  
+DIAAD includes CLI utilities to validate automatic POWERS coding against manual coding.
+
 This workflow has two main steps:
 
 ### 1. Select Validation Samples
@@ -300,7 +316,7 @@ Use (stratified) random sampling to create a balanced subset of samples for manu
 
    - Code through stratum numbers 1 & 2
    - Evaluate reliability
-   - Work through number 3 if poor agreement
+   - Work through further strata if agreement is poor
 
 - If POWERS coding tables exist in the input folder, labeled versions with `stratum_no` will also be written.
 
