@@ -1,141 +1,146 @@
+"""
+DIAAD Streamlit App
+-------------------
+Web interface for the Digital Interface for Aphasiological Analysis of Discourse (DIAAD).
+Allows users to upload configuration and conversation data, select analysis modules,
+and download structured outputs.
+"""
+
+from pathlib import Path
 import streamlit as st
 import yaml
-import os
 import tempfile
 import zipfile
 from io import BytesIO
-from config_builder import build_config_ui
 from datetime import datetime
 
+# --- Ensure src path is importable for local dev installs ---
 def add_src_to_sys_path():
-    import sys, os
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+    import sys
+    src_path = Path(__file__).resolve().parent.parent / "src"
+    sys.path.insert(0, str(src_path))
+
 add_src_to_sys_path()
 
-from diaad.main import *
+# --- DIAAD imports ---
+from diaad.utils.support_funcs import as_path
+from diaad.main import (
+    run_analyze_POWERS_coding,
+    run_make_POWERS_coding_files,
+    run_analyze_digital_convo_turns,
+)
+from diaad.POWERS.validate_automation import (
+    run_reselect_POWERS_reliability_coding,
+    run_evaluate_POWERS_reliability,
+)
+from rascal.main import load_config, run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs
 
-st.title("DIAAD Web App")
+
+# --- Streamlit UI ---
+st.title("🧩 DIAAD Web App")
+st.caption("Digital Interface for Aphasiological Analysis of Discourse")
 
 if "confirmed_config" not in st.session_state:
     st.session_state.confirmed_config = False
 
-def zip_folder(folder_path):
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-        for root, dirs, files in os.walk(folder_path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, folder_path)
-                zf.write(file_path, arcname)
-    zip_buffer.seek(0)
-    return zip_buffer
 
-st.header("Part 1: Create or upload config file")
+# --- Utility: ZIP entire folder ---
+def zip_folder(folder_path: Path) -> BytesIO:
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file_path in folder_path.rglob("*"):
+            if file_path.is_file():
+                zf.write(file_path, file_path.relative_to(folder_path))
+    buffer.seek(0)
+    return buffer
 
-# Upload config or build it
+
+# --- Step 1: Upload or build config ---
+st.header("1️⃣ Configuration")
+
 config_file = st.file_uploader("Upload your config.yaml", type=["yaml", "yml"])
 config = None
 
 if config_file:
-    st.session_state.confirmed_config = False  # reset if new file uploaded
     config = yaml.safe_load(config_file)
-    st.success("✅ Config file uploaded")
+    st.success("✅ Config file loaded.")
 else:
-    with st.expander("No config uploaded? Build one here"):
-        config = build_config_ui()
-        if st.button("✅ Use this built config"):
-            st.session_state.confirmed_config = True
-            st.success("Built config confirmed.")
+    st.info("No config uploaded yet. Please upload a YAML configuration file.")
 
-st.header("Part 2: Upload input files")
+# --- Step 2: Upload input files ---
+st.header("2️⃣ Upload Input Files")
+uploaded_files = st.file_uploader("Upload CHA or XLSX input files", type=["cha", "xlsx"], accept_multiple_files=True)
 
-# Upload .cha files
-cha_files = st.file_uploader("Upload input files", type=["cha", ".xlsx"], accept_multiple_files=True)
-
-if (config_file or st.session_state.confirmed_config) and cha_files:
+if config and uploaded_files:
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_dir = os.path.join(tmpdir, "input")
-        output_dir = os.path.join(tmpdir, "output")
-        os.makedirs(input_dir, exist_ok=True)
-        os.makedirs(output_dir, exist_ok=True)
+        tmpdir = Path(tmpdir)
+        input_dir = tmpdir / "input"
+        output_dir = tmpdir / "output"
+        input_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(exist_ok=True)
 
-        config["input_dir"] = input_dir
-        config["output_dir"] = output_dir
+        # Save uploads
+        for f in uploaded_files:
+            (input_dir / f.name).write_bytes(f.read())
 
-        # Save uploaded .cha files
-        for file in cha_files:
-            with open(os.path.join(input_dir, file.name), "wb") as f:
-                f.write(file.read())
-        # Read config values
+        # Load configuration
         tiers = run_read_tiers(config.get("tiers", {})) or {}
         frac = config.get("reliability_fraction", 0.2)
         coders = config.get("coders", []) or []
-        exclude_participants = config.get('exclude_participants', []) or []
-        automate_POWERS = config.get('automate_POWERS', True)
-        just_c2_POWERS = config.get('just_c2_POWERS', False)
+        exclude_participants = config.get("exclude_participants", []) or []
+        automate_POWERS = config.get("automate_POWERS", True)
+        just_c2_POWERS = config.get("just_c2_POWERS", False)
 
-        # --- List all functions (single-select) ---
-        all_functions = {
-            "Analyze digital conversation turns": ("turns", None),
-            "Prepare POWERS coding files": ("powers", "make"),
-            "Analyze POWERS coding": ("powers", "analyze"),
-            "Evaluate POWERS reliability": ("powers", "evaluate"),
-            "Reselect POWERS reliability coding": ("powers", "reselect"),
-        }
+        # --- Step 3: Select analysis type ---
+        st.header("3️⃣ Select Analysis Type")
+        options = [
+            "Analyze Digital Conversation Turns",
+            "Make POWERS Coding Files",
+            "Analyze POWERS Coding",
+            "Evaluate POWERS Reliability",
+            "Reselect POWERS Reliability Coding",
+        ]
+        choice = st.selectbox("Select a process:", options)
 
-        st.header("Part 3: Select function to run")
-        selected_label = st.selectbox("Choose a function", list(all_functions.keys()))
-
-        if st.button("Run selected function"):
-            command, action = all_functions[selected_label]
-
-            # --- Dispatch ---
-            if command == "turns":
-                run_analyze_digital_convo_turns(input_dir, output_dir)
-
-            elif command == "powers":
-                if action == "make":
-                    utt_files = find_utt_files(input_dir, output_dir)
-                    if not utt_files:
-                        chats = run_read_cha_files(input_dir)
-                        run_prepare_utterance_dfs(tiers, chats, output_dir)
-                    run_make_POWERS_coding_files(
-                        tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS
-                    )
-
-                if action == "analyze":
-                    run_analyze_POWERS_coding(input_dir, output_dir, just_c2_POWERS)
-            
-                if action == "evaluate":
-                    run_evaluate_POWERS_reliability(input_dir, output_dir)
-
-                if action == "reselect":
-                    run_reselect_POWERS_reliability_coding(
-                        input_dir, output_dir, frac, exclude_participants, automate_POWERS
-                    )
-
-            # --- Timestamped ZIP filename ---
+        if st.button("🚀 Run Analysis"):
             timestamp = datetime.now().strftime("%y%m%d_%H%M")
-            if command == "turns":
-                file_name = f"diaad_turns_output_{timestamp}.zip"
-            elif command == "powers":
-                file_name = f"diaad_powers_{action}_output_{timestamp}.zip"
-            else:
-                file_name = f"diaad_output_{timestamp}.zip"
+            out_dir = output_dir / f"diaad_output_{timestamp}"
+            out_dir.mkdir(parents=True, exist_ok=True)
 
-            zip_buffer = zip_folder(output_dir)
+            if "Turns" in choice:
+                run_analyze_digital_convo_turns(input_dir, out_dir)
+
+            elif "Make POWERS" in choice:
+                chats = run_read_cha_files(input_dir)
+                run_prepare_utterance_dfs(tiers, chats, output_dir)
+                run_make_POWERS_coding_files(
+                    tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS
+                )
+
+            elif "Analyze POWERS" in choice:
+                run_analyze_POWERS_coding(input_dir, out_dir, just_c2_POWERS)
+
+            elif "Evaluate POWERS" in choice:
+                run_evaluate_POWERS_reliability(input_dir, out_dir)
+
+            elif "Reselect POWERS" in choice:
+                run_reselect_POWERS_reliability_coding(input_dir, out_dir, frac, exclude_participants, automate_POWERS)
+
+            st.success("✅ Analysis complete!")
+            zip_data = zip_folder(out_dir)
             st.download_button(
                 label="Download Results ZIP",
-                data=zip_buffer,
-                file_name=file_name,
-                mime="application/zip"
+                data=zip_data,
+                file_name=f"{choice.replace(' ', '_').lower()}_{timestamp}.zip",
+                mime="application/zip",
             )
 
-            st.success(f"{selected_label} completed! Output saved in {file_name}")
 
-
+# --- Optional CLI launcher ---
 def main():
-    import subprocess
-    import sys
-    # Launch this file with streamlit
+    """Allow launching this Streamlit app from CLI."""
+    import subprocess, sys
     subprocess.run([sys.executable, "-m", "streamlit", "run", __file__])
+
+if __name__ == "__main__":
+    main()
