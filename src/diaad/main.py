@@ -118,8 +118,8 @@ if __name__ == "__main__":
     powers_parser.add_argument(
         "--seed",
         type=int,
-        default=88,
-        help="RNG seed for selection (default: 88)."
+        default=42,
+        help="RNG seed for selection (default: 42)."
     )
 
     # powers: validate

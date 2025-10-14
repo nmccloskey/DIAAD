@@ -306,7 +306,7 @@ Use (stratified) random sampling to create a balanced subset of samples for manu
 
 - `--strata`: Number of samples to draw per stratum (default: 5).
 
-- `--seed`: Random number generator seed for reproducibility (default: 88).
+- `--seed`: Random number generator seed for reproducibility (default: 42).
 
 **Output:**
 
@@ -326,7 +326,7 @@ Use (stratified) random sampling to create a balanced subset of samples for manu
 diaad powers select \
   --stratify site,test \
   --strata 5 \
-  --seed 88
+  --seed 42
 ```
 
 ### 2. Validate Automation
