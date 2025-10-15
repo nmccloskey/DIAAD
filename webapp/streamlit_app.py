@@ -33,12 +33,13 @@ from diaad.POWERS.validate_automation import (
     run_reselect_POWERS_reliability_coding,
     run_evaluate_POWERS_reliability,
 )
-from rascal.main import load_config, run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs
+from rascal.utils.support_funcs import load_config
+from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs
 
 
 # --- Streamlit UI ---
 st.title("🧩 DIAAD Web App")
-st.caption("Digital Interface for Aphasiological Analysis of Discourse")
+st.caption("Digital Interface for Aggregate Analysis of Dialog")
 
 if "confirmed_config" not in st.session_state:
     st.session_state.confirmed_config = False
@@ -92,7 +93,7 @@ if config and uploaded_files:
         just_c2_POWERS = config.get("just_c2_POWERS", False)
 
         # --- Step 3: Select analysis type ---
-        st.header("3️⃣ Select Analysis Type")
+        st.header("3️⃣ Select Function")
         options = [
             "Analyze Digital Conversation Turns",
             "Make POWERS Coding Files",

@@ -58,11 +58,14 @@ def select_validation_samples(input_dir: str | Path,
     if not filtered_udfs:
         raise RuntimeError("No utterance files with required columns found.")
     sample_info = pd.concat(filtered_udfs, ignore_index=True)
+    sample_info.drop_duplicates(inplace=True, ignore_index=True)
+    print(sample_info)
+
 
     # Stratified random selection
     selections = []
     for keys, g in sample_info.groupby(stratify, dropna=False, sort=False):
-        g = g.sample(n=min(strata, len(g)), random_state=seed)
+        g = g.sample(n=min(strata, len(g)), replace=False, random_state=seed)
         # If fewer than strata available, we still label from 1..len(g)
         k = min(strata, len(g))
         order = list(range(1, k + 1))
@@ -89,8 +92,8 @@ def select_validation_samples(input_dir: str | Path,
     pc_files = find_powers_coding_files(input_dir, output_dir)
     if pc_files:
         for pcf in pc_files:
-            if (pcdf := read_df(pcf)):
-                labeled_pcdf = sample_info[["sample_id", "stratum_no"]].merge(pcdf, on=["sample_id"], how="inner")
+            if (pcdf := read_df(pcf)) is not None and not pcdf.empty:
+                labeled_pcdf = sel[["sample_id", "stratum_no"]].merge(pcdf, on=["sample_id"], how="right")
                 out_pc_file = output_dir / pcf.name.replace("POWERS_Coding", "POWERS_Coding_Labeled")
                 labeled_pcdf.to_excel(out_pc_file, index=False)
                 logging.info(f"Wrote labeled POWERS coding table: {out_pc_file}")
