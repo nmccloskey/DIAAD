@@ -59,8 +59,6 @@ def select_validation_samples(input_dir: str | Path,
         raise RuntimeError("No utterance files with required columns found.")
     sample_info = pd.concat(filtered_udfs, ignore_index=True)
     sample_info.drop_duplicates(inplace=True, ignore_index=True)
-    print(sample_info)
-
 
     # Stratified random selection
     selections = []
