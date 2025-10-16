@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from rascal.utterances.make_coding_files import segment, assign_coders
-from rascal.transcription.transcription_reliability_analysis import _clean_clan_for_reliability
+from rascal.transcription.transcription_reliability_analysis import process_utterances
 
 
 POWERS_cols = [
@@ -25,7 +25,7 @@ GENERIC_TERMS = {"stuff", "thing", "things", "something", "anything", "everythin
 
 # count speech units after cleaning
 def compute_speech_units(utt):
-    cleaned = _clean_clan_for_reliability(utt)
+    cleaned = process_utterances(utt)
     tokens = cleaned.split()
     su = sum(tok.lower() not in {"xx","xxx","yy","yyy"} for tok in tokens)
     return su
@@ -202,7 +202,7 @@ def run_automation(df, coder_num):
         df[f"c{coder_num}_filled_pauses"] = df["utterance"].apply(count_fillers)
 
         content_counts, noun_counts, turn_types = [], [], []
-        utterances = df["utterance"].fillna("").map(_clean_clan_for_reliability)
+        utterances = df["utterance"].fillna("").map(process_utterances)
 
         total_its = len(utterances)
         for doc, utt in tqdm(zip(nlp.pipe(utterances, batch_size=100, n_process=2), utterances), total=total_its, desc="Applying automation to utterances"):
