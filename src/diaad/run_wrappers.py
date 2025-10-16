@@ -14,9 +14,13 @@ def run_make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exc
         automate_POWERS=automate_POWERS
     )
 
-def run_analyze_POWERS_coding(input_dir, output_dir, just_c2_POWERS=False):
+def run_analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWERS=False, exclude_participants=[]):
     from diaad.POWERS.analyze_POWERS_coding import analyze_POWERS_coding
-    analyze_POWERS_coding(input_dir=input_dir, output_dir=output_dir, reliability=False, just_c2_POWERS=just_c2_POWERS)
+    analyze_POWERS_coding(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        reliability=reliability,
+        just_c2_POWERS=just_c2_POWERS, exclude_participants=exclude_participants)
 
 def run_evaluate_POWERS_reliability(input_dir, output_dir):
     from diaad.POWERS.analyze_POWERS_coding import match_reliability_files, analyze_POWERS_coding

@@ -107,7 +107,7 @@ def validate_automation(input_dir: str | Path,
     Merge automatic and manual POWERS coding files for validation.
 
     Steps:
-      - Reads all coding files in `input_dir` containing 'Auto' or 'Manual' in the filename.
+      - Reads all coding files in `input_dir` from 'Auto/' and 'Manual/' subdirectories.
       - Drops duplicate columns and aligns auto/manual codes on `sample_id` (and optionally utterance_id).
       - If `stratum_no` is missing from manual files, merges in stratum assignments
         from a `selection_table`.

@@ -87,7 +87,7 @@ def main(args):
                 selection_table=selection_table,
                 stratum_numbers=stratum_numbers
             )
-            run_analyze_POWERS_coding(out_root, out_root)
+            run_analyze_POWERS_coding(out_root, out_root, exclude_participants=exclude_participants)
 
         else:
             logging.error(f"Unknown powers action: {args.action}")

@@ -13,7 +13,11 @@ from rascal.transcription.transcription_reliability_analysis import process_utte
 POWERS_cols = [
     "id", "turn_type", "speech_units", "content_words", "num_nouns", "filled_pauses", "collab_repair", "POWERS_comment"
 ]
+
 coder_cols = [f"c{n}_{col}" for n in ["1", "2"] for col in POWERS_cols]
+
+client_only_cols = [col for col in coder_cols if col.endswith(
+    ( "content_words", "num_nouns", "filled_pauses"))]
 
 COMM_cols = [
     "communication", "topic", "subject", "dialogue", "conversation"
@@ -117,9 +121,9 @@ def is_content_token(token) -> bool:
     return False
 
 # ---------- Core counting function ----------
-def count_content_words_from_doc(doc, count_type="all"):
+def count_content_words_from_doc(doc):
     """
-    Count content words from a spaCy Doc object.
+    Tally content words & nouns from a spaCy Doc object.
     """
     total = total_nouns = 0
     for tok in doc:
@@ -127,7 +131,7 @@ def count_content_words_from_doc(doc, count_type="all"):
             total += 1
             if tok.pos_ in ("NOUN", "PROPN"):
                 total_nouns += 1
-    return total if count_type == "all" else total_nouns
+    return total, total_nouns
 
 minimal_turns = ["I know", "I don't know", "I see", "alright", "oh dear", "okay", "mm"]
 
@@ -206,10 +210,10 @@ def run_automation(df, coder_num):
 
         total_its = len(utterances)
         for doc, utt in tqdm(zip(nlp.pipe(utterances, batch_size=100, n_process=2), utterances), total=total_its, desc="Applying automation to utterances"):
-            count_content_words = count_content_words_from_doc(doc, "all")
-            content_counts.append(count_content_words)
-            noun_counts.append(count_content_words_from_doc(doc, "noun"))
-            turn_types.append(label_turn(utt, count_content_words))
+            num_content_words, num_nouns = count_content_words_from_doc(doc)
+            content_counts.append(num_content_words)
+            noun_counts.append(num_nouns)
+            turn_types.append(label_turn(utt, num_content_words))
         df[f"c{coder_num}_content_words"] = content_counts
         df[f"c{coder_num}_num_nouns"] = noun_counts
         df[f"c{coder_num}_turn_type"] = turn_types
@@ -292,7 +296,10 @@ def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
         PCdf["c2_id"] = pd.Series(dtype="object")
 
         for col in coder_cols:
-            PCdf[col] = np.where(PCdf["speaker"].isin(exclude_participants), "NA", np.nan)
+            if col in client_only_cols:
+                PCdf[col] = np.where(PCdf["speaker"].isin(exclude_participants), "NA", np.nan)
+            else:
+                PCdf[col] = np.nan
         
         if automate_POWERS:
             PCdf = run_automation(PCdf, "1")

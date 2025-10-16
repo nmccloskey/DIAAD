@@ -212,7 +212,7 @@ def compute_level_summaries(utt_df: pd.DataFrame, coders: list[str]) -> dict[str
         })
     sample_df = utt_df.groupby("sample_id").agg(**sample_aggs).reset_index()
 
-    return {"Turns": turn_df, "Speakers": speaker_df, "Dialogs": sample_df}
+    return {"Utterances": utt_df, "Turns": turn_df, "Speakers": speaker_df, "Dialogs": sample_df}
 
 def format_just_c2_POWERS(df_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     """
@@ -236,7 +236,7 @@ def format_just_c2_POWERS(df_dict: dict[str, pd.DataFrame]) -> dict[str, pd.Data
         out[name] = dd
     return out
 
-def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str) -> dict[str, pd.DataFrame]:
+def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str, investigators: list) -> dict[str, pd.DataFrame]:
     """
     Compute utterance-level reliability between two coders.
 
@@ -246,6 +246,8 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str) -> dict[str, pd.
         Utterance-level table with coder-specific columns f"{c}_<metric>".
     c1, c2 : str
         Coder prefixes (e.g., "c1", "c2").
+    investigators : list
+        Speakers to exclude from reliability metrics on content_words, num_nouns, & filled_pauses
 
     Returns
     -------
@@ -263,7 +265,13 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str) -> dict[str, pd.
     icc_rows = []
     for col in TURN_AGG_COLS:
         try:
-            tmp = utt_df[[f"{c1}_{col}", f"{c2}_{col}"]]
+            # Calculate reliability only on metrics which were recorded for all speakers
+            if col != "speech_units":
+                filtered_utt_df = utt_df[~utt_df["speaker"].isin(investigators)].copy()
+            else:
+                filtered_utt_df = utt_df.copy()
+
+            tmp = filtered_utt_df[[f"{c1}_{col}", f"{c2}_{col}"]]
             tmp = tmp.dropna(how="any")
             if tmp.shape[0] < 2 or tmp.nunique().min() <= 1:
                 logging.warning(f"Insufficient variability for ICC on {col}")
@@ -334,7 +342,7 @@ def write_analysis_workbook(out_path: Path, sheets: dict[str, pd.DataFrame]) -> 
 
 # ----------------------------- Orchestrator ----------------------------- #
 
-def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWERS=False):
+def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWERS=False, exclude_participants=[]):
     """
     Analyze POWERS coding to produce turn/speaker/dialog summaries and (optionally) reliability.
 
@@ -349,6 +357,8 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
         If False, expects standard coding files (c1 vs c2).
     just_c2_POWERS : bool, optional
         If True, drop c1_* columns and rename c2_* -> bare names (no reliability sheets).
+    exclude_participants : list, optional
+        Exclude from POWERS reliability measures on content_words, num_nouns, & filled_pauses (mostly for validating automation)
 
     Returns
     -------
@@ -404,7 +414,7 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
             df_dict = format_just_c2_POWERS(df_dict)
         else:
             try:
-                rel = compute_reliability(utt_df, c1, c2)
+                rel = compute_reliability(utt_df, c1, c2, exclude_participants)
                 df_dict.update(rel)
             except Exception as e:
                 logging.error(f"Reliability computation failed for {pc_file}: {e}")
