@@ -312,9 +312,9 @@ def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
 
         for col in coder_cols:
             if col in client_only_cols:
-                PCdf[col] = np.where(PCdf["speaker"].isin(exclude_participants), "NA", np.nan)
+                PCdf[col] = np.where(PCdf["speaker"].isin(exclude_participants), "NA", "")
             else:
-                PCdf[col] = np.nan
+                PCdf[col] = ""
         
         if automate_POWERS:
             PCdf = run_automation(PCdf, "1")
