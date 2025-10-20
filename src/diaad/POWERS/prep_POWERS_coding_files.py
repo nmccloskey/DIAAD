@@ -124,14 +124,20 @@ def is_content_token(token) -> bool:
 def count_content_words_from_doc(doc):
     """
     Tally content words & nouns from a spaCy Doc object.
+    Also tag tokens for manual review.
     """
     total = total_nouns = 0
+    tagged_utt = ""
     for tok in doc:
+        tagged_utt += f"{tok}"
         if is_content_token(tok):
             total += 1
+            tagged_utt += f"_{tok.pos_}_CW"
             if tok.pos_ in ("NOUN", "PROPN"):
                 total_nouns += 1
-    return total, total_nouns
+                tagged_utt += "_N"
+        tagged_utt += " "
+    return total, total_nouns, tagged_utt
 
 minimal_turns = ["I know", "I don't know", "I see", "alright", "oh dear", "okay", "mm"]
 
@@ -205,18 +211,27 @@ def run_automation(df, coder_num):
         df[f"c{coder_num}_speech_units"] = df["utterance"].apply(compute_speech_units)
         df[f"c{coder_num}_filled_pauses"] = df["utterance"].apply(count_fillers)
 
-        content_counts, noun_counts, turn_types = [], [], []
+        content_counts, noun_counts, turn_types, tagged_utts = [], [], [], []
         utterances = df["utterance"].fillna("").map(process_utterances)
 
         total_its = len(utterances)
-        for doc, utt in tqdm(zip(nlp.pipe(utterances, batch_size=100, n_process=2), utterances), total=total_its, desc="Applying automation to utterances"):
-            num_content_words, num_nouns = count_content_words_from_doc(doc)
+        for doc, utt in tqdm(zip(
+                nlp.pipe(utterances, batch_size=100, n_process=2), utterances),
+                total=total_its, desc="Applying automation to utterances"):
+
+            num_content_words, num_nouns, tagged_utt = count_content_words_from_doc(doc)
             content_counts.append(num_content_words)
             noun_counts.append(num_nouns)
             turn_types.append(label_turn(utt, num_content_words))
+            tagged_utts.append(tagged_utt)
+        
         df[f"c{coder_num}_content_words"] = content_counts
         df[f"c{coder_num}_num_nouns"] = noun_counts
         df[f"c{coder_num}_turn_type"] = turn_types
+        
+        utt_idx = df.columns.tolist().index("utterance")
+        df.insert(utt_idx, "tagged_utterance", tagged_utts)
+        
         return df
     
     except Exception as e:
@@ -334,14 +349,14 @@ def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
 
         try:
             pc_filename.parent.mkdir(parents=True, exist_ok=True)
-            PCdf.to_excel(pc_filename, index=False)
+            PCdf.to_excel(pc_filename, index=False, na_rep="")
             logging.info(f"Successfully wrote POWERS coding file: {pc_filename}")
         except Exception as e:
             logging.error(f"Failed to write POWERS coding file {pc_filename}: {e}")
 
         try:
             rel_filename.parent.mkdir(parents=True, exist_ok=True)
-            reldf.to_excel(rel_filename, index=False)
+            reldf.to_excel(rel_filename, index=False, na_rep="")
             logging.info(f"Successfully wrote POWERS reliability coding file: {rel_filename}")
         except Exception as e:
             logging.error(f"Failed to write POWERS reliability coding file {rel_filename}: {e}")
