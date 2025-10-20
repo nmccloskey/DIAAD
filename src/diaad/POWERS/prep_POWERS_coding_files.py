@@ -230,7 +230,7 @@ def run_automation(df, coder_num):
         df[f"c{coder_num}_turn_type"] = turn_types
         
         utt_idx = df.columns.tolist().index("utterance")
-        df.insert(utt_idx, "tagged_utterance", tagged_utts)
+        df.insert(utt_idx + 1, "tagged_utterance", tagged_utts)
         
         return df
     
