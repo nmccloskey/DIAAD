@@ -27,11 +27,13 @@ CONTENT_UPOS = {"NOUN", "PROPN", "VERB", "ADJ", "ADV", "NUM"}
 
 GENERIC_TERMS = {"stuff", "thing", "things", "something", "anything", "everything", "nothing"}
 
+UNINTELLIGIBLES = {"xx","xxx","yy","yyy"}
+
 # count speech units after cleaning
 def compute_speech_units(utt):
     cleaned = process_utterances(utt)
     tokens = cleaned.split()
-    su = sum(tok.lower() not in {"xx","xxx","yy","yyy"} for tok in tokens)
+    su = sum(tok.lower() not in UNINTELLIGIBLES for tok in tokens)
     return su
 
 FILLER_PATTERN = re.compile(
@@ -78,6 +80,10 @@ def is_aux_or_modal(token) -> bool:
     # If it's AUX, always exclude for your rule set
     return True  # (covers modals + non-modal auxiliaries)
 
+def is_unintelligble(token) -> bool:
+    """Exclude unintelligible speech"""
+    return token.text.lower() in UNINTELLIGIBLES
+
 def is_ly_adverb(token) -> bool:
     # Only count adverbs that end with -ly
     return token.pos_ == "ADV" and token.text.lower().endswith("ly")
@@ -105,6 +111,8 @@ def is_content_token(token) -> bool:
     if is_generic(token):
         return False
     if is_aux_or_modal(token):
+        return False
+    if is_unintelligble(token):
         return False
 
     if is_noun_or_propn(token):
