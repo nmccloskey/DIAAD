@@ -5,6 +5,7 @@ import logging
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
+import contractions
 from pathlib import Path
 from rascal.utterances.make_coding_files import segment, assign_coders
 from rascal.transcription.transcription_reliability_analysis import process_utterances
@@ -44,6 +45,14 @@ FILLER_PATTERN = re.compile(
 # Count filled pauses Without cleaning
 def count_fillers(utt: str) -> int:
     return len(FILLER_PATTERN.findall(utt))
+
+# Expand contractions
+def expand_contractions(utt: str) -> str:
+    return contractions.fix(utt)
+
+# Modified processing
+def expand_and_process_utterances(utt: str) -> str:
+    return process_utterances(expand_contractions(utt))
 
 # --- NLP model singleton (your version, trimmed to essentials here) ---
 class NLPmodel:
@@ -220,7 +229,7 @@ def run_automation(df, coder_num):
         df[f"c{coder_num}_filled_pauses"] = df["utterance"].apply(count_fillers)
 
         content_counts, noun_counts, turn_types, tagged_utts = [], [], [], []
-        utterances = df["utterance"].fillna("").map(process_utterances)
+        utterances = df["utterance"].fillna("").map(expand_and_process_utterances)
 
         total_its = len(utterances)
         for doc, utt in tqdm(zip(
