@@ -297,6 +297,13 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str, investigators: l
     except Exception:
         kappa_turn, agree_turn = np.nan, np.nan
 
+    # Clean collab_repair columns: treat 0 as np.nan
+    for c in [c1, c2]:
+        col = f"{c}_collab_repair"
+        if col in utt_df.columns:
+            utt_df[col] = np.where(utt_df[col] == 0, np.nan, utt_df[col])
+
+    # Binary presence/absence
     c1_bin = (~utt_df.get(f"{c1}_collab_repair", pd.Series(index=utt_df.index)).isna()).astype(int)
     c2_bin = (~utt_df.get(f"{c2}_collab_repair", pd.Series(index=utt_df.index)).isna()).astype(int)
     try:
