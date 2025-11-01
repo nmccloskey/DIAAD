@@ -22,8 +22,7 @@ def add_src_to_sys_path():
 
 add_src_to_sys_path()
 
-# --- DIAAD imports ---
-from diaad.utils.support_funcs import as_path
+# --- DIAAD & RASCAL imports ---
 from diaad.main import (
     run_analyze_POWERS_coding,
     run_make_POWERS_coding_files,
