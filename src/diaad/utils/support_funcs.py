@@ -35,13 +35,6 @@ def parse_stratify_fields(values: list[str] | None) -> list[str]:
             out.append(x); seen.add(x)
     return out
 
-def find_utt_files(input_dir, output_dir):
-    logging.info("Searching for *Utterances*.xlsx files")
-    utterance_files = list(Path(input_dir).rglob("*Utterances*.xlsx")) + \
-        list(Path(output_dir).rglob("*Utterances*.xlsx"))
-    logging.info(f"Found {len(utterance_files)} utterance file(s)")
-    return utterance_files
-
 def find_powers_coding_files(input_dir, output_dir):
     logging.info("Searching for *POWERS_Coding*.xlsx files")
     pc_files = list(Path(input_dir).rglob("*POWERS_Coding*.xlsx")) + \
