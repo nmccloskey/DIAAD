@@ -33,12 +33,11 @@ from diaad.POWERS.validate_automation import (
     run_reselect_POWERS_reliability_coding,
     run_evaluate_POWERS_reliability,
 )
-from rascal.utils.support_funcs import load_config
 from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs
 
 
 # --- Streamlit UI ---
-st.title("🧩 DIAAD Web App")
+st.title("DIAAD Web App")
 st.caption("Digital Interface for Aggregate Analysis of Dialog")
 
 if "confirmed_config" not in st.session_state:
