@@ -2,7 +2,8 @@ import logging
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from diaad.utils.support_funcs import find_utt_files, find_powers_coding_files, read_df
+from rascal.utils.support_funcs import find_utt_files
+from diaad.utils.support_funcs import find_powers_coding_files, read_df
 
 
 def _filter_df(df, cols):

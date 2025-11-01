@@ -17,13 +17,78 @@ from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_prepare_
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def main(args):
-    """Main function to process input arguments and execute appropriate steps."""
-    config = load_config(args.config)
 
+# ---------------------------------------------------------------------
+# Unified parser builder
+# ---------------------------------------------------------------------
+def build_arg_parser() -> argparse.ArgumentParser:
+    """Construct the DIAAD argument parser (shared by CLI and direct run)."""
+    parser = argparse.ArgumentParser(description="DIAAD CLI.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # --- turns ---
+    subparsers.add_parser("turns", help="Analyze digital conversation turns")
+
+    # --- powers ---
+    powers_parser = subparsers.add_parser("powers", help="POWERS coding workflow")
+    powers_parser.add_argument(
+        "action",
+        choices=["make", "analyze", "evaluate", "reselect", "select", "validate"],
+        help="POWERS step"
+    )
+
+    # --- powers: select ---
+    powers_parser.add_argument(
+        "--stratify",
+        action="append",
+        help="Fields to stratify by. Accepts repeated flags or comma/space-delimited list "
+             "(e.g., --stratify site,test)."
+    )
+    powers_parser.add_argument(
+        "--strata",
+        type=int,
+        default=5,
+        help="Number of samples to draw per stratum (default: 5)."
+    )
+    powers_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="RNG seed for selection (default: 42)."
+    )
+
+    # --- powers: validate ---
+    powers_parser.add_argument(
+        "--selection",
+        type=str,
+        default=None,
+        help="Optional path to a selection .xlsx to restrict validation (output of 'powers select')."
+    )
+    powers_parser.add_argument(
+        "--numbers",
+        type=str,
+        default=None,
+        help="Optional selection of stratum numbers to include in validation."
+    )
+
+    # --- global options ---
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config.yaml",
+        help="Path to the configuration file (default: config.yaml)."
+    )
+    return parser
+
+
+# ---------------------------------------------------------------------
+# Main program
+# ---------------------------------------------------------------------
+def main(args):
+    """Process input arguments and execute appropriate DIAAD operations."""
+    config = load_config(args.config)
     input_dir = as_path(config.get('input_dir', 'diaad_data/input'))
     output_dir = as_path(config.get('output_dir', 'diaad_data/output'))
-    
     output_dir.mkdir(parents=True, exist_ok=True)
     input_dir.mkdir(parents=True, exist_ok=True)
 
@@ -35,7 +100,6 @@ def main(args):
 
     tiers = run_read_tiers(config.get('tiers', {})) or {}
 
-    # --- Timestamped output folder ---
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
     if args.command == "turns":
         out_root = output_dir / f"diaad_turns_output_{timestamp}"
@@ -66,7 +130,9 @@ def main(args):
             run_evaluate_POWERS_reliability(input_dir, out_root)
 
         elif args.action == "reselect":
-            run_reselect_POWERS_reliability_coding(input_dir, out_root, frac, exclude_participants, automate_POWERS)
+            run_reselect_POWERS_reliability_coding(
+                input_dir, out_root, frac, exclude_participants, automate_POWERS
+            )
 
         elif args.action == "select":
             stratify_fields = parse_stratify_fields(args.stratify)
@@ -91,63 +157,11 @@ def main(args):
 
         else:
             logging.error(f"Unknown powers action: {args.action}")
-
     else:
         logging.error(f"Unknown command: {args.command}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="DIAAD CLI.")
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    # turns
-    turns_parser = subparsers.add_parser("turns", help="Analyze digital conversation turns")
-
-    # powers
-    powers_parser = subparsers.add_parser("powers", help="POWERS coding workflow")
-    powers_parser.add_argument(
-        "action",
-        choices=["make", "analyze", "evaluate", "reselect", "select", "validate"],
-        help="POWERS step"
-    )
-
-    # powers: select
-    powers_parser.add_argument(
-        "--stratify",
-        action="append",
-        help="Fields to stratify by. Accepts repeated flags or comma/space-delimited list (e.g., --stratify site,test)."
-    )
-    powers_parser.add_argument(
-        "--strata",
-        type=int,
-        default=5,
-        help="Number of samples to draw per stratum (default: 5)."
-    )
-    powers_parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="RNG seed for selection (default: 42)."
-    )
-
-    # powers: validate
-    powers_parser.add_argument(
-        "--selection",
-        type=str,
-        default=None,
-        help="Optional path to a selection .xlsx to restrict validation (output of 'powers select')."
-    )
-
-    powers_parser.add_argument(
-        "--numbers",
-        type=str,
-        default=None,
-        help="Optional selection of stratum numbers to include in validation."
-    )
-
-
-    # global options
-    parser.add_argument("--config", type=str, default="config.yaml", help="Path to the config file")
-
+    parser = build_arg_parser()
     args = parser.parse_args()
     main(args)
