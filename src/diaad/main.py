@@ -2,7 +2,7 @@
 import argparse
 import logging
 from datetime import datetime
-from diaad.utils.support_funcs import parse_stratify_fields
+from diaad.utils.support_funcs import parse_stratify_fields, find_utt_files
 from diaad.run_wrappers import (
     run_analyze_digital_convo_turns,
     run_make_POWERS_coding_files,
@@ -11,8 +11,8 @@ from diaad.run_wrappers import (
     run_reselect_POWERS_reliability_coding
 )
 from diaad.POWERS.validate_automation import select_validation_samples, validate_automation
-from rascal.utils.support_funcs import as_path, load_config, find_utt_files
-from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_prepare_utterance_dfs
+from rascal.utils.support_funcs import as_path, load_config #, find_utt_files
+from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_make_transcript_tables
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -118,7 +118,7 @@ def main(args):
             utt_files = find_utt_files(input_dir, out_root)
             if not utt_files:
                 chats = run_read_cha_files(input_dir)
-                run_prepare_utterance_dfs(tiers, chats, out_root)
+                run_make_transcript_tables(tiers, chats, out_root)
             run_make_POWERS_coding_files(
                 tiers, frac, coders, input_dir, out_root, exclude_participants, automate_POWERS
             )

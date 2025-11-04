@@ -2,7 +2,8 @@ import logging
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from rascal.utils.support_funcs import find_utt_files
+# from rascal.utils.support_funcs import find_utt_files
+from diaad.utils.support_funcs import find_utt_files
 from diaad.utils.support_funcs import find_powers_coding_files, read_df
 
 
@@ -108,7 +109,7 @@ def validate_automation(input_dir: str | Path,
     Merge automatic and manual POWERS coding files for validation.
 
     Steps:
-      - Reads all coding files in `input_dir` from 'Auto/' and 'Manual/' subdirectories.
+      - Reads all coding files in `input_dir` from 'auto/' and 'manual/' subdirectories.
       - Drops duplicate columns and aligns auto/manual codes on `sample_id` (and optionally utterance_id).
       - If `stratum_no` is missing from manual files, merges in stratum assignments
         from a `selection_table`.
@@ -130,21 +131,21 @@ def validate_automation(input_dir: str | Path,
     Raises
     ------
     FileNotFoundError
-        If no Auto/Manual files are found.
+        If no auto/manual folders are found.
     ValueError
         If selection table is missing required columns.
     """
 
     # Collect POWERS coding files   
-    auto = [pcdf for pcf in find_powers_coding_files(input_dir / "Auto", output_dir)
+    auto = [pcdf for pcf in find_powers_coding_files(input_dir / "auto", output_dir)
             if (pcdf := read_df(pcf)) is not None]
 
-    manual = [pcdf for pcf in find_powers_coding_files(input_dir / "Manual", output_dir)
+    manual = [pcdf for pcf in find_powers_coding_files(input_dir / "manual", output_dir)
             if (pcdf := read_df(pcf)) is not None]
     
     # Pair automatic and manual codes and prep for analyze POWERS
     if not auto or not manual:
-        raise FileNotFoundError("Both Auto and Manual POWERS coding files are required.")
+        raise FileNotFoundError("Both /auto and /manual POWERS coding folders are required.")
     auto_df = pd.concat(auto, ignore_index=True)
     manual_df = pd.concat(manual, ignore_index=True)
 

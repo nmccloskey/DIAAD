@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 import contractions
 from pathlib import Path
-from rascal.utterances.make_coding_files import segment, assign_coders
-from rascal.transcription.transcription_reliability_analysis import process_utterances
+from rascal.coding.make_coding_files import segment, assign_coders
+from rascal.transcripts.transcription_reliability_analysis import process_utterances
 
 
 POWERS_cols = [
