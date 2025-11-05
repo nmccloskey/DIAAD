@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
-from diaad.utils.support_funcs import find_powers_coding_files
+from diaad.utils.auxiliary import find_powers_coding_files
 
 TURN_AGG_COLS = ["speech_units", "content_words", "num_nouns", "filled_pauses"]
 

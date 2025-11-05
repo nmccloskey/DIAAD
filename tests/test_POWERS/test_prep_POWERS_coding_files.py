@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-from diaad.POWERS import prep_POWERS_coding_files as pcf
+from diaad.POWERS import POWERS_coding_files as pcf
 
 
 # -------------------- Tiny fakes & stubs --------------------

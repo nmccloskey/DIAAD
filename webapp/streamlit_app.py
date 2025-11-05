@@ -28,7 +28,7 @@ from diaad.main import (
     run_make_POWERS_coding_files,
     run_analyze_digital_convo_turns,
 )
-from diaad.POWERS.validate_automation import (
+from diaad.POWERS.automation_validation import (
     run_reselect_POWERS_reliability_coding,
     run_evaluate_POWERS_reliability,
 )

@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 import contractions
 from pathlib import Path
-from rascal.coding.make_coding_files import segment, assign_coders
-from rascal.transcripts.transcription_reliability_analysis import process_utterances
+from rascal.coding.coding_files import segment, assign_coders
+from rascal.transcripts.transcription_reliability_evaluation import process_utterances
 
 
 POWERS_cols = [
@@ -255,7 +255,7 @@ def run_automation(df, coder_num):
         logging.error(f"Failed to apply automation: {e}")
         return df
 
-def make_POWERS_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS=True):
+def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS=True):
     """
     Generate POWERS coding and reliability files from utterance-level transcripts.
 

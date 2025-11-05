@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from pathlib import Path
 
-from diaad.POWERS import analyze_POWERS_coding as apc
+from diaad.POWERS import POWERS_coding_analysis as apc
 
 
 # -------------------- Fixtures --------------------

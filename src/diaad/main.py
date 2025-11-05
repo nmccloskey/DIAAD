@@ -2,7 +2,7 @@
 import argparse
 import logging
 from datetime import datetime
-from diaad.utils.support_funcs import parse_stratify_fields, find_utt_files
+from diaad.utils.auxiliary import parse_stratify_fields, find_utt_files
 from diaad.run_wrappers import (
     run_analyze_digital_convo_turns,
     run_make_POWERS_coding_files,
@@ -10,8 +10,8 @@ from diaad.run_wrappers import (
     run_evaluate_POWERS_reliability,
     run_reselect_POWERS_reliability_coding
 )
-from diaad.POWERS.validate_automation import select_validation_samples, validate_automation
-from rascal.utils.support_funcs import as_path, load_config #, find_utt_files
+from diaad.powers.automation_validation import select_validation_samples, validate_automation
+from rascal.utils.auxiliary import as_path, load_config
 from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_make_transcript_tables
 
 # Configure logging

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from diaad.convo_turns import digital_convo_turns_analyzer as dct
+from diaad.convo_turns import digital_convo_turns_analysis as dct
 
 
 # ---------- Fixtures ----------
