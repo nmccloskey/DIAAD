@@ -1,11 +1,12 @@
-import logging
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
-from diaad.utils.auxiliary import find_powers_coding_files
+
+from rascal.utils.logger import logger, _rel
+from rascal.utils.auxiliary import find_corresponding_file
 
 TURN_AGG_COLS = ["speech_units", "content_words", "num_nouns", "filled_pauses"]
 
@@ -14,10 +15,10 @@ def match_reliability_files(input_dir, output_dir):
     Match and merge POWERS coding files with reliability coding files.
 
     This function searches `input_dir` for baseline POWERS coding Excel files
-    (*POWERS_Coding*.xlsx) and their corresponding reliability re-coding files
-    (*POWERS_ReliabilityCoding*.xlsx). For each matched pair, it merges data on
+    (*powers_coding*.xlsx) and their corresponding reliability re-coding files
+    (*powers_reliability_coding*.xlsx). For each matched pair, it merges data on
     utterance_id and sample_id, drops coder-1 columns, and writes a new merged
-    file into `{output_dir}/POWERS_ReliabilityAnalysis`.
+    file into `{output_dir}/powers_reliability_analysis`.
 
     Parameters
     ----------
@@ -30,46 +31,48 @@ def match_reliability_files(input_dir, output_dir):
     -------
     None
         Writes merged Excel files named
-        *POWERS_ReliabilityCoding_Merged*.xlsx into the reliability directory.
+        *powers_reliability_coding_merged*.xlsx into the reliability directory.
     """
 
     # Make POWERS Reliability Analysis folder.
     output_dir = Path(output_dir)
-    POWERS_Reliability_dir = output_dir / "POWERS_ReliabilityAnalysis"
+    powers_reliability_dir = output_dir / "powers_reliability_analysis"
     try:
-        POWERS_Reliability_dir.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Created directory: {POWERS_Reliability_dir}")
+        powers_reliability_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Created directory: {_rel(powers_reliability_dir)}")
     except Exception as e:
-        logging.error(f"Failed to create directory {POWERS_Reliability_dir}: {e}")
+        logger.error(f"Failed to create directory {_rel(powers_reliability_dir)}: {e}")
         return
 
-    pc_files = find_powers_coding_files(input_dir, output_dir)
-    rel_files = [f for f in Path(input_dir).rglob('*POWERS_ReliabilityCoding*.xlsx')]
+    pc_files = find_corresponding_file(directories=[input_dir, output_dir],
+                                       search_base="powers_coding")
+    rel_files = find_corresponding_file(directories=[input_dir, output_dir],
+                                    search_base="powers_reliability_coding")
 
     # Match original coding and reliability files.
     for rel in tqdm(rel_files, desc="Analyzing POWERS reliability coding..."):
         for cod in pc_files:
-            if cod.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == rel.name:
+            if cod.name.replace("powers_coding", "powers_reliability_coding") == rel.name:
                 try:
-                    PCcod = pd.read_excel(cod)
-                    PCrel = pd.read_excel(rel)
-                    logging.info(f"Processing coding file: {cod} and reliability file: {rel}")
+                    powers_cod = pd.read_excel(cod)
+                    pc_rel = pd.read_excel(rel)
+                    logger.info(f"Processing coding file: {_rel(cod)} and reliability file: {_rel(rel)}")
                 except Exception as e:
-                    logging.error(f"Failed to read files {cod} or {rel}: {e}")
+                    logger.error(f"Failed to read files {_rel(cod)} or {_rel(rel)}: {e}")
                     continue
     
-                PCrel_merge_cols = ["utterance_id", "sample_id"] + [col for col in PCrel.columns if col.startswith("c3")]
-                merged = PCcod.merge(PCrel[PCrel_merge_cols], on=["utterance_id", "sample_id"], how="inner")
+                pc_rel_merge_cols = ["utterance_id", "sample_id"] + [col for col in pc_rel.columns if col.startswith("c3")]
+                merged = powers_cod.merge(pc_rel[pc_rel_merge_cols], on=["utterance_id", "sample_id"], how="inner")
                 merged.drop(columns=[col for col in merged.columns if col.startswith("c1")], inplace=True)
 
-                merged_filename = Path(POWERS_Reliability_dir, rel.name.replace("POWERS_ReliabilityCoding", "POWERS_ReliabilityCoding_Merged"))
+                merged_filename = Path(powers_reliability_dir, rel.name.replace("POWERS_ReliabilityCoding", "POWERS_ReliabilityCoding_Merged"))
 
                 try:
                     merged_filename.parent.mkdir(parents=True, exist_ok=True)
                     merged.to_excel(merged_filename, index=False)
-                    logging.info(f"Wrote merged POWERS coding & reliability file: {merged_filename}")
+                    logger.info(f"Wrote merged POWERS coding & reliability file: {_rel(merged_filename)}")
                 except Exception as e:
-                    logging.error(f"Failed to write merged POWERS coding & reliability file {merged_filename}: {e}")
+                    logger.error(f"Failed to write merged POWERS coding & reliability file {_rel(merged_filename)}: {e}")
 
 # ----------------------------- Helpers ----------------------------- #
 
@@ -253,8 +256,8 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str, investigators: l
     -------
     dict
         {
-          "ContinuousReliability": DataFrame (ICC2 per metric in TURN_AGG_COLS),
-          "CategoricalReliability": DataFrame (kappa & agreement for turn_type and collab_repair)
+          "continuous_reliability": DataFrame (ICC2 per metric in TURN_AGG_COLS),
+          "categorical_reliability": DataFrame (kappa & agreement for turn_type and collab_repair)
         }
 
     Notes
@@ -274,7 +277,7 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str, investigators: l
             tmp = filtered_utt_df[[f"{c1}_{col}", f"{c2}_{col}"]]
             tmp = tmp.dropna(how="any")
             if tmp.shape[0] < 2 or tmp.nunique().min() <= 1:
-                logging.warning(f"Insufficient variability for ICC on {col}")
+                logger.warning(f"Insufficient variability for ICC on {col}")
                 continue
             tmp_long = tmp.melt(var_name="coder", value_name="score", ignore_index=False).reset_index()
             tmp_long.rename(columns={"index": "target"}, inplace=True)
@@ -285,7 +288,7 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str, investigators: l
             if not icc2_row.empty:
                 icc_rows.append({"metric": col, "ICC2": icc2_row.iloc[0]["ICC"]})
         except Exception as e:
-            logging.error(f"ICC failure for {col}: {e}")
+            logger.error(f"ICC failure for {col}: {e}")
     icc_df = pd.DataFrame(icc_rows)
 
     # Categorical reliability
@@ -321,8 +324,8 @@ def compute_reliability(utt_df: pd.DataFrame, c1: str, c2: str, investigators: l
     ])
 
     return {
-        "ContinuousReliability": icc_df,
-        "CategoricalReliability": cat_rel,
+        "continuous_reliability": icc_df,
+        "categorical_reliability": cat_rel,
     }
 
 def write_analysis_workbook(out_path: Path, sheets: dict[str, pd.DataFrame]) -> None:
@@ -371,49 +374,50 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
     -------
     None
         Writes one workbook per input file under:
-        - {output_dir}/POWERS_CodingAnalysis or
-        - {output_dir}/POWERS_ReliabilityAnalysis
+        - {output_dir}/powers_coding_analysis or
+        - {output_dir}/powers_reliability_analysis
     """
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
-    out_folder = "POWERS_CodingAnalysis" if not reliability else "POWERS_ReliabilityAnalysis"
+    out_folder = "powers_coding_analysis" if not reliability else "powers_reliability_analysis"
     pc_analysis_dir = output_dir / out_folder
     try:
         pc_analysis_dir.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Output directory: {pc_analysis_dir}")
+        logger.info(f"Output directory: {_rel(pc_analysis_dir)}")
     except Exception as e:
-        logging.error(f"Failed to create POWERS analysis directory {pc_analysis_dir}: {e}")
+        logger.error(f"Failed to create POWERS analysis directory {_rel(pc_analysis_dir)}: {e}")
         return
 
     if not reliability:
-        pc_files = find_powers_coding_files(input_dir, output_dir)
+        pc_files = find_corresponding_file(directories=[input_dir, output_dir],
+                                    search_base="powers_coding")
         coders = ["c1", "c2"]
     else:
         # If your merged reliability files are stored elsewhere, change to input_dir accordingly.
-        pc_files = list(pc_analysis_dir.rglob("*POWERS_ReliabilityCoding_Merged*.xlsx"))
+        pc_files = list(pc_analysis_dir.rglob("*powers_reliability_coding_merged*.xlsx"))
         coders = ["c2", "c3"]
     c1, c2 = coders
 
     for pc_file in tqdm(pc_files, desc="Analyzing POWERS coding..."):
         try:
             utt_df = pd.read_excel(pc_file)
-            logging.info(f"Processing file: {pc_file}")
+            logger.info(f"Processing file: {_rel(pc_file)}")
         except Exception as e:
-            logging.error(f"Failed to read file {pc_file}: {e}")
+            logger.error(f"Failed to read file {_rel(pc_file)}: {e}")
             continue
 
         # 1) turn labels
         try:
             utt_df = add_turn_labels(utt_df, coders)
         except Exception as e:
-            logging.error(f"Failed to add turn labels for {pc_file}: {e}")
+            logger.error(f"Failed to add turn labels for {_rel(pc_file)}: {e}")
             continue
 
         # 2) summaries
         try:
             df_dict = compute_level_summaries(utt_df, coders)
         except Exception as e:
-            logging.error(f"Failed to summarize levels for {pc_file}: {e}")
+            logger.error(f"Failed to summarize levels for {_rel(pc_file)}: {e}")
             continue
 
         # 3) either strip to final c2-* only, or compute reliability
@@ -424,13 +428,13 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
                 rel = compute_reliability(utt_df, c1, c2, exclude_participants)
                 df_dict.update(rel)
             except Exception as e:
-                logging.error(f"Reliability computation failed for {pc_file}: {e}")
+                logger.error(f"Reliability computation failed for {_rel(pc_file)}: {e}")
 
         # 4) write
-        to_replace = "Coding" if not reliability else "Coding_Merged"
-        out_file = pc_analysis_dir / (pc_file.stem.replace(to_replace, "Analysis") + ".xlsx")
+        to_replace = "coding" if not reliability else "coding_merged"
+        out_file = pc_analysis_dir / (pc_file.stem.replace(to_replace, "_analysis") + ".xlsx")
         try:
             write_analysis_workbook(out_file, df_dict)
-            logging.info(f"Wrote analysis workbook: {out_file}")
+            logger.info(f"Wrote analysis workbook: {_rel(out_file)}")
         except Exception as e:
-            logging.error(f"Failed to write {out_file}: {e}")
+            logger.error(f"Failed to write {_rel(out_file)}: {e}")

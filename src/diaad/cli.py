@@ -6,7 +6,8 @@ Entry point for the Digital Interface for Aphasiological Analysis of Discourse (
 Delegates parser construction to main.build_arg_parser().
 """
 
-from .main import main as main_core, build_arg_parser
+from .main import main as main_core
+from diaad.utils.auxiliary import build_arg_parser
 
 
 def main():

@@ -1,11 +1,11 @@
 import re
-import logging
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 from scipy.stats import entropy
 from collections import Counter, defaultdict
+from rascal.utils.logger import logger, _rel
 
 
 def extract_turn_counts(turn_string):
@@ -545,17 +545,17 @@ def analyze_digital_convo_turns(input_dir, output_dir):
     # Collect candidate .xlsx files then filter by regex
     name_re = re.compile(r'.*(Convo|Conversation)_?Turns.*\.xlsx$', re.IGNORECASE)
     ct_files = [f for f in Path(input_dir).rglob('*.xlsx') if name_re.search(f.name)]
-    logging.info(f"Found {len(ct_files)} files in {input_dir}.")
+    logger.info(f"Found {len(ct_files)} files in {_rel(input_dir)}.")
 
     for ct_file in tqdm(ct_files, desc="Analyzing conversation turns"):
         try:
             xls = pd.ExcelFile(ct_file)
             if not xls.sheet_names:
-                logging.warning(f"No sheets found in file: {ct_file.name}")
+                logger.warning(f"No sheets found in file: {ct_file.name}")
                 continue
             df = xls.parse(xls.sheet_names[0])
             if df.empty:
-                logging.warning(f"Empty data in file: {ct_file.name}")
+                logger.warning(f"Empty data in file: {ct_file.name}")
                 continue
 
             ct_data = _analyze_convo_turns_file(df)
@@ -583,26 +583,26 @@ def analyze_digital_convo_turns(input_dir, output_dir):
                     try:
                         summary_frames.append(summarize(df_level, level_name))
                     except Exception as e:
-                        logging.warning(f"Could not summarize {level_name} level: {e}")
+                        logger.warning(f"Could not summarize {level_name} level: {e}")
 
             summary_stats_all = pd.concat(summary_frames, ignore_index=True) if summary_frames else pd.DataFrame()
 
             # Save to Excel
-            out_file_name = ct_file.name.replace('.xlsx', '_Analysis.xlsx')
+            out_file_name = ct_file.name.replace('.xlsx', '_analysis.xlsx')
             final_path = Path(output_dir, out_file_name)
 
             with pd.ExcelWriter(final_path, engine='xlsxwriter') as writer:
-                write_if_not_empty(bin_level, writer, 'Bin_Level_Turns')
-                write_if_not_empty(participation_level, writer, 'Participation_Level_Turns')
-                write_if_not_empty(session_level, writer, 'Session_Level_Summary')
-                write_if_not_empty(speaker_level, writer, 'Speaker_Level_Turns')
-                write_if_not_empty(group_level, writer, 'Group_Level_Summary')
-                write_if_not_empty(summary_stats_all, writer, 'Summary_Statistics')
-                write_if_not_empty(speaker_ratios, writer, 'Speaker_Level_Ratios')
+                write_if_not_empty(bin_level, writer, 'bin_level_turns')
+                write_if_not_empty(participation_level, writer, 'participation_level_turns')
+                write_if_not_empty(session_level, writer, 'session_level_summary')
+                write_if_not_empty(speaker_level, writer, 'speaker_level_turns')
+                write_if_not_empty(group_level, writer, 'group_level_summary')
+                write_if_not_empty(summary_stats_all, writer, 'summary_statistics')
+                write_if_not_empty(speaker_ratios, writer, 'speaker_level_ratios')
 
                 for name, matrix in speaker_matrices.items():
-                    sheet_name = f"Speaker_Matrix_{name}"[:31]  # Excel max sheet name = 31
+                    sheet_name = f"speaker_matrix_{name}"[:31]  # Excel max sheet name = 31
                     matrix.to_excel(writer, sheet_name=sheet_name)
 
         except Exception as e:
-            logging.error(f"Unexpected error with file {ct_file.name}: {e}")
+            logger.error(f"Unexpected error with file {ct_file.name}: {e}")

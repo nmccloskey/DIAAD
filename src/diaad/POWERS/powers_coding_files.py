@@ -1,13 +1,15 @@
 import re
 import spacy
 import random
-import logging
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import contractions
 from pathlib import Path
+
+from rascal.utils.logger import logger, _rel
 from rascal.coding.coding_files import segment, assign_coders
+from rascal.utils.auxiliary import find_corresponding_file, extract_transcript_data
 from rascal.transcripts.transcription_reliability_evaluation import process_utterances
 
 
@@ -221,7 +223,7 @@ def run_automation(df, coder_num):
         NLP = NLPmodel()
         nlp = NLP.get_nlp("en_core_web_trf")
     except Exception as e:
-        logging.error(f"Failed to load NLP model - automation not available: {e}")
+        logger.error(f"Failed to load NLP model - automation not available: {e}")
         return df
     
     try:
@@ -252,7 +254,7 @@ def run_automation(df, coder_num):
         return df
     
     except Exception as e:
-        logging.error(f"Failed to apply automation: {e}")
+        logger.error(f"Failed to apply automation: {e}")
         return df
 
 def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS=True):
@@ -260,7 +262,7 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
     Generate POWERS coding and reliability files from utterance-level transcripts.
 
     Steps:
-      1. Load transcript "Utterances.xlsx" files from input_dir/output_dir.
+      1. Load transcript table files from input_dir/output_dir.
       2. Assign two coders per sample and shuffle sample order.
       3. Write a POWERS coding file with initialized coder columns.
       4. Select a fraction of samples for a reliability coder, producing a
@@ -278,7 +280,7 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
     input_dir : str or Path
         Directory containing input Utterances.xlsx files.
     output_dir : str or Path
-        Base directory for POWERS_Coding output.
+        Base directory for powers_coding output.
     exclude_participants : list
         Speakers to exclude (filled with "NA").
     automate_POWERS : bool, optional
@@ -287,31 +289,28 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
     Returns
     -------
     None
-        Writes Excel files to output_dir/POWERS_Coding.
+        Writes Excel files to output_dir/powers_coding.
     """
 
     if len(coders) < 3:
-        logging.warning(f"Coders entered: {coders} do not meet minimum of 3. Using default 1, 2, 3.")
+        logger.warning(f"Coders entered: {coders} do not meet minimum of 3. Using default 1, 2, 3.")
         coders = ['1', '2', '3']
 
     output_dir = Path(output_dir)
-    POWERS_coding_dir = output_dir / "POWERS_Coding"
-    logging.info(f"Writing POWERS coding files to {POWERS_coding_dir}")
-    utterance_files = list(Path(input_dir).rglob("*Utterances*.xlsx")) + list(Path(output_dir).rglob("*Utterances*.xlsx"))
+    powers_coding_dir = output_dir / "powers_coding"
+    logger.info(f"Writing POWERS coding files to {_rel(powers_coding_dir)}")
 
-    for file in tqdm(utterance_files, desc="Generating POWERS coding files"):
-        logging.info(f"Processing file: {file}")
+    # Collect utterance tables
+    transcript_tables = find_corresponding_file(directories=[input_dir, output_dir],
+                                                            search_base="transcript_tables")
+    utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
+
+    for file, uttdf in tqdm(zip(transcript_tables, utt_dfs), desc="Generating POWERS coding files"):
+        logger.info(f"Processing file: {_rel(file)}")
         labels = [t.match(file.name, return_None=True) for t in tiers.values()]
         labels = [l for l in labels if l is not None]
 
         assignments = assign_coders(coders)
-
-        try:
-            uttdf = pd.read_excel(str(file))
-            logging.info(f"Successfully read file: {file}")
-        except Exception as e:
-            logging.error(f"Failed to read file {file}: {e}")
-            continue
 
         # Shuffle samples
         subdfs = []
@@ -320,32 +319,32 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
         random.shuffle(subdfs)
         shuffled_utt_df = pd.concat(subdfs, ignore_index=True)
 
-        PCdf = shuffled_utt_df.drop(columns=[
+        pc_df = shuffled_utt_df.drop(columns=[
             col for col in ['file'] + [t for t in tiers if t.lower() not in COMM_cols] if col in shuffled_utt_df.columns
             ]).copy()
         
-        PCdf["c1_id"] = pd.Series(dtype="object")
-        PCdf["c2_id"] = pd.Series(dtype="object")
+        pc_df["c1_id"] = pd.Series(dtype="object")
+        pc_df["c2_id"] = pd.Series(dtype="object")
 
         for col in coder_cols:
             if col in client_only_cols:
-                PCdf[col] = np.where(PCdf["speaker"].isin(exclude_participants), "NA", "")
+                pc_df[col] = np.where(pc_df["speaker"].isin(exclude_participants), "NA", "")
             else:
-                PCdf[col] = ""
+                pc_df[col] = ""
         
         if automate_POWERS:
-            PCdf = run_automation(PCdf, "1")
+            pc_df = run_automation(pc_df, "1")
 
-        unique_sample_ids = list(PCdf['sample_id'].drop_duplicates(keep='first'))
+        unique_sample_ids = list(pc_df['sample_id'].drop_duplicates(keep='first'))
         segments = segment(unique_sample_ids, n=len(coders))
         rel_subsets = []
 
         for seg, ass in zip(segments, assignments):
-            PCdf.loc[PCdf['sample_id'].isin(seg), 'c1_id'] = ass[0]
-            PCdf.loc[PCdf['sample_id'].isin(seg), 'c2_id'] = ass[1]
+            pc_df.loc[pc_df['sample_id'].isin(seg), 'c1_id'] = ass[0]
+            pc_df.loc[pc_df['sample_id'].isin(seg), 'c2_id'] = ass[1]
 
             rel_samples = random.sample(seg, k=max(1, round(len(seg) * frac)))
-            relsegdf = PCdf[PCdf['sample_id'].isin(rel_samples)].copy()
+            relsegdf = pc_df[pc_df['sample_id'].isin(rel_samples)].copy()
 
             rel_subsets.append(relsegdf)
 
@@ -357,42 +356,42 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
         rename_map = {col:col.replace("1", "3") for col in coder_cols if col.startswith("c1")}
         reldf.rename(columns=rename_map, inplace=True)
         
-        logging.info(f"Selected {len(set(reldf['sample_id']))} samples for reliability from {len(set(PCdf['sample_id']))} total samples.")
+        logger.info(f"Selected {len(set(reldf['sample_id']))} samples for reliability from {len(set(pc_df['sample_id']))} total samples.")
 
         lab_str = '_'.join(labels) + '_' if labels else ''
 
-        pc_filename = Path(POWERS_coding_dir, *labels, f"{lab_str}POWERS_Coding.xlsx")
-        rel_filename = Path(POWERS_coding_dir, *labels, f"{lab_str}POWERS_ReliabilityCoding.xlsx")
+        pc_filename = Path(powers_coding_dir, *labels, f"{lab_str}powers_coding.xlsx")
+        rel_filename = Path(powers_coding_dir, *labels, f"{lab_str}powers_reliability_coding.xlsx")
 
         try:
             pc_filename.parent.mkdir(parents=True, exist_ok=True)
-            PCdf.to_excel(pc_filename, index=False, na_rep="")
-            logging.info(f"Successfully wrote POWERS coding file: {pc_filename}")
+            pc_df.to_excel(pc_filename, index=False, na_rep="")
+            logger.info(f"Successfully wrote POWERS coding file: {_rel(pc_filename)}")
         except Exception as e:
-            logging.error(f"Failed to write POWERS coding file {pc_filename}: {e}")
+            logger.error(f"Failed to write POWERS coding file {_rel(pc_filename)}: {e}")
 
         try:
             rel_filename.parent.mkdir(parents=True, exist_ok=True)
             reldf.to_excel(rel_filename, index=False, na_rep="")
-            logging.info(f"Successfully wrote POWERS reliability coding file: {rel_filename}")
+            logger.info(f"Successfully wrote POWERS reliability coding file: {_rel(rel_filename)}")
         except Exception as e:
-            logging.error(f"Failed to write POWERS reliability coding file {rel_filename}: {e}")
+            logger.error(f"Failed to write POWERS reliability coding file {_rel(rel_filename)}: {e}")
 
 
 def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participants, automate_POWERS):
     """
     Reselect new reliability subsets from existing POWERS coding files.
 
-    Finds POWERS_Coding and POWERS_ReliabilityCoding files, determines
+    Finds powers_coding and powers_reliability_coding files, determines
     which samples are already covered by reliability coders, and selects
     new samples from the remaining pool. Optionally applies automation.
 
     Parameters
     ----------
     input_dir : str or Path
-        Directory containing original POWERS_Coding and POWERS_ReliabilityCoding files.
+        Directory containing original powers_coding and powers_reliability_coding files.
     output_dir : str or Path
-        Directory for saving POWERS_ReselectedReliability outputs.
+        Directory for saving powers_reselected_reliability outputs.
     frac : float
         Fraction of samples per file to assign to reliability (0-1).
     exclude_participants : list
@@ -403,38 +402,38 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
     Returns
     -------
     None
-        Writes new Excel reliability files to output_dir/POWERS_ReselectedReliability.
+        Writes new Excel reliability files to output_dir/powers_reselected_reliability.
     """
 
     output_dir = Path(output_dir)
     
-    POWERS_Reselected_Reliability_dir = output_dir / "POWERS_ReselectedReliability"
+    powers_reselected_reliability_dir = output_dir / "powers_reselected_reliability"
     try:
-        POWERS_Reselected_Reliability_dir.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Created directory: {POWERS_Reselected_Reliability_dir}")
+        powers_reselected_reliability_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Created directory: {_rel(powers_reselected_reliability_dir)}")
     except Exception as e:
-        logging.error(f"Failed to create directory {POWERS_Reselected_Reliability_dir}: {e}")
+        logger.error(f"Failed to create directory {_rel(powers_reselected_reliability_dir)}: {e}")
         return
 
-    coding_files = [f for f in Path(input_dir).rglob('*POWERS_Coding*.xlsx')]
-    rel_files = [f for f in Path(input_dir).rglob('*POWERS_ReliabilityCoding*.xlsx')]
+    coding_files = [f for f in Path(input_dir).rglob('*powers_coding*.xlsx')]
+    rel_files = [f for f in Path(input_dir).rglob('*powers_reliability_coding*.xlsx')]
 
     # Match original coding and reliability files.
     for cod in tqdm(coding_files, desc="Reselecting POWERS reliability coding..."):
         try:
             covered_sample_ids = set()
             PCcod = pd.read_excel(cod)
-            logging.info(f"Processing coding file: {cod}")
+            logger.info(f"Processing coding file: {_rel(cod)}")
         except Exception as e:
-            logging.error(f"Failed to read file {cod}: {e}")
+            logger.error(f"Failed to read file {_rel(cod)}: {e}")
             continue
         for rel in rel_files:
-            if cod.name.replace("POWERS_Coding", "POWERS_ReliabilityCoding") == rel.name:
+            if cod.name.replace("powers_coding", "powers_reliability_coding") == rel.name:
                 try:
                     PCrel = pd.read_excel(rel)
-                    logging.info(f"Processing reliability file: {rel}")
+                    logger.info(f"Processing reliability file: {_rel(rel)}")
                 except Exception as e:
-                    logging.error(f"Failed to read file {rel}: {e}")
+                    logger.error(f"Failed to read file {_rel(rel)}: {e}")
                     continue
                 
             covered_sample_ids.update(set(PCrel["sample_id"].dropna()))
@@ -444,12 +443,12 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
             available_samples = list(all_samples - covered_sample_ids)
 
             if len(available_samples) == 0:
-                logging.warning(f"No available samples to reselect for {cod.name}. Skipping.")
+                logger.warning(f"No available samples to reselect for {cod.name}. Skipping.")
                 continue
             
             num_to_select = max(1, round(len(all_samples) * float(frac)))
             if len(available_samples) < num_to_select:
-                logging.warning(
+                logger.warning(
                     f"Not enough unused samples in {cod.name}. "
                     f"Selecting {len(available_samples)} instead of target {num_to_select}."
                 )
@@ -467,15 +466,15 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
             rename_map = {col:col.replace("1", "3") for col in coder_cols if col.startswith("c1")}
             new_rel_df.rename(columns=rename_map, inplace=True)
             
-            logging.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(PCcod['sample_id']))} total samples.")
+            logger.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(PCcod['sample_id']))} total samples.")
 
             if automate_POWERS:
                 new_rel_df = run_automation(new_rel_df, "3")
 
             try:
-                new_rel_filename = cod.name.replace("POWERS_Coding", "POWERS_Reselected_ReliabilityCoding")
-                new_rel_filepath = POWERS_Reselected_Reliability_dir / new_rel_filename
+                new_rel_filename = cod.name.replace("powers_coding", "powers_reselected_reliability_coding")
+                new_rel_filepath = powers_reselected_reliability_dir / new_rel_filename
                 new_rel_df.to_excel(new_rel_filepath, index=False)
-                logging.info(f"Successfully wrote reselected POWERS reliability coding file: {new_rel_filepath}")
+                logger.info(f"Successfully wrote reselected POWERS reliability coding file: {_rel(new_rel_filepath)}")
             except Exception as e:
-                logging.error(f"Failed to write reselected POWERS reliability coding file {new_rel_filepath}: {e}")
+                logger.error(f"Failed to write reselected POWERS reliability coding file {_rel(new_rel_filepath)}: {e}")

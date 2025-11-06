@@ -1,10 +1,9 @@
-import logging
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-# from rascal.utils.support_funcs import find_utt_files
-from diaad.utils.auxiliary import find_utt_files
-from diaad.utils.auxiliary import find_powers_coding_files, read_df
+from diaad.utils.auxiliary import read_df
+from rascal.utils.logger import logger, _rel
+from rascal.utils.auxiliary import find_corresponding_file, extract_transcript_data
 
 
 def _filter_df(df, cols):
@@ -53,12 +52,14 @@ def select_validation_samples(input_dir: str | Path,
     """
 
     # Collect utterance tables
-    utt_files = find_utt_files(input_dir, output_dir)
+    transcript_tables = find_corresponding_file(directories=[input_dir, output_dir],
+                                                            search_base="transcript_tables")
     utt_cols = ["sample_id", "file"] + stratify
-    utt_dfs = [df for uf in utt_files if (df := read_df(uf)) is not None]
+    utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
+
     filtered_udfs = [df for udf in utt_dfs if (df := _filter_df(udf, utt_cols)) is not None]
     if not filtered_udfs:
-        raise RuntimeError("No utterance files with required columns found.")
+        raise RuntimeError("No transcript table files with required columns found.")
     sample_info = pd.concat(filtered_udfs, ignore_index=True)
     sample_info.drop_duplicates(inplace=True, ignore_index=True)
 
@@ -73,7 +74,7 @@ def select_validation_samples(input_dir: str | Path,
         selections.append(g)
 
         if len(g) < strata:
-            logging.warning(f"Group {keys} had only {len(g)} < {strata} samples; selecting all available.")
+            logger.warning(f"Group {keys} had only {len(g)} < {strata} samples; selecting all available.")
 
     if not selections:
         raise RuntimeError("No groups found to stratify. Check your input tables and --stratify fields.")
@@ -83,22 +84,23 @@ def select_validation_samples(input_dir: str | Path,
     sel = sel.loc[:, stratify + ["sample_id", "file", "stratum_no"]].sort_values(by=stratify + ["stratum_no", "sample_id"])
 
     ts = datetime.now().strftime("%y%m%d_%H%M")
-    out_file = output_dir / f"POWERS_validation_selection_{ts}.xlsx"
+    out_file = output_dir / f"powers_validation_selection_{ts}.xlsx"
     sel.to_excel(out_file, index=False)
-    logging.info(f"Wrote selection table: {out_file}")
+    logger.info(f"Wrote selection table: {_rel(out_file)}")
 
     # Optionally collect empty POWERS coding tables
     # User would have run powers make with automate_POWERS=False
-    pc_files = find_powers_coding_files(input_dir, output_dir)
+    pc_files = find_corresponding_file(directories=[input_dir, output_dir],
+                                       search_base="powers_coding")
     if pc_files:
         for pcf in pc_files:
             if (pcdf := read_df(pcf)) is not None and not pcdf.empty:
                 labeled_pcdf = sel[["sample_id", "stratum_no"]].merge(pcdf, on=["sample_id"], how="right")
-                out_pc_file = output_dir / pcf.name.replace("POWERS_Coding", "POWERS_Coding_Labeled")
+                out_pc_file = output_dir / pcf.name.replace("powers_coding", "powers_coding_labeled")
                 labeled_pcdf.to_excel(out_pc_file, index=False)
-                logging.info(f"Wrote labeled POWERS coding table: {out_pc_file}")
+                logger.info(f"Wrote labeled POWERS coding table: {_rel(out_pc_file)}")
     else:
-        logging.warning("No POWERS coding files available for direct stratum number assignment.")
+        logger.warning("No POWERS coding files available for direct stratum number assignment.")
 
 
 def validate_automation(input_dir: str | Path,
@@ -136,12 +138,13 @@ def validate_automation(input_dir: str | Path,
         If selection table is missing required columns.
     """
 
-    # Collect POWERS coding files   
-    auto = [pcdf for pcf in find_powers_coding_files(input_dir / "auto", output_dir)
-            if (pcdf := read_df(pcf)) is not None]
-
-    manual = [pcdf for pcf in find_powers_coding_files(input_dir / "manual", output_dir)
-            if (pcdf := read_df(pcf)) is not None]
+    # Collect POWERS coding files
+    auto_pc_files = find_corresponding_file(directories=[input_dir / "auto", output_dir],
+                                    search_base="powers_coding")
+    manual_pc_files = find_corresponding_file(directories=[input_dir / "manual", output_dir],
+                                search_base="powers_coding")      
+    auto = [pcdf for pcf in auto_pc_files if (pcdf := read_df(pcf)) is not None]
+    manual = [pcdf for pcf in manual_pc_files if (pcdf := read_df(pcf)) is not None]
     
     # Pair automatic and manual codes and prep for analyze POWERS
     if not auto or not manual:
@@ -166,7 +169,7 @@ def validate_automation(input_dir: str | Path,
     if stratum_numbers:
         merged = merged[merged["stratum_no"].isin([int(n) for n in stratum_numbers])]
 
-    output_dir = output_dir / "AutomationValidation"
-    out_file = output_dir / "POWERS_Coding_Auto_vs_Manual.xlsx"
+    output_dir = output_dir / "automation_validation"
+    out_file = output_dir / "powers_coding_auto_vs_manual.xlsx"
     output_dir.mkdir(parents=True, exist_ok=True)
     merged.to_excel(out_file, index=False)
