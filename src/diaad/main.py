@@ -10,7 +10,7 @@ from diaad.run_wrappers import (
     run_reselect_powers_reliability_coding
 )
 from diaad.powers.automation_validation import select_validation_samples, validate_automation
-from rascal.utils.auxiliary import load_config, project_path, find_corresponding_file
+from rascal.utils.auxiliary import load_config, project_path, find_files
 from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_make_transcript_tables
 from rascal.utils.logger import (
     get_root,
@@ -64,8 +64,8 @@ def main(args):
 
         elif args.command == "powers":
             if args.action == "make":
-                transcript_tables = find_corresponding_file(directories=[input_dir, out_dir],
-                                                            search_base="transcript_tables")
+                transcript_tables = find_files(directories=[input_dir, out_dir],
+                                               search_base="transcript_tables")
                 if not transcript_tables:
                     chats = run_read_cha_files(input_dir)
                     run_make_transcript_tables(tiers, chats, out_dir)

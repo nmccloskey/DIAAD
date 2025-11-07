@@ -3,7 +3,7 @@ from pathlib import Path
 from datetime import datetime
 from diaad.utils.auxiliary import read_df
 from rascal.utils.logger import logger, _rel
-from rascal.utils.auxiliary import find_corresponding_file, extract_transcript_data
+from rascal.utils.auxiliary import find_files, extract_transcript_data
 
 
 def _filter_df(df, cols):
@@ -52,8 +52,8 @@ def select_validation_samples(input_dir: str | Path,
     """
 
     # Collect utterance tables
-    transcript_tables = find_corresponding_file(directories=[input_dir, output_dir],
-                                                            search_base="transcript_tables")
+    transcript_tables = find_files(directories=[input_dir, output_dir],
+                                   search_base="transcript_tables")
     utt_cols = ["sample_id", "file"] + stratify
     utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
 
@@ -90,7 +90,7 @@ def select_validation_samples(input_dir: str | Path,
 
     # Optionally collect empty POWERS coding tables
     # User would have run powers make with automate_POWERS=False
-    pc_files = find_corresponding_file(directories=[input_dir, output_dir],
+    pc_files = find_files(directories=[input_dir, output_dir],
                                        search_base="powers_coding")
     if pc_files:
         for pcf in pc_files:
@@ -139,12 +139,13 @@ def validate_automation(input_dir: str | Path,
     """
 
     # Collect POWERS coding files
-    auto_pc_files = find_corresponding_file(directories=[input_dir / "auto", output_dir],
-                                    search_base="powers_coding")
-    manual_pc_files = find_corresponding_file(directories=[input_dir / "manual", output_dir],
-                                search_base="powers_coding")      
-    auto = [pcdf for pcf in auto_pc_files if (pcdf := read_df(pcf)) is not None]
-    manual = [pcdf for pcf in manual_pc_files if (pcdf := read_df(pcf)) is not None]
+    auto_pc_files = find_files(directories=[input_dir / "auto", output_dir],
+                               search_base="powers_coding")
+    manual_pc_files = find_files(directories=[input_dir / "manual", output_dir],
+                                 search_base="powers_coding")
+
+    auto = [df for p in auto_pc_files if (df := read_df(p)) is not None]
+    manual = [df for p in manual_pc_files if (df := read_df(p)) is not None]
     
     # Pair automatic and manual codes and prep for analyze POWERS
     if not auto or not manual:

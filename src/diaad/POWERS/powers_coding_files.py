@@ -9,7 +9,7 @@ from pathlib import Path
 
 from rascal.utils.logger import logger, _rel
 from rascal.coding.coding_files import segment, assign_coders
-from rascal.utils.auxiliary import find_corresponding_file, extract_transcript_data
+from rascal.utils.auxiliary import find_files, extract_transcript_data
 from rascal.transcripts.transcription_reliability_evaluation import process_utterances
 
 
@@ -297,8 +297,8 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
     logger.info(f"Writing POWERS coding files to {_rel(powers_coding_dir)}")
 
     # Collect utterance tables
-    transcript_tables = find_corresponding_file(directories=[input_dir, output_dir],
-                                                            search_base="transcript_tables")
+    transcript_tables = find_files(directories=[input_dir, output_dir],
+                                   search_base="transcript_tables")
     utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
 
     for file, uttdf in tqdm(zip(transcript_tables, utt_dfs), desc="Generating POWERS coding files"):

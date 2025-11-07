@@ -6,7 +6,7 @@ from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
 from rascal.utils.logger import logger, _rel
-from rascal.utils.auxiliary import find_corresponding_file
+from rascal.utils.auxiliary import find_files
 
 TURN_AGG_COLS = ["speech_units", "content_words", "num_nouns", "filled_pauses"]
 
@@ -44,10 +44,10 @@ def match_reliability_files(input_dir, output_dir):
         logger.error(f"Failed to create directory {_rel(powers_reliability_dir)}: {e}")
         return
 
-    pc_files = find_corresponding_file(directories=[input_dir, output_dir],
-                                       search_base="powers_coding")
-    rel_files = find_corresponding_file(directories=[input_dir, output_dir],
-                                    search_base="powers_reliability_coding")
+    pc_files = find_files(directories=[input_dir, output_dir],
+                          search_base="powers_coding")
+    rel_files = find_files(directories=[input_dir, output_dir],
+                           search_base="powers_reliability_coding")
 
     # Match original coding and reliability files.
     for rel in tqdm(rel_files, desc="Analyzing POWERS reliability coding..."):
@@ -389,8 +389,8 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
         return
 
     if not reliability:
-        pc_files = find_corresponding_file(directories=[input_dir, output_dir],
-                                    search_base="powers_coding")
+        pc_files = find_files(directories=[input_dir, output_dir],
+                              search_base="powers_coding")
         coders = ["c1", "c2"]
     else:
         # If your merged reliability files are stored elsewhere, change to input_dir accordingly.
