@@ -54,7 +54,8 @@ def expand_contractions(utt: str) -> str:
 
 # Modified processing
 def expand_and_process_utterances(utt: str) -> str:
-    expanded_utt = expand_contractions(utt)
+    codeless_utt = " ".join([t for t in utt.split() if t and not t.startswith("&")])
+    expanded_utt = expand_contractions(codeless_utt)
     modified_utt = expanded_utt.replace("-", "_")
     return process_utterances(modified_utt)
 
