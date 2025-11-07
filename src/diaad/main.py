@@ -4,10 +4,10 @@ from datetime import datetime
 from diaad.utils.auxiliary import parse_stratify_fields, build_arg_parser
 from diaad.run_wrappers import (
     run_analyze_digital_convo_turns,
-    run_make_POWERS_coding_files,
-    run_analyze_POWERS_coding,
-    run_evaluate_POWERS_reliability,
-    run_reselect_POWERS_reliability_coding
+    run_make_powers_coding_files,
+    run_analyze_powers_coding,
+    run_evaluate_powers_reliability,
+    run_reselect_powers_reliability_coding
 )
 from diaad.powers.automation_validation import select_validation_samples, validate_automation
 from rascal.utils.auxiliary import load_config, project_path, find_corresponding_file
@@ -51,8 +51,8 @@ def main(args):
         frac = config.get('reliability_fraction', 0.2)
         coders = config.get('coders', []) or []
         exclude_participants = config.get('exclude_participants', []) or []
-        automate_POWERS = config.get('automate_POWERS', True)
-        just_c2_POWERS = config.get('just_c2_POWERS', False)
+        automate_powers = config.get('automate_powers', True)
+        just_c2_powers = config.get('just_c2_powers', False)
 
         tiers = run_read_tiers(config.get('tiers', {})) or {}
 
@@ -69,19 +69,19 @@ def main(args):
                 if not transcript_tables:
                     chats = run_read_cha_files(input_dir)
                     run_make_transcript_tables(tiers, chats, out_dir)
-                run_make_POWERS_coding_files(
-                    tiers, frac, coders, input_dir, out_dir, exclude_participants, automate_POWERS
+                run_make_powers_coding_files(
+                    tiers, frac, coders, input_dir, out_dir, exclude_participants, automate_powers
                 )
 
             elif args.action == "analyze":
-                run_analyze_POWERS_coding(input_dir, out_dir, just_c2_POWERS)
+                run_analyze_powers_coding(input_dir, out_dir, just_c2_powers)
 
             elif args.action == "evaluate":
-                run_evaluate_POWERS_reliability(input_dir, out_dir)
+                run_evaluate_powers_reliability(input_dir, out_dir)
 
             elif args.action == "reselect":
-                run_reselect_POWERS_reliability_coding(
-                    input_dir, out_dir, frac, exclude_participants, automate_POWERS
+                run_reselect_powers_reliability_coding(
+                    input_dir, out_dir, frac, exclude_participants, automate_powers
                 )
 
             elif args.action == "select":
@@ -103,7 +103,7 @@ def main(args):
                     selection_table=selection_table,
                     stratum_numbers=stratum_numbers
                 )
-                run_analyze_POWERS_coding(input_dir, out_dir, exclude_participants=exclude_participants)
+                run_analyze_powers_coding(input_dir, out_dir, exclude_participants=exclude_participants)
 
             else:
                 logger.error(f"Unknown powers action: {args.action}")
@@ -116,7 +116,7 @@ def main(args):
     
     finally:
         # Always finalize logging and metadata
-        terminate_logger(input_dir, out_dir, config_path, config, start_time)
+        terminate_logger(input_dir, out_dir, config_path, config, start_time, "DIAAD")
 
 # -------------------------------------------------------------
 # Direct execution

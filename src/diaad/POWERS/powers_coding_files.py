@@ -116,7 +116,7 @@ def is_adjective(token) -> bool:
     return token.pos_ == "ADJ"
 
 def is_chat_code(token) -> bool:
-    return token.startswith("&")
+    return token.text.startswith("&")
 
 def is_content_token(token) -> bool:
     """
@@ -146,14 +146,30 @@ def is_content_token(token) -> bool:
 
     return False
 
-def check_main_verb(tagged_utt, total_cw):
-    """Treat 'be' form as main in absence of other main verb"""
-    if "VERB" not in tagged_utt:
-        m = re.search(r"(be|am|are|is|was|were|been|being)", tagged_utt)
+def check_main_verb(tagged_utt: str, total_cw: int) -> tuple[str, int]:
+    """
+    Treat 'be' form as a main verb in the absence of any other VERB tag.
+
+    Parameters
+    ----------
+    tagged_utt : str
+        Utterance tagged with POS markers (e.g., "_VERB_CW").
+    total_cw : int
+        Current count of content words.
+
+    Returns
+    -------
+    tuple[str, int]
+        Possibly updated tagged utterance and content word count.
+    """
+    # Only apply if spaCy found no main verbs
+    if "_VERB" not in tagged_utt:
+        # Match standalone forms of 'be' (case-insensitive)
+        m = re.search(r"\b(?:be|am|are|is|was|were|been|being)\b", tagged_utt, flags=re.IGNORECASE)
         if m:
             tagged_utt += "_BE_FORM_MAIN"
             total_cw += 1
-    return tagged_utt
+    return tagged_utt, total_cw
 
 # ---------- Core counting function ----------
 def count_content_words_from_doc(doc):
@@ -236,7 +252,7 @@ def run_automation(df, coder_num):
         logger.error(f"Failed to apply automation: {e}")
         return df
 
-def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_POWERS=True):
+def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_powers=True):
     """
     Generate POWERS coding and reliability files from utterance-level transcripts.
 
@@ -262,7 +278,7 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
         Base directory for powers_coding output.
     exclude_participants : list
         Speakers to exclude (filled with "NA").
-    automate_POWERS : bool, optional
+    automate_powers : bool, optional
         If True, apply run_automation() to coder 1 columns.
 
     Returns
@@ -311,7 +327,7 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
             else:
                 pc_df[col] = ""
         
-        if automate_POWERS:
+        if automate_powers:
             pc_df = run_automation(pc_df, "1")
 
         unique_sample_ids = list(pc_df['sample_id'].drop_duplicates(keep='first'))
@@ -357,7 +373,7 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
             logger.error(f"Failed to write POWERS reliability coding file {_rel(rel_filename)}: {e}")
 
 
-def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participants, automate_POWERS):
+def reselect_powers_reliability(input_dir, output_dir, frac, exclude_participants, automate_powers):
     """
     Reselect new reliability subsets from existing POWERS coding files.
 
@@ -375,7 +391,7 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
         Fraction of samples per file to assign to reliability (0-1).
     exclude_participants : list
         Speakers to exclude (filled with "NA").
-    automate_POWERS : bool
+    automate_powers : bool
         If True, apply run_automation() to coder 3 columns.
 
     Returns
@@ -447,7 +463,7 @@ def reselect_POWERS_reliability(input_dir, output_dir, frac, exclude_participant
             
             logger.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(PCcod['sample_id']))} total samples.")
 
-            if automate_POWERS:
+            if automate_powers:
                 new_rel_df = run_automation(new_rel_df, "3")
 
             try:
