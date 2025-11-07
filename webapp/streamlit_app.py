@@ -28,7 +28,7 @@ from diaad.main import (
     run_make_POWERS_coding_files,
     run_analyze_digital_convo_turns,
 )
-from diaad.POWERS.automation_validation import (
+from diaad.powers.automation_validation import (
     run_reselect_POWERS_reliability_coding,
     run_evaluate_POWERS_reliability,
 )
@@ -37,7 +37,7 @@ from rascal.run_wrappers import run_read_tiers, run_read_cha_files, run_prepare_
 
 # --- Streamlit UI ---
 st.title("DIAAD Web App")
-st.caption("Digital Interface for Aggregate Analysis of Dialog")
+st.subheader("Digital Interface for Aggregate Analysis of Dialog")
 
 if "confirmed_config" not in st.session_state:
     st.session_state.confirmed_config = False
