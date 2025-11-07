@@ -418,7 +418,7 @@ def reselect_powers_reliability(input_dir, output_dir, frac, exclude_participant
     for cod in tqdm(coding_files, desc="Reselecting POWERS reliability coding..."):
         try:
             covered_sample_ids = set()
-            PCcod = pd.read_excel(cod)
+            powers_coding_df = pd.read_excel(cod)
             logger.info(f"Processing coding file: {_rel(cod)}")
         except Exception as e:
             logger.error(f"Failed to read file {_rel(cod)}: {e}")
@@ -426,16 +426,16 @@ def reselect_powers_reliability(input_dir, output_dir, frac, exclude_participant
         for rel in rel_files:
             if cod.name.replace("powers_coding", "powers_reliability_coding") == rel.name:
                 try:
-                    PCrel = pd.read_excel(rel)
+                    powers_rel_df = pd.read_excel(rel)
                     logger.info(f"Processing reliability file: {_rel(rel)}")
                 except Exception as e:
                     logger.error(f"Failed to read file {_rel(rel)}: {e}")
                     continue
                 
-            covered_sample_ids.update(set(PCrel["sample_id"].dropna()))
+            covered_sample_ids.update(set(powers_rel_df["sample_id"].dropna()))
         
         if covered_sample_ids:
-            all_samples = set(PCcod["sample_id"].dropna())
+            all_samples = set(powers_coding_df["sample_id"].dropna())
             available_samples = list(all_samples - covered_sample_ids)
 
             if len(available_samples) == 0:
@@ -451,10 +451,10 @@ def reselect_powers_reliability(input_dir, output_dir, frac, exclude_participant
                 num_to_select = len(available_samples)
             
             reselected_rel_samples = set(random.sample(available_samples, k=num_to_select))
-            new_rel_df = PCcod[PCcod['sample_id'].isin(reselected_rel_samples)].copy()
+            new_rel_df = powers_coding_df[powers_coding_df['sample_id'].isin(reselected_rel_samples)].copy()
 
             for col in coder_cols:
-                new_rel_df[col] = np.where(new_rel_df["speaker"].isin(exclude_participants), "NA", np.nan)
+                new_rel_df[col] = np.where(new_rel_df["speaker"].isin(exclude_participants), "NA", "")
 
             rel_drop_cols = [col for col in coder_cols if col.startswith("c2")]
             new_rel_df.drop(columns=rel_drop_cols, inplace=True, errors='ignore')
@@ -462,7 +462,7 @@ def reselect_powers_reliability(input_dir, output_dir, frac, exclude_participant
             rename_map = {col:col.replace("1", "3") for col in coder_cols if col.startswith("c1")}
             new_rel_df.rename(columns=rename_map, inplace=True)
             
-            logger.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(PCcod['sample_id']))} total samples.")
+            logger.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(powers_coding_df['sample_id']))} total samples.")
 
             if automate_powers:
                 new_rel_df = run_automation(new_rel_df, "3")

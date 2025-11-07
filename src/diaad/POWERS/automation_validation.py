@@ -158,7 +158,7 @@ def validate_automation(input_dir: str | Path,
     auto_df.drop(columns=manual_cols, inplace=True, errors="ignore")
 
     merge_keys = ["utterance_id", "sample_id"]
-    merged = auto_df.merge(manual_df[merge_keys + manual_cols  + stratum_col], on=merge_keys, how="inner")
+    merged = auto_df.merge(manual_df[merge_keys + manual_cols + stratum_col], on=merge_keys, how="inner")
 
     # Select based on random assignment
     if not stratum_col:

@@ -65,7 +65,7 @@ def match_reliability_files(input_dir, output_dir):
                 merged = powers_cod.merge(pc_rel[pc_rel_merge_cols], on=["utterance_id", "sample_id"], how="inner")
                 merged.drop(columns=[col for col in merged.columns if col.startswith("c1")], inplace=True)
 
-                merged_filename = Path(powers_reliability_dir, rel.name.replace("POWERS_ReliabilityCoding", "POWERS_ReliabilityCoding_Merged"))
+                merged_filename = Path(powers_reliability_dir, rel.name.replace("powers_reliability_coding", "powers_reliability_coding_merged"))
 
                 try:
                     merged_filename.parent.mkdir(parents=True, exist_ok=True)
@@ -217,7 +217,7 @@ def compute_level_summaries(utt_df: pd.DataFrame, coders: list[str]) -> dict[str
 
     return {"Utterances": utt_df, "Turns": turn_df, "Speakers": speaker_df, "Dialogs": sample_df}
 
-def format_just_c2_POWERS(df_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
+def format_just_c2_powers(df_dict: dict[str, pd.DataFrame]) -> dict[str, pd.DataFrame]:
     """
     Strip c1_* columns and de-prefix c2_* -> bare names (for final resolved data).
 
@@ -352,7 +352,7 @@ def write_analysis_workbook(out_path: Path, sheets: dict[str, pd.DataFrame]) -> 
 
 # ----------------------------- Orchestrator ----------------------------- #
 
-def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWERS=False, exclude_participants=[]):
+def analyze_powers_coding(input_dir, output_dir, reliability=False, just_c2_powers=False, exclude_participants=[]):
     """
     Analyze POWERS coding to produce turn/speaker/dialog summaries and (optionally) reliability.
 
@@ -365,7 +365,7 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
     reliability : bool, optional
         If True, expects merged reliability files and computes reliability for c2 vs c3.
         If False, expects standard coding files (c1 vs c2).
-    just_c2_POWERS : bool, optional
+    just_c2_powers : bool, optional
         If True, drop c1_* columns and rename c2_* -> bare names (no reliability sheets).
     exclude_participants : list, optional
         Exclude from POWERS reliability measures on content_words, num_nouns, & filled_pauses (mostly for validating automation)
@@ -421,8 +421,8 @@ def analyze_POWERS_coding(input_dir, output_dir, reliability=False, just_c2_POWE
             continue
 
         # 3) either strip to final c2-* only, or compute reliability
-        if just_c2_POWERS:
-            df_dict = format_just_c2_POWERS(df_dict)
+        if just_c2_powers:
+            df_dict = format_just_c2_powers(df_dict)
         else:
             try:
                 rel = compute_reliability(utt_df, c1, c2, exclude_participants)
