@@ -54,7 +54,9 @@ def expand_contractions(utt: str) -> str:
 
 # Modified processing
 def expand_and_process_utterances(utt: str) -> str:
-    return process_utterances(expand_contractions(utt))
+    expanded_utt = expand_contractions(utt)
+    modified_utt = expanded_utt.replace("-", "_")
+    return process_utterances(modified_utt)
 
 # --- NLP model singleton (your version, trimmed to essentials here) ---
 class NLPmodel:
@@ -113,6 +115,9 @@ def is_noun_or_propn(token) -> bool:
 def is_adjective(token) -> bool:
     return token.pos_ == "ADJ"
 
+def is_chat_code(token) -> bool:
+    return token.startswith("&")
+
 def is_content_token(token) -> bool:
     """
     Master predicate implementing your rules:
@@ -124,6 +129,8 @@ def is_content_token(token) -> bool:
     if is_aux_or_modal(token):
         return False
     if is_unintelligble(token):
+        return False
+    if is_chat_code(token):
         return False
 
     if is_noun_or_propn(token):
@@ -139,57 +146,34 @@ def is_content_token(token) -> bool:
 
     return False
 
+def check_main_verb(tagged_utt, total_cw):
+    """Treat 'be' form as main in absence of other main verb"""
+    if "VERB" not in tagged_utt:
+        m = re.search(r"(be|am|are|is|was|were|been|being)", tagged_utt)
+        if m:
+            tagged_utt += "_BE_FORM_MAIN"
+            total_cw += 1
+    return tagged_utt
+
 # ---------- Core counting function ----------
 def count_content_words_from_doc(doc):
     """
     Tally content words & nouns from a spaCy Doc object.
     Also tag tokens for manual review.
     """
-    total = total_nouns = 0
+    total_cw = total_nouns = 0
     tagged_utt = ""
     for tok in doc:
         tagged_utt += f"{tok}"
         if is_content_token(tok):
-            total += 1
+            total_cw += 1
             tagged_utt += f"_{tok.pos_}_CW"
             if tok.pos_ in ("NOUN", "PROPN"):
                 total_nouns += 1
                 tagged_utt += "_N"
         tagged_utt += " "
-    return total, total_nouns, tagged_utt
-
-minimal_turns = ["I know", "I don't know", "I see", "alright", "oh dear", "okay", "mm"]
-
-minimal_turns = [
-    r"\bi know\b",
-    r"\bi don't know\b",
-    r"\bi see\b",
-    r"\balright\b",
-    r"\boh dear\b",
-    r"\bokay\b",
-    r"\bmm+\b",           # catches "mm", "mmm"
-    r"\byeah\b",
-    r"\bno\b",
-    r"\bmaybe\b",
-    # combos
-    r"\balright(,?\s*i see)?(,?\s*i don't know)?",
-    r"\bi don't know(,?\s*maybe)?",
-]
-
-def label_turn(utterance: str, count_content_words: int) -> str:
-    """
-    Label turns:
-      - "MT": minimal turn (from minimal_turns list)
-      - "ST": substantial turn (has content words)
-      - "T" : subminimal turn (no content words, not minimal)
-    """
-    utt = utterance.strip().lower()
-    for pat in minimal_turns:
-        if re.match(pat, utt, flags=re.IGNORECASE):
-            return "MT"
-    if count_content_words > 0:
-        return "ST"
-    return "T"
+    tagged_utt, total_cw = check_main_verb(tagged_utt, total_cw)
+    return total_cw, total_nouns, tagged_utt
 
 def run_automation(df, coder_num):
     """
@@ -199,7 +183,6 @@ def run_automation(df, coder_num):
       - Speech unit counts
       - Filled pause counts
       - Content word counts (all and nouns)
-      - Turn type labeling
 
     Parameters
     ----------
@@ -216,7 +199,6 @@ def run_automation(df, coder_num):
         - c{coder_num}_filled_pauses
         - c{coder_num}_content_words
         - c{coder_num}_num_nouns
-        - c{coder_num}_turn_type
     """
 
     try:
@@ -230,23 +212,20 @@ def run_automation(df, coder_num):
         df[f"c{coder_num}_speech_units"] = df["utterance"].apply(compute_speech_units)
         df[f"c{coder_num}_filled_pauses"] = df["utterance"].apply(count_fillers)
 
-        content_counts, noun_counts, turn_types, tagged_utts = [], [], [], []
+        content_counts, noun_counts, tagged_utts = [], [], []
         utterances = df["utterance"].fillna("").map(expand_and_process_utterances)
 
         total_its = len(utterances)
-        for doc, utt in tqdm(zip(
-                nlp.pipe(utterances, batch_size=100, n_process=2), utterances),
+        for doc in tqdm(nlp.pipe(utterances, batch_size=100, n_process=2),
                 total=total_its, desc="Applying automation to utterances"):
 
             num_content_words, num_nouns, tagged_utt = count_content_words_from_doc(doc)
             content_counts.append(num_content_words)
             noun_counts.append(num_nouns)
-            turn_types.append(label_turn(utt, num_content_words))
             tagged_utts.append(tagged_utt)
         
         df[f"c{coder_num}_content_words"] = content_counts
         df[f"c{coder_num}_num_nouns"] = noun_counts
-        df[f"c{coder_num}_turn_type"] = turn_types
         
         utt_idx = df.columns.tolist().index("utterance")
         df.insert(utt_idx + 1, "tagged_utterance", tagged_utts)
