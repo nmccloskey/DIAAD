@@ -77,9 +77,9 @@ def match_reliability_files(input_dir, output_dir):
 # ----------------------------- Helpers ----------------------------- #
 
 def number_turns(turn_type_col):
-    """Assign sequential numeric labels to turns of type T, MT, or ST."""
+    """Assign sequential numeric labels to turns of type T, MT, ST, or NV."""
     new_col = []
-    turn_counts = {"T": 0, "MT": 0, "ST": 0}
+    turn_counts = {"T": 0, "MT": 0, "ST": 0, "NV": 0}
     for t in turn_type_col:
         if t not in turn_counts:
             try:
@@ -171,7 +171,7 @@ def compute_level_summaries(utt_df: pd.DataFrame, coders: list[str]) -> dict[str
         **{f"{coder}_total_turns": (f"{coder}_turn_label", "nunique") for coder in coders},
         **{
             f"{coder}_num_{ttype}": (f"{coder}_turn_type", count_value(ttype))
-            for coder in coders for ttype in ["T", "MT", "ST"]
+            for coder in coders for ttype in ["T", "MT", "ST", "NV"]
         },
     }
     speaker_df = (
