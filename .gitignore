@@ -12,6 +12,7 @@ dist/
 build/
 *.egg-info/
 src/diaad.egg-info/
+*manual.pdf
 
 # DIAAD-specific
 test_data/

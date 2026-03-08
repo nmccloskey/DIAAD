@@ -1,4 +1,4 @@
-# DIAAD — Database-Oriented, Integrative Architecture for Analyzing Discourse
+# DIAAD — Database-oriented, Integrative Architecture for Analyzing Discourse
 
 ![PyPI version](https://img.shields.io/pypi/v/diaad)
 ![Python](https://img.shields.io/pypi/pyversions/diaad)
