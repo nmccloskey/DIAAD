@@ -1,10 +1,8 @@
-# RASCAL - Resources for Analyzing Speech in Clinical Aphasiology Labs
+# DIAAD — Database-Oriented, Integrative Architecture for Analyzing Discourse
 
-![PyPI version](https://img.shields.io/pypi/v/rascal-speech)
-![Python](https://img.shields.io/pypi/pyversions/rascal-speech)
-![License](https://img.shields.io/github/license/nmccloskey/RASCAL)
-![Zenodo DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17624073.svg)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rascal.streamlit.app/)
+![PyPI version](https://img.shields.io/pypi/v/diaad)
+![Python](https://img.shields.io/pypi/pyversions/diaad)
+![License](https://img.shields.io/github/license/nmccloskey/DIAAD)
 
 > Open-source Python infrastructure for reproducible discourse analysis in clinical aphasiology.
 
@@ -12,119 +10,155 @@
 
 ⚠️ **Development Notice**
 
-Active development of the generalized discourse-analysis engine now continues
-under the **DIAAD** project.
+**DIAAD** is the actively developed successor to the earlier **RASCAL** software architecture.
 
-This repository remains available for historical continuity and may later serve
-as a wrapper or specialized extension of DIAAD.
+DIAAD generalizes and expands the original laboratory-specific pipeline into a modular,
+database-native framework designed to support reproducible discourse analysis workflows
+that integrate manual and automated coding.
 
----
-
-## Description
-
-RASCAL is an open-source Python package designed to enhance efficiency, rigor, and replicability in a variety of monologic discourse analyses common in clinical aphasiology. Initially, the program tabularizes CHAT-formatted (.cha) transcripts with unique identifiers for samples and utterances, facilitating hierarchical organization through filename-derived grouping variables. While structured around our laboratory's workflow, users can run any selection of RASCAL's modules, which include algorithmic transcription reliability evaluation, complete utterance (CU) coding summarization, and batched core lexicon (CoreLex) analysis. The program aims to help researchers and clinicians streamline discourse analysis pipelines, particularly when managing large datasets.
+The original **RASCAL** repository is retained for historical continuity and may later
+be redeveloped as a laboratory-specific wrapper built on top of DIAAD.
 
 ---
 
 ## Installation
 
-We recommend installing RASCAL into a dedicated virtual environment using Anaconda:
+We recommend installing DIAAD into a dedicated virtual environment using Anaconda:
 
 ### 1. Create and activate your environment:
 
 ```bash
-conda create --name rascal python=3.12
-conda activate rascal
+conda create --name diaad python=3.12
+conda activate diaad
 ```
 
-### 2. Download RASCAL:
+### 2. Download DIAAD:
+(PyPI distribution pending)
 ```bash
-# directly from PyPI
-pip install rascal-speech
-
-# or from GitHub
-pip install git+https://github.com/nmccloskey/rascal.git@main
+# install the latest development version
+pip install git+https://github.com/nmccloskey/diaad.git@main
 ```
 ---
 
-## Analysis Pipeline
+## Program Overview (many components pending)
 
-### **BU-TU Semi-Automated Monologic Narrative Analysis Overview**
+DIAAD is a **relational database-native discourse analysis architecture** designed to scaffold reproducible measurement workflows that integrate manual and automated coding.
 
-- **Stage 0 (ASR + Manual):** Complete transcription for all samples.
-- **Stage 1 (RASCAL):**
-   - **Input:** Transcriptions (`.cha`)
-   - **Output:** Transcription reliability samples
-- **Stage 2 (Manual):** Transcribe reliability samples
-- **Stage 3 (RASCAL):**
-   - **Input:** Original & reliability transcriptions
-   - **Output:** Transcription reliability reports, reselected reliability samples
-- **Stage 4 (RASCAL):**
-   - **Input:** Transcriptions (`.cha`)
-   - **Output:** Transcript tables, CU coding & reliability files
-- **Stage 5 (Manual):** CU coding and reliability checks
-- **Stage 6 (RASCAL):**
-   - **Input:** Manually completed CU coding files
-   - **Output:** CU reliability analysis, reselected CU reliability samples
-- **Stage 7 (RASCAL):**
-   - **Input:** CU coding files
-   - **Output:** CU coding summaries, word count files
-- **Stage 8 (Manual):** Word counting and reliability checks, record speaking times
-- **Stage 9 (RASCAL):**
-    - **Input:** Manually completed word count files
-    - **Output:** Word count reliability analysis, reselected reliability samples
-- **Stage 10 (RASCAL):**
-    - **Input:** Transcript tables (with speaking times), CU Coding summaries & word count files
-    - **Output:** Blind & unblind summaries, CoreLex analysis
+### Novelty and Niche
+
+Discourse research benefits from powerful standalone tools (e.g., automated speech recognition systems and linguistic analysis engines). However, large-scale discourse research also requires **robust management and integration of transcripts, metadata, and measurements** across multiple stages of human and computational analysis.
+
+DIAAD addresses this need by providing **revision-tolerant, database-centered infrastructure** that unifies:
+
+- management of transcripts and associated metadata and clinical measures  
+- preset and customizable **human-in-the-loop coding workflows**  
+- integration of external data sources, including:
+  - automated linguistic analysis
+  - macrostructural coding systems
+- **language- and metric-agnostic reproducible measurement pipelines**
+
+Within this architecture, DIAAD formalizes discourse measurement workflows within a stable relational framework.
+
+DIAAD also implements several automated procedures that illustrate the affordances of this infrastructure, including:
+
+- algorithmic **character-level transcription reliability evaluation**
+- **randomized, blinded sampling** for manual annotation tasks
+- computational extraction of selected **POWERS features** (e.g., speech units, content words)
+
+These automated procedures are secondary to the architectural contribution and serve primarily as **proof-of-concept implementations within a broader database-native workflow**.
 
 ---
 
-## Links
+## Core Architectural Features
 
-### GitHub Repository
-Access the full RASCAL source code, issue tracker, and development history:
+### Relational Database Model
 
-👉 **[RASCAL on GitHub](https://github.com/nmccloskey/RASCAL)**
+- Transcriptions are **tabularized with stable unique identifiers** at both document and utterance levels.
+- Transcript metadata are automatically extracted from filenames based on user-defined configuration, enabling hierarchical dataset organization.
+- Transcript content, metadata, and derived measurements are stored within a **unified relational database structure**, enabling:
+
+  - filtering and aggregation
+  - reproducibility
+  - transparent audit trails
+  - integration with external datasets
+
+This structure allows researchers to leverage relational database logic for **scalable discourse analysis workflows**.
 
 ---
 
-### Web App
-Run RASCAL directly in your browser — no local installation required:
+### Human-in-the-Loop Design
 
-👉 **[RASCAL Web App](https://rascal.streamlit.app/)**
+DIAAD is designed to support workflows where manual coding and computational analysis coexist.
+
+Key features include:
+
+- **Position indices** that allow transcript revision without breaking unique identifiers.
+- Stable identifiers enabling **randomized and blinded sampling** for manual coding.
+- Built-in scaffolding for manual annotation workflows, including:
+
+  - generation of coding tables and reliability subsets
+  - Complete Utterance coding
+  - manual word counting workflows
+  - POWERS coding tables
+
+- automated **reliability evaluation** across transcription and coding procedures.
 
 ---
 
-### PyPI Distribution
+### Software Integration
 
-Install the stable RASCAL package from the Python Package Index:
+DIAAD integrates with widely used discourse analysis tools while maintaining a unified relational data structure.
 
-👉 **[rascal-speech on PyPI](https://pypi.org/project/rascal-speech/)**
+Supported integrations include:
 
-```bash
-pip install rascal-speech
-```
+- **Batchalign** (Li et al., 2023) for automated CHAT-formatted transcription upstream of DIAAD workflows.
+- **CLAN** (MacWhinney & Fromm, 2022) via CLI wrappers, allowing established computational analyses to be incorporated into the same relational framework.
 
-### Zenodo Archival Release
-A fully versioned, citable archive of RASCAL (v1.0.0) is available on Zenodo, including:
- - RASCAL Instruction Manual (PDF)
- - Synthetic, non-identifiable example data for all major functionalities
- - MIT license text
- - A release-specific README
+The relational data architecture can be extended to incorporate any external data tables that share compatible sample identifiers.
 
-The example data include:  
-- `toy_data/`: minimal example inputs.  
-- `function_*`: representative output directories with metadata.  
-Please ensure HIPAA compliance when analyzing real clinical data.
+---
 
-👉 **[Zenodo record](https://zenodo.org/records/17624074)**  
-📌 **DOI:** 10.5281/zenodo.17624073
+## DIAAD Modules
+
+### Current modules include:
+
+- Transcript table generation 
+  - from `.cha` files
+  - Metadata extraction
+  - Relational database construction
+- Alignment-based string similarity for **character-level transcription reliability**
+- Complete Utterance (CU) coding workflow
+- Manual word count workflow
+
+
+### Developing modules include:
+- **Customizable blinded sampling** for arbitrary manual annotation tasks
+- POWERS coding workflow, with computational extraction of selected **POWERS features**
+  - speech units
+  - disfluencies
+  - nouns
+  - content words
+- **Digital Conversation Turns (DCT)** analysis
+- CLAN wrappers for command-line workflows
+- Core Lexicon analysis via two pathways:
+  - **DIAAD convenience implementation** (web app), leveraging normative data from Cavanaugh et al. (2021)
+  - **CLI wrappers for CLAN’s CoreLex functionality** for broader narrative and language coverage
+
+---
+
+## Project Lineage
+
+DIAAD evolves from earlier laboratory software developed under the **RASCAL** project.
+
+The transition reflects a shift from a laboratory-specific semi-automated coding pipeline toward a **generalized relational architecture for discourse measurement workflows**.
+
+See `lineage.md` for a detailed description of the project's development history.
 
 ---
 
 ## Setup
 
-To prepare for running RASCAL, complete the following steps:
+To prepare for running DIAAD, complete the following steps:
 
 ### 1. Create your working directory:
 
@@ -135,9 +169,9 @@ Example structure:
 ```plaintext
 your_project/
 ├── config.yaml           # Configuration file (see below)
-└── rascal_data/
+└── diaad_data/
     └── input/            # Place your CHAT (.cha) files and/or Excel data here
-                          # (RASCAL will make an output directory)
+                          # (DIAAD will make an output directory)
 ```
 
 ### 2. Provide a `config.yaml` file
@@ -147,8 +181,8 @@ This file specifies the directories, coders, reliability settings, and tier stru
 You can download the example config file from the repo or create your own like this:
 
 ```yaml
-input_dir: rascal_data/input
-output_dir: rascal_data/output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 random_seed: 8
 reliability_fraction: 0.2
 coders:
@@ -242,42 +276,42 @@ Tabularization:
 
 ## Running the Program
 
-Once installed, RASCAL can be run from any directory using the command-line interface. Commands can be entered in succinct, expanded, or omnibus form (see below tables).
+Once installed, DIAAD can be run from any directory using the command-line interface. Commands can be entered in succinct, expanded, or omnibus form (see below tables).
 
 ```bash
-rascal [-h] [--config CONFIG] command [command ...]
+diaad [-h] [--config CONFIG] command [command ...]
 ```
 
 Examples:
 
 ```bash
 # Reselect transcription reliability:
-rascal 3b
+diaad 3b
 # or
-rascal "transcripts reselect"
+diaad "transcripts reselect"
 
 # Prepare utterance tables and CU coding & reliability files from chat transcripts:
-rascal 4
+diaad 4
 # or
-rascal 4a,4b
+diaad 4a,4b
 # or
-rascal "utterances make", "cus make"
+diaad "utterances make", "cus make"
 
 # Summarize CUs and specify config (default 'config.yaml'):
-rascal 10a --config other_config.yaml
+diaad 10a --config other_config.yaml
 ```
 
 Batched CoreLex:
 ```bash
 # Minimal command for batched CoreLex analysis of .cha-formatted transcripts:
-rascal 10b
+diaad 10b
 # or
-rascal "corelex analyze"
+diaad "corelex analyze"
 
 # To include speaking rate, run the below and fill in the speaking_time column (in seconds) before calling 10b.
-rascal 4a
+diaad 4a
 # or
-rascal "transcripts make"
+diaad "transcripts make"
 
 ```
 ---
@@ -286,13 +320,13 @@ rascal "transcripts make"
 
 | Mode | Example | Typical Use |
 |------|----------|--------------|
-| **Succinct** | `rascal 4b` | Fast single-stage execution |
-| **Expanded** | `rascal "cus make"` | Clearer readability; use quotes for multi-word commands |
-| **Omnibus** | `rascal 4` | Runs all sub-steps in that stage (e.g., 4a–4b) |
+| **Succinct** | `diaad 4b` | Fast single-stage execution |
+| **Expanded** | `diaad "cus make"` | Clearer readability; use quotes for multi-word commands |
+| **Omnibus** | `diaad 4` | Runs all sub-steps in that stage (e.g., 4a–4b) |
 
 ---
 
-## RASCAL Pipeline Commands
+## DIAAD Pipeline Commands
 
 | Stage (succinct command) | Expanded command | Description | Input | Output | Function name |
 |---------------------------|------------------|--------------|--------|---------|----------------|
@@ -321,22 +355,13 @@ rascal "transcripts make"
 
 ---
 
-## RASCAL Workflow
-
-Below is the current RASCAL pipeline.
-
-![RASCAL Workflow Chart](https://raw.githubusercontent.com/nmccloskey/RASCAL/main/images/RASCAL_workflowchart.png)
-
-Stages 2, 5, & 8 are entirely manual. Dashed arrows show the alternate inputs to function **10b**: function **4a** output is required, and recording speaking time in the `samples` sheet is optional but recommended.
-
-
 ## Notes
 
 ### Input Transcriptions
 
 - `.cha` files must be formatted correctly according to CHAT conventions.
 - Ensure filenames match tier values as specified in `config.yaml`.
-- RASCAL searches tier values using exact spelling and capitalization.
+- DIAAD searches tier values using exact spelling and capitalization.
 
 ### Transcript Tables (function **4a**)
 
@@ -348,7 +373,7 @@ The `transcript_tables.xlsx` output contains two sheets:
 
 This encoded tabularization: 
 - establishes unique, human-readable identifiers that satisfy database logic
-- facilitates data management across RASCAL inputs and outputs, including joins between tables
+- facilitates data management across DIAAD inputs and outputs, including joins between tables
 - promotes transparency and consistency in text processing
 - minimizes potential bias during manual coding
 
@@ -356,13 +381,13 @@ If not provided, these tables are automatically generated from `.cha` inputs for
 
 ### Transcription Reliability Input (function **3a**)
 
-In both the CLI and webapp versions, RASCAL function **3a** matches original with reliability transcripts based on common tiers plus a `reliability` tag in the file name, e.g., `TU88_PreTxBrokenWindow.cha` & `TU88PreTxBrokenWindow_reliability.cha`. Function **1a** generates empty `.cha` file templates with the `reliabiilty` tag for the randomly selected samples. In the CLI version, reliability samples can be collected into a `/reliability` subdirectory in the input folder. The tier values must match the originals, but this provides an alternative to tagging filenames.
+In both the CLI and webapp versions, DIAAD function **3a** matches original with reliability transcripts based on common tiers plus a `reliability` tag in the file name, e.g., `TU88_PreTxBrokenWindow.cha` & `TU88PreTxBrokenWindow_reliability.cha`. Function **1a** generates empty `.cha` file templates with the `reliabiilty` tag for the randomly selected samples. In the CLI version, reliability samples can be collected into a `/reliability` subdirectory in the input folder. The tier values must match the originals, but this provides an alternative to tagging filenames.
 
 ### Logs & Metadata
 
 The `logs` subdirectory in the output folder contains two files describing the program run:
- - `rascal_YYMMDD_HHMM.log` - contains log messages (e.g, runtime, detected files, errors, etc.)
- - `rascal_YYMMDD_HHMM_metadata.json` - takes a snapshot of input & output directory content just before program terminates
+ - `diaad_YYMMDD_HHMM.log` - contains log messages (e.g, runtime, detected files, errors, etc.)
+ - `diaad_YYMMDD_HHMM_metadata.json` - takes a snapshot of input & output directory content just before program terminates
 
 ## 🧪 Testing
 
@@ -394,27 +419,19 @@ I warmly welcome feedback, feature suggestions, or bug reports. Feel free to rea
 
 Thanks for your interest and collaboration!
 
-## Citation
-
-If using RASCAL in your research, please cite:
-
-> McCloskey, N., et al. (2025, April). *The RASCAL pipeline: User-friendly and time-saving computational resources for coding and analyzing language samples*. Poster presented at the Aphasia Access Leadership Summit, Pittsburgh, PA.
-
-There is a formal writeup in preparation.
-> (in prep) McCloskey, N., Hoover, E., Vitale, S., Kohen, F., and DeDe, G. (2025) *The RASCAL pipeline: User-friendly and time-saving computational resources for coding and analyzing monologic discourse samples*.
 
 ## Acknowledgments
 
-RASCAL builds on and integrates functionality from two excellent open-source tools which I highly recommend to researchers and clinicians working with language data:
+DIAAD builds on and integrates functionality from two excellent open-source tools which I highly recommend to researchers and clinicians working with language data:
 
-- [**batchalign2**](https://github.com/TalkBank/batchalign2) – Developed by the TalkBank team, Batchalign provides a robust backend for automatic speech recognition (ASR). RASCAL was designed to function downstream of this system, leveraging its debulletized `.cha` files as input. This integration allows researchers to significantly expedite batch transcription, which without an ASR springboard might bottleneck discourse analysis.
+- [**batchalign2**](https://github.com/TalkBank/batchalign2) – Developed by the TalkBank team, Batchalign provides a robust backend for automatic speech recognition (ASR). DIAAD was designed to function downstream of this system, leveraging its debulletized `.cha` files as input. This integration allows researchers to significantly expedite batch transcription, which without an ASR springboard might bottleneck discourse analysis.
 
 > Liu H, MacWhinney B, Fromm D, Lanzi A. *Automation of Language Sample Analysis*. J Speech Lang Hear Res. 2023 Jul 12;66(7):2421-2433. doi: 10.1044/2023_JSLHR-22-00642. Epub 2023 Jun 22. PMID: 37348510; PMCID: PMC10555460.
 
-- [**coreLexicon**](https://github.com/rbcavanaugh/coreLexicon) – A web-based interface for Core Lexicon analysis developed by Rob Cavanaugh, et al (2021). RASCAL implements its own Core Lexicon analysis that has high reliability with this web app: ICC(2) values (two-way random, absolute agreement) on primary metrics were 0.9627 for accuracy (number of core words) and 0.9689 for efficiency (core words per minute) - measured on 402 narratives (Brokem Window, Cat Rescue, and Refused Umbrella) from our conversation treatment study. RASCAL does not use the webapp but accesses the normative data associated with this repository (using Google sheet IDs) to calculate percentiles.
+- [**coreLexicon**](https://github.com/rbcavanaugh/coreLexicon) – A web-based interface for Core Lexicon analysis developed by Rob Cavanaugh, et al (2021). DIAAD implements its own Core Lexicon analysis that has high reliability with this web app: ICC(2) values (two-way random, absolute agreement) on primary metrics were 0.9627 for accuracy (number of core words) and 0.9689 for efficiency (core words per minute) - measured on 402 narratives (Brokem Window, Cat Rescue, and Refused Umbrella) from our conversation treatment study. DIAAD does not use the webapp but accesses the normative data associated with this repository (using Google sheet IDs) to calculate percentiles.
 
-  - **Inspiration & overlap:** RASCAL’s output table design was directly inspired by the original web app, with many of the same fields (accuracy, efficiency, percentiles, CoreLex tokens produced).
-  - **Enhancements:** RASCAL extends this model by (a) supporting batch analysis of uploaded/input tabular data (rather than manual entry through a web interface), and (b) including some new metrics, particularly a normalized lexicon coverage, which enables aggregate comparisons across narratives.
-  - **Recommended use cases:** The original web app remains an excellent choice for users working with a small number of samples who want individualized reports, while RASCAL's CoreLex functionality fills the niche of higher-throughput analysis ready for downstream statistical workflows.
+  - **Inspiration & overlap:** DIAAD’s output table design was directly inspired by the original web app, with many of the same fields (accuracy, efficiency, percentiles, CoreLex tokens produced).
+  - **Enhancements:** DIAAD extends this model by (a) supporting batch analysis of uploaded/input tabular data (rather than manual entry through a web interface), and (b) including some new metrics, particularly a normalized lexicon coverage, which enables aggregate comparisons across narratives.
+  - **Recommended use cases:** The original web app remains an excellent choice for users working with a small number of samples who want individualized reports, while DIAAD's CoreLex functionality fills the niche of higher-throughput analysis ready for downstream statistical workflows.
 
 > Cavanaugh, R., Dalton, S. G., & Richardson, J. (2021). coreLexicon: *An open-source web-app for scoring core lexicon analysis*. R package version 0.0.1.0000. https://github.com/aphasia-apps/coreLexicon
