@@ -31,7 +31,7 @@ def mock_run_functions(monkeypatch):
         "run_select_transcription_reliability_samples",
         "run_reselect_transcription_reliability_samples",
         "run_evaluate_transcription_reliability",
-        "run_make_transcript_tables",
+        "run_tabularize_transcripts",
         "run_make_cu_coding_files",
         "run_evaluate_cu_reliability",
         "run_analyze_cu_coding",
@@ -82,7 +82,7 @@ def mock_utils(monkeypatch, tmp_path):
         },
     )
 
-    # Stub find_files to simulate no transcript tables (forces run_make_transcript_tables)
+    # Stub find_files to simulate no transcript tables (forces run_tabularize_transcripts)
     monkeypatch.setattr(main_module, "find_files", lambda **k: [])
 
     return tmp_path
@@ -93,14 +93,14 @@ def test_main_executes_basic_command(mock_utils, mock_run_functions, tmp_path):
     args = types.SimpleNamespace(command=["4a"], config=None)
     main_module.main(args)
 
-    # run_read_tiers and run_make_transcript_tables should have been called
+    # run_read_tiers and run_tabularize_transcripts should have been called
     assert "run_read_tiers" in mock_run_functions
-    assert "run_make_transcript_tables" in mock_run_functions
+    assert "run_tabularize_transcripts" in mock_run_functions
 
     tiers_args = mock_run_functions["run_read_tiers"]["args"]
     assert isinstance(tiers_args[0], dict)
 
-    make_args = mock_run_functions["run_make_transcript_tables"]["args"]
+    make_args = mock_run_functions["run_tabularize_transcripts"]["args"]
     assert len(make_args) == 5
     assert isinstance(make_args[2], Path)
     assert make_args[2].name.startswith("diaad_output_")
@@ -110,7 +110,7 @@ def test_main_handles_expanded_command(mock_utils, mock_run_functions):
     """Ensure expanded command names map correctly to their succinct codes."""
     args = types.SimpleNamespace(command=["transcripts make"], config=None)
     main_module.main(args)
-    assert "run_make_transcript_tables" in mock_run_functions
+    assert "run_tabularize_transcripts" in mock_run_functions
 
 
 def test_main_handles_omnibus(mock_utils, mock_run_functions):
@@ -118,7 +118,7 @@ def test_main_handles_omnibus(mock_utils, mock_run_functions):
     args = types.SimpleNamespace(command=["4"], config=None)
     main_module.main(args)
     # OMNIBUS '4' expands to ['4a', '4b']
-    assert "run_make_transcript_tables" in mock_run_functions
+    assert "run_tabularize_transcripts" in mock_run_functions
     assert "run_make_cu_coding_files" in mock_run_functions
 
 
@@ -139,5 +139,5 @@ def test_main_executes_multiple_commands(mock_utils, mock_run_functions):
     main_module.main(args)
 
     # Both commands should be executed
-    assert "run_make_transcript_tables" in mock_run_functions
+    assert "run_tabularize_transcripts" in mock_run_functions
     assert "run_summarize_cus" in mock_run_functions

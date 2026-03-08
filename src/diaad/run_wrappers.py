@@ -28,9 +28,9 @@ def run_reselect_transcription_reliability_samples(input_dir, output_dir, frac):
     from diaad.transcripts.transcription_reliability_selection import reselect_transcription_reliability_samples
     reselect_transcription_reliability_samples(input_dir, output_dir, frac)
 
-def run_make_transcript_tables(tiers, chats, output_dir, shuffle_samples, seed):
-    from diaad.transcripts.transcript_tables import make_transcript_tables
-    return make_transcript_tables(tiers=tiers, chats=chats, output_dir=output_dir, shuffle=shuffle_samples, random_seed=seed)
+def run_tabularize_transcripts(tiers, chats, output_dir, shuffle_samples, seed):
+    from diaad.transcripts.transcript_tables import tabularize_transcripts
+    return tabularize_transcripts(tiers=tiers, chats=chats, output_dir=output_dir, shuffle=shuffle_samples, random_seed=seed)
 
 def run_make_cu_coding_files(tiers, frac, coders, input_dir, output_dir, cu_paradigms, exclude_participants):
     from diaad.coding.coding_files import make_cu_coding_files

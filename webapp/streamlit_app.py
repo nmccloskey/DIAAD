@@ -46,7 +46,7 @@ from diaad.run_wrappers import (
     run_select_transcription_reliability_samples,
     run_reselect_transcription_reliability_samples,
     run_evaluate_transcription_reliability,
-    run_make_transcript_tables, run_make_cu_coding_files,
+    run_tabularize_transcripts, run_make_cu_coding_files,
     run_evaluate_cu_reliability,
     run_analyze_cu_coding, run_reselect_cu_reliability,
     run_make_word_count_files, run_evaluate_word_count_reliability,
@@ -209,7 +209,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     if not transcript_tables:
                         logger.info("No utterance files detected — creating automatically.")
                         chats = chats or run_read_cha_files(input_dir)
-                        run_make_transcript_tables(tiers, chats, out_dir, shuffle_samples, random_seed)
+                        run_tabularize_transcripts(tiers, chats, out_dir, shuffle_samples, random_seed)
 
                 # --- Execute selected functions ---
                 for func in selected_funcs:
@@ -223,7 +223,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     elif func.startswith("3b."):
                         run_reselect_transcription_reliability_samples(input_dir, out_dir, frac)
                     elif func.startswith("4a."):
-                        run_make_transcript_tables(tiers, chats, out_dir, shuffle_samples, random_seed)
+                        run_tabularize_transcripts(tiers, chats, out_dir, shuffle_samples, random_seed)
                     elif func.startswith("4b."):
                         run_make_cu_coding_files(
                             tiers, frac, coders, input_dir, out_dir,

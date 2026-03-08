@@ -25,7 +25,7 @@ from diaad.run_wrappers import (
     run_select_transcription_reliability_samples,
     run_reselect_transcription_reliability_samples,
     run_evaluate_transcription_reliability,
-    run_make_transcript_tables, run_make_cu_coding_files,
+    run_tabularize_transcripts, run_make_cu_coding_files,
     run_evaluate_cu_reliability,
     run_analyze_cu_coding, run_reselect_cu_reliability,
     run_make_word_count_files, run_evaluate_word_count_reliability,
@@ -102,7 +102,7 @@ def main(args):
             if not transcript_tables:
                 logger.info("No input transcript tables detected - creating them automatically.")
                 chats = chats or run_read_cha_files(input_dir)
-                run_make_transcript_tables(
+                run_tabularize_transcripts(
                     tiers, chats, out_dir, shuffle_samples, random_seed
                 )
 
@@ -120,7 +120,7 @@ def main(args):
             "transcripts reselect": lambda: run_reselect_transcription_reliability_samples(
                 input_dir, out_dir, frac
             ),
-            "transcripts tabularize": lambda: run_make_transcript_tables(
+            "transcripts tabularize": lambda: run_tabularize_transcripts(
                 tiers, chats, out_dir, shuffle_samples, random_seed
             ),
             "cus make": lambda: run_make_cu_coding_files(

@@ -333,7 +333,7 @@ diaad "transcripts make"
 | 1a | transcripts select | Select transcription reliability samples | Raw `.cha` files | Reliability & full sample lists + template `.cha` files | `select_transcription_reliability_samples` |
 | 3a | transcripts evaluate | Evaluate transcription reliability | Reliability `.cha` pairs | Agreement metrics + alignment text reports | `evaluate_transcription_reliability` |
 | 3b | transcripts reselect | Reselect transcription reliability samples | Original + reliability transcription tables (from **1a**) | New reliability subset(s) | `reselect_transcription_reliability_samples` |
-| 4a | transcripts make | Prepare transcript tables | Raw `.cha` files | Sample & utterance-level spreadsheets | `make_transcript_tables` |
+| 4a | transcripts make | Prepare transcript tables | Raw `.cha` files | Sample & utterance-level spreadsheets | `tabularize_transcripts` |
 | 4b | cus make | Make CU coding & reliability files | Utterance tables (from **4a**) | CU coding + reliability spreadsheets | `make_cu_coding_files` |
 | 6a | cus evaluate | Analyze CU reliability | Manually completed CU coding (from **4b**) | Reliability summary tables + reports | `evaluate_cu_reliability` |
 | 6b | cus reselect | Reselect CU reliability samples | Manually completed CU coding (from **4b**) | New reliability subset(s) | `reselect_cu_wc_reliability` |

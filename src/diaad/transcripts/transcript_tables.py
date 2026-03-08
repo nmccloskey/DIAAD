@@ -76,7 +76,7 @@ def _count_utterances_in_chunk(chats: Dict[str, object], file_list: List[str]) -
     return total
 
 
-def make_transcript_tables(
+def tabularize_transcripts(
     tiers: Dict[str, object],
     chats: Dict[str, object],
     output_dir: Path,

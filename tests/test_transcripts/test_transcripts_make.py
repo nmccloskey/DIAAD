@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from diaad.transcripts.transcript_tables import make_transcript_tables
+from diaad.transcripts.transcript_tables import tabularize_transcripts
 
 
 class MockTier:
@@ -31,8 +31,8 @@ class MockChatReader:
         return self._utterances
 
 
-def test_make_transcript_tables(tmp_path):
-    """End-to-end test of make_transcript_tables with mock CHAT and tiers."""
+def test_tabularize_transcripts(tmp_path):
+    """End-to-end test of tabularize_transcripts with mock CHAT and tiers."""
     # --- Setup directories and mock tiers ---
     output_dir = tmp_path / "out"
     output_dir.mkdir()
@@ -53,7 +53,7 @@ def test_make_transcript_tables(tmp_path):
     }
 
     # --- Run function ---
-    make_transcript_tables(tiers, chats, output_dir)
+    tabularize_transcripts(tiers, chats, output_dir)
 
     # --- Verify transcript_tables directory ---
     # The code splits 'SiteA_G1' into ['SiteA', 'G1']

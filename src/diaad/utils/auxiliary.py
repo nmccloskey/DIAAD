@@ -199,7 +199,7 @@ def extract_transcript_data(
     Parameters
     ----------
     transcript_table_path : str or Path
-        Path to an Excel file produced by `make_transcript_tables`.
+        Path to an Excel file produced by `tabularize_transcripts`.
     type : {'utterance', 'sample', 'joined'}, default='joined'
         Which dataset to return:
           - 'utterance': utterance-level data
