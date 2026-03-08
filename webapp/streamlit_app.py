@@ -54,7 +54,7 @@ from diaad.run_wrappers import (
 )
 from diaad import __version__
 
-from iridic import render_manual_ui  
+from iridic.manual_viewer import render_manual_ui
 
 
 # ------------------------------------------------------------------
@@ -68,9 +68,9 @@ st.subheader("Database-oriented, Integrative Architecture for Analyzing Discours
 # ------------------------------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[1]  # webapp/ -> REPO/
 
-render_manual_ui_single_pane(
+render_manual_ui(
     repo_root=REPO_ROOT,
-    manual_rel_dir="manual",
+    manual_rel_dir="docs/manual",
     expander_label="📘 Show / Hide DIAAD Manual Menu",
 )
 
