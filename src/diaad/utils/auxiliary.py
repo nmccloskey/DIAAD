@@ -1,81 +1,11 @@
 from __future__ import annotations
 import math
-from typing import Sequence, Any, Sized
 import yaml
-from pathlib import Path
 import pandas as pd
+from pathlib import Path
+from typing import Sized
 from diaad.utils.logger import logger, get_root, early_log, _rel
-import argparse
 
-
-# -------------------------------------------------------------
-# Omnibus mappings
-# -------------------------------------------------------------
-OMNIBUS_MAP = {
-    "1": ["1a"],
-    "4": ["4a", "4b"],
-    "7": ["7a", "7b"],
-    "10": ["10a", "10b"],
-}
-
-COMMAND_MAP = {
-    "1a": "transcripts select",
-    "3a": "transcripts evaluate",
-    "3b": "transcripts reselect",
-    "4a": "transcripts make",
-    "4b": "cus make",
-    "6a": "cus evaluate",
-    "6b": "cus reselect",
-    "7a": "cus analyze",
-    "7b": "words make",
-    "9a": "words evaluate",
-    "9b": "words reselect",
-    "10a": "cus summarize",
-    "10b": "corelex analyze",
-}
-
-# -------------------------------------------------------------
-# CLI setup utilities
-# -------------------------------------------------------------
-def build_arg_parser():
-    """Construct and return the argument parser used by both main.py and cli.py."""
-    parser = argparse.ArgumentParser(
-        description=(
-            "DIAAD command-line interface.\n\n"
-            "Examples:\n"
-            "  diaad 3b\n"
-            "  diaad transcripts reselect\n"
-            "  diaad 4\n"
-            "  diaad 4a,4b\n"
-            "  diaad utterances make, cus make, timesheets make\n"
-        ),
-        formatter_class=argparse.RawTextHelpFormatter,
-    )
-
-    parser.add_argument(
-        "command",
-        nargs="+",
-        help="Command(s) to run (comma-separated or space-separated)."
-    )
-
-    parser.add_argument(
-        "--config",
-        type=str,
-        default="config.yaml",
-        help="Path to the configuration file (default: config.yaml)"
-    )
-
-    # ---- Help text for expansions ----
-    help_lines = ["\nAvailable Commands:\n"]
-    for short, long in COMMAND_MAP.items():
-        help_lines.append(f"  {short:<4}  →  {long}")
-    help_lines.append("\nOmnibus Commands:\n")
-    for omni, subs in OMNIBUS_MAP.items():
-        expansions = [f"{s} ({COMMAND_MAP[s]})" for s in subs]
-        help_lines.append(f"  {omni:<4}  →  {', '.join(expansions)}")
-    parser.epilog = "\n".join(help_lines)
-
-    return parser
 
 def project_path(*parts) -> Path:
     """Return an absolute path anchored to the project root."""
@@ -164,9 +94,6 @@ def load_config(config_file: str | Path) -> dict:
         raise
 
 
-# -------------------------------------------------------------
-# File handling utilities
-# -------------------------------------------------------------
 def find_files(
     match_tiers=None,
     directories=None,
