@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-RASCAL requires a **configuration file** (e.g., `config.yaml`) to define how the program interprets, organizes, and processes your data.  
+DIAAD requires a **configuration file** (e.g., `config.yaml`) to define how the program interprets, organizes, and processes your data.  
 This file specifies the following:
 
 1. Input and output directories (automatic in web app mode)  
@@ -13,7 +13,7 @@ This file specifies the following:
 6. Tier definitions for identifying (nested) units of analysis in filenames  
 7. Optional preprocessing settings for transcription reliability
 
-RASCAL reads this configuration at runtime for both the **CLI** and **web app**, ensuring a reproducible workflow across users and datasets.
+DIAAD reads this configuration at runtime for both the **CLI** and **web app**, ensuring a reproducible workflow across users and datasets.
 
 ---
 
@@ -22,8 +22,8 @@ RASCAL reads this configuration at runtime for both the **CLI** and **web app**,
 You can download an editable example (`example_config.yaml`) from the GitHub repository or create your own using the format below:
 
 ```yaml
-input_dir: rascal_data/input
-output_dir: rascal_data/output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 random_seed: 99
 reliability_fraction: 0.2
 coders:
@@ -74,7 +74,7 @@ tiers:
 | **input_dir / output_dir** | Paths for input and output data. The web app presets these automatically (the latter is zipped for download). |
 | **random_seed** | Ensures deterministic selections for replicability |
 | **reliability_fraction** | Fraction of samples randomly selected for reliability coding (default = 0.2). |
-| **coders** | List of alphanumeric identifiers (e.g., 1–3). At least 2 are required for word count and 3 for CU coding. RASCAL automatically distributes samples evenly and prevents overlap between coders. |
+| **coders** | List of alphanumeric identifiers (e.g., 1–3). At least 2 are required for word count and 3 for CU coding. DIAAD automatically distributes samples evenly and prevents overlap between coders. |
 | **CU_paradigms** | Defines CU coding systems (e.g., SAE = Standard American English, AAE = African American English). Multiple paradigms generate parallel coding columns. |
 | **exclude_participants** | Excludes specified speakers (e.g., “INV”) from transcription reliability and CU coding. |
 
@@ -90,7 +90,7 @@ tiers:
 
 ## 4. Tiers: Structuring Units of Analysis
 
-Tiers define the **metadata dimensions** (e.g., site, test phase, participant ID, narrative) that RASCAL extracts from transcript filenames.  
+Tiers define the **metadata dimensions** (e.g., site, test phase, participant ID, narrative) that DIAAD extracts from transcript filenames.  
 Each tier has:  
 - A set of **values** (either listed explicitly or expressed as a regular expression)  
 - Optional **partition** and **blind** flags that control analysis grouping and CU summary anonymization.
@@ -100,7 +100,7 @@ Each tier has:
 | Attribute | Description |
 |------------|--------------|
 | **values** | List of literal identifiers or a single regular expression defining possible values in filenames. |
-| **partition** | When `true`, RASCAL creates **separate coding files and reliability subsets** for each value of that tier (e.g., site). |
+| **partition** | When `true`, DIAAD creates **separate coding files and reliability subsets** for each value of that tier (e.g., site). |
 | **blind** | When `true`, generates blinding codes for CU coding summaries (function **10a**). |
 
 ### 4.2 Example: File Naming and Tier Extraction
@@ -115,7 +115,7 @@ Example files:
 - `TU88PreTxBrokenWindow.cha`
 - `BU77Maintenance_CatRescue.cha`
 
-Based on the above configuration (section 4.2), RASCAL tabularizes as follows:
+Based on the above configuration (section 4.2), DIAAD tabularizes as follows:
 
 | site | test  | study_id | narrative     |
 |------|-------|---------------|---------------|
@@ -130,15 +130,15 @@ See [Python - re](https://docs.python.org/3/library/re.html) for more informatio
 
 ## 5. Dialectal CU Paradigms
 
-Including multiple CU paradigms (e.g., `SAE`, `AAE`) allows RASCAL to automatically produce **parallel CU coding columns**.  
+Including multiple CU paradigms (e.g., `SAE`, `AAE`) allows DIAAD to automatically produce **parallel CU coding columns**.  
 This is useful when coding across dialectal or sociolectal variations while maintaining consistent reliability analysis.
 
 ---
 
 ## 6. Building the Config File Online
 
-Users may create a custom configuration file directly from the **RASCAL web application** using its interactive Config Builder:
-1. Launch the web app: [https://rascal.streamlit.app/](https://rascal.streamlit.app/)  
+Users may create a custom configuration file directly from the **DIAAD web application** using its interactive Config Builder:
+1. Launch the web app: [https://diaad.streamlit.app/](https://diaad.streamlit.app/)  
 2. Select “Config Builder.”  
 3. Define tiers, coders, and reliability settings using dropdowns and checkboxes.  
 4. Click “Download config.yaml” to save it for future sessions.  

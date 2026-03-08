@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
-from rascal.utils.logger import logger, _rel
-from rascal.utils.auxiliary import extract_transcript_data, find_files
+from diaad.utils.logger import logger, _rel
+from diaad.utils.auxiliary import extract_transcript_data, find_files
 
 
 def _aggregate_sample_level(merged_utts, wc_by_utt, cu_by_sample, file):

@@ -2,21 +2,21 @@
 from pathlib import Path
 import random, numpy as np
 from datetime import datetime
-from rascal.utils.logger import (
+from diaad.utils.logger import (
     get_root,
     set_root,
     logger,
     initialize_logger,
     terminate_logger,
 )
-from rascal.utils.auxiliary import (
+from diaad.utils.auxiliary import (
     project_path,
     load_config,
     find_files,
     OMNIBUS_MAP,
     COMMAND_MAP,
     build_arg_parser)
-from rascal.run_wrappers import (
+from diaad.run_wrappers import (
     run_read_tiers, run_read_cha_files,
     run_select_transcription_reliability_samples,
     run_reselect_transcription_reliability_samples,
@@ -27,7 +27,7 @@ from rascal.run_wrappers import (
     run_make_word_count_files, run_evaluate_word_count_reliability,
     run_reselect_wc_reliability, run_summarize_cus, run_run_corelex
 )
-from rascal import __version__
+from diaad import __version__
 
 
 def main(args):
@@ -42,19 +42,19 @@ def main(args):
         config_path = project_path(args.config or "config.yaml")
         config = load_config(config_path)
 
-        input_dir = project_path(config.get("input_dir", "rascal_data/input"))
+        input_dir = project_path(config.get("input_dir", "diaad_data/input"))
         if not input_dir.is_relative_to(get_root()):
             logger.warning(f"Input directory {input_dir} is outside the project root.")
-        output_dir = project_path(config.get("output_dir", "rascal_data/output"))
+        output_dir = project_path(config.get("output_dir", "diaad_data/output"))
 
         timestamp = start_time.strftime("%y%m%d_%H%M")
-        out_dir = (output_dir / f"rascal_output_{timestamp}").resolve()
+        out_dir = (output_dir / f"diaad_output_{timestamp}").resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
 
         # -----------------------------------------------------------------
         # Initialize logger once output folder is ready
         # -----------------------------------------------------------------
-        initialize_logger(start_time, out_dir, program_name="RASCAL", version=__version__)
+        initialize_logger(start_time, out_dir, program_name="DIAAD", version=__version__)
         logger.info("Logger initialized and early logs flushed.")
 
         random_seed = config.get("random_seed", 99) or 99
@@ -155,7 +155,7 @@ def main(args):
             logger.info(f"Completed: {', '.join(executed)}")
 
     except Exception as e:
-        logger.error(f"RASCAL execution failed: {e}", exc_info=True)
+        logger.error(f"DIAAD execution failed: {e}", exc_info=True)
         raise
 
     finally:
@@ -166,7 +166,7 @@ def main(args):
             config_path=config_path,
             config=config,
             start_time=start_time,
-            program_name="RASCAL",
+            program_name="DIAAD",
             version=__version__,
         )
 

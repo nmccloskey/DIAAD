@@ -11,12 +11,12 @@ env*/
 dist/
 build/
 *.egg-info/
-src/rascal.egg-info/
+src/diaad.egg-info/
 
-# RASCAL-specific
+# DIAAD-specific
 test_data/
-rascal_data/output/
-rascal_data/input/
+diaad_data/output/
+diaad_data/input/
 
 # System files
 .DS_Store

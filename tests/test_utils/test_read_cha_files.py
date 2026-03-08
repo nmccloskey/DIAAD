@@ -1,6 +1,6 @@
 import random
 from pathlib import Path
-from rascal.utils.cha_files import read_cha_files
+from diaad.utils.cha_files import read_cha_files
 
 
 def _make_cha_file(path: Path, text: str):
@@ -27,7 +27,7 @@ def test_read_cha_files(tmp_path, monkeypatch):
             return [{"participant": "PAR", "text": "mock"}]
 
     monkeypatch.setattr(
-        "rascal.utils.cha_files.pylangacq.read_chat",
+        "diaad.utils.cha_files.pylangacq.read_chat",
         lambda path: MockReader(path)
     )
 

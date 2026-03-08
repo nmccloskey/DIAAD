@@ -32,16 +32,16 @@ def zip_folder(folder_path: Path) -> BytesIO:
 
 
 # ------------------------------------------------------------------
-# RASCAL imports
+# DIAAD imports
 # ------------------------------------------------------------------
-from rascal.utils.auxiliary import find_files
-from rascal.utils.logger import (
+from diaad.utils.auxiliary import find_files
+from diaad.utils.logger import (
     logger,
     initialize_logger,
     terminate_logger,
     early_log,
 )
-from rascal.run_wrappers import (
+from diaad.run_wrappers import (
     run_read_tiers, run_read_cha_files,
     run_select_transcription_reliability_samples,
     run_reselect_transcription_reliability_samples,
@@ -52,7 +52,7 @@ from rascal.run_wrappers import (
     run_make_word_count_files, run_evaluate_word_count_reliability,
     run_reselect_wc_reliability, run_summarize_cus, run_run_corelex
 )
-from rascal import __version__
+from diaad import __version__
 
 from manual_viewer import render_manual_ui_single_pane  
 
@@ -60,7 +60,7 @@ from manual_viewer import render_manual_ui_single_pane
 # ------------------------------------------------------------------
 # Streamlit header
 # ------------------------------------------------------------------
-st.title("RASCAL Web App")
+st.title("DIAAD Web App")
 st.subheader("Resources for Analyzing Speech in Clinical Aphasiology Labs")
 
 # ------------------------------------------------------------------
@@ -71,7 +71,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]  # webapp/ -> REPO/
 render_manual_ui_single_pane(
     repo_root=REPO_ROOT,
     manual_rel_dir="manual",
-    expander_label="📘 Show / Hide RASCAL Manual Menu",
+    expander_label="📘 Show / Hide DIAAD Manual Menu",
 )
 
 # ---------------------------------------------------------------
@@ -105,7 +105,7 @@ cha_files = st.file_uploader("Upload input files", type=["cha", "xlsx"], accept_
 if (config_file or st.session_state.confirmed_config) and cha_files:
     with tempfile.TemporaryDirectory() as tmpdir:
         root_dir = Path(tmpdir).resolve()
-        early_log("info", f"RASCAL web run initialized (temporary root: {root_dir})")
+        early_log("info", f"DIAAD web run initialized (temporary root: {root_dir})")
 
         input_dir = (root_dir / "input").resolve()
         output_dir = (root_dir / "output").resolve()
@@ -120,7 +120,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
 
         # Create timestamped output folder and logger
         timestamp = start_time.strftime("%y%m%d_%H%M")
-        out_dir = (output_dir / f"rascal_output_{timestamp}").resolve()
+        out_dir = (output_dir / f"diaad_output_{timestamp}").resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
 
         # --- Save the effective config into the output folder ---
@@ -135,11 +135,11 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                 yaml.safe_dump(config, f, sort_keys=False)
 
         # Set root for nicer relative paths in logs
-        from rascal.utils.logger import set_root
+        from diaad.utils.logger import set_root
         set_root(root_dir)
 
         # Initialize the logger
-        initialize_logger(start_time, out_dir, program_name="RASCAL", version=__version__)
+        initialize_logger(start_time, out_dir, program_name="DIAAD", version=__version__)
 
         # ------------------------------------------------------------------
         # Load config parameters
@@ -249,9 +249,9 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                 st.success("✅ All selected functions completed successfully!")
 
             except Exception as e:
-                logger.exception("Unhandled error during RASCAL web run.")
+                logger.exception("Unhandled error during DIAAD web run.")
                 st.error(
-                    "❌ An unexpected error occurred while running RASCAL. "
+                    "❌ An unexpected error occurred while running DIAAD. "
                     "Please check the logs in the downloaded ZIP for details."
                 )
 
@@ -264,7 +264,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                         config_path=config_path,
                         config=config,
                         start_time=start_time,
-                        program_name="RASCAL",
+                        program_name="DIAAD",
                         version=__version__,
                     )
                 except Exception:
@@ -277,7 +277,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
             st.download_button(
                 label="⬇️ Download Results ZIP",
                 data=zip_buffer,
-                file_name=f"rascal_web_output_{timestamp}.zip",
+                file_name=f"diaad_web_output_{timestamp}.zip",
                 mime="application/zip"
             )
 

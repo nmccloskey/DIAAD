@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rascal.coding.coding_files import make_cu_coding_files
+from diaad.coding.coding_files import make_cu_coding_files
 
 
 class FakeTier:
@@ -43,10 +43,10 @@ def io_tree(tmp_path, monkeypatch):
 
     # Patch read_excel to return our synthetic utterance DF
     monkeypatch.setattr(pd, "read_excel", lambda *a, **k: _mk_utt_df(), raising=False)
-    import rascal.coding.coding_files as mod
+    import diaad.coding.coding_files as mod
     monkeypatch.setattr(mod, "extract_transcript_data", lambda path: _mk_utt_df())
 
-    import rascal.coding.coding_files as mod
+    import diaad.coding.coding_files as mod
     monkeypatch.setattr(mod.random, "sample", lambda seq, k: list(seq)[:k])
     return input_dir, output_dir, fname
 

@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from rascal.transcripts.transcript_tables import make_transcript_tables
+from diaad.transcripts.transcript_tables import make_transcript_tables
 
 
 class MockTier:

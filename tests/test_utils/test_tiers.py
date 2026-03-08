@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from rascal.utils.tiers import Tier, TierManager
+from diaad.utils.tiers import Tier, TierManager
 
 
 def test_default_tiers_when_config_missing_or_invalid():

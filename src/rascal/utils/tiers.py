@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
-from rascal.utils.logger import logger
+from diaad.utils.logger import logger
 
 
 # -------------------------

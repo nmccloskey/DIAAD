@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from rascal.transcripts.transcription_reliability_selection import reselect_transcription_reliability_samples
+from diaad.transcripts.transcription_reliability_selection import reselect_transcription_reliability_samples
 
 
 def _make_reliability_excel(path: Path):

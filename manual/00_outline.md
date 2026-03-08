@@ -1,4 +1,4 @@
-# RASCAL Instruction Manual
+# DIAAD Instruction Manual
 
 **Version:** 1.0.7  
 **Generated:** 2026-02-22  
@@ -20,7 +20,7 @@
 ## Outline (Links)
 
 ### Manual root
-- [01_introduction.md — 0: About RASCAL](01_introduction.md)
+- [01_introduction.md — 0: About DIAAD](01_introduction.md)
 - [02_installation.md — 1: Installation and Access](02_installation.md)
 - [03_configuration.md — 4: Configuration](03_configuration.md)
 

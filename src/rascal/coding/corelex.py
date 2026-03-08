@@ -8,9 +8,9 @@ from pathlib import Path
 from datetime import datetime
 from scipy.stats import percentileofscore
 
-from rascal.utils.logger import logger, _rel
-from rascal.coding.coding_files import stim_cols
-from rascal.utils.auxiliary import find_files, extract_transcript_data
+from diaad.utils.logger import logger, _rel
+from diaad.coding.coding_files import stim_cols
+from diaad.utils.auxiliary import find_files, extract_transcript_data
 
 
 urls = {
@@ -650,7 +650,7 @@ def compute_corelex_for_text(
 
 def extract_corelex_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
     """
-    Extract (text, speaking_time, narrative, sample_id) from a RASCAL-style sample_df.
+    Extract (text, speaking_time, narrative, sample_id) from a DIAAD-style sample_df.
 
     Returns
     -------

@@ -2,7 +2,7 @@ import yaml
 import pandas as pd
 from pathlib import Path
 import pytest
-from rascal.utils.auxiliary import (
+from diaad.utils.auxiliary import (
     project_path,
     as_path,
     find_config_file,

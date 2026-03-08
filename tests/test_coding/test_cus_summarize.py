@@ -5,7 +5,7 @@ import random
 import pandas as pd
 import pytest
 
-import rascal.coding.cu_summarization as cu
+import diaad.coding.cu_summarization as cu
 
 
 @pytest.fixture

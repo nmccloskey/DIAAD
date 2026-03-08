@@ -5,9 +5,9 @@ import pytest
 
 # Import target
 try:
-    from rascal.coding import cu_analysis as cua
+    from diaad.coding import cu_analysis as cua
 except Exception as e:
-    pytest.skip(f"Could not import rascal.coding.cu_analysis: {e}", allow_module_level=True)
+    pytest.skip(f"Could not import diaad.coding.cu_analysis: {e}", allow_module_level=True)
 
 
 class MockTier:

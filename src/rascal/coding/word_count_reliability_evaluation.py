@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
-from rascal.utils.logger import logger, _rel
+from diaad.utils.logger import logger, _rel
 
 
 def percent_difference(value1, value2):

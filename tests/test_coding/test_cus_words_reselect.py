@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from rascal.coding.coding_files import reselect_cu_wc_reliability
+from diaad.coding.coding_files import reselect_cu_wc_reliability
 
 class MockTier:
     """Minimal mock tier that provides .match() for label extraction."""

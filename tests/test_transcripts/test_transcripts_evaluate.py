@@ -1,11 +1,11 @@
 import pylangacq
 import pandas as pd
 from pathlib import Path
-from rascal.transcripts.transcription_reliability_evaluation import evaluate_transcription_reliability
+from diaad.transcripts.transcription_reliability_evaluation import evaluate_transcription_reliability
 
 
 class MockTier:
-    """Minimal mock tier simulating real RASCAL tier behavior."""
+    """Minimal mock tier simulating real DIAAD tier behavior."""
     def __init__(self, label, partition=True):
         self.label = label
         self.partition = partition
@@ -62,13 +62,13 @@ def test_evaluate_transcription_reliability(tmp_path, monkeypatch):
             return [MockUtt(self._text)]
 
     monkeypatch.setattr(
-        "rascal.transcripts.transcription_reliability_evaluation.pylangacq.read_chat",
+        "diaad.transcripts.transcription_reliability_evaluation.pylangacq.read_chat",
         lambda path: MockReader(Path(path).read_text())
     )
 
     # Monkeypatch _convert_cha_names to return the reliability dir as having been processed
     monkeypatch.setattr(
-        "rascal.transcripts.transcription_reliability_evaluation._convert_cha_names",
+        "diaad.transcripts.transcription_reliability_evaluation._convert_cha_names",
         lambda input_dir: {"renamed": [], "originals": []}
     )
 

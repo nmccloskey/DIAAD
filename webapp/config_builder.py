@@ -14,7 +14,7 @@ def _split_values(text: str):
     return [p.strip() for p in parts if p.strip()]
 
 def build_config_ui():
-    st.subheader("🔧 Create RASCAL Config")
+    st.subheader("🔧 Create DIAAD Config")
 
     # ---- Top-level ----
     input_dir = st.text_input("Input directory", value="data/input")

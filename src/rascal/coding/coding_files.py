@@ -8,8 +8,8 @@ from tqdm import tqdm
 import num2words as n2w
 from pathlib import Path
 from functools import lru_cache
-from rascal.utils.logger import logger, _rel
-from rascal.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
+from diaad.utils.logger import logger, _rel
+from diaad.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
 
 stim_cols = ["narrative", "scene", "story", "stimulus"]
 

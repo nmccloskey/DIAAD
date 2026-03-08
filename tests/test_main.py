@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 from datetime import datetime
 
-import rascal.main as main_module
+import diaad.main as main_module
 
 
 @pytest.fixture
@@ -103,7 +103,7 @@ def test_main_executes_basic_command(mock_utils, mock_run_functions, tmp_path):
     make_args = mock_run_functions["run_make_transcript_tables"]["args"]
     assert len(make_args) == 5
     assert isinstance(make_args[2], Path)
-    assert make_args[2].name.startswith("rascal_output_")
+    assert make_args[2].name.startswith("diaad_output_")
 
 
 def test_main_handles_expanded_command(mock_utils, mock_run_functions):

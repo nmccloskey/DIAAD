@@ -4,7 +4,7 @@ from typing import Sequence, Any, Sized
 import yaml
 from pathlib import Path
 import pandas as pd
-from rascal.utils.logger import logger, get_root, early_log, _rel
+from diaad.utils.logger import logger, get_root, early_log, _rel
 import argparse
 
 
@@ -41,13 +41,13 @@ def build_arg_parser():
     """Construct and return the argument parser used by both main.py and cli.py."""
     parser = argparse.ArgumentParser(
         description=(
-            "RASCAL command-line interface.\n\n"
+            "DIAAD command-line interface.\n\n"
             "Examples:\n"
-            "  rascal 3b\n"
-            "  rascal transcripts reselect\n"
-            "  rascal 4\n"
-            "  rascal 4a,4b\n"
-            "  rascal utterances make, cus make, timesheets make\n"
+            "  diaad 3b\n"
+            "  diaad transcripts reselect\n"
+            "  diaad 4\n"
+            "  diaad 4a,4b\n"
+            "  diaad utterances make, cus make, timesheets make\n"
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )

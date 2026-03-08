@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from rascal.coding.word_count_reliability_evaluation import evaluate_word_count_reliability
+from diaad.coding.word_count_reliability_evaluation import evaluate_word_count_reliability
 
 
 class MockTier:

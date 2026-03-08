@@ -5,9 +5,9 @@ import pytest
 
 # Import target module
 try:
-    from rascal.coding import corelex as clx
+    from diaad.coding import corelex as clx
 except Exception as e:
-    pytest.skip(f"Could not import rascal.coding.corelex: {e}", allow_module_level=True)
+    pytest.skip(f"Could not import diaad.coding.corelex: {e}", allow_module_level=True)
 
 
 def _make_placeholder_files(tmp_path, *, unblind=False, fallback=False):

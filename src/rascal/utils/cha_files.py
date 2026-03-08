@@ -1,7 +1,7 @@
 import random
 import pylangacq
 from tqdm import tqdm
-from rascal.utils.logger import logger, _rel
+from diaad.utils.logger import logger, _rel
 
 
 def read_cha_files(input_dir, shuffle=False):

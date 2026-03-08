@@ -6,7 +6,7 @@
 
 - **CLI pattern:**  
   ```bash
-  rascal [-h] [--config CONFIG] command [command ...]
+  diaad [-h] [--config CONFIG] command [command ...]
   ```  
   - *Succinct* commands: numeric/letter codes (e.g., `4b`).  
   - *Expanded* commands: quoted phrases (e.g., `"cus make"`).  
@@ -16,7 +16,7 @@
 
 ---
 
-### 1.3 RASCAL Pipeline Commands
+### 1.3 DIAAD Pipeline Commands
 
 | Stage (succinct command) | Expanded command | Description | Input | Output | Function name |
 |---------------------------|------------------|--------------|--------|---------|----------------|
@@ -51,13 +51,13 @@
 
 ```bash
 # Prepare transcript tables + CU coding files in one go
-rascal 4            # runs 4a,4b
+diaad 4            # runs 4a,4b
 
 # Full CU analysis after manual CU coding is finished
-rascal 6a,7a,10a
+diaad 6a,7a,10a
 
 # Minimal batched CoreLex on input .cha files
-rascal 10b
+diaad 10b
 ```
 
 ---
@@ -74,11 +74,11 @@ rascal 10b
 
 ## 2: Example Data
 
-RASCAL is distributed with a folder of **example data** to support hands-on exploration and verification of the pipeline. All included materials are synthetic and non-identifiable. Users can safely test every functionality without access to clinical data.
+DIAAD is distributed with a folder of **example data** to support hands-on exploration and verification of the pipeline. All included materials are synthetic and non-identifiable. Users can safely test every functionality without access to clinical data.
 
 ### 2.1  Folder Structure
 ```
-rascal_files/
+diaad_files/
   example_data/
     toy_data/
       toy_narratives/
@@ -86,12 +86,12 @@ rascal_files/
       toy_transcript_tables/
       toy_transcription_reliability/
     function_1a/
-      rascal_output_YYYYMM_DD_HHMM/
+      diaad_output_YYYYMM_DD_HHMM/
     ...
 ```
 
 - **toy_data/** provides minimal inputs for trial runs.
-- **function_xx/** folders each contain a timestamped output directory from a complete RASCAL operation (e.g., `rascal_output_YYYYMMDD_HHMM/`).  
+- **function_xx/** folders each contain a timestamped output directory from a complete DIAAD operation (e.g., `diaad_output_YYYYMMDD_HHMM/`).  
   These runs illustrate expected outputs, internal metadata, and file naming conventions without repeating inputs unnecessarily.
 
 ## 3: Usage Notes
@@ -101,6 +101,6 @@ rascal_files/
 
 ---
 
-> The following sections are organized by **functionality**. For each function you’ll find: purpose (in the RASCAL pipeline and in general), inputs, outputs, CLI commands (succinct & expanded), Streamlit selection, and any associated **manual** procedures. See the `README.md` on GitHub for a tabular summary of RASCAL functions.
+> The following sections are organized by **functionality**. For each function you’ll find: purpose (in the DIAAD pipeline and in general), inputs, outputs, CLI commands (succinct & expanded), Streamlit selection, and any associated **manual** procedures. See the `README.md` on GitHub for a tabular summary of DIAAD functions.
 
 ---

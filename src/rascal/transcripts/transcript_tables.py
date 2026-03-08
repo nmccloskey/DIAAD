@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 import numpy as np
-from rascal.utils.logger import logger, _rel
+from diaad.utils.logger import logger, _rel
 
 
 def zero_pad(num: int, lower_bound: int = 3) -> int:

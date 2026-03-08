@@ -1,5 +1,5 @@
 from typing import Dict
-from rascal.utils.logger import logger
+from diaad.utils.logger import logger
 
 
 class RascalTier:
@@ -31,9 +31,9 @@ class RascalTier:
     def match(self, *args, **kwargs):
         return self._base.match(*args, **kwargs)
 
-def adapt_tiers_for_rascal(TM) -> Dict[str, RascalTier]:
+def adapt_tiers_for_diaad(TM) -> Dict[str, RascalTier]:
     """
-    Convert TierManager.tiers into RASCAL-compatible tier dict
+    Convert TierManager.tiers into DIAAD-compatible tier dict
     with .partition and .blind attributes.
     """
 
@@ -62,6 +62,6 @@ def adapt_tiers_for_rascal(TM) -> Dict[str, RascalTier]:
         )
 
     if not adapted:
-        logger.warning("No tiers adapted for RASCAL.")
+        logger.warning("No tiers adapted for DIAAD.")
 
     return adapted

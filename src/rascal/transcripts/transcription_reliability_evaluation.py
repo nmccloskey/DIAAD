@@ -6,7 +6,7 @@ from tqdm import tqdm
 from pathlib import Path
 from Bio.Align import PairwiseAligner
 from typing import Union, List
-from rascal.utils.logger import logger, _rel
+from diaad.utils.logger import logger, _rel
 
 
 def percent_difference(a, b):
@@ -81,7 +81,7 @@ def extract_cha_text(
     """
     Extract utterance text only when a pylangacq.Reader is provided.
 
-    For RASCAL: accepts a Reader and returns concatenated utterances.
+    For DIAAD: accepts a Reader and returns concatenated utterances.
     For DIAAD: if input is already a text string, it is returned unchanged
     (no pylangacq parsing).
 
@@ -128,7 +128,7 @@ def process_utterances(
     lowercase: bool = True,
 ) -> str:
     """
-    Unified utterance-processing pipeline for both RASCAL (Reader input)
+    Unified utterance-processing pipeline for both DIAAD (Reader input)
     and DIAAD (plain text input).
 
     Behavior
