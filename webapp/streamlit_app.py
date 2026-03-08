@@ -54,14 +54,14 @@ from diaad.run_wrappers import (
 )
 from diaad import __version__
 
-from manual_viewer import render_manual_ui_single_pane  
+from iridic import render_manual_ui  
 
 
 # ------------------------------------------------------------------
 # Streamlit header
 # ------------------------------------------------------------------
 st.title("DIAAD Web App")
-st.subheader("Resources for Analyzing Speech in Clinical Aphasiology Labs")
+st.subheader("Database-oriented, Integrative Architecture for Analyzing Discourse")
 
 # ------------------------------------------------------------------
 # Instruction manual toggle
