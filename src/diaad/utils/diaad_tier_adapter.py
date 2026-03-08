@@ -2,7 +2,7 @@ from typing import Dict
 from diaad.utils.logger import logger
 
 
-class RascalTier:
+class DiaadTier:
     """
     Adapter wrapper around core Tier.
 
@@ -31,7 +31,7 @@ class RascalTier:
     def match(self, *args, **kwargs):
         return self._base.match(*args, **kwargs)
 
-def adapt_tiers_for_diaad(TM) -> Dict[str, RascalTier]:
+def adapt_tiers_for_diaad(TM) -> Dict[str, DiaadTier]:
     """
     Convert TierManager.tiers into DIAAD-compatible tier dict
     with .partition and .blind attributes.
@@ -48,7 +48,7 @@ def adapt_tiers_for_diaad(TM) -> Dict[str, RascalTier]:
         partition = name in partition_set
         blind = name in blind_set
 
-        tier = RascalTier(
+        tier = DiaadTier(
             base,
             partition=partition,
             blind=blind,
