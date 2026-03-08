@@ -12,10 +12,14 @@ from diaad.utils.logger import (
 from diaad.utils.auxiliary import (
     project_path,
     load_config,
-    find_files,
-    OMNIBUS_MAP,
-    COMMAND_MAP,
-    build_arg_parser)
+    find_files
+)
+from diaad.utils.cli_utils import (
+    build_arg_parser,
+    parse_cli_commands,
+    commands_require_chats,
+    commands_require_transcript_tables,
+)
 from diaad.run_wrappers import (
     run_read_tiers, run_read_cha_files,
     run_select_transcription_reliability_samples,
@@ -74,69 +78,79 @@ def main(args):
         tiers, TM = run_read_tiers(config) or {}
 
         # ---------------------------------------------------------
-        # Expand omnibus & comma-separated commands
+        # Parse commands
         # ---------------------------------------------------------
-        if isinstance(args.command, list):
-            args.command = " ".join(args.command)
-        raw_commands = [c.strip() for c in args.command.split(",") if c.strip()]
-
-        # Standardize to succinct abbreviations
-        rev_cmap = {v: k for k, v in COMMAND_MAP.items()}
-        converted = []
-        for c in raw_commands:
-            # Direct succinct match
-            if c in COMMAND_MAP:
-                converted.append(c)
-            # Expanded (e.g. "transcripts select")
-            elif c in COMMAND_MAP.values():
-                converted.append(rev_cmap[c])
-            # Omnibus --> succinct
-            elif c in OMNIBUS_MAP:
-                converted.extend(OMNIBUS_MAP[c])
-            else:
-                logger.warning(f"Command {c} not recognized - skipping")
+        converted = parse_cli_commands(args.command, logger=logger)
 
         if not converted:
-            logger.error("No valid commands recognized — exiting.")
+            logger.error("No valid commands recognized - exiting.")
             return
 
         logger.info(f"Executing command(s): {', '.join(converted)}")
 
         # Load .cha if required
         chats = None
-        if any(c in ["1a", "4a"] for c in converted):
+        if commands_require_chats(converted):
             chats = run_read_cha_files(input_dir)
 
-        # Prepare utterance files if needed
-        if "4a" not in converted and any(c in ["4b", "10b"] for c in converted):
-            transcript_tables = find_files(directories=[input_dir, out_dir],
-                                           search_base="transcript_tables")
+        # Prepare transcript tables if needed
+        if "transcripts tabularize" not in converted and commands_require_transcript_tables(converted):
+            transcript_tables = find_files(
+                directories=[input_dir, out_dir],
+                search_base="transcript_tables",
+            )
             if not transcript_tables:
-                logger.info("No input transcript tables detected — creating them automatically.")
+                logger.info("No input transcript tables detected - creating them automatically.")
                 chats = chats or run_read_cha_files(input_dir)
-                run_make_transcript_tables(tiers, chats, out_dir, shuffle_samples, random_seed)
+                run_make_transcript_tables(
+                    tiers, chats, out_dir, shuffle_samples, random_seed
+                )
 
         # ---------------------------------------------------------
         # Dispatch dictionary
         # ---------------------------------------------------------
         dispatch = {
-            "1a": lambda: run_select_transcription_reliability_samples(tiers, chats, frac, out_dir),
-            "3a": lambda: run_evaluate_transcription_reliability(
-                tiers, input_dir, out_dir, exclude_participants, strip_clan, prefer_correction, lowercase
+            "transcripts select": lambda: run_select_transcription_reliability_samples(
+                tiers, chats, frac, out_dir
             ),
-            "3b": lambda: run_reselect_transcription_reliability_samples(input_dir, out_dir, frac),
-            "4a": lambda: run_make_transcript_tables(tiers, chats, out_dir, shuffle_samples, random_seed),
-            "4b": lambda: run_make_cu_coding_files(
-                tiers, frac, coders, input_dir, out_dir, cu_paradigms, exclude_participants
+            "transcripts evaluate": lambda: run_evaluate_transcription_reliability(
+                tiers, input_dir, out_dir, exclude_participants,
+                strip_clan, prefer_correction, lowercase
             ),
-            "6a": lambda: run_evaluate_cu_reliability(tiers, input_dir, out_dir, cu_paradigms),
-            "6b": lambda: run_reselect_cu_reliability(tiers, input_dir, out_dir, "CU", frac),
-            "7a": lambda: run_analyze_cu_coding(tiers, input_dir, out_dir, cu_paradigms),
-            "7b": lambda: run_make_word_count_files(tiers, frac, coders, input_dir, out_dir),
-            "9a": lambda: run_evaluate_word_count_reliability(tiers, input_dir, out_dir),
-            "9b": lambda: run_reselect_wc_reliability(tiers, input_dir, out_dir, "WC", frac),
-            "10a": lambda: run_summarize_cus(tiers, input_dir, out_dir, random_seed, TM),
-            "10b": lambda: run_run_corelex(tiers, input_dir, out_dir, exclude_participants),
+            "transcripts reselect": lambda: run_reselect_transcription_reliability_samples(
+                input_dir, out_dir, frac
+            ),
+            "transcripts tabularize": lambda: run_make_transcript_tables(
+                tiers, chats, out_dir, shuffle_samples, random_seed
+            ),
+            "cus make": lambda: run_make_cu_coding_files(
+                tiers, frac, coders, input_dir, out_dir,
+                cu_paradigms, exclude_participants
+            ),
+            "cus evaluate": lambda: run_evaluate_cu_reliability(
+                tiers, input_dir, out_dir, cu_paradigms
+            ),
+            "cus reselect": lambda: run_reselect_cu_reliability(
+                tiers, input_dir, out_dir, "CU", frac
+            ),
+            "cus analyze": lambda: run_analyze_cu_coding(
+                tiers, input_dir, out_dir, cu_paradigms
+            ),
+            "cus summarize": lambda: run_summarize_cus(
+                tiers, input_dir, out_dir, random_seed, TM
+            ),
+            "words make": lambda: run_make_word_count_files(
+                tiers, frac, coders, input_dir, out_dir
+            ),
+            "words evaluate": lambda: run_evaluate_word_count_reliability(
+                tiers, input_dir, out_dir
+            ),
+            "words reselect": lambda: run_reselect_wc_reliability(
+                tiers, input_dir, out_dir, "WC", frac
+            ),
+            "corelex analyze": lambda: run_run_corelex(
+                tiers, input_dir, out_dir, exclude_participants
+            ),
         }
 
         # ---------------------------------------------------------

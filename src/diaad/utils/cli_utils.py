@@ -114,3 +114,12 @@ def parse_cli_commands(command_arg, logger=None):
                 logger.warning(f"Command {cmd!r} not recognized - skipping")
 
     return valid
+
+def commands_require_chats(commands):
+    """Return True if any requested command requires .cha files to be loaded."""
+    return any(cmd in {"transcripts select", "transcripts tabularize"} for cmd in commands)
+
+
+def commands_require_transcript_tables(commands):
+    """Return True if transcript tables must exist before executing commands."""
+    return any(cmd in {"cus make", "corelex analyze"} for cmd in commands)
