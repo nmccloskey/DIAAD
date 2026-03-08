@@ -230,7 +230,7 @@ tiers:
 
   - `reliability_fraction` - the proportion of data to subset for reliability (default 20%).
 
-  - `coders` - alphanumeric coder identifiers (2 required for function **g** and 3 for **c**, see below).
+  - `coders` - alphanumeric coder identifiers.
 
   - `CU_paradigms` - allows users to accommodate multiple dialects if desired. If at least two paradigms are entered, parallel coding columns will be prepared and processed in all CU functions.
 
@@ -258,7 +258,7 @@ The tier system facilitates tabularization by associating a unit of analysis wit
 
 - **Tier attributes**
   - **Partition**: creates separate coding files and **separate reliability** subsets by that tier. In this example, separate CU coding files will be generated for each site (AC, BU, TU), but not for each narrative or test value.
-  - **Blind**: generates blind codes for CU summaries (function **j** below).
+  - **Blind**: generates blind codes for CU summaries.
 
 ***Example: Tier-Based Tabularization from Filenames (according to the above config).***
 
@@ -276,82 +276,133 @@ Tabularization:
 
 ## Running the Program
 
-Once installed, DIAAD can be run from any directory using the command-line interface. Commands can be entered in succinct, expanded, or omnibus form (see below tables).
+Once installed, DIAAD can be run from any directory using the command-line interface.
 
-```bash
+Commands follow the pattern:
+
+```
+diaad <module> <action>
+```
+
+Multiple commands may be executed sequentially by separating them with commas.
+
+```
 diaad [-h] [--config CONFIG] command [command ...]
 ```
 
 Examples:
 
 ```bash
-# Reselect transcription reliability:
-diaad 3b
-# or
-diaad "transcripts reselect"
+# Reselect transcription reliability samples
+diaad transcripts reselect
 
-# Prepare utterance tables and CU coding & reliability files from chat transcripts:
-diaad 4
-# or
-diaad 4a,4b
-# or
-diaad "utterances make", "cus make"
+# Prepare transcript tables from CHAT transcripts
+diaad transcripts tabularize
 
-# Summarize CUs and specify config (default 'config.yaml'):
-diaad 10a --config other_config.yaml
+# Generate CU coding and reliability spreadsheets
+diaad cus make
+
+# Run multiple steps in sequence
+diaad transcripts tabularize, cus make, words make
+
+# Use a custom configuration file
+diaad cus summarize --config other_config.yaml
 ```
 
-Batched CoreLex:
+---
+
+## DIAAD Commands by Module
+
+DIAAD commands are grouped by **module**. Each command corresponds to a specific operation within a module.
+
+---
+
+### Transcripts Module
+
+| Command                  | Description                                     | Input                                       | Output                                                  | Function                                     |
+| ------------------------ | ----------------------------------------------- | ------------------------------------------- | ------------------------------------------------------- | -------------------------------------------- |
+| `transcripts select`     | Select transcription reliability samples        | Raw `.cha` files                            | Reliability & full sample lists + template `.cha` files | `select_transcription_reliability_samples`   |
+| `transcripts evaluate`   | Evaluate transcription reliability              | Reliability `.cha` pairs                    | Agreement metrics + alignment text reports              | `evaluate_transcription_reliability`         |
+| `transcripts reselect`   | Reselect transcription reliability samples      | Original + reliability transcription tables | New reliability subset(s)                               | `reselect_transcription_reliability_samples` |
+| `transcripts tabularize` | Convert CHAT transcripts into structured tables | Raw `.cha` files                            | Sample- and utterance-level spreadsheets                | `tabularize_transcripts`                     |
+
+---
+
+### Complete Utterances (CU) Module
+
+| Command         | Description                                     | Input                            | Output                                         | Function                     |
+| --------------- | ----------------------------------------------- | -------------------------------- | ---------------------------------------------- | ---------------------------- |
+| `cus make`      | Generate CU coding and reliability spreadsheets | Utterance tables                 | CU coding + reliability spreadsheets           | `make_cu_coding_files`       |
+| `cus evaluate`  | Evaluate CU coding reliability                  | Completed CU coding spreadsheets | Reliability summaries + reports                | `evaluate_cu_reliability`    |
+| `cus reselect`  | Reselect CU reliability samples                 | Completed CU coding spreadsheets | New reliability subset(s)                      | `reselect_cu_wc_reliability` |
+| `cus analyze`   | Analyze completed CU coding                     | Completed CU coding spreadsheets | Sample- and utterance-level CU analyses        | `analyze_cu_coding`          |
+| `cus summarize` | Summarize CU coding and word counts             | CU and WC coding results         | Blind + unblind summaries and utterance tables | `summarize_cus`              |
+
+---
+
+### Word Count Module
+
+| Command          | Description                                             | Input                             | Output                                    | Function                          |
+| ---------------- | ------------------------------------------------------- | --------------------------------- | ----------------------------------------- | --------------------------------- |
+| `words make`     | Generate word-count coding and reliability spreadsheets | CU coding tables                  | Word count + reliability spreadsheets     | `make_word_count_files`           |
+| `words evaluate` | Evaluate word-count reliability                         | Completed word-count spreadsheets | Reliability summaries + agreement reports | `evaluate_word_count_reliability` |
+| `words reselect` | Reselect word-count reliability samples                 | Completed word-count spreadsheets | New reliability subset(s)                 | `reselect_cu_wc_reliability`      |
+
+---
+
+### CoreLex Module
+
+| Command           | Description                  | Input                    | Output                                  | Function      |
+| ----------------- | ---------------------------- | ------------------------ | --------------------------------------- | ------------- |
+| `corelex analyze` | Run batched CoreLex analysis | CU and WC summary tables | CoreLex coverage and percentile metrics | `run_corelex` |
+
+---
+
+## Typical Workflow Example
+
+A typical workflow might look like:
+
 ```bash
-# Minimal command for batched CoreLex analysis of .cha-formatted transcripts:
-diaad 10b
-# or
-diaad "corelex analyze"
+# Convert transcripts to tables
+diaad transcripts tabularize
 
-# To include speaking rate, run the below and fill in the speaking_time column (in seconds) before calling 10b.
-diaad 4a
-# or
-diaad "transcripts make"
+# Create CU coding spreadsheets
+diaad cus make
+
+# After coding is complete, evaluate reliability
+diaad cus evaluate
+
+# Analyze completed CU coding
+diaad cus analyze
+
+# Generate final summaries
+diaad cus summarize
+
+# Run CoreLex analysis
+diaad corelex analyze
+```
+
+Commands can also be chained:
+
+```bash
+diaad transcripts tabularize, cus make
+```
+
+---
+
+## Configuration Files
+
+By default, DIAAD reads configuration settings from:
 
 ```
----
+config.yaml
+```
 
-### Command Modes
+A different configuration file may be specified using:
 
-| Mode | Example | Typical Use |
-|------|----------|--------------|
-| **Succinct** | `diaad 4b` | Fast single-stage execution |
-| **Expanded** | `diaad "cus make"` | Clearer readability; use quotes for multi-word commands |
-| **Omnibus** | `diaad 4` | Runs all sub-steps in that stage (e.g., 4a–4b) |
-
----
-
-## DIAAD Pipeline Commands
-
-| Stage (succinct command) | Expanded command | Description | Input | Output | Function name |
-|---------------------------|------------------|--------------|--------|---------|----------------|
-| 1a | transcripts select | Select transcription reliability samples | Raw `.cha` files | Reliability & full sample lists + template `.cha` files | `select_transcription_reliability_samples` |
-| 3a | transcripts evaluate | Evaluate transcription reliability | Reliability `.cha` pairs | Agreement metrics + alignment text reports | `evaluate_transcription_reliability` |
-| 3b | transcripts reselect | Reselect transcription reliability samples | Original + reliability transcription tables (from **1a**) | New reliability subset(s) | `reselect_transcription_reliability_samples` |
-| 4a | transcripts make | Prepare transcript tables | Raw `.cha` files | Sample & utterance-level spreadsheets | `tabularize_transcripts` |
-| 4b | cus make | Make CU coding & reliability files | Utterance tables (from **4a**) | CU coding + reliability spreadsheets | `make_cu_coding_files` |
-| 6a | cus evaluate | Analyze CU reliability | Manually completed CU coding (from **4b**) | Reliability summary tables + reports | `evaluate_cu_reliability` |
-| 6b | cus reselect | Reselect CU reliability samples | Manually completed CU coding (from **4b**) | New reliability subset(s) | `reselect_cu_wc_reliability` |
-| 7a | cus analyze | Analyze CU coding | Manually completed CU coding (from **4b**) | Sample- and utterance-level CU analyses | `analyze_cu_coding` |
-| 7b | words make | Make word count & reliability files | CU coding tables (from **7a**) | Word count + reliability spreadsheets | `make_word_count_files` |
-| 9a | words evaluate | Evaluate word count reliability | Manually completed word counts (from **7b**) | Reliability summaries + agreement reports | `evaluate_word_count_reliability` |
-| 9b | words reselect | Reselect word count reliability samples | Manually completed word counts (from **7b**) | New reliability subset(s) | `reselect_cu_wc_reliability` |
-| 10a | cus summarize | Summarize CU coding & word counts | CU and WC coding results | Blind + unblind utterance and sample summaries + blind codes | `summarize_cus` |
-| 10b | corelex analyze | Run CoreLex analysis | CU and WC sample summaries | CoreLex coverage and percentile metrics | `run_corelex` |
-
----
-## Command Mappings
-| Omnibus command | Succinct command | Expanded command |
-|--|--|--|
-| 1 | 1a | transcripts select |
-| 4 | 4a, 4b | utterances make, cus make |
-| 7 | 7a, 7b | cus analyze, words make |
-| 10 | 10a, 10b | cus summarize, corelex analyze
+```bash
+diaad transcripts tabularize --config other_config.yaml
+```
 
 ---
 
@@ -363,9 +414,9 @@ diaad "transcripts make"
 - Ensure filenames match tier values as specified in `config.yaml`.
 - DIAAD searches tier values using exact spelling and capitalization.
 
-### Transcript Tables (function **4a**)
+### Transcript Tables (command `transcripts tabularize`)
 
-Function **4a** prepares both utterance- and sample-level tabulations of CHAT-formatted transcripts in Excel files, assigning unique alphanumeric identifiers encoding level of analysis – ‘S’ for sample and ‘U’ for utterance – for example, `S008` and `U0246`.
+This function prepares both utterance- and sample-level tabulations of CHAT-formatted transcripts in Excel files, assigning unique alphanumeric identifiers encoding level of analysis – ‘S’ for sample and ‘U’ for utterance – for example, `S008` and `U0246`.
 
 The `transcript_tables.xlsx` output contains two sheets:
  - `samples` for transcript metadata, including file name and tier values
@@ -377,11 +428,11 @@ This encoded tabularization:
 - promotes transparency and consistency in text processing
 - minimizes potential bias during manual coding
 
-If not provided, these tables are automatically generated from `.cha` inputs for functions `4b`, `7b`, & `10b`.
+If not provided when running either `cus make` or `corelex analyze`, these tables are automatically generated from `.cha` inputs.
 
-### Transcription Reliability Input (function **3a**)
+### Transcription Reliability Input (command `transcripts evaluate`)
 
-In both the CLI and webapp versions, DIAAD function **3a** matches original with reliability transcripts based on common tiers plus a `reliability` tag in the file name, e.g., `TU88_PreTxBrokenWindow.cha` & `TU88PreTxBrokenWindow_reliability.cha`. Function **1a** generates empty `.cha` file templates with the `reliabiilty` tag for the randomly selected samples. In the CLI version, reliability samples can be collected into a `/reliability` subdirectory in the input folder. The tier values must match the originals, but this provides an alternative to tagging filenames.
+In both the CLI and webapp versions, this DIAAD function matches original with reliability transcripts based on common tiers plus a `reliability` tag in the file name, e.g., `TU88_PreTxBrokenWindow.cha` & `TU88PreTxBrokenWindow_reliability.cha`. The command `transcripts select` generates empty `.cha` file templates with the `reliabiilty` tag for the randomly selected samples. In the CLI version, reliability samples can be collected into a `/reliability` subdirectory in the input folder. The tier values must match the originals, but this provides an alternative to tagging filenames.
 
 ### Logs & Metadata
 
