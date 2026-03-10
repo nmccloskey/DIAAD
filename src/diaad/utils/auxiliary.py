@@ -314,26 +314,3 @@ def read_df(file_path):
     except Exception as e:
         logger.error(f"Failed to read file {_rel(file_path)}: {e}")
         return None
-
-def parse_stratify_fields(values: list[str] | None) -> list[str]:
-    """
-    Accepts:
-      --stratify site test
-      --stratify site,test
-      --stratify "site, test"
-      --stratify site --stratify test
-    """
-    if not values:
-        return []
-    items: list[str] = []
-    for v in values:
-        parts = re.split(r"[,\s]+", v.strip())
-        parts = [x for x in parts if x]
-        items.extend(parts)
-    # preserve order but dedupe
-    seen = set()
-    out = []
-    for x in items:
-        if x not in seen:
-            out.append(x); seen.add(x)
-    return out

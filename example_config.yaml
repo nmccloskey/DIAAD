@@ -13,8 +13,10 @@ strip_clan: true
 prefer_correction: true
 lowercase: true
 
-automate_POWERS: true
-just_c2_POWERS: true
+automate_powers: true
+just_c2_powers: true
+stratify_by: []
+num_strata: 0
 
 tiers:
   site:

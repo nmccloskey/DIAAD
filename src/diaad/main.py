@@ -30,7 +30,10 @@ from diaad.run_wrappers import (
     run_analyze_cu_coding, run_reselect_cu_reliability,
     run_make_word_count_files, run_evaluate_word_count_reliability,
     run_reselect_wc_reliability, run_summarize_cus, run_run_corelex,
-    run_analyze_digital_convo_turns
+    run_analyze_digital_convo_turns,
+    run_make_powers_coding_files, run_analyze_powers_coding,
+    run_evaluate_powers_reliability, run_reselect_powers_reliability_coding,
+    run_select_for_validation, run_validate_automation
 )
 from diaad import __version__
 
@@ -62,6 +65,9 @@ def main(args):
         initialize_logger(start_time, out_dir, program_name="DIAAD", version=__version__)
         logger.info("Logger initialized and early logs flushed.")
 
+        # -----------------------------------------------------------------
+        # Remaining program parameters
+        # -----------------------------------------------------------------
         random_seed = config.get("random_seed", 99) or 99
         random.seed(random_seed)
         np.random.seed(random_seed)
@@ -69,12 +75,22 @@ def main(args):
 
         frac = config.get("reliability_fraction", 0.2) or 0.2
         shuffle_samples = config.get("shuffle_samples", True) or True
+
         coders = config.get("coders", []) or []
         cu_paradigms = config.get("cu_paradigms", []) or []
         exclude_participants = config.get("exclude_participants", []) or []
+
         strip_clan = config.get("strip_clan", True) or True
         prefer_correction = config.get("prefer_correction", True) or True
         lowercase = config.get("lowercase", True) or True
+
+        automate_powers = config.get("automate_powers", True) or True
+        just_c2_powers = config.get("just_c2_powers", True) or True
+
+        stratify_by = config.get("stratify_by", []) or []
+        num_strata = config.get("num_strata", 0) or 0
+        selection_table = config.get("selection_table", "") or ""
+        stratum_numbers = config.get("stratum_numbers", []) or []
 
         tiers, TM = run_read_tiers(config) or {}
 
@@ -111,6 +127,8 @@ def main(args):
         # Dispatch dictionary
         # ---------------------------------------------------------
         dispatch = {
+
+            # Transcription
             "transcripts select": lambda: run_select_transcription_reliability_samples(
                 tiers, chats, frac, out_dir
             ),
@@ -124,6 +142,8 @@ def main(args):
             "transcripts tabularize": lambda: run_tabularize_transcripts(
                 tiers, chats, out_dir, shuffle_samples, random_seed
             ),
+
+            # Complete Utterance coding
             "cus make": lambda: run_make_cu_coding_files(
                 tiers, frac, coders, input_dir, out_dir,
                 cu_paradigms, exclude_participants
@@ -140,6 +160,8 @@ def main(args):
             "cus summarize": lambda: run_summarize_cus(
                 tiers, input_dir, out_dir, random_seed, TM
             ),
+
+            # Manual word counting
             "words make": lambda: run_make_word_count_files(
                 tiers, frac, coders, input_dir, out_dir
             ),
@@ -149,12 +171,38 @@ def main(args):
             "words reselect": lambda: run_reselect_wc_reliability(
                 tiers, input_dir, out_dir, "WC", frac
             ),
+
+            # CoreLex - convenience layer
             "corelex analyze": lambda: run_run_corelex(
                 tiers, input_dir, out_dir, exclude_participants
             ),
+
+            # Digital Conversation Turns
             "turns analyze": lambda: run_analyze_digital_convo_turns(
                 input_dir, out_dir
-            )
+            ),
+
+            # POWERS coding workflow
+            "powers make": lambda: run_make_powers_coding_files(
+                tiers, frac, coders, input_dir, out_dir, exclude_participants, automate_powers
+            ),
+            "powers analyze": lambda: run_analyze_powers_coding(
+                input_dir, out_dir, just_c2_powers=just_c2_powers
+            ),
+            "powers evaulate": lambda: run_evaluate_powers_reliability(
+                input_dir, out_dir
+            ),
+            "powers reselect": lambda: run_reselect_powers_reliability_coding(
+                input_dir, out_dir, frac, exclude_participants, automate_powers
+            ),
+
+            # POWERS automation validation
+            "powers select": lambda: run_select_for_validation(
+                stratify_by, input_dir, out_dir, num_strata, random_seed
+            ),
+            "powers validate": lambda: run_validate_automation(
+                selection_table, stratum_numbers, input_dir, out_dir, exclude_participants
+                )
         }
 
         # ---------------------------------------------------------
