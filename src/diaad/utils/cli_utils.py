@@ -28,6 +28,14 @@ MODULE_COMMANDS = {
     ],
     "turns": [
         "turns analyze",
+    ],
+    "powers": [
+        "powers make",
+        "powers analyze",
+        "powers evaluate",
+        "powers reselect",
+        "powers select",
+        "powers validate"
     ]
 }
 
