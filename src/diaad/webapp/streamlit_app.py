@@ -11,13 +11,8 @@ from diaad.webapp.config_builder import build_config_ui
 start_time = datetime.now()
 
 # ------------------------------------------------------------------
-# Path setup and zip utility
+# Zip utility
 # ------------------------------------------------------------------
-def add_src_to_sys_path():
-    import sys
-    src_path = Path(__file__).resolve().parent.parent / "src"
-    sys.path.insert(0, str(src_path))
-add_src_to_sys_path()
 
 def zip_folder(folder_path: Path) -> BytesIO:
     """Compress the given folder into an in-memory ZIP buffer."""
@@ -54,7 +49,7 @@ from diaad.run_wrappers import (
 )
 from diaad import __version__
 
-from iridic.manual_viewer import render_manual_ui
+from iridic.webapp.manual_viewer import render_manual_ui
 
 
 # ------------------------------------------------------------------
@@ -66,7 +61,7 @@ st.subheader("Database-oriented, Integrative Architecture for Analyzing Discours
 # ------------------------------------------------------------------
 # Instruction manual toggle
 # ------------------------------------------------------------------
-REPO_ROOT = Path(__file__).resolve().parents[1]  # webapp/ -> REPO/
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 render_manual_ui(
     repo_root=REPO_ROOT,
