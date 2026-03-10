@@ -184,7 +184,7 @@ def main(args):
 
             # POWERS coding workflow
             "powers make": lambda: run_make_powers_coding_files(
-                tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_powers
+                tiers, frac, coders, input_dir, out_dir, exclude_participants, automate_powers
             ),
             "powers analyze": lambda: run_analyze_powers_coding(
                 input_dir, out_dir, just_c2_powers=just_c2_powers
