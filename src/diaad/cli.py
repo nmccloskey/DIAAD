@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from .main import main as main_core
 from diaad.utils.logger import logger
-from diaad.utils.auxiliary import build_arg_parser
+from diaad.utils.cli_utils import build_arg_parser
 
 
 def main():
