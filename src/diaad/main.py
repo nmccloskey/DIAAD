@@ -65,6 +65,9 @@ def main(args):
         initialize_logger(start_time, out_dir, program_name="DIAAD", version=__version__)
         logger.info("Logger initialized and early logs flushed.")
 
+        # -----------------------------------------------------------------
+        # Remaining program parameters
+        # -----------------------------------------------------------------
         random_seed = config.get("random_seed", 99) or 99
         random.seed(random_seed)
         np.random.seed(random_seed)

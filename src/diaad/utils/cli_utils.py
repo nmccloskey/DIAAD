@@ -133,4 +133,4 @@ def commands_require_chats(commands):
 
 def commands_require_transcript_tables(commands):
     """Return True if transcript tables must exist before executing commands."""
-    return any(cmd in {"cus make", "corelex analyze"} for cmd in commands)
+    return any(cmd in {"cus make", "corelex analyze", "powers make"} for cmd in commands)
