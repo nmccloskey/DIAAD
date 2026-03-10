@@ -7,10 +7,10 @@ import numpy as np
 import contractions
 from pathlib import Path
 
-from rascal.utils.logger import logger, _rel
-from rascal.coding.coding_files import segment, assign_coders
-from rascal.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
-from rascal.transcripts.transcription_reliability_evaluation import process_utterances
+from diaad.utils.logger import logger, _rel
+from diaad.coding.coding_files import segment, assign_coders
+from diaad.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
+from diaad.transcripts.transcription_reliability_evaluation import process_utterances
 
 
 POWERS_cols = [

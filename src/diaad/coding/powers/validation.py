@@ -1,9 +1,8 @@
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from taalcr.utils.auxiliary import read_df
-from rascal.utils.logger import logger, _rel
-from rascal.utils.auxiliary import find_files, extract_transcript_data
+from diaad.utils.logger import logger, _rel
+from diaad.utils.auxiliary import read_df, find_files, extract_transcript_data
 
 
 def _filter_df(df, cols):
