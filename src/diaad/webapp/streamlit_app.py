@@ -6,7 +6,7 @@ import streamlit as st
 from pathlib import Path
 import random, numpy as np
 from datetime import datetime
-from config_builder import build_config_ui
+from diaad.webapp.config_builder import build_config_ui
 
 start_time = datetime.now()
 
