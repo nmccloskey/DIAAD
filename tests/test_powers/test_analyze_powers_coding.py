@@ -67,7 +67,7 @@ def test_compute_level_summaries_shapes_and_ratios(utt_df_minimal):
     out = apc.compute_level_summaries(df, ["c1", "c2"])
 
     # Keys and non-empty
-    assert set(out.keys()) == {"Turns", "Speakers", "Dialogs"}
+    assert set(out.keys()) == {"Utterances", "Turns", "Speakers", "Dialogs"}
     assert not out["Turns"].empty and not out["Speakers"].empty and not out["Dialogs"].empty
 
     sp = out["Speakers"]
@@ -119,7 +119,7 @@ def test_compute_reliability_with_stubbed_icc(monkeypatch, utt_df_minimal):
         )
     monkeypatch.setattr(apc, "intraclass_corr", fake_icc)
 
-    res = apc.compute_reliability(utt_df_minimal, "c1", "c2")
+    res = apc.compute_reliability(utt_df_minimal, "c1", "c2", [])
 
     icc = res["ContinuousReliability"]
     cat = res["CategoricalReliability"]
