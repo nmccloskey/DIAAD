@@ -97,5 +97,5 @@ def run_run_corelex(tiers, input_dir, output_dir, exclude_participants):
 # ------------------------------------------------------------------
 
 def run_analyze_digital_convo_turns(input_dir, output_dir):
-    from diaad.convo_turns.digital_convo_turns import analyze_digital_convo_turns
+    from diaad.coding.convo_turns.digital_convo_turns import analyze_digital_convo_turns
     analyze_digital_convo_turns(input_dir=input_dir, output_dir=output_dir)
