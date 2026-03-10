@@ -26,6 +26,9 @@ MODULE_COMMANDS = {
     "corelex": [
         "corelex analyze",
     ],
+    "turns": [
+        "turns analyze",
+    ]
 }
 
 VALID_COMMANDS = {

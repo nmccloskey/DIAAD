@@ -29,7 +29,8 @@ from diaad.run_wrappers import (
     run_evaluate_cu_reliability,
     run_analyze_cu_coding, run_reselect_cu_reliability,
     run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_reliability, run_summarize_cus, run_run_corelex
+    run_reselect_wc_reliability, run_summarize_cus, run_run_corelex,
+    run_analyze_digital_convo_turns
 )
 from diaad import __version__
 
@@ -151,6 +152,9 @@ def main(args):
             "corelex analyze": lambda: run_run_corelex(
                 tiers, input_dir, out_dir, exclude_participants
             ),
+            "turns analyze": lambda: run_analyze_digital_convo_turns(
+                input_dir, out_dir
+            )
         }
 
         # ---------------------------------------------------------
