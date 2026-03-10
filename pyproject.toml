@@ -23,14 +23,16 @@ dependencies = [
     "nltk>=3.9.1",
     "num2words>=0.5.14",
     "numpy==1.26.4",
+    "openpyxl>=3.1.5",
     "pandas>=2.0.3",
+    "pingouin==0.5.5",
     "pyenchant==3.2.2",
     "pylangacq==0.19.1",
     "python-Levenshtein>=0.27.1",
     "PyYAML>=6.0.2",
-    "tqdm>=4.67.1",
-    "openpyxl>=3.1.5",
+    "scikit-learn>=1.7.2",
     "scipy>=1.16.0",
+    "tqdm>=4.67.1",
     "xlsxwriter>=3.2.5",
 ]
 
@@ -41,3 +43,4 @@ streamlit_diaad = "webapp.streamlit_app:main"
 [project.optional-dependencies]
 dev = ["pytest"]
 web = ["streamlit>=1.45.1"]
+nlp = ["spacy>=3.8,<3.9"]
