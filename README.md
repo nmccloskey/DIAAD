@@ -3,6 +3,7 @@
 ![PyPI version](https://img.shields.io/pypi/v/diaad)
 ![Python](https://img.shields.io/pypi/pyversions/diaad)
 ![License](https://img.shields.io/github/license/nmccloskey/DIAAD)
+<!-- [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://diaad.streamlit.app/) -->
 
 > Open-source Python infrastructure for reproducible discourse analysis in clinical aphasiology.
 
