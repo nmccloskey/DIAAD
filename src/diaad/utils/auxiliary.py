@@ -304,3 +304,36 @@ def calc_subset_size(frac: float, samples: Sized) -> int:
         raise ValueError("samples must be non-empty (len(samples) > 0)")
 
     return max(1, math.ceil(frac * n_samples))
+
+
+def read_df(file_path):
+    try:
+        df = pd.read_excel(str(file_path))
+        logger.info(f"Successfully read file: {_rel(file_path)}")
+        return df
+    except Exception as e:
+        logger.error(f"Failed to read file {_rel(file_path)}: {e}")
+        return None
+
+def parse_stratify_fields(values: list[str] | None) -> list[str]:
+    """
+    Accepts:
+      --stratify site test
+      --stratify site,test
+      --stratify "site, test"
+      --stratify site --stratify test
+    """
+    if not values:
+        return []
+    items: list[str] = []
+    for v in values:
+        parts = re.split(r"[,\s]+", v.strip())
+        parts = [x for x in parts if x]
+        items.extend(parts)
+    # preserve order but dedupe
+    seen = set()
+    out = []
+    for x in items:
+        if x not in seen:
+            out.append(x); seen.add(x)
+    return out
