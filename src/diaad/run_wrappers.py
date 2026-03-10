@@ -101,7 +101,7 @@ def run_analyze_digital_convo_turns(input_dir, output_dir):
     analyze_digital_convo_turns(input_dir=input_dir, output_dir=output_dir)
 
 # ------------------------------------------------------------------
-# POWERS coding
+# POWERS coding workflow
 # ------------------------------------------------------------------
 
 def run_make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_powers=True):
@@ -137,6 +137,10 @@ def run_reselect_powers_reliability_coding(input_dir, output_dir, frac, exclude_
         frac=frac,
         exclude_participants=exclude_participants,
         automate_powers=automate_powers)
+
+# ------------------------------------------------------------------
+# POWERS automation validation
+# ------------------------------------------------------------------
 
 def run_select_for_validation(stratify_by, input_dir, out_dir, num_strata, random_seed):
     from diaad.coding.powers.validation import parse_stratify_fields, select_validation_samples

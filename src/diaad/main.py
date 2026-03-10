@@ -182,7 +182,7 @@ def main(args):
                 input_dir, out_dir
             ),
 
-            # POWERS coding
+            # POWERS coding workflow
             "powers make": lambda: run_make_powers_coding_files(
                 tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_powers
             ),
@@ -195,6 +195,8 @@ def main(args):
             "powers reselect": lambda: run_reselect_powers_reliability_coding(
                 input_dir, out_dir, frac, exclude_participants, automate_powers
             ),
+
+            # POWERS automation validation
             "powers select": lambda: run_select_for_validation(
                 stratify_by, input_dir, out_dir, num_strata, random_seed
             ),
