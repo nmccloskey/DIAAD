@@ -97,5 +97,43 @@ def run_run_corelex(tiers, input_dir, output_dir, exclude_participants):
 # ------------------------------------------------------------------
 
 def run_analyze_digital_convo_turns(input_dir, output_dir):
-    from diaad.convo_turns.digital_convo_turns import analyze_digital_convo_turns
+    from diaad.coding.convo_turns.digital_convo_turns import analyze_digital_convo_turns
     analyze_digital_convo_turns(input_dir=input_dir, output_dir=output_dir)
+
+# ------------------------------------------------------------------
+# POWERS coding
+# ------------------------------------------------------------------
+
+def run_make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_powers=True):
+    from diaad.coding.powers.files import make_powers_coding_files
+    make_powers_coding_files(
+        tiers=tiers,
+        frac=frac,
+        coders=coders,
+        input_dir=input_dir,
+        output_dir=output_dir,
+        exclude_participants=exclude_participants,
+        automate_powers=automate_powers
+    )
+
+def run_analyze_powers_coding(input_dir, output_dir, reliability=False, just_c2_powers=False, exclude_participants=[]):
+    from diaad.coding.powers.analysis import analyze_powers_coding
+    analyze_powers_coding(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        reliability=reliability,
+        just_c2_powers=just_c2_powers, exclude_participants=exclude_participants)
+
+def run_evaluate_powers_reliability(input_dir, output_dir):
+    from diaad.coding.powers.analysis import match_reliability_files, analyze_powers_coding
+    match_reliability_files(input_dir=input_dir, output_dir=output_dir)
+    analyze_powers_coding(input_dir=input_dir, output_dir=output_dir, reliability=True, just_c2_powers=False)
+
+def run_reselect_powers_reliability_coding(input_dir, output_dir, frac, exclude_participants, automate_powers):
+    from diaad.coding.powers.files import reselect_powers_reliability
+    reselect_powers_reliability(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        frac=frac,
+        exclude_participants=exclude_participants,
+        automate_powers=automate_powers)
