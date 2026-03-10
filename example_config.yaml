@@ -1,39 +1,35 @@
 input_dir: diaad_data/input
 output_dir: diaad_data/output
+
+random_seed: 99
 reliability_fraction: 0.2
-random_seed: 8
-coders:
-- '1'
-- '2'
-- '3'
-CU_paradigms:
-- SAE
-- AAE
-exclude_participants:
-- INV
+shuffle_samples: true
+
+coders: [1, 2, 3]
+cu_paradigms: [SAE, AAE]
+exclude_participants: [INV]
+
 strip_clan: true
 prefer_correction: true
 lowercase: true
+
+automate_POWERS: true
+just_c2_POWERS: true
+
 tiers:
   site:
-    values:
-    - AC
-    - BU
-    - TU
-    partition: true
-    blind: true
+    order: 1
+    values: [AC, BU, TU]
   test:
-    values:
-    - Pre
-    - Post
-    - Maint
-    blind: true
+    order: 2
+    values: [Pre, Post, Maint]
   study_id:
-    values: (AC|BU|TU)\d+
+    order: 3
+    regex: "(AC|BU|TU)\\d+"
   narrative:
-    values:
-    - CATGrandpa
-    - BrokenWindow
-    - RefusedUmbrella
-    - CatRescue
-    - BirthdayScene
+    order: 4
+    values: [CATGrandpa, BrokenWindow, RefusedUmbrella, CatRescue, BirthdayScene]
+
+tier_groups:
+  partition: [site]
+  blind: [site, test]
