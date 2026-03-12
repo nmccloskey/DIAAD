@@ -4,6 +4,15 @@ import itertools
 from diaad.utils.logger import logger
 
 
+UNINTELLIGIBLE = {"xxx", "yyy", "www"}
+DEFAULT_STIM_COLS = ["narrative", "scene", "story", "stimulus"]
+
+
+def resolve_stim_cols(narrative_field):
+    """Use explicit narrative_field when provided; otherwise fall back to legacy stimulus columns."""
+    return [narrative_field] if narrative_field else DEFAULT_STIM_COLS
+
+
 def segment(x, n):
     """
     Segment a list x into n batches of roughly equal length.

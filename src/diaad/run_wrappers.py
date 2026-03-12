@@ -100,9 +100,10 @@ def run_evaluate_word_count_reliability(tiers, input_dir, output_dir):
 # CoreLex - convenience layer
 # ------------------------------------------------------------------
 
-def run_run_corelex(tiers, input_dir, output_dir, exclude_participants):
+def run_run_corelex(tiers, input_dir, output_dir, exclude_participants, narrative_field):
     from src.diaad.coding.corelex.corelex import run_corelex
-    run_corelex(tiers=tiers, input_dir=input_dir, output_dir=output_dir, exclude_participants=exclude_participants)
+    run_corelex(tiers=tiers, input_dir=input_dir, output_dir=output_dir, 
+                exclude_participants=exclude_participants, narrative_field=narrative_field)
 
 # ------------------------------------------------------------------
 # Digital Conversation Turns

@@ -175,7 +175,7 @@ def main(args):
 
             # CoreLex - convenience layer
             "corelex analyze": lambda: run_run_corelex(
-                tiers, input_dir, out_dir, exclude_participants
+                tiers, input_dir, out_dir, exclude_participants, narrative_field
             ),
 
             # Digital Conversation Turns

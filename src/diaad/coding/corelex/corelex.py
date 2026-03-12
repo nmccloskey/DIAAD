@@ -210,7 +210,7 @@ def _compute_corelex_for_sample(sample_df, norm_lookup, partition_tiers, tup):
         return {}
 
 
-def run_corelex(tiers, input_dir, output_dir, exclude_participants=None):
+def run_corelex(tiers, input_dir, output_dir, exclude_participants=None, narrative_field="narrative"):
     """
     Execute CoreLex analysis on aphasia narratives and export results.
     """

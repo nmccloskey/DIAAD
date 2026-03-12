@@ -6,14 +6,7 @@ from pathlib import Path
 
 from diaad.utils.logger import logger, _rel
 from diaad.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
-from diaad.coding.utils import segment, assign_coders, normalize_coders
-
-DEFAULT_STIM_COLS = ["narrative", "scene", "story", "stimulus"]
-
-
-def _resolve_stim_cols(narrative_field):
-    """Use explicit narrative_field when provided; otherwise fall back to legacy stimulus columns."""
-    return [narrative_field] if narrative_field else DEFAULT_STIM_COLS
+from diaad.coding.utils import segment, assign_coders, normalize_coders, resolve_stim_cols
 
 
 def _assign_single_coding_columns(df, cu_paradigms, exclude_participants):
@@ -143,7 +136,7 @@ def make_cu_coding_files(
     cu_coding_dir = Path(output_dir) / "cu_coding"
     cu_coding_dir.mkdir(parents=True, exist_ok=True)
 
-    stim_cols = _resolve_stim_cols(narrative_field)
+    stim_cols = resolve_stim_cols(narrative_field)
     mode, coders = normalize_coders(coders)
     if frac == 0:
         logger.info("frac=0 detected; no reliability subset will be generated.")

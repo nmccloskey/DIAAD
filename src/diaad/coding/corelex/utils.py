@@ -7,12 +7,10 @@ from pathlib import Path
 from scipy.stats import percentileofscore
 
 from diaad.utils.logger import logger, _rel
-from diaad.coding.coding_files import stim_cols
+from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
 from diaad.utils.auxiliary import find_files, extract_transcript_data
 from diaad.coding.corelex.supp import urls, scene_tokens
 from diaad.coding.corelex.supp import urls, scene_tokens, lemma_dict
-
-_UNINTELLIGIBLE = {"xxx", "yyy", "www"}  # common CHAT placeholders
 
 
 def generate_token_columns(present_narratives):
@@ -111,7 +109,8 @@ def find_corelex_inputs(input_dir: str, output_dir: str) -> dict | None:
     logger.info(f"Loaded and concatenated {len(transcript_tables)} transcript table(s).")
     return "transcripts", utt_df
 
-def prepare_corelex_inputs(input_dir, output_dir, exclude_participants):
+
+def prepare_corelex_inputs(input_dir, output_dir, exclude_participants, narrative_field):
     """
     Load and normalize utterance-level CoreLex inputs.
 
@@ -125,7 +124,8 @@ def prepare_corelex_inputs(input_dir, output_dir, exclude_participants):
         Source and destination directories.
     exclude_participants : set[str]
         Speaker IDs to exclude (e.g., {"INV"}).
-
+    narrative_field : str
+        Column/tier containing stimulus (entries would be BrokenWindow, RefusedUmbrella, etc.)
     Returns
     -------
     tuple[pd.DataFrame, set[str]]
@@ -136,6 +136,8 @@ def prepare_corelex_inputs(input_dir, output_dir, exclude_participants):
         mode, utt_df = find_corelex_inputs(input_dir, output_dir)
         if utt_df is None:
             return None, None
+        
+        stim_cols = resolve_stim_cols(narrative_field)
 
         if mode == "unblind":
             narr_col = _col(utt_df, stim_cols)
@@ -238,7 +240,7 @@ def reformat(text: str) -> str:
         text = re.sub(r"[^\w\s']", ' ', text)
 
         # 9) Token-level cleanup: drop CHAT placeholders like 'xxx', 'yyy', 'www'
-        toks = [t for t in text.split() if t not in _UNINTELLIGIBLE]
+        toks = [t for t in text.split() if t not in UNINTELLIGIBLE]
 
         # 10) Collapse whitespace and return
         return " ".join(toks).strip()
