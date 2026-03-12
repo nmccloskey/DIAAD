@@ -43,9 +43,9 @@ from diaad.run_wrappers import (
     run_evaluate_transcription_reliability,
     run_tabularize_transcripts, run_make_cu_coding_files,
     run_evaluate_cu_reliability,
-    run_analyze_cu_coding, run_reselect_cu_reliability,
+    run_analyze_cu_coding, run_reselect_cu_rel,
     run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_reliability, run_summarize_cus, run_run_corelex
+    run_reselect_wc_rel, run_summarize_cus, run_run_corelex
 )
 from diaad import __version__
 
@@ -227,7 +227,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     elif func.startswith("6a."):
                         run_evaluate_cu_reliability(tiers, input_dir, out_dir, cu_paradigms)
                     elif func.startswith("6b."):
-                        run_reselect_cu_reliability(tiers, input_dir, out_dir, "CU", frac)
+                        run_reselect_cu_rel(tiers, input_dir, out_dir, "CU", frac)
                     elif func.startswith("7a."):
                         run_analyze_cu_coding(tiers, input_dir, out_dir, cu_paradigms)
                     elif func.startswith("7b."):
@@ -235,7 +235,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     elif func.startswith("9a."):
                         run_evaluate_word_count_reliability(tiers, input_dir, out_dir)
                     elif func.startswith("9b."):
-                        run_reselect_wc_reliability(tiers, input_dir, out_dir, "WC", frac)
+                        run_reselect_wc_rel(tiers, input_dir, out_dir, "WC", frac)
                     elif func.startswith("10a."):
                         run_summarize_cus(tiers, input_dir, out_dir, random_seed, TM)
                     elif func.startswith("10b."):

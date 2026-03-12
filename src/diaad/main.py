@@ -27,9 +27,9 @@ from diaad.run_wrappers import (
     run_evaluate_transcription_reliability,
     run_tabularize_transcripts, run_make_cu_coding_files,
     run_evaluate_cu_reliability,
-    run_analyze_cu_coding, run_reselect_cu_reliability,
+    run_analyze_cu_coding, run_reselect_cu_rel,
     run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_reliability, run_summarize_cus, run_corelex,
+    run_reselect_wc_rel, run_summarize_cus, run_corelex,
     run_analyze_digital_convo_turns,
     run_make_powers_coding_files, run_analyze_powers_coding,
     run_evaluate_powers_reliability, run_reselect_powers_reliability_coding,
@@ -152,8 +152,8 @@ def main(args):
             "cus evaluate": lambda: run_evaluate_cu_reliability(
                 tiers, input_dir, out_dir, cu_paradigms
             ),
-            "cus reselect": lambda: run_reselect_cu_reliability(
-                tiers, input_dir, out_dir, frac
+            "cus reselect": lambda: run_reselect_cu_rel(
+                tiers, input_dir, out_dir, frac, random_seed
             ),
             "cus analyze": lambda: run_analyze_cu_coding(
                 tiers, input_dir, out_dir, cu_paradigms
@@ -169,8 +169,8 @@ def main(args):
             "words evaluate": lambda: run_evaluate_word_count_reliability(
                 tiers, input_dir, out_dir
             ),
-            "words reselect": lambda: run_reselect_wc_reliability(
-                tiers, input_dir, out_dir, frac
+            "words reselect": lambda: run_reselect_wc_rel(
+                tiers, input_dir, out_dir, frac, random_seed
             ),
 
             # CoreLex - convenience layer

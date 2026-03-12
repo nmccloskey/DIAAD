@@ -32,7 +32,7 @@ def run_read_cha_files(input_dir, shuffle=False):
 # Transcription
 # ------------------------------------------------------------------
 
-def run_tabularize_transcripts(tiers, chats, output_dir, shuffle_samples, seed):
+def run_tabularize_transcripts(tiers, chats, output_dir, shuffle_samples, random_seed):
     """Convert CHAT transcripts into tabular transcript files."""
     from diaad.transcripts.transcript_tables import tabularize_transcripts
 
@@ -41,7 +41,7 @@ def run_tabularize_transcripts(tiers, chats, output_dir, shuffle_samples, seed):
         chats=chats,
         output_dir=output_dir,
         shuffle=shuffle_samples,
-        random_seed=seed,
+        random_seed=random_seed,
     )
 
 
@@ -126,15 +126,16 @@ def run_make_cu_coding_files(
     )
 
 
-def run_reselect_cu_reliability(tiers, input_dir, output_dir, frac):
+def run_reselect_cu_rel(tiers, input_dir, output_dir, frac, random_seed):
     """Reselect CU reliability samples."""
-    from diaad.coding.compl_utts.rel_reselection import reselect_cu_reliability
+    from diaad.coding.compl_utts.rel_reselection import reselect_cu_rel
 
-    return reselect_cu_reliability(
+    return reselect_cu_rel(
         tiers=tiers,
         input_dir=input_dir,
         output_dir=output_dir,
         frac=frac,
+        random_seed=random_seed
     )
 
 
@@ -162,7 +163,7 @@ def run_analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms):
     )
 
 
-def run_summarize_cus(tiers, input_dir, output_dir, seed, tier_manager):
+def run_summarize_cus(tiers, input_dir, output_dir, random_seed, tier_manager):
     """Summarize CU results."""
     from diaad.coding.compl_utts.summarization import summarize_cus
 
@@ -170,7 +171,7 @@ def run_summarize_cus(tiers, input_dir, output_dir, seed, tier_manager):
         tiers=tiers,
         input_dir=input_dir,
         output_dir=output_dir,
-        seed=seed,
+        random_seed=random_seed,
         TM=tier_manager,
     )
 
@@ -192,15 +193,16 @@ def run_make_word_count_files(tiers, frac, coders, input_dir, output_dir):
     )
 
 
-def run_reselect_wc_reliability(tiers, input_dir, output_dir, frac):
+def run_reselect_wc_rel(tiers, input_dir, output_dir, frac, random_seed):
     """Reselect word-count reliability samples."""
-    from diaad.coding.compl_utts.rel_reselection import reselect_wc_reliability
+    from diaad.coding.word_counts.rel_reselection import reselect_wc_rel
 
-    return reselect_wc_reliability(
+    return reselect_wc_rel(
         tiers=tiers,
         input_dir=input_dir,
         output_dir=output_dir,
         frac=frac,
+        random_seed=random_seed
     )
 
 
@@ -339,7 +341,7 @@ def run_reselect_powers_reliability_coding(
 # POWERS automation validation
 # ------------------------------------------------------------------
 
-def run_select_for_validation(stratify_by, input_dir, output_dir, num_strata, seed):
+def run_select_for_validation(stratify_by, input_dir, output_dir, num_strata, random_seed):
     """Select samples for POWERS automation validation."""
     from diaad.coding.powers.validation import (
         parse_stratify_fields,
@@ -353,7 +355,7 @@ def run_select_for_validation(stratify_by, input_dir, output_dir, num_strata, se
         output_dir=output_dir,
         stratify=stratify_fields,
         strata=num_strata,
-        seed=seed,
+        random_seed=random_seed,
     )
 
 
