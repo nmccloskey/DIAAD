@@ -30,27 +30,37 @@ def run_read_cha_files(input_dir, shuffle=False):
 
 def run_tabularize_transcripts(tiers, chats, output_dir, shuffle_samples, seed):
     from diaad.transcripts.transcript_tables import tabularize_transcripts
-    return tabularize_transcripts(tiers=tiers, chats=chats, output_dir=output_dir, shuffle=shuffle_samples, random_seed=seed)
+    return tabularize_transcripts(tiers=tiers, chats=chats, output_dir=output_dir, 
+                                  shuffle=shuffle_samples, random_seed=seed)
 
 def run_select_transcription_reliability_samples(tiers, chats, frac, output_dir):
     from diaad.transcripts.transcription_reliability_selection import select_transcription_reliability_samples
-    select_transcription_reliability_samples(tiers=tiers, chats=chats, frac=frac, output_dir=output_dir)
+    select_transcription_reliability_samples(tiers=tiers, chats=chats, 
+                                             frac=frac, output_dir=output_dir)
 
 def run_reselect_transcription_reliability_samples(input_dir, output_dir, frac):
     from diaad.transcripts.transcription_reliability_selection import reselect_transcription_reliability_samples
     reselect_transcription_reliability_samples(input_dir, output_dir, frac)
 
-def run_evaluate_transcription_reliability(tiers, input_dir, output_dir, exclude_participants, strip_clan, prefer_correction, lowercase):
+def run_evaluate_transcription_reliability(tiers, input_dir, output_dir, exclude_participants, 
+                                           strip_clan, prefer_correction, lowercase):
     from diaad.transcripts.transcription_reliability_evaluation import evaluate_transcription_reliability
-    evaluate_transcription_reliability(tiers=tiers, input_dir=input_dir, output_dir=output_dir, exclude_participants=exclude_participants, strip_clan=strip_clan, prefer_correction=prefer_correction, lowercase=lowercase)
+    evaluate_transcription_reliability(tiers=tiers, input_dir=input_dir, output_dir=output_dir,
+                                        exclude_participants=exclude_participants, 
+                                        strip_clan=strip_clan, prefer_correction=prefer_correction, 
+                                        lowercase=lowercase)
 
 # ------------------------------------------------------------------
 # Complete Utterance coding
 # ------------------------------------------------------------------
 
-def run_make_cu_coding_files(tiers, frac, coders, input_dir, output_dir, cu_paradigms, exclude_participants):
+def run_make_cu_coding_files(tiers, frac, coders, input_dir, output_dir, 
+                             cu_paradigms, exclude_participants, narrative_field):
     from diaad.coding.coding_files import make_cu_coding_files
-    make_cu_coding_files(tiers=tiers, frac=frac, coders=coders, input_dir=input_dir, output_dir=output_dir, cu_paradigms=cu_paradigms, exclude_participants=exclude_participants)
+    make_cu_coding_files(tiers=tiers, frac=frac, coders=coders, input_dir=input_dir, 
+                         output_dir=output_dir, cu_paradigms=cu_paradigms, 
+                         exclude_participants=exclude_participants,
+                         narrative_field=narrative_field)
 
 def run_reselect_cu_reliability(tiers, input_dir, output_dir, rel_type, frac):
     from diaad.coding.coding_files import reselect_cu_wc_reliability
@@ -58,11 +68,13 @@ def run_reselect_cu_reliability(tiers, input_dir, output_dir, rel_type, frac):
 
 def run_evaluate_cu_reliability(tiers, input_dir, output_dir, cu_paradigms):
     from diaad.coding.cu_analysis import evaluate_cu_reliability
-    evaluate_cu_reliability(tiers=tiers, input_dir=input_dir, output_dir=output_dir, cu_paradigms=cu_paradigms)
+    evaluate_cu_reliability(tiers=tiers, input_dir=input_dir, 
+                            output_dir=output_dir, cu_paradigms=cu_paradigms)
 
 def run_analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms):
     from diaad.coding.cu_analysis import analyze_cu_coding
-    analyze_cu_coding(tiers=tiers, input_dir=input_dir, output_dir=output_dir, cu_paradigms=cu_paradigms)
+    analyze_cu_coding(tiers=tiers, input_dir=input_dir, 
+                      output_dir=output_dir, cu_paradigms=cu_paradigms)
 
 def run_summarize_cus(tiers, input_dir, output_dir, seed, TM):
     from diaad.coding.cu_summarization import summarize_cus

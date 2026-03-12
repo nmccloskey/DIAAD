@@ -78,6 +78,7 @@ def main(args):
 
         coders = config.get("coders", []) or []
         cu_paradigms = config.get("cu_paradigms", []) or []
+        narrative_field = config.get("narrative_field", "") or ""
         exclude_participants = config.get("exclude_participants", []) or []
 
         strip_clan = config.get("strip_clan", True) or True
@@ -146,7 +147,7 @@ def main(args):
             # Complete Utterance coding
             "cus make": lambda: run_make_cu_coding_files(
                 tiers, frac, coders, input_dir, out_dir,
-                cu_paradigms, exclude_participants
+                cu_paradigms, exclude_participants, narrative_field
             ),
             "cus evaluate": lambda: run_evaluate_cu_reliability(
                 tiers, input_dir, out_dir, cu_paradigms

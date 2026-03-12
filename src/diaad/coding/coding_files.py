@@ -123,14 +123,15 @@ def make_cu_coding_files(
     output_dir,
     cu_paradigms,
     exclude_participants,
+    narrative_field
 ):
     """
     Build Complete Utterance (CU) coding and reliability workbooks from
     utterance tables in `input_dir` or `output_dir`.
 
     Two Excel files are created per input:
-      1) *_cu_coding.xlsx – main coding workbook
-      2) *_cu_reliability_coding.xlsx – reliability subset
+      1) *_cu_coding.xlsx - main coding workbook
+      2) *_cu_reliability_coding.xlsx - reliability subset
 
     Behavior:
     - Loads all *Utterances.xlsx files, labels them by tiers.
@@ -142,7 +143,7 @@ def make_cu_coding_files(
     Parameters
     ----------
     tiers : dict[str, Tier]
-    frac : float (0–1)
+    frac : float (0-1)
     coders : list[str] (≥3 recommended)
     input_dir, output_dir : Path or str
     cu_paradigms : list[str]
@@ -160,6 +161,9 @@ def make_cu_coding_files(
     transcript_tables = find_files(directories=[input_dir, output_dir],
                                                 search_base="transcript_tables")
     utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
+
+    if narrative_field:
+        stim_cols = [narrative_field]
 
     for file, uttdf in tqdm(zip(transcript_tables, utt_dfs), desc="Generating CU coding files"):
         try:
