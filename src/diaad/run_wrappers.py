@@ -140,7 +140,7 @@ def run_reselect_cu_reliability(tiers, input_dir, output_dir, frac):
 
 def run_evaluate_cu_reliability(tiers, input_dir, output_dir, cu_paradigms):
     """Evaluate CU reliability."""
-    from diaad.coding.compl_utts.analysis import evaluate_cu_reliability
+    from diaad.coding.compl_utts.rel_evaluation import evaluate_cu_reliability
 
     return evaluate_cu_reliability(
         tiers=tiers,
