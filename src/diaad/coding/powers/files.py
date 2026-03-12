@@ -8,7 +8,7 @@ import contractions
 from pathlib import Path
 
 from diaad.utils.logger import logger, _rel
-from diaad.coding.coding_files import segment, assign_coders
+from diaad.coding.utils import segment, assign_coders
 from diaad.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
 from diaad.transcripts.transcription_reliability_evaluation import process_utterances
 

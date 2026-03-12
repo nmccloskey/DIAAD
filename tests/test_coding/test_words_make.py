@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from diaad.coding.coding_files import make_word_count_files
+from diaad.coding.word_counts.files import make_word_count_files
 
 
 class MockTier:
@@ -44,7 +44,7 @@ def test_make_word_count_files(tmp_path, monkeypatch):
 
     # --- Monkeypatch get_word_checker to skip nltk dependency ---
     monkeypatch.setattr(
-        "diaad.coding.coding_files.get_word_checker",
+        "diaad.coding.word_counts.files.get_word_checker",
         lambda: (lambda w: True)  # every token is a valid word
     )
 
