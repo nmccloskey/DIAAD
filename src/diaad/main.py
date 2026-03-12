@@ -29,7 +29,7 @@ from diaad.run_wrappers import (
     run_evaluate_cu_reliability,
     run_analyze_cu_coding, run_reselect_cu_rel,
     run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_rel, run_summarize_cus, run_corelex,
+    run_reselect_wc_rel, run_corelex,
     run_analyze_digital_convo_turns,
     run_make_powers_coding_files, run_analyze_powers_coding,
     run_evaluate_powers_reliability, run_reselect_powers_reliability_coding,
@@ -93,7 +93,7 @@ def main(args):
         selection_table = config.get("selection_table", "") or ""
         stratum_numbers = config.get("stratum_numbers", []) or []
 
-        tiers, TM = run_read_tiers(config) or {}
+        tiers, tier_manager = run_read_tiers(config) or {}
 
         # ---------------------------------------------------------
         # Parse commands
@@ -157,9 +157,6 @@ def main(args):
             ),
             "cus analyze": lambda: run_analyze_cu_coding(
                 tiers, input_dir, out_dir, cu_paradigms
-            ),
-            "cus summarize": lambda: run_summarize_cus(
-                tiers, input_dir, out_dir, random_seed, TM
             ),
 
             # Manual word counting

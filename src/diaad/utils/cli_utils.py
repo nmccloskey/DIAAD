@@ -16,7 +16,6 @@ MODULE_COMMANDS = {
         "cus evaluate",
         "cus reselect",
         "cus analyze",
-        "cus summarize",
     ],
     "words": [
         "words make",

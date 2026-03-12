@@ -163,19 +163,6 @@ def run_analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms):
     )
 
 
-def run_summarize_cus(tiers, input_dir, output_dir, random_seed, tier_manager):
-    """Summarize CU results."""
-    from diaad.coding.compl_utts.summarization import summarize_cus
-
-    return summarize_cus(
-        tiers=tiers,
-        input_dir=input_dir,
-        output_dir=output_dir,
-        random_seed=random_seed,
-        TM=tier_manager,
-    )
-
-
 # ------------------------------------------------------------------
 # Manual word counting
 # ------------------------------------------------------------------
