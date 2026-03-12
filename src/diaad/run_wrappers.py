@@ -56,7 +56,7 @@ def run_evaluate_transcription_reliability(tiers, input_dir, output_dir, exclude
 
 def run_make_cu_coding_files(tiers, frac, coders, input_dir, output_dir, 
                              cu_paradigms, exclude_participants, narrative_field):
-    from diaad.coding.coding_files import make_cu_coding_files
+    from diaad.coding.compl_utts.files import make_cu_coding_files
     make_cu_coding_files(tiers=tiers, frac=frac, coders=coders, input_dir=input_dir, 
                          output_dir=output_dir, cu_paradigms=cu_paradigms, 
                          exclude_participants=exclude_participants,
@@ -85,7 +85,7 @@ def run_summarize_cus(tiers, input_dir, output_dir, seed, TM):
 # ------------------------------------------------------------------
 
 def run_make_word_count_files(tiers, frac, coders, input_dir, output_dir):
-    from diaad.coding.coding_files import make_word_count_files
+    from diaad.coding.word_counts.files import make_word_count_files
     make_word_count_files(tiers=tiers, frac=frac, coders=coders, input_dir=input_dir, output_dir=output_dir)
 
 def run_reselect_wc_reliability(tiers, input_dir, output_dir, frac):
