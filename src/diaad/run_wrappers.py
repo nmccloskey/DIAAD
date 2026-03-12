@@ -62,22 +62,22 @@ def run_make_cu_coding_files(tiers, frac, coders, input_dir, output_dir,
                          exclude_participants=exclude_participants,
                          narrative_field=narrative_field)
 
-def run_reselect_cu_reliability(tiers, input_dir, output_dir, rel_type, frac):
-    from diaad.coding.coding_files import reselect_cu_wc_reliability
-    reselect_cu_wc_reliability(tiers, input_dir, output_dir, rel_type, frac)
+def run_reselect_cu_reliability(tiers, input_dir, output_dir, frac):
+    from diaad.coding.compl_utts.rel_reselection import reselect_cu_reliability
+    reselect_cu_reliability(tiers, input_dir, output_dir, frac)
 
 def run_evaluate_cu_reliability(tiers, input_dir, output_dir, cu_paradigms):
-    from diaad.coding.cu_analysis import evaluate_cu_reliability
+    from src.diaad.coding.compl_utts.analysis import evaluate_cu_reliability
     evaluate_cu_reliability(tiers=tiers, input_dir=input_dir, 
                             output_dir=output_dir, cu_paradigms=cu_paradigms)
 
 def run_analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms):
-    from diaad.coding.cu_analysis import analyze_cu_coding
+    from src.diaad.coding.compl_utts.analysis import analyze_cu_coding
     analyze_cu_coding(tiers=tiers, input_dir=input_dir, 
                       output_dir=output_dir, cu_paradigms=cu_paradigms)
 
 def run_summarize_cus(tiers, input_dir, output_dir, seed, TM):
-    from diaad.coding.cu_summarization import summarize_cus
+    from src.diaad.coding.compl_utts.summarization import summarize_cus
     summarize_cus(tiers=tiers, input_dir=input_dir, output_dir=output_dir, seed=seed, TM=TM)
 
 # ------------------------------------------------------------------
@@ -88,12 +88,12 @@ def run_make_word_count_files(tiers, frac, coders, input_dir, output_dir):
     from diaad.coding.coding_files import make_word_count_files
     make_word_count_files(tiers=tiers, frac=frac, coders=coders, input_dir=input_dir, output_dir=output_dir)
 
-def run_reselect_wc_reliability(tiers, input_dir, output_dir, rel_type, frac):
-    from diaad.coding.coding_files import reselect_cu_wc_reliability
-    reselect_cu_wc_reliability(tiers, input_dir, output_dir, rel_type, frac)
+def run_reselect_wc_reliability(tiers, input_dir, output_dir, frac):
+    from diaad.coding.compl_utts.rel_reselection import reselect_wc_reliability
+    reselect_wc_reliability(tiers, input_dir, output_dir, frac)
 
 def run_evaluate_word_count_reliability(tiers, input_dir, output_dir):
-    from diaad.coding.word_count_reliability_evaluation import evaluate_word_count_reliability
+    from src.diaad.coding.word_counts.rel_evaluation import evaluate_word_count_reliability
     evaluate_word_count_reliability(tiers=tiers, input_dir=input_dir, output_dir=output_dir)
 
 # ------------------------------------------------------------------
@@ -101,7 +101,7 @@ def run_evaluate_word_count_reliability(tiers, input_dir, output_dir):
 # ------------------------------------------------------------------
 
 def run_run_corelex(tiers, input_dir, output_dir, exclude_participants):
-    from diaad.coding.corelex import run_corelex
+    from src.diaad.coding.corelex.corelex import run_corelex
     run_corelex(tiers=tiers, input_dir=input_dir, output_dir=output_dir, exclude_participants=exclude_participants)
 
 # ------------------------------------------------------------------

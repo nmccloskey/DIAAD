@@ -153,7 +153,7 @@ def main(args):
                 tiers, input_dir, out_dir, cu_paradigms
             ),
             "cus reselect": lambda: run_reselect_cu_reliability(
-                tiers, input_dir, out_dir, "CU", frac
+                tiers, input_dir, out_dir, frac
             ),
             "cus analyze": lambda: run_analyze_cu_coding(
                 tiers, input_dir, out_dir, cu_paradigms
@@ -170,7 +170,7 @@ def main(args):
                 tiers, input_dir, out_dir
             ),
             "words reselect": lambda: run_reselect_wc_reliability(
-                tiers, input_dir, out_dir, "WC", frac
+                tiers, input_dir, out_dir, frac
             ),
 
             # CoreLex - convenience layer
