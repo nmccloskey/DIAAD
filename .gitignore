@@ -36,6 +36,10 @@ google_creds.json
 
 # Configs
 config.yaml
+blinding.yaml
+project.yaml
+tiers.yaml
+validation.yaml
 *.secrets.yaml
 
 # Cache dirs (used by tools)
