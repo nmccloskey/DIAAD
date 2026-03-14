@@ -7,7 +7,7 @@ from typing import Sized
 from diaad.utils.logger import logger, get_root, early_log, _rel
 
 
-def project_path(*parts) -> Path:
+def cwd_path(*parts) -> Path:
     """Return an absolute path anchored to the project root."""
     return (Path.cwd().resolve() / Path(*parts)).resolve()
 

@@ -9,7 +9,7 @@ import random
 import numpy as np
 
 from diaad import __version__
-from diaad.utils.auxiliary import find_files, project_path
+from diaad.utils.auxiliary import find_files, cwd_path
 from diaad.utils.logger import logger
 from diaad.utils.auxiliary import get_root
 
@@ -151,8 +151,8 @@ class RunContext:
         Resolve configured input/output directories and create the
         timestamped run output directory.
         """
-        self.input_dir = project_path(self.config.input_dir)
-        self.base_output_dir = project_path(self.config.output_dir)
+        self.input_dir = cwd_path(self.config.input_dir)
+        self.base_output_dir = cwd_path(self.config.output_dir)
 
         if not self.input_dir.is_relative_to(get_root()):
             logger.warning(
