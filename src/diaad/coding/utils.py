@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 import pandas as pd
 
-from src.diaad.core.logger import logger
+from diaad.core.logger import logger
 
 
 UNINTELLIGIBLE = {"xxx", "yyy", "www"}

@@ -1,7 +1,7 @@
 import random
 import pylangacq
 from tqdm import tqdm
-from src.diaad.core.logger import logger, _rel
+from diaad.core.logger import logger, _rel
 
 
 def read_cha_files(input_dir, shuffle=False):

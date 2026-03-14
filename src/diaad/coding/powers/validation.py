@@ -2,7 +2,7 @@ import re
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from src.diaad.core.logger import logger, _rel
+from diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.tables import extract_transcript_data
 

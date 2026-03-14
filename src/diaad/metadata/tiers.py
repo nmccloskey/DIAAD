@@ -5,7 +5,7 @@ import random
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
-from src.diaad.core.logger import logger
+from diaad.core.logger import logger
 
 
 # -------------------------

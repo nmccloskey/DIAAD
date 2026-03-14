@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 from scipy.stats import entropy
 from collections import Counter, defaultdict
-from src.diaad.core.logger import logger, _rel
+from diaad.core.logger import logger, _rel
 
 
 def extract_turn_counts(turn_string):

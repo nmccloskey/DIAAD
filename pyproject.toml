@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.scripts]
-diaad = "diaad.cli:main"
+diaad = "diaad.cli.entry:main"
 streamlit_diaad = "webapp.streamlit_app:main"
 
 [project.optional-dependencies]

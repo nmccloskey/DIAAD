@@ -1,0 +1,146 @@
+{
+  "program": {
+    "name": "DIAAD",
+    "version": "0.3.0"
+  },
+  "header": "DIAAD run 2026-03-14 14:33:33",
+  "timestamp": "2026-03-14T14:33:34",
+  "runtime_seconds": 0.52,
+  "root_directory": "C:\\Users\\mcclo\\OneDrive - Temple University\\GitRepos\\DIAAD",
+  "paths": {
+    "input_dir": "config\\diaad_data\\input",
+    "output_dir": "config\\diaad_data\\output\\diaad_output_260314_1433",
+    "config_file": "config"
+  },
+  "configuration": {
+    "config_dir": "C:\\Users\\mcclo\\OneDrive - Temple University\\GitRepos\\DIAAD\\config",
+    "project": {
+      "input_dir": "diaad_data/input",
+      "output_dir": "diaad_data/output",
+      "random_seed": 99,
+      "reliability_fraction": 0.2,
+      "shuffle_samples": true,
+      "strip_clan": true,
+      "prefer_correction": true,
+      "lowercase": true,
+      "exclude_participants": [
+        "INV"
+      ],
+      "coders": [
+        1,
+        2
+      ],
+      "narrative_field": "narrative",
+      "cu_paradigms": [
+        "SAE",
+        "AAE"
+      ],
+      "automate_powers": true,
+      "just_c2_powers": false,
+      "compute_rates": true,
+      "speaking_time_field": "speaking_time",
+      "rate_unit": "minute"
+    },
+    "tiers": {
+      "tiers": {
+        "site": {
+          "order": 1,
+          "values": [
+            "AC",
+            "BU",
+            "TU"
+          ]
+        },
+        "test": {
+          "order": 2,
+          "values": [
+            "Pre",
+            "Post",
+            "Maint"
+          ]
+        },
+        "study_id": {
+          "order": 3,
+          "regex": "(AC|BU|TU)\\d+"
+        },
+        "narrative": {
+          "order": 4,
+          "values": [
+            "CATGrandpa",
+            "BrokenWindow",
+            "RefusedUmbrella",
+            "CatRescue",
+            "BirthdayScene"
+          ]
+        }
+      },
+      "tier_groups": {
+        "partition": [
+          "site"
+        ],
+        "blind": [
+          "site",
+          "test"
+        ]
+      }
+    },
+    "blinding": {
+      "default_strategy": "analysis",
+      "default_id_cols": [
+        "sample_id",
+        "utterance_id"
+      ],
+      "code_prefixes": {
+        "site": "SIT",
+        "test": "TST",
+        "study_id": "SID",
+        "group": "GRP",
+        "timepoint": "TPT",
+        "speaker": "SPK"
+      },
+      "strategies": {
+        "analysis": {
+          "append": true,
+          "suffix": "_blind",
+          "preserve_unmapped": true,
+          "drop_recovered_source_cols": false,
+          "include_na": false,
+          "metadata_source": "transcript_tables",
+          "width": 3
+        },
+        "export": {
+          "append": false,
+          "suffix": "_blind",
+          "preserve_unmapped": false,
+          "drop_recovered_source_cols": true,
+          "include_na": false,
+          "metadata_source": "transcript_tables",
+          "width": 3
+        }
+      }
+    },
+    "validation": {
+      "stratify_by": [],
+      "num_strata": 0,
+      "selection_table": "",
+      "stratum_numbers": []
+    }
+  },
+  "directory_snapshot": {
+    "input_contents": {
+      "base": "config\\diaad_data\\input",
+      "folders": [],
+      "files": []
+    },
+    "output_contents": {
+      "base": "config\\diaad_data\\output\\diaad_output_260314_1433",
+      "folders": [
+        "config\\diaad_data\\output\\diaad_output_260314_1433\\logs",
+        "config\\diaad_data\\output\\diaad_output_260314_1433\\transcript_tables"
+      ],
+      "files": [
+        "config\\diaad_data\\output\\diaad_output_260314_1433\\logs\\diaad_260314_1433.log"
+      ]
+    }
+  }
+}

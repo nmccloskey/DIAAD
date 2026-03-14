@@ -10,9 +10,9 @@ import numpy as np
 
 from diaad import __version__
 from diaad.io.discovery import find_matching_files
-from src.diaad.core.logger import logger
+from diaad.core.logger import logger
 
-from src.diaad.core.config import ConfigManager
+from diaad.core.config import ConfigManager
 
 
 @dataclass
@@ -178,8 +178,8 @@ class RunContext:
         """
         Build TierManager and adapted DIAAD tiers from configuration.
         """
-        from src.diaad.metadata.tier_adapter import adapt_tiers_for_diaad
-        from src.diaad.metadata.tiers import TierManager
+        from diaad.metadata.tier_adapter import adapt_tiers_for_diaad
+        from diaad.metadata.tiers import TierManager
 
         self.tier_manager = TierManager(self.config.tiers_config)
         self.tiers = adapt_tiers_for_diaad(self.tier_manager) or {}
@@ -206,7 +206,7 @@ class RunContext:
         if self.chats is not None and not force:
             return self.chats
 
-        from src.diaad.io.cha_files import read_cha_files
+        from diaad.io.cha_files import read_cha_files
 
         self.chats = read_cha_files(
             input_dir=self.input_dir,

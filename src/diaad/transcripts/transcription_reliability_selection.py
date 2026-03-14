@@ -2,7 +2,7 @@ import random
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
-from src.diaad.core.logger import logger, _rel
+from diaad.core.logger import logger, _rel
 from diaad.utils.sampling import calc_subset_size
 
 

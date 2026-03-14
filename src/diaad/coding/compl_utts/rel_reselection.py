@@ -3,7 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from src.diaad.core.logger import logger
+from diaad.core.logger import logger
 from diaad.coding.reselection_utils import (
     cols_to_comment,
     post_comment_cols,

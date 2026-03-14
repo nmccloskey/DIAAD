@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 
-from src.diaad.core.logger import logger, _rel
+from diaad.core.logger import logger, _rel
 from diaad.coding.corelex.utils import (
     reformat, id_core_words, preload_corelex_norms, get_percentiles, prepare_corelex_inputs, generate_token_columns
 )
