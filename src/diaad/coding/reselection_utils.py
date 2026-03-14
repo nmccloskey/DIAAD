@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from diaad.utils.logger import logger, _rel
+from src.diaad.core.logger import logger, _rel
 from diaad.utils.sampling import calc_subset_size
 
 

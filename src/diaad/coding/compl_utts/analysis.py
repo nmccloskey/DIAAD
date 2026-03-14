@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 
-from diaad.utils.logger import logger, _rel
+from src.diaad.core.logger import logger, _rel
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
 
 

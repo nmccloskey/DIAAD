@@ -6,7 +6,7 @@ from tqdm import tqdm
 from pathlib import Path
 from Bio.Align import PairwiseAligner
 from typing import Union, List
-from diaad.utils.logger import logger, _rel
+from src.diaad.core.logger import logger, _rel
 
 
 def percent_difference(a, b):

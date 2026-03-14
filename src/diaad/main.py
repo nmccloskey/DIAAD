@@ -5,10 +5,10 @@ from datetime import datetime
 from pathlib import Path
 
 from diaad import __version__
-from diaad.utils.run_context import RunContext
+from src.diaad.core.run_context import RunContext
 from diaad.utils.dispatch import build_dispatch, prepare_dispatch_prerequisites
 from diaad.utils.cli_utils import build_arg_parser, parse_cli_commands
-from diaad.utils.logger import (
+from src.diaad.core.logger import (
     initialize_logger,
     logger,
     set_root,

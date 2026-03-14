@@ -4,10 +4,10 @@ import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 
-from diaad.utils.logger import logger, _rel
+from src.diaad.core.logger import logger, _rel
 from diaad.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
-from diaad.transcripts.tables import extract_transcript_data
+from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders, normalize_coders, resolve_stim_cols
 
 

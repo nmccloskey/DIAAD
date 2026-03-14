@@ -7,7 +7,7 @@ import numpy as np
 import contractions
 from pathlib import Path
 
-from diaad.utils.logger import logger, _rel
+from src.diaad.core.logger import logger, _rel
 from diaad.coding.utils import segment, assign_coders
 from diaad.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files

@@ -1,5 +1,5 @@
 from typing import Dict
-from diaad.utils.logger import logger
+from src.diaad.core.logger import logger
 
 
 class DiaadTier:

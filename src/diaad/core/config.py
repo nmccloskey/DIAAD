@@ -6,7 +6,7 @@ from typing import Any
 
 import yaml
 
-from diaad.utils.logger import logger
+from src.diaad.core.logger import logger
 
 
 # ------------------------------------------------------------------

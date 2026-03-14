@@ -10,9 +10,9 @@ import numpy as np
 
 from diaad import __version__
 from diaad.io.discovery import find_matching_files
-from diaad.utils.logger import logger
+from src.diaad.core.logger import logger
 
-from diaad.utils.config import ConfigManager
+from src.diaad.core.config import ConfigManager
 
 
 @dataclass

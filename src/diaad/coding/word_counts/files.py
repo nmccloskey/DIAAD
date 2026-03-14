@@ -6,7 +6,7 @@ from tqdm import tqdm
 import num2words as n2w
 from pathlib import Path
 
-from diaad.utils.logger import logger, _rel
+from src.diaad.core.logger import logger, _rel
 from diaad.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.tables import extract_transcript_data

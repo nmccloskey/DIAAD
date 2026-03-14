@@ -30,7 +30,7 @@ def zip_folder(folder_path: Path) -> BytesIO:
 # DIAAD imports
 # ------------------------------------------------------------------
 from diaad.io.discovery import find_matching_files
-from diaad.utils.logger import (
+from src.diaad.core.logger import (
     logger,
     initialize_logger,
     terminate_logger,
@@ -130,7 +130,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                 yaml.safe_dump(config, f, sort_keys=False)
 
         # Set root for nicer relative paths in logs
-        from diaad.utils.logger import set_root
+        from src.diaad.core.logger import set_root
         set_root(root_dir)
 
         # Initialize the logger
