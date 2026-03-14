@@ -10,7 +10,7 @@ import numpy as np
 
 from diaad import __version__
 from diaad.io.discovery import find_matching_files
-from diaad.utils.logger import logger, get_root
+from diaad.utils.logger import logger
 
 from diaad.utils.config import ConfigManager
 
@@ -206,7 +206,7 @@ class RunContext:
         if self.chats is not None and not force:
             return self.chats
 
-        from diaad.utils.cha_files import read_cha_files
+        from src.diaad.io.cha_files import read_cha_files
 
         self.chats = read_cha_files(
             input_dir=self.input_dir,
