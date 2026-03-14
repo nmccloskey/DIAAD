@@ -104,7 +104,7 @@ def find_matching_files(
 
 def extract_transcript_data(
     transcript_table_path: str | Path,
-    type: str = "joined"
+    kind: str = "joined",
 ) -> pd.DataFrame:
     """
     Load data from a transcript table Excel file.
@@ -113,7 +113,7 @@ def extract_transcript_data(
     ----------
     transcript_table_path : str or Path
         Path to an Excel file produced by `tabularize_transcripts`.
-    type : {'utterance', 'sample', 'joined'}, default='joined'
+    kind : {'utterance', 'sample', 'joined'}, default='joined'
         Which dataset to return:
           - 'utterance': utterance-level data
           - 'sample': sample-level metadata
@@ -131,44 +131,49 @@ def extract_transcript_data(
     ValueError
         If the `type` argument is invalid.
     """
-    path = as_path(transcript_table_path)
+    path = Path(transcript_table_path).expanduser().resolve()
     if not path.exists():
-        logger.error(f"Transcript table not found: {path}")
+        logger.error(f"Transcript table not found: {_rel(path)}")
         raise FileNotFoundError(f"Transcript table not found: {path}")
 
+    if kind not in {"sample", "utterance", "joined"}:
+        raise ValueError(
+            f"Invalid kind '{kind}'. Must be 'sample', 'utterance', or 'joined'."
+        )
+
     try:
-        # Read available sheets once to avoid multiple disk I/O operations
-        xls = pd.ExcelFile(path, engine="openpyxl")
-        sheet_names = [s.lower() for s in xls.sheet_names]
+        with pd.ExcelFile(path, engine="openpyxl") as xls:
+            sheet_names = {s.lower() for s in xls.sheet_names}
+            sample_df = (
+                pd.read_excel(xls, sheet_name="samples")
+                if "samples" in sheet_names else None
+            )
+            utt_df = (
+                pd.read_excel(xls, sheet_name="utterances")
+                if "utterances" in sheet_names else None
+            )
 
-        sample_df = pd.read_excel(xls, sheet_name="samples") if "samples" in sheet_names else None
-        utt_df = pd.read_excel(xls, sheet_name="utterances") if "utterances" in sheet_names else None
-        xls.close()
-
-        if type == "sample":
+        if kind == "sample":
             if sample_df is None:
                 raise ValueError("Sample sheet not found in transcript table.")
-            logger.info(f"Loaded sample data from {path}")
+            logger.info(f"Loaded sample data from {_rel(path)}")
             return sample_df
 
-        elif type == "utterance":
+        if kind == "utterance":
             if utt_df is None:
                 raise ValueError("Utterance sheet not found in transcript table.")
-            logger.info(f"Loaded utterance data from {path}")
+            logger.info(f"Loaded utterance data from {_rel(path)}")
             return utt_df
 
-        elif type == "joined":
-            if sample_df is None or utt_df is None:
-                raise ValueError("Both sheets required for joined type are missing.")
-            joined = sample_df.merge(utt_df, on="sample_id", how="inner")
-            logger.info(f"Loaded joined transcript data from {path}")
-            return joined
+        if sample_df is None or utt_df is None:
+            raise ValueError("Both sheets required for joined kind are missing.")
 
-        else:
-            raise ValueError(f"Invalid type '{type}'. Must be 'sample', 'utterance', or 'joined'.")
+        joined = sample_df.merge(utt_df, on="sample_id", how="inner")
+        logger.info(f"Loaded joined transcript data from {_rel(path)}")
+        return joined
 
     except Exception as e:
-        logger.error(f"Failed to read {path}: {e}")
+        logger.error(f"Failed to read {_rel(path)}: {e}")
         raise
 
 
