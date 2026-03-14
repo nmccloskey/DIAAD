@@ -13,7 +13,7 @@ from diaad.utils.auxiliary import find_files, project_path
 from diaad.utils.logger import logger
 from diaad.utils.auxiliary import get_root
 
-from diaad.config.config_manager import ConfigManager
+from diaad.utils.config import ConfigManager
 
 
 @dataclass
