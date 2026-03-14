@@ -102,7 +102,7 @@ class ConfigManager:
     )
 
     def __init__(self, config_dir: str | Path) -> None:
-        self.config_dir = Path(config_dir).resolve()
+        self.config_dir = Path(config_dir).expanduser().resolve()
         self._validate_config_dir()
 
         self._raw_project = self._read_yaml("project.yaml")
