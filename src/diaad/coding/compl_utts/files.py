@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
+from diaad.utils.auxiliary import find_matching_files, extract_transcript_data, calc_subset_size
 from diaad.coding.utils import segment, assign_coders, normalize_coders, resolve_stim_cols
 
 
@@ -141,7 +141,7 @@ def make_cu_coding_files(
     if frac == 0:
         logger.info("frac=0 detected; no reliability subset will be generated.")
 
-    transcript_tables = find_files(
+    transcript_tables = find_matching_files(
         directories=[input_dir, output_dir],
         search_base="transcript_tables",
     )

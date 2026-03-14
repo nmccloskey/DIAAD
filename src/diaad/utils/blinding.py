@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import find_files, extract_transcript_data
+from diaad.utils.auxiliary import find_matching_files, extract_transcript_data
 
 
 DEFAULT_ID_COLS = ("sample_id", "utterance_id")
@@ -116,7 +116,7 @@ def _load_metadata_from_transcript_tables(
         Concatenated joined transcript metadata.
     """
     if transcript_tables is None:
-        transcript_tables = find_files(
+        transcript_tables = find_matching_files(
             match_tiers=match_tiers,
             directories=directories,
             search_base="transcript_tables",

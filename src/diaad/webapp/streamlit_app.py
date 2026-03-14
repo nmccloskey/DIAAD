@@ -29,7 +29,7 @@ def zip_folder(folder_path: Path) -> BytesIO:
 # ------------------------------------------------------------------
 # DIAAD imports
 # ------------------------------------------------------------------
-from diaad.utils.auxiliary import find_files
+from diaad.utils.auxiliary import find_matching_files
 from diaad.utils.logger import (
     logger,
     initialize_logger,
@@ -197,7 +197,7 @@ if (config_file or st.session_state.confirmed_config) and cha_files:
                     for f in selected_funcs
                 )
                 if needs_utt and not any(f.startswith("4a") for f in selected_funcs):
-                    transcript_tables = find_files(
+                    transcript_tables = find_matching_files(
                         directories=[input_dir, out_dir],
                         search_base="transcript_tables",
                     )

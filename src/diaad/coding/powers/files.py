@@ -9,7 +9,7 @@ from pathlib import Path
 
 from diaad.utils.logger import logger, _rel
 from diaad.coding.utils import segment, assign_coders
-from diaad.utils.auxiliary import find_files, extract_transcript_data, calc_subset_size
+from diaad.utils.auxiliary import find_matching_files, extract_transcript_data, calc_subset_size
 from diaad.transcripts.transcription_reliability_evaluation import process_utterances
 
 
@@ -301,7 +301,7 @@ def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude
     logger.info(f"Writing POWERS coding files to {_rel(powers_coding_dir)}")
 
     # Collect utterance tables
-    transcript_tables = find_files(directories=[input_dir, output_dir],
+    transcript_tables = find_matching_files(directories=[input_dir, output_dir],
                                    search_base="transcript_tables")
     utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
 

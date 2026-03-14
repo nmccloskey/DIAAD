@@ -8,7 +8,7 @@ from scipy.stats import percentileofscore
 
 from diaad.utils.logger import logger, _rel
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
-from diaad.utils.auxiliary import find_files, extract_transcript_data
+from diaad.utils.auxiliary import find_matching_files, extract_transcript_data
 from diaad.coding.corelex.supp import urls, scene_tokens
 from diaad.coding.corelex.supp import urls, scene_tokens, lemma_dict
 
@@ -91,7 +91,7 @@ def find_corelex_inputs(input_dir: str, output_dir: str) -> dict | None:
             return "unblind", df
 
     # 2) Fallback: transcript tables
-    transcript_tables = find_files(directories=[input_dir, output_dir],
+    transcript_tables = find_matching_files(directories=[input_dir, output_dir],
                                                 search_base="transcript_tables")
     if not transcript_tables:
         logger.error(

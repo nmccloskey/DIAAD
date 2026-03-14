@@ -9,7 +9,7 @@ from pathlib import Path
 from diaad.utils.logger import logger, _rel
 from diaad.utils.auxiliary import (
     calc_subset_size,
-    find_files,
+    find_matching_files,
     extract_transcript_data,
 )
 from diaad.coding.utils import segment, assign_coders
@@ -114,7 +114,7 @@ def _find_input_files(input_dir, output_dir):
     """
     Prefer CU coding files. If none are found, fall back to transcript tables.
     """
-    cu_files = find_files(
+    cu_files = find_matching_files(
         directories=[input_dir, output_dir],
         search_base="cu_coding_by_utterance",
     )
@@ -125,7 +125,7 @@ def _find_input_files(input_dir, output_dir):
         )
         return "cu", cu_files
 
-    transcript_tables = find_files(
+    transcript_tables = find_matching_files(
         directories=[input_dir, output_dir],
         search_base="transcript_tables",
     )

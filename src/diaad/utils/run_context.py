@@ -9,7 +9,7 @@ import random
 import numpy as np
 
 from diaad import __version__
-from diaad.utils.auxiliary import find_files, cwd_path
+from diaad.utils.auxiliary import find_matching_files, cwd_path
 from diaad.utils.logger import logger
 from diaad.utils.auxiliary import get_root
 
@@ -214,7 +214,7 @@ class RunContext:
         Return True if transcript tables are already present in either the
         input directory or current run output directory.
         """
-        transcript_tables = find_files(
+        transcript_tables = find_matching_files(
             directories=[self.input_dir, self.out_dir],
             search_base="transcript_tables",
         )

@@ -7,7 +7,7 @@ from typing import Sized
 from diaad.utils.logger import logger, _rel
 
 
-def find_files(
+def find_matching_files(
     match_tiers=None,
     directories=None,
     search_base="",
