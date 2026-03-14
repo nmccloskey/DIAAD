@@ -30,6 +30,7 @@ class RunContext:
     """
 
     config_dir: str | Path
+    project_root: str | Path
     start_time: datetime
 
     # ------------------------------------------------------------------
@@ -145,25 +146,25 @@ class RunContext:
     # ------------------------------------------------------------------
     # Setup helpers
     # ------------------------------------------------------------------
-    def _resolve_path(self, path: str | Path) -> Path:
+    def _resolve_project_path(self, path: str | Path) -> Path:
         """
-        Resolve a config-defined path relative to the config directory.
+        Resolve a project-defined path relative to the DIAAD project root.
 
         Absolute paths are preserved. Relative paths are interpreted
-        relative to the directory containing the DIAAD YAML config files.
+        relative to the project root.
         """
         p = Path(path).expanduser()
         if p.is_absolute():
             return p.resolve()
-        return (self.config.config_dir / p).resolve()
+        return (self.project_root / p).resolve()
 
     def _resolve_directories(self) -> None:
         """
         Resolve configured input/output directories and create the
         timestamped run output directory.
         """
-        self.input_dir = self._resolve_path(self.config.input_dir)
-        self.base_output_dir = self._resolve_path(self.config.output_dir)
+        self.input_dir = self._resolve_project_path(self.config.input_dir)
+        self.base_output_dir = self._resolve_project_path(self.config.output_dir)
 
         self.out_dir = (self.base_output_dir / f"diaad_output_{self.timestamp}").resolve()
         self.out_dir.mkdir(parents=True, exist_ok=True)

@@ -23,12 +23,14 @@ def main(args) -> None:
 
     try:
         start_time = datetime.now()
-        set_root(Path.cwd())
+        project_root = Path.cwd().resolve()
+        set_root(project_root)
 
         print("ARGS.CONFIG:", args.config)
 
         ctx = RunContext(
             config_dir=args.config or "config",
+            project_root=project_root,
             start_time=start_time,
         )
 
