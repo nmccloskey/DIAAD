@@ -57,6 +57,7 @@ class RunContext:
     # Initialization
     # ------------------------------------------------------------------
     def __post_init__(self) -> None:
+        self.config_path = Path(self.config_path).resolve()
         self.config = ConfigManager(self.config_path)
         self._resolve_directories()
         self._seed_rngs()
@@ -301,7 +302,7 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "config_path": Path(self.config_path),
+            "config_path": self.config_path,
             "config": self.config.as_termination_dict(),
             "start_time": self.start_time,
             "program_name": "DIAAD",

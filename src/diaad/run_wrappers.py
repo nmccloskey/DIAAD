@@ -1,32 +1,3 @@
-from diaad.utils.logger import logger
-
-
-# ------------------------------------------------------------------
-# Config and initial inputs
-# ------------------------------------------------------------------
-
-def run_read_tiers(config):
-    """Read and adapt configured tiers for DIAAD."""
-    from diaad.utils.diaad_tier_adapter import adapt_tiers_for_diaad
-    from diaad.utils.tiers import TierManager
-
-    tier_manager = TierManager(config)
-    adapted_tiers = adapt_tiers_for_diaad(tier_manager)
-
-    if adapted_tiers:
-        logger.info("Successfully parsed and adapted tiers for DIAAD.")
-    else:
-        logger.warning("Adapted tiers are empty or malformed.")
-
-    return adapted_tiers, tier_manager
-
-
-def run_read_cha_files(input_dir, shuffle=False):
-    """Read CHAT files from the input directory."""
-    from diaad.utils.cha_files import read_cha_files
-
-    return read_cha_files(input_dir=input_dir, shuffle=shuffle)
-
 
 # ------------------------------------------------------------------
 # Transcription
