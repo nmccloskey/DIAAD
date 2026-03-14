@@ -77,8 +77,8 @@ def build_arg_parser():
     parser.add_argument(
         "--config",
         type=str,
-        default="config.yaml",
-        help="Path to the configuration file (default: config.yaml)",
+        default="config",
+        help="Path to the configuration directory (default: config/)",
     )
 
     help_lines = ["\nAvailable Commands:\n"]

@@ -24,6 +24,8 @@ def main(args) -> None:
         start_time = datetime.now()
         set_root(Path.cwd())
 
+        print("ARGS.CONFIG:", args.config)
+
         ctx = RunContext(
             config_path=args.config or "config",
             start_time=start_time,
