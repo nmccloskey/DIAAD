@@ -27,7 +27,7 @@ def main(args) -> None:
         print("ARGS.CONFIG:", args.config)
 
         ctx = RunContext(
-            config_path=args.config or "config",
+            config_dir=args.config or "config",
             start_time=start_time,
         )
 

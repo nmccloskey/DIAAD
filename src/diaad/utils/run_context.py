@@ -29,7 +29,7 @@ class RunContext:
     dispatch/wrapper layers.
     """
 
-    config_path: str | Path
+    config_dir: str | Path
     start_time: datetime
 
     # ------------------------------------------------------------------
@@ -56,8 +56,8 @@ class RunContext:
     # Initialization
     # ------------------------------------------------------------------
     def __post_init__(self) -> None:
-        self.config_path = Path(self.config_path).resolve()
-        self.config = ConfigManager(self.config_path)
+        self.config_dir = Path(self.config_dir).expanduser().resolve()
+        self.config = ConfigManager(self.config_dir)
         self._resolve_directories()
         self._seed_rngs()
         self._build_tier_state()
@@ -145,19 +145,25 @@ class RunContext:
     # ------------------------------------------------------------------
     # Setup helpers
     # ------------------------------------------------------------------
+    def _resolve_path(self, path: str | Path) -> Path:
+        """
+        Resolve a config-defined path relative to the config directory.
+
+        Absolute paths are preserved. Relative paths are interpreted
+        relative to the directory containing the DIAAD YAML config files.
+        """
+        p = Path(path).expanduser()
+        if p.is_absolute():
+            return p.resolve()
+        return (self.config.config_dir / p).resolve()
+
     def _resolve_directories(self) -> None:
         """
         Resolve configured input/output directories and create the
         timestamped run output directory.
         """
-        self.input_dir = cwd_path(self.config.input_dir)
-        self.base_output_dir = cwd_path(self.config.output_dir)
-
-        if not self.input_dir.is_relative_to(get_root()):
-            logger.warning(
-                "Input directory %s is outside the project root.",
-                self.input_dir,
-            )
+        self.input_dir = self._resolve_path(self.config.input_dir)
+        self.base_output_dir = self._resolve_path(self.config.output_dir)
 
         self.out_dir = (self.base_output_dir / f"diaad_output_{self.timestamp}").resolve()
         self.out_dir.mkdir(parents=True, exist_ok=True)
@@ -253,7 +259,7 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "config_path": self.config_path,
+            "config_path": self.config_dir,
             "config": self.config.as_termination_dict(),
             "start_time": self.start_time,
             "program_name": "DIAAD",
