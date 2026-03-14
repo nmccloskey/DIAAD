@@ -3,7 +3,8 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import find_matching_files, extract_transcript_data
+from diaad.io.discovery import find_matching_files
+from diaad.transcripts.tables import extract_transcript_data
 
 
 def _filter_df(df, cols):

@@ -7,11 +7,9 @@ import num2words as n2w
 from pathlib import Path
 
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import (
-    calc_subset_size,
-    find_matching_files,
-    extract_transcript_data,
-)
+from diaad.utils.sampling import calc_subset_size
+from diaad.io.discovery import find_matching_files
+from diaad.transcripts.tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders
 
 

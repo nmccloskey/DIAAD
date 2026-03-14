@@ -9,9 +9,8 @@ import random
 import numpy as np
 
 from diaad import __version__
-from diaad.utils.auxiliary import find_matching_files, cwd_path
-from diaad.utils.logger import logger
-from diaad.utils.auxiliary import get_root
+from diaad.io.discovery import find_matching_files
+from diaad.utils.logger import logger, get_root
 
 from diaad.utils.config import ConfigManager
 

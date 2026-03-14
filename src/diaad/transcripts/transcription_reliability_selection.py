@@ -3,7 +3,7 @@ import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import calc_subset_size
+from diaad.utils.sampling import calc_subset_size
 
 
 def select_transcription_reliability_samples(tiers, chats, frac, output_dir):

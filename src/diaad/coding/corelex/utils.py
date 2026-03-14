@@ -8,7 +8,8 @@ from scipy.stats import percentileofscore
 
 from diaad.utils.logger import logger, _rel
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
-from diaad.utils.auxiliary import find_matching_files, extract_transcript_data
+from diaad.io.discovery import find_matching_files
+from diaad.transcripts.tables import extract_transcript_data
 from diaad.coding.corelex.supp import urls, scene_tokens
 from diaad.coding.corelex.supp import urls, scene_tokens, lemma_dict
 

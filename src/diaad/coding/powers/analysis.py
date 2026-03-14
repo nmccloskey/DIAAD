@@ -6,7 +6,7 @@ from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import find_matching_files
+from diaad.io.discovery import find_matching_files
 
 TURN_AGG_COLS = ["speech_units", "content_words", "num_nouns", "filled_pauses"]
 

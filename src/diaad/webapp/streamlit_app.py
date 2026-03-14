@@ -29,7 +29,7 @@ def zip_folder(folder_path: Path) -> BytesIO:
 # ------------------------------------------------------------------
 # DIAAD imports
 # ------------------------------------------------------------------
-from diaad.utils.auxiliary import find_matching_files
+from diaad.io.discovery import find_matching_files
 from diaad.utils.logger import (
     logger,
     initialize_logger,
