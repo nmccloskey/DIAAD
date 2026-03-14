@@ -245,54 +245,6 @@ class RunContext:
         )
 
     # ------------------------------------------------------------------
-    # Command requirement helpers
-    # ------------------------------------------------------------------
-    @staticmethod
-    def commands_require_chats(commands: Iterable[str]) -> bool:
-        """
-        Return True if any requested command requires CHAT files as input.
-        """
-        commands = set(commands)
-        return bool(
-            commands
-            & {
-                "transcripts tabularize",
-                "transcripts select",
-            }
-        )
-
-    @staticmethod
-    def commands_require_transcript_tables(commands: Iterable[str]) -> bool:
-        """
-        Return True if any requested command depends on transcript tables.
-        """
-        commands = set(commands)
-        return bool(
-            commands
-            & {
-                "cus make",
-                "corelex analyze",
-                "powers make",
-            }
-        )
-
-    def prepare_prerequisites(self, commands: Iterable[str]) -> None:
-        """
-        Lazily prepare shared prerequisites needed by the requested
-        commands.
-        """
-        commands = list(commands)
-
-        if self.commands_require_chats(commands):
-            self.load_chats()
-
-        if (
-            "transcripts tabularize" not in commands
-            and self.commands_require_transcript_tables(commands)
-        ):
-            self.ensure_transcript_tables()
-
-    # ------------------------------------------------------------------
     # Logging / termination helpers
     # ------------------------------------------------------------------
     def termination_kwargs(self) -> dict[str, Any]:
