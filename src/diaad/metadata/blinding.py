@@ -7,7 +7,7 @@ import pandas as pd
 
 from src.diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
-from diaad.transcripts.tables import extract_transcript_data
+from diaad.transcripts.transcript_tables import extract_transcript_data
 
 DEFAULT_ID_COLS = ("sample_id", "utterance_id")
 

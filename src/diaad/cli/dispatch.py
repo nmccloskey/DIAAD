@@ -43,17 +43,18 @@ TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "powers make",
 }
 
-
 def commands_require_chats(commands: Iterable[str]) -> bool:
     """Return True if any command requires CHAT files."""
     return bool(set(commands) & CHAT_REQUIRED_COMMANDS)
-
 
 def commands_require_transcript_tables(commands: Iterable[str]) -> bool:
     """Return True if any command requires transcript tables."""
     return bool(set(commands) & TRANSCRIPT_TABLE_REQUIRED_COMMANDS)
 
-def prepare_dispatch_prerequisites(ctx, commands):
+def prepare_dispatch_prerequisites(ctx, commands: Iterable[str]) -> None:
+    """
+    Load prerequisite runtime state before dispatching commands.
+    """
     commands = list(commands)
 
     if commands_require_chats(commands):
