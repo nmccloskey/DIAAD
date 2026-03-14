@@ -178,8 +178,8 @@ class RunContext:
         """
         Build TierManager and adapted DIAAD tiers from configuration.
         """
-        from diaad.utils.diaad_tier_adapter import adapt_tiers_for_diaad
-        from diaad.utils.tiers import TierManager
+        from src.diaad.metadata.tier_adapter import adapt_tiers_for_diaad
+        from src.diaad.metadata.tiers import TierManager
 
         self.tier_manager = TierManager(self.config.tiers_config)
         self.tiers = adapt_tiers_for_diaad(self.tier_manager) or {}
