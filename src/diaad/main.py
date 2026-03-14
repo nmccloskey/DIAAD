@@ -1,238 +1,87 @@
 #!/usr/bin/env python3
-from pathlib import Path
-import random, numpy as np
+from __future__ import annotations
+
 from datetime import datetime
+from pathlib import Path
+
+from diaad import __version__
+from diaad.utils.run_context import RunContext
+from diaad.utils.dispatch import build_dispatch, prepare_dispatch_prerequisites
+from diaad.utils.cli_utils import build_arg_parser, parse_cli_commands
 from diaad.utils.logger import (
-    get_root,
-    set_root,
-    logger,
     initialize_logger,
+    logger,
+    set_root,
     terminate_logger,
 )
-from diaad.utils.auxiliary import (
-    project_path,
-    load_config,
-    find_files
-)
-from diaad.utils.cli_utils import (
-    build_arg_parser,
-    parse_cli_commands,
-    commands_require_chats,
-    commands_require_transcript_tables,
-)
-from diaad.run_wrappers import (
-    run_read_tiers, run_read_cha_files,
-    run_select_transcription_reliability_samples,
-    run_reselect_transcription_reliability_samples,
-    run_evaluate_transcription_reliability,
-    run_tabularize_transcripts, run_make_cu_coding_files,
-    run_evaluate_cu_reliability,
-    run_analyze_cu_coding, run_reselect_cu_rel,
-    run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_rel, run_corelex,
-    run_analyze_digital_convo_turns,
-    run_make_powers_coding_files, run_analyze_powers_coding,
-    run_evaluate_powers_reliability, run_reselect_powers_reliability_coding,
-    run_select_for_validation, run_validate_automation
-)
-from diaad import __version__
 
 
-def main(args):
-    """Main function to process input arguments and execute appropriate steps."""
+def main(args) -> None:
+    """Parse CLI arguments and execute the requested DIAAD commands."""
+    ctx = None
+
     try:
         start_time = datetime.now()
         set_root(Path.cwd())
 
-        # -----------------------------------------------------------------
-        # Configuration and directories
-        # -----------------------------------------------------------------
-        config_path = project_path(args.config or "config.yaml")
-        config = load_config(config_path)
-
-        input_dir = project_path(config.get("input_dir", "diaad_data/input"))
-        if not input_dir.is_relative_to(get_root()):
-            logger.warning(f"Input directory {input_dir} is outside the project root.")
-        output_dir = project_path(config.get("output_dir", "diaad_data/output"))
-
-        timestamp = start_time.strftime("%y%m%d_%H%M")
-        out_dir = (output_dir / f"diaad_output_{timestamp}").resolve()
-        out_dir.mkdir(parents=True, exist_ok=True)
+        ctx = RunContext(
+            config_path=args.config or "config",
+            start_time=start_time,
+        )
 
         # -----------------------------------------------------------------
         # Initialize logger once output folder is ready
         # -----------------------------------------------------------------
-        initialize_logger(start_time, out_dir, program_name="DIAAD", version=__version__)
+        initialize_logger(
+            start_time,
+            ctx.out_dir,
+            program_name="DIAAD",
+            version=__version__,
+        )
         logger.info("Logger initialized and early logs flushed.")
-
-        # -----------------------------------------------------------------
-        # Remaining program parameters
-        # -----------------------------------------------------------------
-        random_seed = config.get("random_seed", 99) or 99
-        random.seed(random_seed)
-        np.random.seed(random_seed)
-        logger.info(f"Random seed set to {random_seed}")
-
-        frac = config.get("reliability_fraction", 0.2) or 0.2
-        shuffle_samples = config.get("shuffle_samples", True) or True
-
-        coders = config.get("coders", []) or []
-        cu_paradigms = config.get("cu_paradigms", []) or []
-        narrative_field = config.get("narrative_field", "") or ""
-        exclude_participants = config.get("exclude_participants", []) or []
-
-        strip_clan = config.get("strip_clan", True) or True
-        prefer_correction = config.get("prefer_correction", True) or True
-        lowercase = config.get("lowercase", True) or True
-
-        automate_powers = config.get("automate_powers", True) or True
-        just_c2_powers = config.get("just_c2_powers", True) or True
-
-        stratify_by = config.get("stratify_by", []) or []
-        num_strata = config.get("num_strata", 0) or 0
-        selection_table = config.get("selection_table", "") or ""
-        stratum_numbers = config.get("stratum_numbers", []) or []
-
-        tiers, tier_manager = run_read_tiers(config) or {}
 
         # ---------------------------------------------------------
         # Parse commands
         # ---------------------------------------------------------
-        converted = parse_cli_commands(args.command, logger=logger)
+        commands = parse_cli_commands(args.command, logger=logger)
 
-        if not converted:
+        if not commands:
             logger.error("No valid commands recognized - exiting.")
             return
 
-        logger.info(f"Executing command(s): {', '.join(converted)}")
-
-        # Load .cha if required
-        chats = None
-        if commands_require_chats(converted):
-            chats = run_read_cha_files(input_dir)
-
-        # Prepare transcript tables if needed
-        if "transcripts tabularize" not in converted and commands_require_transcript_tables(converted):
-            transcript_tables = find_files(
-                directories=[input_dir, out_dir],
-                search_base="transcript_tables",
-            )
-            if not transcript_tables:
-                logger.info("No input transcript tables detected - creating them automatically.")
-                chats = chats or run_read_cha_files(input_dir)
-                run_tabularize_transcripts(
-                    tiers, chats, out_dir, shuffle_samples, random_seed
-                )
+        ctx.set_commands(commands)
+        logger.info("Executing command(s): %s", ", ".join(commands))
 
         # ---------------------------------------------------------
-        # Dispatch dictionary
+        # Prepare prerequisites and dispatch
         # ---------------------------------------------------------
-        dispatch = {
-
-            # Transcription
-            "transcripts select": lambda: run_select_transcription_reliability_samples(
-                tiers, chats, frac, out_dir
-            ),
-            "transcripts evaluate": lambda: run_evaluate_transcription_reliability(
-                tiers, input_dir, out_dir, exclude_participants,
-                strip_clan, prefer_correction, lowercase
-            ),
-            "transcripts reselect": lambda: run_reselect_transcription_reliability_samples(
-                input_dir, out_dir, frac
-            ),
-            "transcripts tabularize": lambda: run_tabularize_transcripts(
-                tiers, chats, out_dir, shuffle_samples, random_seed
-            ),
-
-            # Complete Utterance coding
-            "cus make": lambda: run_make_cu_coding_files(
-                tiers, frac, coders, input_dir, out_dir,
-                cu_paradigms, exclude_participants, narrative_field
-            ),
-            "cus evaluate": lambda: run_evaluate_cu_reliability(
-                tiers, input_dir, out_dir, cu_paradigms
-            ),
-            "cus reselect": lambda: run_reselect_cu_rel(
-                tiers, input_dir, out_dir, frac, random_seed
-            ),
-            "cus analyze": lambda: run_analyze_cu_coding(
-                tiers, input_dir, out_dir, cu_paradigms
-            ),
-
-            # Manual word counting
-            "words make": lambda: run_make_word_count_files(
-                tiers, frac, coders, input_dir, out_dir
-            ),
-            "words evaluate": lambda: run_evaluate_word_count_reliability(
-                tiers, input_dir, out_dir
-            ),
-            "words reselect": lambda: run_reselect_wc_rel(
-                tiers, input_dir, out_dir, frac, random_seed
-            ),
-
-            # CoreLex - convenience layer
-            "corelex analyze": lambda: run_corelex(
-                tiers, input_dir, out_dir, exclude_participants, narrative_field
-            ),
-
-            # Digital Conversation Turns
-            "turns analyze": lambda: run_analyze_digital_convo_turns(
-                input_dir, out_dir
-            ),
-
-            # POWERS coding workflow
-            "powers make": lambda: run_make_powers_coding_files(
-                tiers, frac, coders, input_dir, out_dir, exclude_participants, automate_powers
-            ),
-            "powers analyze": lambda: run_analyze_powers_coding(
-                input_dir, out_dir, just_c2_powers=just_c2_powers
-            ),
-            "powers evaulate": lambda: run_evaluate_powers_reliability(
-                input_dir, out_dir
-            ),
-            "powers reselect": lambda: run_reselect_powers_reliability_coding(
-                input_dir, out_dir, frac, exclude_participants, automate_powers
-            ),
-
-            # POWERS automation validation
-            "powers select": lambda: run_select_for_validation(
-                stratify_by, input_dir, out_dir, num_strata, random_seed
-            ),
-            "powers validate": lambda: run_validate_automation(
-                selection_table, stratum_numbers, input_dir, out_dir, exclude_participants
-                )
-        }
+        prepare_dispatch_prerequisites(ctx, commands)
+        dispatch = build_dispatch(ctx)
 
         # ---------------------------------------------------------
         # Execute all requested commands
         # ---------------------------------------------------------
         executed = []
-        for cmd in converted:
+        for cmd in commands:
             func = dispatch.get(cmd)
-            if func:
-                func()
-                executed.append(cmd)
-            else:
-                logger.error(f"Unknown command: {cmd}")
+            if func is None:
+                logger.error("Unknown command: %s", cmd)
+                continue
+
+            func()
+            executed.append(cmd)
 
         if executed:
-            logger.info(f"Completed: {', '.join(executed)}")
+            logger.info("Completed: %s", ", ".join(executed))
 
     except Exception as e:
-        logger.error(f"DIAAD execution failed: {e}", exc_info=True)
+        logger.error("DIAAD execution failed: %s", e, exc_info=True)
         raise
 
     finally:
-        # Always finalize logging and metadata
-        terminate_logger(
-            input_dir=input_dir,
-            output_dir=out_dir,
-            config_path=config_path,
-            config=config,
-            start_time=start_time,
-            program_name="DIAAD",
-            version=__version__,
-        )
+        if ctx is not None:
+            terminate_logger(**ctx.termination_kwargs())
+
 
 # -------------------------------------------------------------
 # Direct execution
