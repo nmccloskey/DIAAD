@@ -304,13 +304,3 @@ def calc_subset_size(frac: float, samples: Sized) -> int:
         raise ValueError("samples must be non-empty (len(samples) > 0)")
 
     return max(1, math.ceil(frac * n_samples))
-
-
-def read_df(file_path):
-    try:
-        df = pd.read_excel(str(file_path))
-        logger.info(f"Successfully read file: {_rel(file_path)}")
-        return df
-    except Exception as e:
-        logger.error(f"Failed to read file {_rel(file_path)}: {e}")
-        return None

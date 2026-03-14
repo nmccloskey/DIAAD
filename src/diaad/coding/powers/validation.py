@@ -1,8 +1,9 @@
+import re
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from diaad.utils.logger import logger, _rel
-from diaad.utils.auxiliary import read_df, find_files, extract_transcript_data
+from diaad.utils.auxiliary import find_files, extract_transcript_data
 
 
 def _filter_df(df, cols):
@@ -11,6 +12,14 @@ def _filter_df(df, cols):
     except:
         return None
 
+def _read_df(file_path):
+    try:
+        df = pd.read_excel(str(file_path))
+        logger.info(f"Successfully read file: {_rel(file_path)}")
+        return df
+    except Exception as e:
+        logger.error(f"Failed to read file {_rel(file_path)}: {e}")
+        return None
 
 def parse_stratify_fields(values: list[str] | None) -> list[str]:
     """
@@ -118,7 +127,7 @@ def select_validation_samples(input_dir: str | Path,
                                        search_base="powers_coding")
     if pc_files:
         for pcf in pc_files:
-            if (pcdf := read_df(pcf)) is not None and not pcdf.empty:
+            if (pcdf := _read_df(pcf)) is not None and not pcdf.empty:
                 labeled_pcdf = sel[["sample_id", "stratum_no"]].merge(pcdf, on=["sample_id"], how="right")
                 out_pc_file = output_dir / pcf.name.replace("powers_coding", "powers_coding_labeled")
                 labeled_pcdf.to_excel(out_pc_file, index=False)
@@ -168,8 +177,8 @@ def validate_automation(input_dir: str | Path,
     manual_pc_files = find_files(directories=[input_dir / "manual", output_dir],
                                  search_base="powers_coding")
 
-    auto = [df for p in auto_pc_files if (df := read_df(p)) is not None]
-    manual = [df for p in manual_pc_files if (df := read_df(p)) is not None]
+    auto = [df for p in auto_pc_files if (df := _read_df(p)) is not None]
+    manual = [df for p in manual_pc_files if (df := _read_df(p)) is not None]
     
     # Pair automatic and manual codes and prep for analyze POWERS
     if not auto or not manual:
