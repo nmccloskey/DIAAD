@@ -260,3 +260,229 @@ class RunContext:
             "program_name": "DIAAD",
             "version": self.version,
         }
+
+    # ------------------------------------------------------------------
+    # Keyword-argument builders
+    # ------------------------------------------------------------------
+    def kwargs_io(self) -> dict[str, Any]:
+        """
+        Return the standard input/output directory payload for modules
+        that do not require tiers.
+        """
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+        }
+
+    def kwargs_tiered_io(self) -> dict[str, Any]:
+        """
+        Return the standard tiers + input/output payload for modules
+        that operate on tier-aware transcript tables.
+        """
+        return {
+            "tiers": self.tiers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+        }
+
+    # ------------------------------------------------------------------
+    # Transcription
+    # ------------------------------------------------------------------
+    def kwargs_tabularize_transcripts(self) -> dict[str, Any]:
+        """Return kwargs for transcript tabularization."""
+        if self.chats is None:
+            raise RuntimeError("CHAT files have not been loaded for this run.")
+        return {
+            "tiers": self.tiers,
+            "chats": self.chats,
+            "output_dir": self.out_dir,
+            "shuffle": self.shuffle_samples,
+            "random_seed": self.random_seed,
+        }
+
+    def kwargs_select_transcription_reliability_samples(self) -> dict[str, Any]:
+        """Return kwargs for transcription reliability sample selection."""
+        if self.chats is None:
+            raise RuntimeError("CHAT files have not been loaded for this run.")
+        return {
+            "tiers": self.tiers,
+            "chats": self.chats,
+            "frac": self.reliability_fraction,
+            "output_dir": self.out_dir,
+        }
+
+    def kwargs_reselect_transcription_reliability_samples(self) -> dict[str, Any]:
+        """Return kwargs for transcription reliability reselection."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+        }
+
+    def kwargs_evaluate_transcription_reliability(self) -> dict[str, Any]:
+        """Return kwargs for transcription reliability evaluation."""
+        return {
+            "tiers": self.tiers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "exclude_participants": self.exclude_participants,
+            "strip_clan": self.strip_clan,
+            "prefer_correction": self.prefer_correction,
+            "lowercase": self.lowercase,
+        }
+
+    # ------------------------------------------------------------------
+    # Complete Utterance coding
+    # ------------------------------------------------------------------
+    def kwargs_make_cu_coding_files(self) -> dict[str, Any]:
+        """Return kwargs for CU coding file creation."""
+        return {
+            "tiers": self.tiers,
+            "frac": self.reliability_fraction,
+            "coders": self.coders,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "cu_paradigms": self.cu_paradigms,
+            "exclude_participants": self.exclude_participants,
+            "narrative_field": self.narrative_field,
+        }
+
+    def kwargs_reselect_cu_rel(self) -> dict[str, Any]:
+        """Return kwargs for CU reliability reselection."""
+        return {
+            "tiers": self.tiers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "random_seed": self.random_seed,
+        }
+
+    def kwargs_cu_analysis(self) -> dict[str, Any]:
+        """
+        Return shared kwargs for CU reliability evaluation and finalized
+        CU analysis.
+        """
+        return {
+            "tiers": self.tiers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "cu_paradigms": self.cu_paradigms,
+        }
+
+    # ------------------------------------------------------------------
+    # Manual word counting
+    # ------------------------------------------------------------------
+    def kwargs_make_word_count_files(self) -> dict[str, Any]:
+        """Return kwargs for manual word-count file creation."""
+        return {
+            "tiers": self.tiers,
+            "frac": self.reliability_fraction,
+            "coders": self.coders,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+        }
+
+    def kwargs_reselect_wc_rel(self) -> dict[str, Any]:
+        """Return kwargs for word-count reliability reselection."""
+        return {
+            "tiers": self.tiers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "random_seed": self.random_seed,
+        }
+
+    # ------------------------------------------------------------------
+    # CoreLex
+    # ------------------------------------------------------------------
+    def kwargs_corelex(self) -> dict[str, Any]:
+        """Return kwargs for CoreLex analysis."""
+        return {
+            "tiers": self.tiers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "exclude_participants": self.exclude_participants,
+            "narrative_field": self.narrative_field,
+        }
+
+    # ------------------------------------------------------------------
+    # Digital Conversation Turns
+    # ------------------------------------------------------------------
+    def kwargs_digital_convo_turns(self) -> dict[str, Any]:
+        """Return kwargs for digital conversation turn analysis."""
+        return self.kwargs_io()
+
+    # ------------------------------------------------------------------
+    # POWERS coding workflow
+    # ------------------------------------------------------------------
+    def kwargs_make_powers_coding_files(self) -> dict[str, Any]:
+        """Return kwargs for POWERS coding file creation."""
+        return {
+            "tiers": self.tiers,
+            "frac": self.reliability_fraction,
+            "coders": self.coders,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "exclude_participants": self.exclude_participants,
+            "automate_powers": self.automate_powers,
+        }
+
+    def kwargs_analyze_powers_coding(
+        self,
+        *,
+        reliability: bool = False,
+        just_c2_powers: bool | None = None,
+    ) -> dict[str, Any]:
+        """
+        Return kwargs for POWERS analysis.
+
+        Parameters
+        ----------
+        reliability:
+            Whether the analysis is running in reliability mode.
+        just_c2_powers:
+            Override for the configured just_c2_powers setting. If None,
+            the configured value is used.
+        """
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "reliability": reliability,
+            "just_c2_powers": (
+                self.just_c2_powers if just_c2_powers is None else just_c2_powers
+            ),
+            "exclude_participants": self.exclude_participants,
+        }
+
+    def kwargs_reselect_powers_reliability(self) -> dict[str, Any]:
+        """Return kwargs for POWERS reliability reselection."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "exclude_participants": self.exclude_participants,
+            "automate_powers": self.automate_powers,
+        }
+
+    # ------------------------------------------------------------------
+    # POWERS automation validation
+    # ------------------------------------------------------------------
+    def kwargs_select_for_validation(self) -> dict[str, Any]:
+        """Return base kwargs for POWERS validation sample selection."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "stratify_by": self.stratify_by,
+            "num_strata": self.num_strata,
+            "random_seed": self.random_seed,
+        }
+
+    def kwargs_validate_automation(self) -> dict[str, Any]:
+        """Return base kwargs for POWERS automation validation."""
+        return {
+            "selection_table": self.selection_table,
+            "stratum_numbers": self.stratum_numbers,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "exclude_participants": self.exclude_participants,
+        }
