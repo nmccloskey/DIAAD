@@ -9,8 +9,10 @@ from pathlib import Path
 from diaad.core.logger import logger, _rel
 from diaad.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
-from diaad.transcripts.tables import extract_transcript_data
+from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders
+from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
+
 
 
 # ------------------------------------------------------------------
@@ -143,7 +145,7 @@ def _read_source_file(file: Path, source_type: str) -> pd.DataFrame:
     if source_type == "cu":
         df = pd.read_excel(file)
     elif source_type == "transcript":
-        df = extract_transcript_data(file, type="utterance")
+        df = extract_transcript_data(file, kind="utterance")
     else:
         raise ValueError(f"Unknown source_type: {source_type}")
 
@@ -384,6 +386,49 @@ def _assign_wc_coders(wc_df: pd.DataFrame, coders: list[str], frac: float):
 
 
 # ------------------------------------------------------------------
+# Blinding
+# ------------------------------------------------------------------
+
+def _blind_wc_exports(
+    wc_df: pd.DataFrame,
+    wc_rel_df: pd.DataFrame,
+    *,
+    blinding_config=None,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame | None]:
+    """
+    Apply file-identifier blinding to word-count primary and reliability exports.
+
+    Returns
+    -------
+    export_wc_df
+        Primary word-count dataframe, possibly blinded.
+    export_wc_rel_df
+        Reliability word-count dataframe, possibly blinded.
+    codebook_df
+        Codebook used for blinding, or None if blinding was not applied.
+    """
+    export_wc_df = wc_df.copy()
+    export_wc_rel_df = wc_rel_df.copy()
+    codebook_df = None
+
+    if blinding_config is None or not getattr(blinding_config, "blind_files", False):
+        return export_wc_df, export_wc_rel_df, codebook_df
+
+    export_wc_df, codebook_df = blind_file_identifiers(
+        export_wc_df,
+        config=blinding_config,
+    )
+
+    export_wc_rel_df, _ = blind_file_identifiers(
+        export_wc_rel_df,
+        config=blinding_config,
+        existing_codebook=codebook_df,
+    )
+
+    return export_wc_df, export_wc_rel_df, codebook_df
+
+
+# ------------------------------------------------------------------
 # Output
 # ------------------------------------------------------------------
 
@@ -392,8 +437,9 @@ def _write_wc_outputs(
     wc_rel_df: pd.DataFrame,
     word_count_dir: Path,
     labels: list[str],
+    codebook_df: pd.DataFrame | None = None,
 ):
-    """Write primary and reliability word-count workbooks."""
+    """Write primary and reliability word-count workbooks and optional blind codebook."""
     out_dir = Path(word_count_dir, *labels)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -412,6 +458,13 @@ def _write_wc_outputs(
         except Exception as e:
             logger.error(f"Failed to write {_rel(fpath)}: {e}")
 
+    if codebook_df is not None and not codebook_df.empty:
+        codebook_path = out_dir / f"{lab_str}word_count_blind_codebook.xlsx"
+        try:
+            write_blind_codebook(codebook_df, codebook_path)
+        except Exception as e:
+            logger.error(f"Failed to write blind codebook {_rel(codebook_path)}: {e}")
+
 
 # ------------------------------------------------------------------
 # Main entry point
@@ -424,6 +477,7 @@ def make_word_count_files(
     input_dir,
     output_dir,
     exclude_participants: list[str] | None = None,
+    blinding_config=None,
 ):
     """
     Create blinded word-count coding and reliability workbooks from either:
@@ -446,6 +500,11 @@ def make_word_count_files(
     - 1 coder   -> same id in primary and reliability
     - 2+ coders -> segmented sample assignment via helpers
 
+    Blinding
+    --------
+    File-identifier blinding is applied only at export time, after coder
+    assignment, so internal logic continues to operate on the original IDs.
+
     Parameters
     ----------
     tiers : dict[str, Tier]
@@ -455,6 +514,8 @@ def make_word_count_files(
     output_dir : Path | str
     exclude_participants : list[str] | None
         Speakers whose utterances should be explicitly marked neutral ('NA').
+    blinding_config
+        Optional normalized blinding configuration.
     """
     word_count_dir = Path(output_dir) / "word_counts"
     word_count_dir.mkdir(parents=True, exist_ok=True)
@@ -482,15 +543,22 @@ def make_word_count_files(
                 frac=frac,
             )
 
-            # Reassert blinded column order after coder assignment.
+            # Reassert required output order after coder assignment.
             wc_df = _ensure_required_columns(wc_df)[BLINDED_COLUMNS].copy()
             wc_rel_df = _ensure_required_columns(wc_rel_df)[BLINDED_COLUMNS].copy()
 
-            _write_wc_outputs(
+            export_wc_df, export_wc_rel_df, codebook_df = _blind_wc_exports(
                 wc_df=wc_df,
                 wc_rel_df=wc_rel_df,
+                blinding_config=blinding_config,
+            )
+
+            _write_wc_outputs(
+                wc_df=export_wc_df,
+                wc_rel_df=export_wc_rel_df,
                 word_count_dir=word_count_dir,
                 labels=labels,
+                codebook_df=codebook_df,
             )
 
         except Exception as e:

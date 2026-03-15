@@ -387,6 +387,8 @@ class RunContext:
             "coders": self.coders,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
+            "exclude_participants": self.exclude_participants,
+            "blinding_config": self.config.blinding,
         }
 
     def kwargs_reselect_wc_rel(self) -> dict[str, Any]:
