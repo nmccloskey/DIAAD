@@ -63,10 +63,36 @@ class TiersConfig:
 class BlindingConfig:
     """Normalized blinding configuration."""
 
+    blind_files: bool
+    blind_analysis: bool
+    file_blind_cols: list[str]
+
     default_strategy: str
     strategies: dict[str, dict[str, Any]]
+
     default_id_cols: list[str]
     code_prefixes: dict[str, str]
+
+    def strategy(self, name: str | None = None) -> dict[str, Any]:
+        """
+        Return a resolved blinding strategy.
+
+        If `name` is None, the configured default_strategy is used.
+        """
+        strategy_name = name or self.default_strategy
+
+        if strategy_name not in self.strategies:
+            raise KeyError(
+                f"Blinding strategy '{strategy_name}' is not defined. "
+                f"Available strategies: {list(self.strategies)}"
+            )
+
+        return self.strategies[strategy_name]
+
+    @property
+    def default(self) -> dict[str, Any]:
+        """Return the default blinding strategy."""
+        return self.strategies[self.default_strategy]
 
 
 @dataclass(frozen=True)
@@ -441,6 +467,19 @@ class ConfigManager:
     # ------------------------------------------------------------------
 
     def _parse_blinding(self, data: dict[str, Any]) -> BlindingConfig:
+        blind_files = self._as_bool(
+            data.get("blind_files"),
+            default=True,
+        )
+        blind_analysis = self._as_bool(
+            data.get("blind_analysis"),
+            default=False,
+        )
+        file_blind_cols = self._as_str_list(
+            data.get("file_blind_cols"),
+            default=["sample_id"],
+        )
+
         default_strategy = self._as_str(
             data.get("default_strategy"),
             default="analysis",
@@ -496,6 +535,9 @@ class ConfigManager:
         }
 
         return BlindingConfig(
+            blind_files=blind_files,
+            blind_analysis=blind_analysis,
+            file_blind_cols=file_blind_cols,
             default_strategy=default_strategy,
             strategies=normalized_strategies,
             default_id_cols=default_id_cols,

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-import random
-from pathlib import Path
+from typing import Optional, Tuple
 
+import random
 import pandas as pd
+from pathlib import Path
 
 from diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
+from diaad.core.config import BlindingConfig
 
 DEFAULT_ID_COLS = ("sample_id", "utterance_id")
 
@@ -504,3 +506,99 @@ def write_blind_codebook(codebook_df: pd.DataFrame, path: str | Path) -> None:
         raise ValueError("Codebook path must end in .xlsx or .csv")
 
     logger.info(f"Blind codebook written to {_rel(path)}")
+
+def blind_file_identifiers(
+    df: pd.DataFrame,
+    config: BlindingConfig,
+    *,
+    existing_codebook: Optional[pd.DataFrame] = None,
+    seed: int = 99,
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Blind identifier columns in a dataframe used for manual coding files.
+
+    This function replaces identifier columns (e.g., sample_id) with blinded
+    codes so that human coders cannot infer metadata from the identifiers.
+
+    Parameters
+    ----------
+    df
+        DataFrame containing coding rows.
+    config
+        Blinding configuration object.
+    existing_codebook
+        Optional existing blind codebook. If provided and compatible,
+        it will be reused.
+    seed
+        Random seed used when generating a new codebook.
+
+    Returns
+    -------
+    blinded_df
+        DataFrame with identifier columns replaced by blind codes.
+    codebook_df
+        Codebook used for blinding.
+    """
+
+    blind_cols = config.file_blind_cols
+
+    if not blind_cols:
+        logger.warning("No file_blind_cols configured; returning dataframe unchanged.")
+        return df.copy(), pd.DataFrame()
+
+    for col in blind_cols:
+        if col not in df.columns:
+            raise ValueError(
+                f"Column '{col}' required for file blinding is not present in dataframe."
+            )
+
+    # ---------------------------------------------------------
+    # Determine whether to reuse or generate a codebook
+    # ---------------------------------------------------------
+
+    if existing_codebook is not None:
+
+        # Check that codebook covers required columns
+        missing = [
+            col
+            for col in blind_cols
+            if col not in existing_codebook["column"].unique()
+        ]
+
+        if missing:
+            raise ValueError(
+                f"Existing codebook does not contain required columns: {missing}"
+            )
+
+        logger.info("Reusing existing blind codebook for file identifiers.")
+        codebook_df = existing_codebook
+
+    else:
+
+        logger.info(
+            f"Generating new blind codebook for identifier columns: {blind_cols}"
+        )
+
+        codebook_df = generate_blind_codebook(
+            df=df,
+            blind_cols=blind_cols,
+            seed=seed,
+            code_prefixes=config.code_prefixes,
+        )
+
+    # ---------------------------------------------------------
+    # Apply the codebook (replace identifiers directly)
+    # ---------------------------------------------------------
+
+    blinded_df = apply_blind_codebook(
+        df=df,
+        codebook_df=codebook_df,
+        append=False,
+        inplace=False,
+    )
+
+    logger.info(
+        f"Identifier columns blinded for coding files: {blind_cols}"
+    )
+
+    return blinded_df, codebook_df
