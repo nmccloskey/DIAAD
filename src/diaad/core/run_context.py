@@ -351,6 +351,7 @@ class RunContext:
             "cu_paradigms": self.cu_paradigms,
             "exclude_participants": self.exclude_participants,
             "narrative_field": self.narrative_field,
+            "blinding_config": self.config.blinding,
         }
 
     def kwargs_reselect_cu_rel(self) -> dict[str, Any]:

@@ -260,6 +260,14 @@ class ConfigManager:
     def stratum_numbers(self) -> list[int]:
         return self.validation.stratum_numbers
 
+    @property
+    def metadata_source(self) -> str:
+        return self.blinding.default.metadata_source
+    
+    @property
+    def metadata_path(self) -> Path:
+        return self.input_dir / self.metadata_source
+
     # ------------------------------------------------------------------
     # Public serialization helpers
     # ------------------------------------------------------------------

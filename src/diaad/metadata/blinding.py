@@ -507,6 +507,132 @@ def write_blind_codebook(codebook_df: pd.DataFrame, path: str | Path) -> None:
 
     logger.info(f"Blind codebook written to {_rel(path)}")
 
+
+def validate_blind_codebook_compatibility(
+    df: pd.DataFrame,
+    codebook_df: pd.DataFrame,
+    blind_cols: list[str],
+    *,
+    require_value_coverage: bool = True,
+    allow_extra_codebook_columns: bool = True,
+    include_na: bool = False,
+) -> None:
+    """
+    Validate that a blind codebook is compatible with a dataframe and target columns.
+
+    Parameters
+    ----------
+    df
+        DataFrame whose values may be blinded.
+    codebook_df
+        Tabular codebook with columns: 'column', 'raw_value', 'blind_code'.
+    blind_cols
+        Columns that must be supported by the codebook.
+    require_value_coverage
+        If True, require the codebook to contain mappings for all observed values
+        in `df[blind_cols]` (excluding NA unless include_na=True).
+    allow_extra_codebook_columns
+        If False, raise an error when the codebook contains mappings for columns
+        outside `blind_cols`.
+    include_na
+        If True, treat NA as a value that must be explicitly represented in the
+        codebook when require_value_coverage=True.
+
+    Raises
+    ------
+    ValueError
+        If the codebook is incompatible.
+    """
+    blind_cols = list(dict.fromkeys(blind_cols))
+
+    if not blind_cols:
+        raise ValueError("blind_cols must contain at least one column name.")
+
+    required_codebook_cols = ["column", "raw_value", "blind_code"]
+    missing_codebook_cols = [c for c in required_codebook_cols if c not in codebook_df.columns]
+    if missing_codebook_cols:
+        raise ValueError(
+            f"Codebook is missing required columns: {missing_codebook_cols}"
+        )
+
+    missing_df_cols = [c for c in blind_cols if c not in df.columns]
+    if missing_df_cols:
+        raise ValueError(
+            f"Dataframe is missing columns required for compatibility check: {missing_df_cols}"
+        )
+
+    codebook_targets = set(codebook_df["column"].dropna().astype(str).unique())
+    requested_targets = set(blind_cols)
+
+    missing_target_cols = [c for c in blind_cols if c not in codebook_targets]
+    if missing_target_cols:
+        raise ValueError(
+            f"Codebook does not contain required target column(s): {missing_target_cols}"
+        )
+
+    if not allow_extra_codebook_columns:
+        extra_target_cols = sorted(codebook_targets - requested_targets)
+        if extra_target_cols:
+            raise ValueError(
+                f"Codebook contains unexpected target column(s): {extra_target_cols}"
+            )
+
+    # Check for duplicate raw_value mappings within a column
+    dupes = codebook_df.duplicated(subset=["column", "raw_value"], keep=False)
+    if dupes.any():
+        bad = (
+            codebook_df.loc[dupes, ["column", "raw_value"]]
+            .drop_duplicates()
+            .sort_values(["column", "raw_value"], key=lambda s: s.astype(str))
+        )
+        preview = bad.to_dict(orient="records")
+        raise ValueError(
+            f"Codebook contains duplicate mappings for (column, raw_value): {preview}"
+        )
+
+    if not require_value_coverage:
+        logger.info(
+            f"Blind codebook compatibility check passed for columns {blind_cols} "
+            "(structure only; value coverage not required)."
+        )
+        return
+
+    uncovered: dict[str, list] = {}
+
+    for col in blind_cols:
+        codebook_values = codebook_df.loc[codebook_df["column"] == col, "raw_value"]
+
+        if include_na:
+            observed = pd.Series(df[col].unique()).tolist()
+            covered = codebook_values.tolist()
+
+            missing_values = []
+            for value in observed:
+                if pd.isna(value):
+                    if not codebook_values.isna().any():
+                        missing_values.append(value)
+                elif value not in set(v for v in covered if not pd.isna(v)):
+                    missing_values.append(value)
+        else:
+            observed = pd.Series(df[col].dropna().unique()).tolist()
+            covered = set(v for v in codebook_values.tolist() if not pd.isna(v))
+            missing_values = [value for value in observed if value not in covered]
+
+        if missing_values:
+            uncovered[col] = sorted(missing_values, key=lambda x: str(x))
+
+    if uncovered:
+        raise ValueError(
+            f"Codebook does not cover all observed dataframe values for requested "
+            f"blind columns: {uncovered}"
+        )
+
+    logger.info(
+        f"Blind codebook compatibility check passed for columns {blind_cols} "
+        "(including observed value coverage)."
+    )
+
+
 def blind_file_identifiers(
     df: pd.DataFrame,
     config: BlindingConfig,
@@ -558,18 +684,14 @@ def blind_file_identifiers(
 
     if existing_codebook is not None:
 
-        # Check that codebook covers required columns
-        missing = [
-            col
-            for col in blind_cols
-            if col not in existing_codebook["column"].unique()
-        ]
-
-        if missing:
-            raise ValueError(
-                f"Existing codebook does not contain required columns: {missing}"
-            )
-
+        validate_blind_codebook_compatibility(
+            df=df,
+            codebook_df=existing_codebook,
+            blind_cols=blind_cols,
+            require_value_coverage=True,
+            allow_extra_codebook_columns=True,
+            include_na=False,
+        )
         logger.info("Reusing existing blind codebook for file identifiers.")
         codebook_df = existing_codebook
 
