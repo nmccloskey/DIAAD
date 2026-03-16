@@ -374,6 +374,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
+            "blinding_config": self.config.blinding,
         }
 
     # ------------------------------------------------------------------

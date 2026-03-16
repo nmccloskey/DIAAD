@@ -6,6 +6,7 @@ from pathlib import Path
 
 from diaad.core.logger import logger, _rel
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
+from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
 
 # ---------------------------------------------------------------------
@@ -184,38 +185,112 @@ def _make_summary_columns(coder_prefix, paradigm):
 
 
 # ---------------------------------------------------------------------
+# Blinding
+# ---------------------------------------------------------------------
+
+def _blind_cu_analysis_exports(
+    cu_coding: pd.DataFrame,
+    summary_long: pd.DataFrame | None,
+    *,
+    blinding_config=None,
+) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None]:
+    """
+    Apply identifier blinding to CU analysis exports.
+
+    Blinding is applied only to the exported analysis tables, not to the
+    in-memory data used for aggregation.
+
+    Returns
+    -------
+    export_cu_coding
+        Utterance-level analysis dataframe, possibly blinded.
+    export_summary_long
+        Sample-level summary dataframe, possibly blinded.
+    codebook_df
+        Codebook used for blinding, or None if blinding was not applied.
+    """
+    export_cu_coding = cu_coding.copy()
+    export_summary_long = summary_long.copy() if summary_long is not None else None
+    codebook_df = None
+
+    if blinding_config is None or not getattr(blinding_config, "blind_analysis", False):
+        return export_cu_coding, export_summary_long, codebook_df
+
+    export_cu_coding, codebook_df = blind_file_identifiers(
+        export_cu_coding,
+        config=blinding_config,
+    )
+
+    if export_summary_long is not None:
+        export_summary_long, _ = blind_file_identifiers(
+            export_summary_long,
+            config=blinding_config,
+            existing_codebook=codebook_df,
+        )
+
+    return export_cu_coding, export_summary_long, codebook_df
+
+
+# ---------------------------------------------------------------------
 # Output writing
 # ---------------------------------------------------------------------
 
-def _write_cu_analysis_outputs(cu_coding, summaries, out_dir, partition_labels):
-    """Write utterance- and sample-level CU analysis files with relative-path logging."""
+def _write_cu_analysis_outputs(
+    cu_coding,
+    summaries,
+    out_dir,
+    partition_labels,
+    *,
+    blinding_config=None,
+):
+    """Write utterance- and sample-level CU analysis files with optional blinding."""
     label_str = "_".join(partition_labels) if partition_labels else "all_samples"
     utterance_path = Path(out_dir, f"{label_str}_cu_coding_by_utterance.xlsx")
 
+    summary_long = pd.concat(summaries, ignore_index=True) if summaries else None
+
+    export_cu_coding, export_summary_long, codebook_df = _blind_cu_analysis_exports(
+        cu_coding=cu_coding,
+        summary_long=summary_long,
+        blinding_config=blinding_config,
+    )
+
     try:
-        cu_coding.to_excel(utterance_path, index=False)
+        export_cu_coding.to_excel(utterance_path, index=False)
         logger.info(f"Saved utterance-level CU analysis: {_rel(utterance_path)}")
     except Exception as e:
         logger.error(f"Failed writing utterance-level file {_rel(utterance_path)}: {e}")
         return
 
-    if not summaries:
+    if export_summary_long is None or export_summary_long.empty:
         logger.warning(f"No valid CU summaries for {_rel(out_dir)}")
-        return
+    else:
+        try:
+            summary_path = Path(out_dir, f"{label_str}_cu_coding_by_sample.xlsx")
+            export_summary_long.to_excel(summary_path, index=False)
+            logger.info(f"Saved CU summary file: {_rel(summary_path)}")
+        except Exception as e:
+            logger.error(f"Failed saving CU summary to {_rel(out_dir)}: {e}")
 
-    try:
-        summary_long = pd.concat(summaries, ignore_index=True)
-        summary_path = Path(out_dir, f"{label_str}_cu_coding_by_sample.xlsx")
-        summary_long.to_excel(summary_path, index=False)
-        logger.info(f"Saved CU summary file: {_rel(summary_path)}")
-    except Exception as e:
-        logger.error(f"Failed saving CU summary to {_rel(out_dir)}: {e}")
+    if codebook_df is not None and not codebook_df.empty:
+        codebook_path = Path(out_dir, f"{label_str}_cu_analysis_blind_codebook.xlsx")
+        try:
+            write_blind_codebook(codebook_df, codebook_path)
+        except Exception as e:
+            logger.error(f"Failed writing blind codebook {_rel(codebook_path)}: {e}")
+
 
 # ---------------------------------------------------------------------
 # Main analysis
 # ---------------------------------------------------------------------
 
-def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
+def analyze_cu_coding(
+    tiers,
+    input_dir,
+    output_dir,
+    cu_paradigms=None,
+    blinding_config=None,
+):
     """
     Summarize Complete Utterance (CU) coding by sample across all available
     coder schemas and paradigms in each workbook.
@@ -240,6 +315,7 @@ def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
     - Writes:
         * utterance-level file with derived CU columns added
         * sample-level merged summary across all detected coder/paradigm pairs
+    - If analysis blinding is enabled, identifiers are blinded only at export time.
 
     Parameters
     ----------
@@ -247,6 +323,8 @@ def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
     input_dir, output_dir : Path or str
     cu_paradigms : list[str] | None
         Optional explicit list of paradigms to include. If None, infer from columns.
+    blinding_config
+        Optional normalized blinding configuration.
     """
     cu_analysis_dir = Path(output_dir) / "cu_coding_analysis"
     cu_analysis_dir.mkdir(parents=True, exist_ok=True)
@@ -262,12 +340,19 @@ def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
             continue
 
         cu_coding.drop(
-            columns=[c for c in ["c1_id", "c1_comment", "c2_id", "c2_comment", "c3_id", "c3_comment"] if c in cu_coding],
+            columns=[
+                c for c in
+                ["c1_id", "c1_comment", "c2_id", "c2_comment", "c3_id", "c3_comment"]
+                if c in cu_coding
+            ],
             inplace=True,
             errors="ignore",
         )
 
-        coder_pairs = _detect_coder_paradigm_pairs(cu_coding.columns, cu_paradigms=cu_paradigms)
+        coder_pairs = _detect_coder_paradigm_pairs(
+            cu_coding.columns,
+            cu_paradigms=cu_paradigms,
+        )
 
         if not coder_pairs:
             logger.warning(f"No valid SV/REL coder-paradigm pairs found in {_rel(cod)}")
@@ -291,7 +376,10 @@ def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
                     errors="coerce",
                 )
 
-                cu_coding[cu_col] = cu_coding[[sv_col, rel_col]].apply(compute_cu_column, axis=1)
+                cu_coding[cu_col] = cu_coding[[sv_col, rel_col]].apply(
+                    compute_cu_column,
+                    axis=1,
+                )
 
                 agg_df = cu_coding[["sample_id", sv_col, rel_col, cu_col]].copy()
 
@@ -327,7 +415,6 @@ def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
                 cu_sum["rel_col"] = rel_col
                 cu_sum["cu_col"] = cu_col
 
-                # optional column ordering
                 cu_sum = cu_sum[
                     [
                         "sample_id",
@@ -362,4 +449,10 @@ def analyze_cu_coding(tiers, input_dir, output_dir, cu_paradigms=None):
         out_dir = Path(cu_analysis_dir, *partition_labels)
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        _write_cu_analysis_outputs(cu_coding, summaries, out_dir, partition_labels)
+        _write_cu_analysis_outputs(
+            cu_coding=cu_coding,
+            summaries=summaries,
+            out_dir=out_dir,
+            partition_labels=partition_labels,
+            blinding_config=blinding_config,
+        )
