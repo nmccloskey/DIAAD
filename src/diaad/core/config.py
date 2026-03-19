@@ -63,36 +63,88 @@ class TiersConfig:
 class BlindingConfig:
     """Normalized blinding configuration."""
 
-    blind_files: bool
-    blind_analysis: bool
-    coding_blind_cols: list[str]
+    # ------------------------------------------------------------------
+    # Workflow
+    # ------------------------------------------------------------------
 
-    default_strategy: str
-    strategies: dict[str, dict[str, Any]]
+    blind_files: bool = True
+    blind_analysis: bool = True
+    metadata_source: str = "transcript_tables"
 
-    default_id_cols: list[str]
-    code_prefixes: dict[str, str]
+    # ------------------------------------------------------------------
+    # Column specifications
+    # ------------------------------------------------------------------
 
-    def strategy(self, name: str | None = None) -> dict[str, Any]:
+    coding_blind_cols: list[str] | None = None
+    analysis_blind_cols: list[str] | None = None
+
+    # ------------------------------------------------------------------
+    # Join keys
+    # ------------------------------------------------------------------
+
+    id_cols: list[str] | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "coding_blind_cols",
+            list(self.coding_blind_cols or ["sample_id"]),
+        )
+        object.__setattr__(
+            self,
+            "analysis_blind_cols",
+            list(self.analysis_blind_cols or ["sample_id"]),
+        )
+        object.__setattr__(
+            self,
+            "id_cols",
+            list(self.id_cols or ["sample_id", "utterance_id"]),
+        )
+
+    def get_blind_cols(self, mode: str) -> list[str]:
         """
-        Return a resolved blinding strategy.
+        Return columns configured for a blinding mode.
 
-        If `name` is None, the configured default_strategy is used.
+        Parameters
+        ----------
+        mode : str
+            Either "coding" or "analysis".
+
+        Returns
+        -------
+        list[str]
+            Columns configured for blinding in that mode.
         """
-        strategy_name = name or self.default_strategy
+        if mode == "coding":
+            return self.coding_blind_cols
+        if mode == "analysis":
+            return self.analysis_blind_cols
+        raise ValueError(f"Unknown blinding mode: {mode}")
 
-        if strategy_name not in self.strategies:
-            raise KeyError(
-                f"Blinding strategy '{strategy_name}' is not defined. "
-                f"Available strategies: {list(self.strategies)}"
-            )
+    def should_blind(self, mode: str) -> bool:
+        """
+        Return whether blinding is enabled for a given mode.
 
-        return self.strategies[strategy_name]
+        Parameters
+        ----------
+        mode : str
+            Either "coding" or "analysis".
+
+        Returns
+        -------
+        bool
+            True if blinding is enabled for that mode.
+        """
+        if mode == "coding":
+            return self.blind_files
+        if mode == "analysis":
+            return self.blind_analysis
+        raise ValueError(f"Unknown blinding mode: {mode}")
 
     @property
-    def default(self) -> dict[str, Any]:
-        """Return the default blinding strategy."""
-        return self.strategies[self.default_strategy]
+    def blinded_suffix(self) -> str:
+        """Suffix used for blinded output columns."""
+        return "_blinded"
 
 
 @dataclass(frozen=True)
