@@ -63,25 +63,12 @@ class TiersConfig:
 class BlindingConfig:
     """Normalized blinding configuration."""
 
-    # ------------------------------------------------------------------
-    # Workflow
-    # ------------------------------------------------------------------
-
     blind_files: bool = True
     blind_analysis: bool = True
     metadata_source: str = "transcript_tables"
 
-    # ------------------------------------------------------------------
-    # Column specifications
-    # ------------------------------------------------------------------
-
     coding_blind_cols: list[str] | None = None
     analysis_blind_cols: list[str] | None = None
-
-    # ------------------------------------------------------------------
-    # Join keys
-    # ------------------------------------------------------------------
-
     id_cols: list[str] | None = None
 
     def __post_init__(self) -> None:
@@ -100,6 +87,11 @@ class BlindingConfig:
             "id_cols",
             list(self.id_cols or ["sample_id", "utterance_id"]),
         )
+
+    @property
+    def blinded_suffix(self) -> str:
+        """Suffix used for blinded output columns."""
+        return "_blinded"
 
     def get_blind_cols(self, mode: str) -> list[str]:
         """
@@ -140,11 +132,6 @@ class BlindingConfig:
         if mode == "analysis":
             return self.blind_analysis
         raise ValueError(f"Unknown blinding mode: {mode}")
-
-    @property
-    def blinded_suffix(self) -> str:
-        """Suffix used for blinded output columns."""
-        return "_blinded"
 
 
 @dataclass(frozen=True)
@@ -281,20 +268,28 @@ class ConfigManager:
         }
 
     @property
-    def default_blinding_strategy(self) -> str:
-        return self.blinding.default_strategy
+    def id_cols(self) -> list[str]:
+        return self.blinding.id_cols
+    
+    @property
+    def blind_files(self) -> bool:
+        return self.blinding.blind_files
+    
+    @property
+    def blinded_suffix(self) -> str:
+        return self.blinding.blinded_suffix
 
     @property
-    def blinding_strategies(self) -> dict[str, dict[str, Any]]:
-        return self.blinding.strategies
+    def blind_analysis(self) -> bool:
+        return self.blinding.blind_analysis
+    
+    @property
+    def coding_blind_cols(self) -> list[str]:
+        return self.blinding.get_blind_cols(mode="coding")
 
     @property
-    def default_id_cols(self) -> list[str]:
-        return self.blinding.default_id_cols
-
-    @property
-    def code_prefixes(self) -> dict[str, str]:
-        return self.blinding.code_prefixes
+    def analysis_blind_cols(self) -> list[str]:
+        return self.blinding.get_blind_cols(mode="analysis")
 
     @property
     def stratify_by(self) -> list[str]:
@@ -314,7 +309,7 @@ class ConfigManager:
 
     @property
     def metadata_source(self) -> str:
-        return self.blinding.default.metadata_source
+        return self.blinding.metadata_source
     
     @property
     def metadata_path(self) -> Path:
@@ -392,10 +387,13 @@ class ConfigManager:
             },
             "tiers": self.tiers_config,
             "blinding": {
-                "default_strategy": self.default_blinding_strategy,
-                "default_id_cols": self.default_id_cols,
-                "code_prefixes": self.code_prefixes,
-                "strategies": self.blinding_strategies,
+                "blind_files": self.blind_files,
+                "blind_analysis": self.blind_analysis,
+                "metadata_source": self.metadata_source,
+                "coding_blind_cols": self.coding_blind_cols,
+                "analysis_blind_cols": self.analysis_blind_cols,
+                "id_cols": self.id_cols,
+                "blinded_suffix": self.blinded_suffix,
             },
             "validation": {
                 "stratify_by": self.stratify_by,
@@ -527,81 +525,40 @@ class ConfigManager:
     # ------------------------------------------------------------------
 
     def _parse_blinding(self, data: dict[str, Any]) -> BlindingConfig:
+        """Parse blinding.yaml into a normalized BlindingConfig."""
         blind_files = self._as_bool(
             data.get("blind_files"),
             default=True,
         )
         blind_analysis = self._as_bool(
             data.get("blind_analysis"),
-            default=False,
+            default=True,
         )
+        metadata_source = self._as_str(
+            data.get("metadata_source"),
+            default="transcript_tables",
+        )
+
         coding_blind_cols = self._as_str_list(
             data.get("coding_blind_cols"),
-            default=["sample_id"],
+            default=None,
         )
-
-        default_strategy = self._as_str(
-            data.get("default_strategy"),
-            default="analysis",
+        analysis_blind_cols = self._as_str_list(
+            data.get("analysis_blind_cols"),
+            default=None,
         )
-        strategies = data.get("strategies", {})
-        default_id_cols = self._as_str_list(
-            data.get("default_id_cols"),
-            default=["sample_id", "utterance_id"],
+        id_cols = self._as_str_list(
+            data.get("id_cols"),
+            default=None,
         )
-        code_prefixes = data.get("code_prefixes", {})
-
-        if not isinstance(strategies, dict):
-            raise TypeError("blinding.yaml: 'strategies' must be a dictionary.")
-        if not isinstance(code_prefixes, dict):
-            raise TypeError("blinding.yaml: 'code_prefixes' must be a dictionary.")
-
-        if default_strategy not in strategies:
-            raise ValueError(
-                f"default_strategy {default_strategy!r} is not defined under 'strategies'."
-            )
-
-        normalized_strategies: dict[str, dict[str, Any]] = {}
-        for name, spec in strategies.items():
-            if not isinstance(spec, dict):
-                raise TypeError(f"Blinding strategy '{name}' must map to a dictionary.")
-
-            normalized = dict(spec)
-            normalized["append"] = self._as_bool(spec.get("append"), default=True)
-            normalized["suffix"] = self._as_str(spec.get("suffix"), default="_blind")
-            normalized["preserve_unmapped"] = self._as_bool(
-                spec.get("preserve_unmapped"),
-                default=True,
-            )
-            normalized["drop_recovered_source_cols"] = self._as_bool(
-                spec.get("drop_recovered_source_cols"),
-                default=False,
-            )
-            normalized["include_na"] = self._as_bool(
-                spec.get("include_na"),
-                default=False,
-            )
-            normalized["metadata_source"] = self._as_str(
-                spec.get("metadata_source"),
-                default="transcript_tables",
-            )
-            normalized["width"] = self._as_int(spec.get("width"), default=3)
-
-            normalized_strategies[str(name)] = normalized
-
-        normalized_prefixes = {
-            str(k): self._as_str(v)
-            for k, v in code_prefixes.items()
-        }
 
         return BlindingConfig(
             blind_files=blind_files,
             blind_analysis=blind_analysis,
+            metadata_source=metadata_source,
             coding_blind_cols=coding_blind_cols,
-            default_strategy=default_strategy,
-            strategies=normalized_strategies,
-            default_id_cols=default_id_cols,
-            code_prefixes=normalized_prefixes,
+            analysis_blind_cols=analysis_blind_cols,
+            id_cols=id_cols,
         )
 
     # ------------------------------------------------------------------

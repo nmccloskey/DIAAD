@@ -11,9 +11,6 @@ from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.core.config import BlindingConfig
 
-DEFAULT_ID_COLS = ("sample_id", "utterance_id")
-BLINDED_SUFFIX = "_blinded"
-
 
 # ---------------------------------------------------------------------
 # Small helpers
@@ -47,7 +44,7 @@ def _validate_columns(
 def _choose_join_keys(
     df: pd.DataFrame,
     metadata_df: pd.DataFrame,
-    id_cols: tuple[str, ...] | list[str] = DEFAULT_ID_COLS,
+    id_cols: tuple[str, ...] | list[str] = [],
 ) -> list[str]:
     """
     Choose the most specific usable join keys shared by df and metadata_df.
@@ -150,7 +147,7 @@ def _resolve_analysis_source_columns(
     blind_cols: list[str],
     *,
     metadata_df: pd.DataFrame | None = None,
-    id_cols: tuple[str, ...] | list[str] = DEFAULT_ID_COLS,
+    id_cols: tuple[str, ...] | list[str] = [],
 ) -> tuple[pd.DataFrame, list[str], list[str], list[str]]:
     """
     Ensure requested analysis blind columns are present in a working dataframe.
@@ -356,6 +353,8 @@ def _apply_blind_codebook_as_new_columns(
     df: pd.DataFrame,
     codebook_df: pd.DataFrame,
     blind_cols: list[str],
+    *,
+    suffix: str,
 ) -> pd.DataFrame:
     """
     Append blinded columns named '{column}_blinded'.
@@ -374,7 +373,7 @@ def _apply_blind_codebook_as_new_columns(
         sub = codebook_df.loc[codebook_df["column"] == col, ["raw_value", "blind_code"]]
         mapping = dict(zip(sub["raw_value"], sub["blind_code"]))
 
-        blinded_col = f"{col}{BLINDED_SUFFIX}"
+        blinded_col = f"{col}{suffix}"
         out[blinded_col] = out[col].map(mapping)
 
         logger.info(f"Applied blind codes to column '{col}' -> '{blinded_col}'")
@@ -385,6 +384,8 @@ def _apply_blind_codebook_as_new_columns(
 def _replace_columns_with_blinded_versions(
     df: pd.DataFrame,
     blind_cols: list[str],
+    *,
+    suffix: str,
 ) -> pd.DataFrame:
     """
     Replace raw blind columns with integer-coded values in the same column names.
@@ -394,7 +395,7 @@ def _replace_columns_with_blinded_versions(
     out = df.copy()
 
     for col in blind_cols:
-        blinded_col = f"{col}{BLINDED_SUFFIX}"
+        blinded_col = f"{col}{suffix}"
         if blinded_col not in out.columns:
             raise ValueError(
                 f"Expected blinded column '{blinded_col}' not found for replacement."
@@ -497,13 +498,14 @@ def blind_analysis_dataframe(
         df=working_df,
         codebook_df=codebook_df,
         blind_cols=resolved_cols,
+        suffix=config.blinded_suffix
     )
 
     diagnostic_cols = []
     diagnostic_cols.extend([c for c in join_keys if c in coded_df.columns])
     diagnostic_cols.extend([c for c in resolved_cols if c in coded_df.columns])
     diagnostic_cols.extend(
-        [f"{c}{BLINDED_SUFFIX}" for c in resolved_cols if f"{c}{BLINDED_SUFFIX}" in coded_df.columns]
+        [f"{c}{config.blinded_suffix}" for c in resolved_cols if f"{c}{config.blinded_suffix}" in coded_df.columns]
     )
 
     diagnostics_df = coded_df.loc[:, list(dict.fromkeys(diagnostic_cols))].copy()
@@ -571,11 +573,13 @@ def blind_file_identifiers(
         df=df,
         codebook_df=codebook_df,
         blind_cols=blind_cols,
+        suffix=config.blinded_suffix
     )
 
     blinded_df = _replace_columns_with_blinded_versions(
         df=coded_df,
         blind_cols=blind_cols,
+        suffix=config.blinded_suffix
     )
 
     logger.info(f"Identifier columns blinded for coding files: {blind_cols}")
