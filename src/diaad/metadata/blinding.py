@@ -666,10 +666,10 @@ def blind_file_identifiers(
         Codebook used for blinding.
     """
 
-    blind_cols = config.file_blind_cols
+    blind_cols = config.coding_blind_cols
 
     if not blind_cols:
-        logger.warning("No file_blind_cols configured; returning dataframe unchanged.")
+        logger.warning("No coding_blind_cols configured; returning dataframe unchanged.")
         return df.copy(), pd.DataFrame()
 
     for col in blind_cols:

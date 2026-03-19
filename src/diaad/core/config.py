@@ -65,7 +65,7 @@ class BlindingConfig:
 
     blind_files: bool
     blind_analysis: bool
-    file_blind_cols: list[str]
+    coding_blind_cols: list[str]
 
     default_strategy: str
     strategies: dict[str, dict[str, Any]]
@@ -483,8 +483,8 @@ class ConfigManager:
             data.get("blind_analysis"),
             default=False,
         )
-        file_blind_cols = self._as_str_list(
-            data.get("file_blind_cols"),
+        coding_blind_cols = self._as_str_list(
+            data.get("coding_blind_cols"),
             default=["sample_id"],
         )
 
@@ -545,7 +545,7 @@ class ConfigManager:
         return BlindingConfig(
             blind_files=blind_files,
             blind_analysis=blind_analysis,
-            file_blind_cols=file_blind_cols,
+            coding_blind_cols=coding_blind_cols,
             default_strategy=default_strategy,
             strategies=normalized_strategies,
             default_id_cols=default_id_cols,
