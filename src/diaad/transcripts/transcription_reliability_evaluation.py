@@ -521,8 +521,10 @@ def _match_reliability_pairs(
     coverage = (matched_n / total_org * 100) if total_org else 0.0
 
     logger.info(
-        "Matched %d reliability pairs (%.1f%% of input originals).",
+        "Matched %d reliability pairs (%d/%d originals; %.1f%% coverage).",
         matched_n,
+        matched_n,
+        total_org,
         coverage,
     )
 
