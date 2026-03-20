@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias
 
 import yaml
 
@@ -51,12 +51,12 @@ class ProjectConfig:
         object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
 
 
+TierSpec: TypeAlias = str | list[str]
+
 @dataclass(frozen=True)
 class TiersConfig:
     """Normalized tier-definition configuration."""
-
-    tiers: dict[str, dict[str, Any]]
-    tier_groups: dict[str, list[str]]
+    tiers: dict[str, TierSpec]
 
 
 @dataclass(frozen=True)
@@ -180,8 +180,6 @@ class ConfigManager:
         self.blinding = self._parse_blinding(self._raw_blinding)
         self.validation = self._parse_validation(self._raw_validation)
 
-        self._validate_cross_section_consistency()
-
         logger.info("Loaded configuration from %s", self.config_dir)
 
     # ------------------------------------------------------------------
@@ -264,7 +262,6 @@ class ConfigManager:
         """
         return {
             "tiers": self.tiers_section.tiers,
-            "tier_groups": self.tiers_section.tier_groups,
         }
 
     @property
@@ -341,10 +338,7 @@ class ConfigManager:
                 "speaking_time_field": self.project.speaking_time_field,
                 "rate_unit": self.project.rate_unit,
             },
-            "tiers": {
-                "tiers": self.tiers_section.tiers,
-                "tier_groups": self.tiers_section.tier_groups,
-            },
+            "tiers": self.tiers_section.tiers,
             "blinding": {
                 "default_strategy": self.blinding.default_strategy,
                 "strategies": self.blinding.strategies,
@@ -484,41 +478,33 @@ class ConfigManager:
 
     def _parse_tiers(self, data: dict[str, Any]) -> TiersConfig:
         tiers = data.get("tiers", {})
-        tier_groups = data.get("tier_groups", {})
 
         if not isinstance(tiers, dict):
             raise TypeError("tiers.yaml: 'tiers' must be a dictionary.")
-        if not isinstance(tier_groups, dict):
-            raise TypeError("tiers.yaml: 'tier_groups' must be a dictionary.")
 
-        normalized_tiers: dict[str, dict[str, Any]] = {}
-        orders: list[int] = []
+        normalized_tiers: dict[str, Any] = {}
 
         for tier_name, tier_spec in tiers.items():
-            if not isinstance(tier_spec, dict):
-                raise TypeError(f"Tier '{tier_name}' must map to a dictionary.")
+            tier_name = str(tier_name)
 
-            order = tier_spec.get("order")
-            if order is None:
-                raise ValueError(f"Tier '{tier_name}' is missing required key 'order'.")
-            order = self._as_int(order)
-            orders.append(order)
+            if isinstance(tier_spec, str):
+                if not tier_spec.strip():
+                    raise ValueError(f"Tier '{tier_name}' regex string must be non-empty.")
+                normalized_tiers[tier_name] = tier_spec
 
-            normalized_spec = dict(tier_spec)
-            normalized_spec["order"] = order
-            normalized_tiers[str(tier_name)] = normalized_spec
+            elif isinstance(tier_spec, list):
+                if not all(isinstance(v, str) for v in tier_spec):
+                    raise TypeError(
+                        f"Tier '{tier_name}' values must be a list of strings."
+                    )
+                normalized_tiers[tier_name] = list(tier_spec)
 
-        if len(orders) != len(set(orders)):
-            logger.warning("Duplicate tier order values detected in tiers.yaml.")
+            else:
+                raise TypeError(
+                    f"Tier '{tier_name}' must be either a regex string or a list[str]."
+                )
 
-        normalized_groups: dict[str, list[str]] = {}
-        for group_name, members in tier_groups.items():
-            normalized_groups[str(group_name)] = self._as_str_list(members, default=[])
-
-        return TiersConfig(
-            tiers=normalized_tiers,
-            tier_groups=normalized_groups,
-        )
+        return TiersConfig(tiers=normalized_tiers)
 
     # ------------------------------------------------------------------
     # Blinding parsing
@@ -580,29 +566,6 @@ class ConfigManager:
             raise ValueError(f"num_strata must be >= 0; got {validation.num_strata}")
 
         return validation
-
-    # ------------------------------------------------------------------
-    # Cross-section validation
-    # ------------------------------------------------------------------
-
-    def _validate_cross_section_consistency(self) -> None:
-        tier_names = set(self.tiers_section.tiers.keys())
-
-        for group_name, members in self.tiers_section.tier_groups.items():
-            unknown = [m for m in members if m not in tier_names]
-            if unknown:
-                logger.warning(
-                    "Tier group '%s' references unknown tiers: %s",
-                    group_name,
-                    ", ".join(unknown),
-                )
-
-        for field in self.validation.stratify_by:
-            if field not in tier_names:
-                logger.warning(
-                    "Validation stratify field '%s' is not defined in tiers.yaml",
-                    field,
-                )
 
     # ------------------------------------------------------------------
     # Normalization helpers

@@ -177,18 +177,14 @@ class RunContext:
 
     def _build_tier_state(self) -> None:
         """
-        Build TierManager and adapted DIAAD tiers from configuration.
+        Build TierManager and tiers from configuration.
         """
-        from diaad.metadata.tier_adapter import adapt_tiers_for_diaad
         from diaad.metadata.tiers import TierManager
 
         self.tier_manager = TierManager(self.config.tiers_config)
-        self.tiers = adapt_tiers_for_diaad(self.tier_manager) or {}
+        self.tiers = self.tier_manager.tiers
 
-        if self.tiers:
-            logger.info("Successfully parsed and adapted tiers for DIAAD.")
-        else:
-            logger.warning("Adapted tiers are empty or malformed.")
+        logger.info(f"Successfully parsed {len(self.tiers)} tiers for DIAAD.")
 
     # ------------------------------------------------------------------
     # Mutable runtime state
