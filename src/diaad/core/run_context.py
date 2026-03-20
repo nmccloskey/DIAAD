@@ -390,7 +390,6 @@ class RunContext:
     def kwargs_make_word_count_files(self) -> dict[str, Any]:
         """Return kwargs for manual word-count file creation."""
         return {
-            "tiers": self.tiers,
             "frac": self.reliability_fraction,
             "num_coders": self.num_coders,
             "input_dir": self.input_dir,

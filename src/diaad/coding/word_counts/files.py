@@ -14,7 +14,6 @@ from diaad.coding.utils import segment, assign_coders
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
 
-
 # ------------------------------------------------------------------
 # Text normalization / automated first-pass counting
 # ------------------------------------------------------------------
@@ -110,20 +109,26 @@ def _shuffle_by_sample(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(subdfs, ignore_index=True) if subdfs else df.copy()
 
 
-def _find_input_files(input_dir, output_dir):
+def _find_input_file(input_dir, output_dir):
     """
     Prefer CU coding files. If none are found, fall back to transcript tables.
+
+    If multiple candidate files are found, warn and use only the first returned file.
     """
     cu_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="cu_coding_by_utterance",
+        search_base="cu_coding_by_utterance.xlsx",
     )
 
     if cu_files:
-        logger.info(
-            f"Found {len(cu_files)} CU coding file(s); using these for word-count prep."
-        )
-        return "cu", cu_files
+        if len(cu_files) > 1:
+            logger.warning(
+                "Multiple CU coding files detected for word-count prep. "
+                f"Using only the first returned file: {_rel(cu_files[0])}"
+            )
+        else:
+            logger.info("Found CU coding file for word-count prep.")
+        return "cu", cu_files[0]
 
     transcript_tables = find_matching_files(
         directories=[input_dir, output_dir],
@@ -131,13 +136,18 @@ def _find_input_files(input_dir, output_dir):
     )
 
     if transcript_tables:
-        logger.info(
-            f"No CU coding files found. Found {len(transcript_tables)} transcript table file(s); "
-            "using these for automated first-pass word-count prep."
-        )
-        return "transcript", transcript_tables
+        if len(transcript_tables) > 1:
+            logger.warning(
+                "Multiple transcript table files detected for word-count prep. "
+                f"Using only the first returned file: {_rel(transcript_tables[0])}"
+            )
+        else:
+            logger.info(
+                "No CU coding file found. Found transcript table file for automated first-pass word-count prep."
+            )
+        return "transcript", transcript_tables[0]
 
-    return None, []
+    return None, None
 
 
 def _read_source_file(file: Path, source_type: str) -> pd.DataFrame:
@@ -152,12 +162,6 @@ def _read_source_file(file: Path, source_type: str) -> pd.DataFrame:
     df = _shuffle_by_sample(df)
     logger.info(f"Read and shuffled {_rel(file)}")
     return df
-
-
-def _extract_labels(file: Path, tiers) -> list[str]:
-    """Extract tier labels from filename."""
-    labels = [t.match(file.name, return_none=True) for t in tiers.values()]
-    return [lab for lab in labels if lab]
 
 
 # ------------------------------------------------------------------
@@ -297,6 +301,11 @@ def _prepare_wc_df(
 # Coder assignment
 # ------------------------------------------------------------------
 
+def _coder_ids(num_coders: int) -> list[int]:
+    """Return canonical integer coder IDs: 1..num_coders."""
+    return list(range(1, max(0, int(num_coders)) + 1))
+
+
 def _sample_reliability_subset(df: pd.DataFrame, frac: float) -> pd.DataFrame:
     """Sample a whole-sample reliability subset."""
     unique_ids = list(df["sample_id"].drop_duplicates())
@@ -309,7 +318,7 @@ def _sample_reliability_subset(df: pd.DataFrame, frac: float) -> pd.DataFrame:
     return df[df["sample_id"].isin(rel_samples)].copy()
 
 
-def _assign_wc_coders(wc_df: pd.DataFrame, coders: list[str], frac: float):
+def _assign_wc_coders(wc_df: pd.DataFrame, num_coders: int, frac: float):
     """
     Assign coder IDs for primary and reliability word-count workbooks.
 
@@ -317,47 +326,53 @@ def _assign_wc_coders(wc_df: pd.DataFrame, coders: list[str], frac: float):
     -----
     frac == 0:
         no reliability subset
-    len(coders) == 0:
+    num_coders == 0:
         blank id in both primary and reliability
-    len(coders) == 1:
-        same id in both primary and reliability
-    len(coders) >= 2:
-        segment samples and assign via imported helpers
+    num_coders == 1:
+        coder 1 in both primary and reliability
+    num_coders >= 2:
+        segment samples and assign integer IDs via imported helpers
     """
     wc_df = wc_df.copy()
+    coder_ids = _coder_ids(num_coders)
 
     if "id" not in wc_df.columns:
         wc_df["id"] = ""
 
     # frac = 0 -> empty reliability workbook
     if frac == 0:
+        if num_coders == 1:
+            wc_df["id"] = 1
+        elif num_coders >= 2:
+            unique_ids = list(wc_df["sample_id"].drop_duplicates())
+            sample_segments = segment(unique_ids, n=len(coder_ids))
+            for seg, coder in zip(sample_segments, coder_ids):
+                wc_df.loc[wc_df["sample_id"].isin(seg), "id"] = coder
+
         wc_rel_df = wc_df.iloc[0:0].copy()
         logger.info("frac=0, so no reliability subset was created.")
         return wc_df, wc_rel_df
 
     # 0 coders -> blank IDs
-    if len(coders) == 0:
+    if num_coders == 0:
         wc_df["id"] = ""
         wc_rel_df = _sample_reliability_subset(wc_df, frac=frac)
         wc_rel_df["id"] = ""
-        logger.info("No coders supplied; created primary/reliability files with blank ID column.")
+        logger.info("num_coders=0; created primary/reliability files with blank ID column.")
         return wc_df, wc_rel_df
 
     # 1 coder -> same ID everywhere
-    if len(coders) == 1:
-        coder = coders[0]
-        wc_df["id"] = coder
+    if num_coders == 1:
+        wc_df["id"] = 1
         wc_rel_df = _sample_reliability_subset(wc_df, frac=frac)
-        wc_rel_df["id"] = coder
-        logger.info(
-            f"One coder supplied ({coder}); created reliability subset with the same ID values."
-        )
+        wc_rel_df["id"] = 1
+        logger.info("num_coders=1; created reliability subset with coder ID 1.")
         return wc_df, wc_rel_df
 
     # 2+ coders -> segment samples and assign IDs
-    assignments = assign_coders(coders)
+    assignments = assign_coders(coder_ids)
     unique_ids = list(wc_df["sample_id"].drop_duplicates())
-    sample_segments = segment(unique_ids, n=len(coders))
+    sample_segments = segment(unique_ids, n=len(coder_ids))
 
     rel_subsets = []
 
@@ -436,22 +451,18 @@ def _write_wc_outputs(
     wc_df: pd.DataFrame,
     wc_rel_df: pd.DataFrame,
     word_count_dir: Path,
-    labels: list[str],
     codebook_df: pd.DataFrame | None = None,
 ):
     """Write primary and reliability word-count workbooks and optional blind codebook."""
-    out_dir = Path(word_count_dir, *labels)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    lab_str = "_".join(labels) + "_" if labels else ""
+    word_count_dir.mkdir(parents=True, exist_ok=True)
 
     outputs = {
-        f"{lab_str}word_counting.xlsx": wc_df,
-        f"{lab_str}word_count_reliability.xlsx": wc_rel_df,
+        "word_counting.xlsx": wc_df,
+        "word_count_reliability.xlsx": wc_rel_df,
     }
 
     for fname, df in outputs.items():
-        fpath = out_dir / fname
+        fpath = word_count_dir / fname
         try:
             df.to_excel(fpath, index=False)
             logger.info(f"Wrote {_rel(fpath)}")
@@ -459,7 +470,7 @@ def _write_wc_outputs(
             logger.error(f"Failed to write {_rel(fpath)}: {e}")
 
     if codebook_df is not None and not codebook_df.empty:
-        codebook_path = out_dir / f"{lab_str}word_count_blind_codebook.xlsx"
+        codebook_path = word_count_dir / "word_count_blind_codebook.xlsx"
         try:
             write_blind_codebook(codebook_df, codebook_path)
         except Exception as e:
@@ -471,9 +482,8 @@ def _write_wc_outputs(
 # ------------------------------------------------------------------
 
 def make_word_count_files(
-    tiers,
     frac,
-    coders,
+    num_coders,
     input_dir,
     output_dir,
     exclude_participants: list[str] | None = None,
@@ -481,13 +491,14 @@ def make_word_count_files(
 ):
     """
     Create blinded word-count coding and reliability workbooks from either:
-      1. CU coding-by-utterance files (preferred), or
+      1. CU coding files (preferred), or
       2. transcript tables (fallback).
 
     Behavior
     --------
     - CU files are preferred so neutral utterances can be excluded from counting.
     - If no CU files are found, transcript tables are used for automated first-pass counts.
+    - If multiple candidate input files are found, only the first returned file is used.
     - Output columns are restricted to:
         sample_id, utterance_id, speaker, utterance, comment, id, word_count, wc_comment
     - Any utterance from exclude_participants gets word_count = 'NA'.
@@ -495,10 +506,10 @@ def make_word_count_files(
 
     Reliability behavior
     --------------------
-    - frac == 0 -> empty reliability workbook
-    - 0 coders  -> blank id column
-    - 1 coder   -> same id in primary and reliability
-    - 2+ coders -> segmented sample assignment via helpers
+    - frac == 0      -> empty reliability workbook
+    - num_coders == 0 -> blank id column
+    - num_coders == 1 -> coder ID 1 in primary and reliability
+    - num_coders >= 2 -> segmented sample assignment using integer coder IDs
 
     Blinding
     --------
@@ -507,9 +518,8 @@ def make_word_count_files(
 
     Parameters
     ----------
-    tiers : dict[str, Tier]
     frac : float
-    coders : list[str]
+    num_coders : int
     input_dir : Path | str
     output_dir : Path | str
     exclude_participants : list[str] | None
@@ -520,46 +530,44 @@ def make_word_count_files(
     word_count_dir = Path(output_dir) / "word_counts"
     word_count_dir.mkdir(parents=True, exist_ok=True)
 
-    source_type, files = _find_input_files(input_dir, output_dir)
+    source_type, file = _find_input_file(input_dir, output_dir)
 
-    if not files:
+    if file is None:
         logger.warning("No CU coding files or transcript tables were found for word-count prep.")
         return
 
-    for file in tqdm(files, desc="Generating word count files"):
-        try:
-            df = _read_source_file(file, source_type=source_type)
-            labels = _extract_labels(file, tiers)
+    try:
+        df = _read_source_file(file, source_type=source_type)
 
-            wc_df = _prepare_wc_df(
-                df=df,
-                source_type=source_type,
-                exclude_participants=exclude_participants,
-            )
+        wc_df = _prepare_wc_df(
+            df=df,
+            source_type=source_type,
+            exclude_participants=exclude_participants,
+        )
 
-            wc_df, wc_rel_df = _assign_wc_coders(
-                wc_df=wc_df,
-                coders=coders,
-                frac=frac,
-            )
+        wc_df, wc_rel_df = _assign_wc_coders(
+            wc_df=wc_df,
+            num_coders=num_coders,
+            frac=frac,
+        )
 
-            # Reassert required output order after coder assignment.
-            wc_df = _ensure_required_columns(wc_df)[BLINDED_COLUMNS].copy()
-            wc_rel_df = _ensure_required_columns(wc_rel_df)[BLINDED_COLUMNS].copy()
+        # Reassert required output order after coder assignment.
+        wc_df = _ensure_required_columns(wc_df)[BLINDED_COLUMNS].copy()
+        wc_rel_df = _ensure_required_columns(wc_rel_df)[BLINDED_COLUMNS].copy()
 
-            export_wc_df, export_wc_rel_df, codebook_df = _blind_wc_exports(
-                wc_df=wc_df,
-                wc_rel_df=wc_rel_df,
-                blinding_config=blinding_config,
-            )
+        export_wc_df, export_wc_rel_df, codebook_df = _blind_wc_exports(
+            wc_df=wc_df,
+            wc_rel_df=wc_rel_df,
+            blinding_config=blinding_config,
+        )
 
-            _write_wc_outputs(
-                wc_df=export_wc_df,
-                wc_rel_df=export_wc_rel_df,
-                word_count_dir=word_count_dir,
-                labels=labels,
-                codebook_df=codebook_df,
-            )
+        _write_wc_outputs(
+            wc_df=export_wc_df,
+            wc_rel_df=export_wc_rel_df,
+            word_count_dir=word_count_dir,
+            codebook_df=codebook_df,
+        )
 
-        except Exception as e:
-            logger.error(f"Failed processing {_rel(file)}: {e}")
+    except Exception as e:
+        logger.error(f"Failed processing {_rel(file)}: {e}")
+    
