@@ -7,38 +7,12 @@ import pandas as pd
 from pathlib import Path
 
 from diaad.core.logger import logger, _rel
-from diaad.io.discovery import find_matching_files
-from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.core.config import BlindingConfig
-
-
-# ---------------------------------------------------------------------
-# Small helpers
-# ---------------------------------------------------------------------
-
-def _normalize_to_list(x):
-    """Return x as a list, preserving order for tuples/lists and wrapping scalars."""
-    if x is None:
-        return []
-    if isinstance(x, (list, tuple)):
-        return list(x)
-    return [x]
-
-
-def _present_cols(df: pd.DataFrame, cols: list[str]) -> list[str]:
-    """Return requested columns that are present in df, preserving order."""
-    return [c for c in cols if c in df.columns]
-
-
-def _validate_columns(
-    df: pd.DataFrame,
-    required_cols: list[str],
-    df_name: str = "DataFrame",
-) -> None:
-    """Raise ValueError if any required columns are absent."""
-    missing = [c for c in required_cols if c not in df.columns]
-    if missing:
-        raise ValueError(f"{df_name} is missing required columns: {missing}")
+from diaad.metadata.utils import (
+    present_cols,
+    validate_columns,
+    load_metadata_from_transcript_tables
+)
 
 
 def _choose_join_keys(
@@ -104,44 +78,6 @@ def _deduplicate_metadata_for_join(
 # Metadata loading / recovery
 # ---------------------------------------------------------------------
 
-def _load_metadata_from_transcript_tables(
-    transcript_tables=None,
-    match_tiers=None,
-    directories=None,
-) -> pd.DataFrame:
-    """
-    Load and concatenate joined transcript-table metadata.
-    """
-    if transcript_tables is None:
-        transcript_tables = find_matching_files(
-            match_tiers=match_tiers,
-            directories=directories,
-            search_base="transcript_tables",
-            search_ext=".xlsx",
-        )
-
-    transcript_tables = [Path(p) for p in _normalize_to_list(transcript_tables)]
-
-    if not transcript_tables:
-        raise FileNotFoundError("No transcript tables found for metadata resolution.")
-
-    metadata_dfs = []
-    for path in transcript_tables:
-        try:
-            joined = extract_transcript_data(path, type="joined")
-            joined["file"] = path.name
-            metadata_dfs.append(joined)
-        except Exception as e:
-            logger.error(f"Failed loading transcript metadata from {_rel(path)}: {e}")
-            raise
-
-    metadata_df = pd.concat(metadata_dfs, ignore_index=True)
-    logger.info(
-        f"Loaded joined transcript metadata from {len(transcript_tables)} transcript table(s)"
-    )
-    return metadata_df
-
-
 def _resolve_analysis_source_columns(
     df: pd.DataFrame,
     blind_cols: list[str],
@@ -164,7 +100,7 @@ def _resolve_analysis_source_columns(
         Join keys actually used if metadata recovery occurred, else present id_cols from df.
     """
     blind_cols = list(dict.fromkeys(blind_cols))
-    present = _present_cols(df, blind_cols)
+    present = present_cols(df, blind_cols)
     missing = [c for c in blind_cols if c not in present]
 
     present_id_cols = [c for c in id_cols if c in df.columns]
@@ -201,7 +137,7 @@ def _resolve_analysis_source_columns(
             f"Failed to recover metadata columns after join: {unresolved_after_join}"
         )
 
-    resolved_cols = _present_cols(working_df, blind_cols)
+    resolved_cols = present_cols(working_df, blind_cols)
     logger.info(
         f"Recovered blind columns from metadata via join on {join_keys}: {recoverable}"
     )
@@ -229,7 +165,7 @@ def generate_integer_blind_codebook(
         Long codebook with columns: column, raw_value, blind_code
     """
     blind_cols = list(dict.fromkeys(blind_cols))
-    _validate_columns(df, blind_cols, df_name="df")
+    validate_columns(df, blind_cols, df_name="df")
 
     rng = random.Random(seed)
     rows = []
@@ -362,7 +298,7 @@ def _apply_blind_codebook_as_new_columns(
     Missing values remain missing.
     """
     required = ["column", "raw_value", "blind_code"]
-    _validate_columns(codebook_df, required, df_name="codebook_df")
+    validate_columns(codebook_df, required, df_name="codebook_df")
 
     out = df.copy()
 
@@ -451,20 +387,22 @@ def blind_analysis_dataframe(
                 raise ValueError(
                     f"Unsupported metadata_source: {config.metadata_source}"
                 )
-            working_metadata = _load_metadata_from_transcript_tables(
+            working_metadata = load_metadata_from_transcript_tables(
                 transcript_tables=None,
                 match_tiers=match_tiers,
                 directories=directories,
+                combine=True
             )
         else:
             if config.metadata_source != "transcript_tables":
                 raise ValueError(
                     f"Unsupported metadata_source: {config.metadata_source}"
                 )
-            working_metadata = _load_metadata_from_transcript_tables(
+            working_metadata = load_metadata_from_transcript_tables(
                 transcript_tables=working_metadata,
                 match_tiers=match_tiers,
                 directories=directories,
+                combine=True
             )
 
     working_df, resolved_cols, recovered_cols, join_keys = _resolve_analysis_source_columns(
@@ -547,7 +485,7 @@ def blind_file_identifiers(
         logger.warning("No coding_blind_cols configured; returning dataframe unchanged.")
         return df.copy(), pd.DataFrame()
 
-    _validate_columns(df, blind_cols, df_name="df")
+    validate_columns(df, blind_cols, df_name="df")
 
     if existing_codebook is not None:
         validate_blind_codebook_compatibility(
