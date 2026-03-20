@@ -352,6 +352,14 @@ class RunContext:
             "narrative_field": self.narrative_field,
             "blinding_config": self.config.blinding,
         }
+    
+    def kwargs_evaluate_cu_reliability(self) -> dict[str, Any]:
+        """Return kwargs for CU reliability evaluation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "cu_paradigms": self.cu_paradigms,
+        }
 
     def kwargs_reselect_cu_rel(self) -> dict[str, Any]:
         """Return kwargs for CU reliability reselection."""

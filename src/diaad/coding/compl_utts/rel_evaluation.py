@@ -7,6 +7,7 @@ from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
 from diaad.core.logger import logger, _rel
+from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
 
 
@@ -313,7 +314,6 @@ def write_reliability_report(
     cu_rel_sum,
     overall_stats,
     report_path,
-    partition_labels=None,
     comparison_mode=None,
     paradigm=None,
 ):
@@ -329,21 +329,14 @@ def write_reliability_report(
         sample-total ICC metrics.
     report_path : str | os.PathLike
         Destination .txt filepath.
-    partition_labels : list[str] | None
-        Optional partition labels for the report header.
     comparison_mode : str | None
         Resolved schema label, e.g. 'primary_vs_reliability' or 'coder2_vs_coder3'.
     paradigm : str | None
         Optional coder paradigm label.
     """
-    partition_labels = partition_labels or []
-
     try:
         with open(report_path, "w", encoding="utf-8") as report:
-            if partition_labels:
-                report.write(f"CU Reliability Coding Report for {' '.join(partition_labels)}\n")
-            else:
-                report.write("CU Reliability Coding Report\n")
+            report.write("CU Reliability Coding Report\n")
 
             if comparison_mode:
                 report.write(f"Comparison mode: {comparison_mode}\n")
@@ -389,7 +382,11 @@ def write_reliability_report(
                 col = f"sample_agmt_{measure}"
                 num_samples_agmt = np.nansum(cu_rel_sum[col]) if col in cu_rel_sum else np.nan
                 denom = len(cu_rel_sum) if len(cu_rel_sum) > 0 else np.nan
-                perc_samples_agmt = round(num_samples_agmt / denom * 100, 2) if denom and not pd.isna(denom) else np.nan
+                perc_samples_agmt = (
+                    round(num_samples_agmt / denom * 100, 2)
+                    if denom and not pd.isna(denom)
+                    else np.nan
+                )
 
                 report.write(
                     f"Samples with >=80% agreement on {measure.upper()}: "
@@ -397,9 +394,15 @@ def write_reliability_report(
                 )
 
             report.write("\n")
-            report.write(f"Average percent agreement on SV: {round(np.nanmean(cu_rel_sum['perc_agmt_sv']), 3)}\n")
-            report.write(f"Average percent agreement on REL: {round(np.nanmean(cu_rel_sum['perc_agmt_rel']), 3)}\n")
-            report.write(f"Average percent agreement on CU: {round(np.nanmean(cu_rel_sum['perc_agmt_cu']), 3)}\n")
+            report.write(
+                f"Average percent agreement on SV: {round(np.nanmean(cu_rel_sum['perc_agmt_sv']), 3)}\n"
+            )
+            report.write(
+                f"Average percent agreement on REL: {round(np.nanmean(cu_rel_sum['perc_agmt_rel']), 3)}\n"
+            )
+            report.write(
+                f"Average percent agreement on CU: {round(np.nanmean(cu_rel_sum['perc_agmt_cu']), 3)}\n"
+            )
 
         logger.info(f"Successfully wrote CU reliability report to {_rel(report_path)}")
 
@@ -413,7 +416,6 @@ def write_reliability_report(
 
 def _write_cu_reliability_outputs(
     cu_rel_coding,
-    partition_labels,
     base_dir,
     paradigm,
     comparison_mode,
@@ -427,28 +429,26 @@ def _write_cu_reliability_outputs(
       c2_sv, c2_rel, c2_cu, c3_sv, c3_rel, c3_cu
     regardless of whether source files used unprefixed or c2/c3-prefixed names.
     """
-    paradigm_str = f"_{paradigm}" if paradigm else ""
-    output_path = Path(base_dir, *partition_labels)
+    output_path = Path(base_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    labels_str = "_".join(partition_labels) if partition_labels else "all_samples"
+    paradigm_str = f"_{paradigm}" if paradigm else ""
 
-    utterance_path = output_path / f"{labels_str}{paradigm_str}_cu_reliability_coding_by_utterance.xlsx"
+    utterance_path = output_path / f"cu_reliability_coding_by_utterance{paradigm_str}.xlsx"
     cu_rel_coding.to_excel(utterance_path, index=False)
     logger.info(f"Wrote CU reliability utterance file to {_rel(utterance_path)}")
 
     cu_rel_sum, overall_stats = summarize_cu_reliability(cu_rel_coding)
 
-    summary_path = output_path / f"{labels_str}{paradigm_str}_cu_reliability_coding_by_sample.xlsx"
+    summary_path = output_path / f"cu_reliability_coding_by_sample{paradigm_str}.xlsx"
     cu_rel_sum.to_excel(summary_path, index=False)
     logger.info(f"Wrote CU reliability summary file to {_rel(summary_path)}")
 
-    report_path = output_path / f"{labels_str}{paradigm_str}_cu_reliability_coding_report.txt"
+    report_path = output_path / f"cu_reliability_coding_report{paradigm_str}.txt"
     write_reliability_report(
         cu_rel_sum=cu_rel_sum,
         overall_stats=overall_stats,
         report_path=report_path,
-        partition_labels=partition_labels,
         comparison_mode=comparison_mode,
         paradigm=paradigm,
     )
@@ -458,7 +458,7 @@ def _write_cu_reliability_outputs(
 # Main evaluator
 # ---------------------------------------------------------------------
 
-def evaluate_cu_reliability(tiers, input_dir, output_dir, cu_paradigms):
+def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
     """
     Compute and summarize Complete Utterance (CU) reliability across matched
     coding and reliability workbooks.
@@ -476,7 +476,7 @@ def evaluate_cu_reliability(tiers, input_dir, output_dir, cu_paradigms):
     Outputs
     -------
     Written to:
-      <output_dir>/cu_reliability[/<PARADIGM>]/<partition_labels>/
+      <output_dir>/cu_reliability[/<PARADIGM>/]
 
     Notes
     -----
@@ -484,98 +484,117 @@ def evaluate_cu_reliability(tiers, input_dir, output_dir, cu_paradigms):
       downstream summarization/reporting is schema-agnostic.
     - If `cu_paradigms` is empty, the base (non-suffixed) columns are used.
     - If `cu_paradigms` contains one or more paradigms, each is evaluated.
+    - Tier partition logic has been removed; this function evaluates the single
+      CU coding / reliability workbook pair currently in use.
     """
     cu_reliability_dir = Path(output_dir) / "cu_reliability"
     cu_reliability_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = list(Path(input_dir).rglob("*cu_coding.xlsx"))
-    rel_files = list(Path(input_dir).rglob("*cu_reliability_coding.xlsx"))
+    coding_files = find_matching_files(
+        directories=[input_dir, output_dir],
+        search_base="cu_coding",
+    )
+    rel_files = find_matching_files(
+        directories=[input_dir, output_dir],
+        search_base="cu_reliability_coding",
+    )
+
+    if not coding_files:
+        logger.error("No CU coding file found.")
+        return
+    if not rel_files:
+        logger.error("No CU reliability coding file found.")
+        return
+
+    if len(coding_files) > 1:
+        logger.warning(
+            "Multiple CU coding files detected. "
+            f"Processing only the first returned file: {_rel(coding_files[0])}"
+        )
+    if len(rel_files) > 1:
+        logger.warning(
+            "Multiple CU reliability coding files detected. "
+            f"Processing only the first returned file: {_rel(rel_files[0])}"
+        )
+
+    cod = coding_files[0]
+    rel = rel_files[0]
+
+    try:
+        cu_coding = pd.read_excel(cod)
+        cu_rel = pd.read_excel(rel)
+        logger.info(f"Processing pair: {_rel(cod)} + {_rel(rel)}")
+    except Exception as e:
+        logger.error(f"Failed reading {_rel(cod)} or {_rel(rel)}: {e}")
+        return
 
     paradigms_to_run = cu_paradigms if cu_paradigms else [None]
 
-    for rel in tqdm(rel_files, desc="Analyzing CU reliability..."):
-        rel_labels = [t.match(rel.name, return_none=True) for t in tiers.values()]
+    for paradigm in tqdm(paradigms_to_run, desc="Analyzing CU reliability..."):
+        try:
+            resolved = _resolve_coder_columns(cu_coding, cu_rel, paradigm=paradigm)
+            comparison_mode = resolved["mode"]
 
-        for cod in coding_files:
-            cod_labels = [t.match(cod.name, return_none=True) for t in tiers.values()]
-            if rel_labels != cod_labels:
-                continue
+            out_subdir = cu_reliability_dir / (paradigm or "")
 
-            try:
-                cu_coding = pd.read_excel(cod)
-                cu_rel = pd.read_excel(rel)
-                logger.info(f"Processing pair: {_rel(cod)} + {_rel(rel)}")
-            except Exception as e:
-                logger.error(f"Failed reading {_rel(cod)} or {_rel(rel)}: {e}")
-                continue
+            left = cu_coding[
+                ["utterance_id", "sample_id", resolved["coding_sv"], resolved["coding_rel"]]
+            ].rename(
+                columns={
+                    resolved["coding_sv"]: "c2_sv",
+                    resolved["coding_rel"]: "c2_rel",
+                }
+            )
 
-            for paradigm in paradigms_to_run:
-                try:
-                    resolved = _resolve_coder_columns(cu_coding, cu_rel, paradigm=paradigm)
-                    comparison_mode = resolved["mode"]
+            right = cu_rel[
+                ["utterance_id", resolved["rel_sv"], resolved["rel_rel"]]
+            ].rename(
+                columns={
+                    resolved["rel_sv"]: "c3_sv",
+                    resolved["rel_rel"]: "c3_rel",
+                }
+            )
 
-                    out_subdir = cu_reliability_dir / (paradigm or "")
+            merged = pd.merge(left, right, on="utterance_id", how="inner")
 
-                    left = cu_coding[
-                        ["utterance_id", "sample_id", resolved["coding_sv"], resolved["coding_rel"]]
-                    ].rename(
-                        columns={
-                            resolved["coding_sv"]: "c2_sv",
-                            resolved["coding_rel"]: "c2_rel",
-                        }
-                    )
+            if len(right) != len(merged):
+                logger.warning(
+                    f"Length mismatch in {_rel(rel)} "
+                    f"({paradigm or 'base'}, {comparison_mode})"
+                )
 
-                    right = cu_rel[
-                        ["utterance_id", resolved["rel_sv"], resolved["rel_rel"]]
-                    ].rename(
-                        columns={
-                            resolved["rel_sv"]: "c3_sv",
-                            resolved["rel_rel"]: "c3_rel",
-                        }
-                    )
+            merged["c2_cu"] = merged[["c2_sv", "c2_rel"]].apply(compute_cu_column, axis=1)
+            merged["c3_cu"] = merged[["c3_sv", "c3_rel"]].apply(compute_cu_column, axis=1)
 
-                    merged = pd.merge(left, right, on="utterance_id", how="inner")
+            for pair, new in [
+                (("c2_sv", "c3_sv"), "agmt_sv"),
+                (("c2_rel", "c3_rel"), "agmt_rel"),
+                (("c2_cu", "c3_cu"), "agmt_cu"),
+            ]:
+                merged[new] = merged.apply(
+                    lambda r: int(
+                        (r[pair[0]] == r[pair[1]])
+                        or (pd.isna(r[pair[0]]) and pd.isna(r[pair[1]]))
+                    ),
+                    axis=1,
+                )
 
-                    if len(right) != len(merged):
-                        logger.warning(
-                            f"Length mismatch in {_rel(rel)} "
-                            f"({paradigm or 'base'}, {comparison_mode})"
-                        )
+            _write_cu_reliability_outputs(
+                cu_rel_coding=merged,
+                base_dir=out_subdir,
+                paradigm=paradigm,
+                comparison_mode=comparison_mode,
+            )
 
-                    merged["c2_cu"] = merged[["c2_sv", "c2_rel"]].apply(compute_cu_column, axis=1)
-                    merged["c3_cu"] = merged[["c3_sv", "c3_rel"]].apply(compute_cu_column, axis=1)
-
-                    for pair, new in [
-                        (("c2_sv", "c3_sv"), "agmt_sv"),
-                        (("c2_rel", "c3_rel"), "agmt_rel"),
-                        (("c2_cu", "c3_cu"), "agmt_cu"),
-                    ]:
-                        merged[new] = merged.apply(
-                            lambda r: int(
-                                (r[pair[0]] == r[pair[1]])
-                                or (pd.isna(r[pair[0]]) and pd.isna(r[pair[1]]))
-                            ),
-                            axis=1,
-                        )
-
-                    partition_labels = [t.match(rel.name) for t in tiers.values() if t.partition]
-
-                    _write_cu_reliability_outputs(
-                        cu_rel_coding=merged,
-                        partition_labels=partition_labels,
-                        base_dir=out_subdir,
-                        paradigm=paradigm,
-                        comparison_mode=comparison_mode,
-                    )
-
-                except KeyError as e:
-                    logger.info(
-                        f"Skipping paradigm {paradigm or 'base'} for {_rel(rel)} "
-                        f"because required columns were not found: {e}"
-                    )
-                    continue
-                except Exception as e:
-                    logger.error(
-                        f"Failed CU reliability for {paradigm or 'base'} on {_rel(rel)}: {e}"
-                    )
-                    continue
+        except KeyError as e:
+            logger.info(
+                f"Skipping paradigm {paradigm or 'base'} for {_rel(rel)} "
+                f"because required columns were not found: {e}"
+            )
+            continue
+        except Exception as e:
+            logger.error(
+                f"Failed CU reliability for {paradigm or 'base'} on {_rel(rel)}: {e}"
+            )
+            continue
+    

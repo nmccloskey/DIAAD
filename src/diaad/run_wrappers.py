@@ -67,7 +67,7 @@ def run_evaluate_cu_reliability(ctx):
     """Evaluate CU reliability."""
     from diaad.coding.compl_utts.rel_evaluation import evaluate_cu_reliability
 
-    return evaluate_cu_reliability(**ctx.kwargs_cu_analysis())
+    return evaluate_cu_reliability(**ctx.kwargs_evaluate_cu_reliability())
 
 
 def run_analyze_cu_coding(ctx):
