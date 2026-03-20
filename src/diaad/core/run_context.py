@@ -331,6 +331,8 @@ class RunContext:
             "strip_clan": self.strip_clan,
             "prefer_correction": self.prefer_correction,
             "lowercase": self.lowercase,
+            "reliability_tag": self.config.project.reliability_tag,
+            "reliability_dirname": self.config.project.reliability_dirname,
         }
 
     # ------------------------------------------------------------------

@@ -28,6 +28,9 @@ class ProjectConfig:
     prefer_correction: bool = True
     lowercase: bool = True
 
+    reliability_tag: str = "_reliability"
+    reliability_dirname: str = "reliability"
+
     exclude_participants: list[str] | None = None
     coders: list[Any] | None = None
     narrative_field: str = ""
@@ -328,6 +331,8 @@ class ConfigManager:
                 "strip_clan": self.project.strip_clan,
                 "prefer_correction": self.project.prefer_correction,
                 "lowercase": self.project.lowercase,
+                "reliability_tag": self.project.reliability_tag,
+                "reliability_dirname": self.project.reliability_dirname,
                 "exclude_participants": self.project.exclude_participants,
                 "coders": self.project.coders,
                 "narrative_field": self.project.narrative_field,
@@ -441,6 +446,8 @@ class ConfigManager:
                 data.get("prefer_correction"),
                 default=True,
             ),
+            reliability_tag=self._as_str(data.get("reliability_tag"), default="_reliability"),
+            reliability_dirname=self._as_str(data.get("reliability_dirname"), default="reliability"),
             lowercase=self._as_bool(data.get("lowercase"), default=True),
             exclude_participants=self._as_str_list(
                 data.get("exclude_participants"),
