@@ -101,7 +101,7 @@ def run_evaluate_word_count_reliability(ctx):
         evaluate_word_count_reliability,
     )
 
-    return evaluate_word_count_reliability(**ctx.kwargs_tiered_io())
+    return evaluate_word_count_reliability(**ctx.kwargs_io())
 
 
 # ------------------------------------------------------------------
