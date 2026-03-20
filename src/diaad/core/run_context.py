@@ -311,6 +311,7 @@ class RunContext:
             "chats": self.chats,
             "frac": self.reliability_fraction,
             "output_dir": self.out_dir,
+            "input_dir": self.input_dir,
         }
 
     def kwargs_reselect_transcription_reliability_samples(self) -> dict[str, Any]:
