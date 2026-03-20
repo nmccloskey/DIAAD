@@ -32,7 +32,7 @@ class ProjectConfig:
     reliability_dirname: str = "reliability"
 
     exclude_participants: list[str] | None = None
-    coders: list[Any] | None = None
+    num_coders: int = 0
     narrative_field: str = ""
 
     cu_paradigms: list[str] | None = None
@@ -50,7 +50,6 @@ class ProjectConfig:
             "exclude_participants",
             list(self.exclude_participants or []),
         )
-        object.__setattr__(self, "coders", list(self.coders or []))
         object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
 
 
@@ -226,8 +225,8 @@ class ConfigManager:
         return self.project.exclude_participants
 
     @property
-    def coders(self) -> list[Any]:
-        return self.project.coders
+    def num_coders(self) -> list[Any]:
+        return self.project.num_coders
 
     @property
     def narrative_field(self) -> str:
@@ -334,7 +333,7 @@ class ConfigManager:
                 "reliability_tag": self.project.reliability_tag,
                 "reliability_dirname": self.project.reliability_dirname,
                 "exclude_participants": self.project.exclude_participants,
-                "coders": self.project.coders,
+                "num_coders": self.project.num_coders,
                 "narrative_field": self.project.narrative_field,
                 "cu_paradigms": self.project.cu_paradigms,
                 "automate_powers": self.project.automate_powers,
@@ -375,7 +374,7 @@ class ConfigManager:
                 "prefer_correction": self.prefer_correction,
                 "lowercase": self.lowercase,
                 "exclude_participants": self.exclude_participants,
-                "coders": self.coders,
+                "num_coders": self.num_coders,
                 "narrative_field": self.narrative_field,
                 "cu_paradigms": self.cu_paradigms,
                 "automate_powers": self.automate_powers,
@@ -453,7 +452,7 @@ class ConfigManager:
                 data.get("exclude_participants"),
                 default=[],
             ),
-            coders=self._as_list(data.get("coders"), default=[]),
+            num_coders=self._as_int(data.get("num_coders"), default=0),
             narrative_field=self._as_str(data.get("narrative_field"), default=""),
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),

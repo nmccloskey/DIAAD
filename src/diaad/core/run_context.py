@@ -92,8 +92,8 @@ class RunContext:
         return self.config.shuffle_samples
 
     @property
-    def coders(self) -> list[Any]:
-        return self.config.coders
+    def num_coders(self) -> int:
+        return self.config.num_coders
 
     @property
     def cu_paradigms(self) -> list[str]:
@@ -344,7 +344,7 @@ class RunContext:
         return {
             "tiers": self.tiers,
             "frac": self.reliability_fraction,
-            "coders": self.coders,
+            "num_coders": self.num_coders,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
@@ -384,7 +384,7 @@ class RunContext:
         return {
             "tiers": self.tiers,
             "frac": self.reliability_fraction,
-            "coders": self.coders,
+            "num_coders": self.num_coders,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
@@ -429,7 +429,7 @@ class RunContext:
         return {
             "tiers": self.tiers,
             "frac": self.reliability_fraction,
-            "coders": self.coders,
+            "num_coders": self.num_coders,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,

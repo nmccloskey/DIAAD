@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from pathlib import Path
 from typing import Optional
 
@@ -9,11 +8,54 @@ from diaad.core.logger import logger, _rel
 from diaad.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
-from diaad.coding.utils import segment, assign_coders, normalize_coders, resolve_stim_cols
+from diaad.coding.utils import segment, assign_coders, resolve_stim_cols
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
 
-def _assign_single_coding_columns(df, cu_paradigms, exclude_participants):
+def _coder_ids(num_coders: int) -> list[int]:
+    """Return canonical integer coder IDs: 1..num_coders."""
+    return list(range(1, max(0, int(num_coders)) + 1))
+
+
+def _resolve_coder_mode(num_coders: int) -> tuple[str, list[int]]:
+    """
+    Resolve workflow mode from num_coders.
+
+    Modes
+    -----
+    zero:
+        Blank primary coding file, optional blank reliability subset.
+    single:
+        One coder in primary file, optional blank reliability subset.
+    two:
+        Two coders split primary assignments; reliability goes to opposite coder.
+    three:
+        3+ coder workflow using c1/c2 primary + c3 reliability.
+        If num_coders > 3, only coder IDs 1, 2, 3 are used.
+    """
+    coder_ids = _coder_ids(num_coders)
+
+    if num_coders <= 0:
+        return "zero", []
+    if num_coders == 1:
+        return "single", coder_ids
+    if num_coders == 2:
+        return "two", coder_ids
+
+    if num_coders > 3:
+        logger.warning(
+            f"num_coders={num_coders} detected for CU coding. "
+            "Using the 3-coder workflow with coder IDs [1, 2, 3]; additional coders will be ignored."
+        )
+
+    return "three", [1, 2, 3]
+
+
+def _assign_single_coding_columns(
+    df: pd.DataFrame,
+    cu_paradigms,
+    exclude_participants,
+) -> pd.DataFrame:
     """Add one unprefixed coding layer."""
     base_cols = ["id", "sv", "rel", "comment"]
     for col in base_cols:
@@ -27,10 +69,15 @@ def _assign_single_coding_columns(df, cu_paradigms, exclude_participants):
         for paradigm in cu_paradigms:
             new_col = f"{tag}_{paradigm}"
             df[new_col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+
     return df
 
 
-def _assign_three_coding_columns(df, cu_paradigms, exclude_participants):
+def _assign_three_coding_columns(
+    df: pd.DataFrame,
+    cu_paradigms,
+    exclude_participants,
+) -> pd.DataFrame:
     """Add c1/c2 coding layers."""
     base_cols = [
         "c1_id", "c1_sv", "c1_rel", "c1_comment",
@@ -47,11 +94,20 @@ def _assign_three_coding_columns(df, cu_paradigms, exclude_participants):
             df.drop(columns=[f"{prefix}_{tag}"], inplace=True, errors="ignore")
             for paradigm in cu_paradigms:
                 new_col = f"{prefix}_{tag}_{paradigm}"
-                df[new_col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+                df[new_col] = np.where(
+                    df["speaker"].isin(exclude_participants),
+                    "NA",
+                    "",
+                )
+
     return df
 
 
-def _prepare_blank_reliability_subset(cu_df, sample_ids, frac):
+def _prepare_blank_reliability_subset(
+    cu_df: pd.DataFrame,
+    sample_ids: list,
+    frac: float,
+) -> pd.DataFrame | None:
     """Build a blank reliability subset with no assigned coder."""
     n_rel_samples = calc_subset_size(frac=frac, samples=sample_ids)
     if n_rel_samples == 0:
@@ -61,7 +117,12 @@ def _prepare_blank_reliability_subset(cu_df, sample_ids, frac):
     return cu_df[cu_df["sample_id"].isin(rel_samples)].copy()
 
 
-def _prepare_two_coder_reliability_subset(cu_df, seg, rel_coder, frac):
+def _prepare_two_coder_reliability_subset(
+    cu_df: pd.DataFrame,
+    seg: list,
+    rel_coder: int,
+    frac: float,
+) -> pd.DataFrame | None:
     """Build a 2-coder reliability subset from one coder's primary assignments."""
     n_rel_samples = calc_subset_size(frac=frac, samples=seg)
     if n_rel_samples == 0:
@@ -73,7 +134,13 @@ def _prepare_two_coder_reliability_subset(cu_df, seg, rel_coder, frac):
     return relsegdf
 
 
-def _prepare_three_coder_reliability_subset(cu_df, seg, assn, frac, cu_paradigms):
+def _prepare_three_coder_reliability_subset(
+    cu_df: pd.DataFrame,
+    seg: list,
+    assn: list[int],
+    frac: float,
+    cu_paradigms,
+) -> pd.DataFrame | None:
     """Build the reliability subset for the 3-coder workflow."""
     n_rel_samples = calc_subset_size(frac=frac, samples=seg)
     if n_rel_samples == 0:
@@ -86,21 +153,36 @@ def _prepare_three_coder_reliability_subset(cu_df, seg, assn, frac, cu_paradigms
     if len(cu_paradigms) >= 2:
         for tag in ["sv", "rel"]:
             for paradigm in cu_paradigms:
-                old, new = f"c2_{tag}_{paradigm}", f"c3_{tag}_{paradigm}"
-                if old in relsegdf:
+                old = f"c2_{tag}_{paradigm}"
+                new = f"c3_{tag}_{paradigm}"
+                if old in relsegdf.columns:
                     relsegdf.rename(columns={old: new}, inplace=True)
-                relsegdf.drop(columns=[f"c1_{tag}_{paradigm}"], inplace=True, errors="ignore")
+                relsegdf.drop(
+                    columns=[f"c1_{tag}_{paradigm}"],
+                    inplace=True,
+                    errors="ignore",
+                )
         relsegdf.rename(columns={"c2_comment": "c3_comment"}, inplace=True)
+
     else:
-        renames = {"c2_sv": "c3_sv", "c2_rel": "c3_rel", "c2_comment": "c3_comment"}
-        relsegdf.rename(columns={k: v for k, v in renames.items() if k in relsegdf}, inplace=True)
+        renames = {
+            "c2_sv": "c3_sv",
+            "c2_rel": "c3_rel",
+            "c2_comment": "c3_comment",
+        }
+        relsegdf.rename(
+            columns={k: v for k, v in renames.items() if k in relsegdf.columns},
+            inplace=True,
+        )
         relsegdf.drop(columns=["c1_sv", "c1_rel"], inplace=True, errors="ignore")
+
         for col in ["c3_sv", "c3_rel", "c3_comment"]:
-            if col not in relsegdf:
+            if col not in relsegdf.columns:
                 relsegdf[col] = ""
 
     relsegdf.drop(columns=["c2_id"], inplace=True, errors="ignore")
     relsegdf.insert(relsegdf.columns.get_loc("c3_comment"), "c3_id", assn[2])
+
     return relsegdf
 
 
@@ -131,7 +213,7 @@ def _build_cu_assignments(
     cu_df: pd.DataFrame,
     *,
     mode: str,
-    coders: list[str],
+    coder_ids: list[int],
     frac: float,
     cu_paradigms,
     exclude_participants,
@@ -148,7 +230,7 @@ def _build_cu_assignments(
     rel_subsets: list[pd.DataFrame] = []
 
     if mode in {"single", "zero"}:
-        coder = coders[0] if coders else ""
+        coder = coder_ids[0] if coder_ids else ""
         cu_df["id"] = np.where(
             cu_df["speaker"].isin(exclude_participants),
             "NA",
@@ -156,31 +238,25 @@ def _build_cu_assignments(
         )
 
         if frac > 0:
-            rel_subsets.append(
-                _prepare_blank_reliability_subset(cu_df, unique_ids, frac)
-            )
+            rel_subsets.append(_prepare_blank_reliability_subset(cu_df, unique_ids, frac))
 
     elif mode == "two":
         segments = segment(unique_ids, n=2)
 
-        for seg, coder in zip(segments, coders):
+        for seg, coder in zip(segments, coder_ids):
             cu_df.loc[cu_df["sample_id"].isin(seg), "id"] = coder
 
         if frac > 0:
             rel_subsets.extend(
                 [
-                    _prepare_two_coder_reliability_subset(
-                        cu_df, segments[0], coders[1], frac
-                    ),
-                    _prepare_two_coder_reliability_subset(
-                        cu_df, segments[1], coders[0], frac
-                    ),
+                    _prepare_two_coder_reliability_subset(cu_df, segments[0], coder_ids[1], frac),
+                    _prepare_two_coder_reliability_subset(cu_df, segments[1], coder_ids[0], frac),
                 ]
             )
 
     else:
-        segments = segment(unique_ids, n=len(coders))
-        assignments = assign_coders(coders)
+        segments = segment(unique_ids, n=len(coder_ids))
+        assignments = assign_coders(coder_ids)
 
         for seg, assn in zip(segments, assignments):
             cu_df.loc[cu_df["sample_id"].isin(seg), ["c1_id", "c2_id"]] = assn[:2]
@@ -188,7 +264,11 @@ def _build_cu_assignments(
             if frac > 0:
                 rel_subsets.append(
                     _prepare_three_coder_reliability_subset(
-                        cu_df, seg, assn, frac, cu_paradigms
+                        cu_df,
+                        seg,
+                        assn,
+                        frac,
+                        cu_paradigms,
                     )
                 )
 
@@ -243,22 +323,21 @@ def _write_cu_outputs(
     export_cu_df: pd.DataFrame,
     export_rel_df: pd.DataFrame | None,
     codebook_df: pd.DataFrame | None,
-    label_path: Path,
-    lab_str: str,
+    cu_coding_dir: Path,
     source_name: str,
     total_unique_ids: int,
 ) -> None:
     """
     Write CU coding outputs, reliability outputs, and optional blind codebook.
     """
-    export_cu_df.to_excel(label_path / f"{lab_str}cu_coding.xlsx", index=False)
+    export_cu_df.to_excel(cu_coding_dir / "cu_coding.xlsx", index=False)
 
     if export_rel_df is not None:
         logger.info(
             f"{source_name}: reliability={export_rel_df['sample_id'].nunique()} / total={total_unique_ids}"
         )
         export_rel_df.to_excel(
-            label_path / f"{lab_str}cu_reliability_coding.xlsx",
+            cu_coding_dir / "cu_reliability_coding.xlsx",
             index=False,
         )
     else:
@@ -267,14 +346,14 @@ def _write_cu_outputs(
     if codebook_df is not None and not codebook_df.empty:
         write_blind_codebook(
             codebook_df,
-            label_path / f"{lab_str}cu_blind_codebook.xlsx",
+            cu_coding_dir / "cu_blind_codebook.xlsx",
         )
 
 
 def make_cu_coding_files(
     tiers,
     frac,
-    coders,
+    num_coders,
     input_dir,
     output_dir,
     cu_paradigms,
@@ -283,27 +362,35 @@ def make_cu_coding_files(
     blinding_config=None,
 ):
     """
-    Build CU coding and reliability workbooks from utterance tables.
+    Build CU coding and reliability workbooks from an utterance table.
 
     Modes
     -----
     0 coders:
         One unprefixed coding layer (id, sv, rel, comment) with blank coder IDs.
         If frac > 0, a blank reliability subset may also be generated.
+
     1 coder:
-        One unprefixed coding layer with that coder in the id column.
-        Reliability, if requested, is generated as a blank subset rather than as an independent coder assignment.
+        One unprefixed coding layer with coder ID 1 in the id column.
+        Reliability, if requested, is generated as a blank subset rather than as an
+        independent coder assignment.
+
     2 coders:
-        One unprefixed coding layer. Samples are split across coders; reliability
-        subset is reassigned to the opposite coder.
+        One unprefixed coding layer. Samples are split across coders 1 and 2;
+        reliability subset is reassigned to the opposite coder.
+
     3+ coders:
         Current c1/c2 primary coding workflow plus c3 reliability workflow.
-        If >3 coders are provided, only the first three are used.
+        If num_coders > 3, only coder IDs 1, 2, and 3 are used.
 
     Notes
     -----
     frac == 0 means no reliability subset is generated.
     narrative_field overrides legacy stimulus-column fallback behavior.
+
+    Transcript table selection
+    --------------------------
+    If multiple transcript tables are detected, only the first returned match is processed.
 
     Blinding
     --------
@@ -314,7 +401,7 @@ def make_cu_coding_files(
     cu_coding_dir = Path(output_dir) / "cu_coding"
     cu_coding_dir.mkdir(parents=True, exist_ok=True)
 
-    mode, coders = normalize_coders(coders)
+    mode, coder_ids = _resolve_coder_mode(num_coders)
 
     if frac == 0:
         logger.info("frac=0 detected; no reliability subset will be generated.")
@@ -323,47 +410,51 @@ def make_cu_coding_files(
         directories=[input_dir, output_dir],
         search_base="transcript_tables",
     )
-    utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
 
-    for file, uttdf in tqdm(zip(transcript_tables, utt_dfs), desc="Generating CU coding files"):
-        try:
-            labels = [t.match(file.name, return_none=True) for t in tiers.values()]
-            labels = [label for label in labels if label]
+    if not transcript_tables:
+        logger.error("No transcript_tables file found.")
+        return
 
-            label_path = Path(cu_coding_dir, *labels)
-            label_path.mkdir(parents=True, exist_ok=True)
-            lab_str = "_".join(labels) + "_" if labels else ""
+    if len(transcript_tables) > 1:
+        logger.warning(
+            "Multiple transcript tables detected. "
+            f"Processing only the first returned file: {_rel(transcript_tables[0])}"
+        )
 
-            cu_df = _prepare_cu_base_dataframe(
-                uttdf=uttdf,
-                tiers=tiers,
-                narrative_field=narrative_field,
-            )
+    transcript_table = transcript_tables[0]
 
-            cu_df, rel_df = _build_cu_assignments(
-                cu_df,
-                mode=mode,
-                coders=coders,
-                frac=frac,
-                cu_paradigms=cu_paradigms,
-                exclude_participants=exclude_participants,
-            )
+    try:
+        uttdf = extract_transcript_data(transcript_table)
 
-            export_cu_df, export_rel_df, codebook_df = _blind_coding_exports(
-                cu_df,
-                rel_df,
-                blinding_config=blinding_config,
-            )
+        cu_df = _prepare_cu_base_dataframe(
+            uttdf=uttdf,
+            tiers=tiers,
+            narrative_field=narrative_field,
+        )
 
-            _write_cu_outputs(
-                export_cu_df=export_cu_df,
-                export_rel_df=export_rel_df,
-                codebook_df=codebook_df,
-                label_path=label_path,
-                lab_str=lab_str,
-                source_name=file.name,
-                total_unique_ids=cu_df["sample_id"].nunique(),
-            )
+        cu_df, rel_df = _build_cu_assignments(
+            cu_df,
+            mode=mode,
+            coder_ids=coder_ids,
+            frac=frac,
+            cu_paradigms=cu_paradigms,
+            exclude_participants=exclude_participants,
+        )
 
-        except Exception as e:
-            logger.error(f"Failed processing {_rel(file)}: {e}")
+        export_cu_df, export_rel_df, codebook_df = _blind_coding_exports(
+            cu_df,
+            rel_df,
+            blinding_config=blinding_config,
+        )
+
+        _write_cu_outputs(
+            export_cu_df=export_cu_df,
+            export_rel_df=export_rel_df,
+            codebook_df=codebook_df,
+            cu_coding_dir=cu_coding_dir,
+            source_name=transcript_table.name,
+            total_unique_ids=cu_df["sample_id"].nunique(),
+        )
+
+    except Exception as e:
+        logger.error(f"Failed processing {_rel(transcript_table)}: {e}")
