@@ -1,10 +1,10 @@
 import re
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 from pathlib import Path
 
 from diaad.core.logger import logger, _rel
+from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
@@ -58,22 +58,10 @@ def _detect_coder_paradigm_pairs(columns, cu_paradigms=None):
     Prefixed:
         c2_sv, c2_rel, c2_sv_AAE, c2_rel_AAE, ...
         c3_sv, c3_rel, c3_sv_AAE, c3_rel_AAE, ...
-
-    Returns
-    -------
-    list[dict]
-        Each entry has:
-        {
-            "coder_prefix": str | None,   # None for unprefixed schema
-            "paradigm": str | None,
-            "sv_col": str,
-            "rel_col": str,
-        }
     """
     columns = set(columns)
     pairs = []
 
-    # Unprefixed base / paradigm columns
     if "sv" in columns and "rel" in columns:
         pairs.append(
             {
@@ -98,7 +86,6 @@ def _detect_coder_paradigm_pairs(columns, cu_paradigms=None):
                 }
             )
 
-    # Prefixed coder columns, e.g. c2_sv, c3_sv_AAE
     prefixed_sv = [c for c in columns if re.fullmatch(r"c\d+_sv(?:_.+)?", c)]
     for sv_col in sorted(prefixed_sv):
         match = re.fullmatch(r"(c\d+)_sv(?:_(.+))?", sv_col)
@@ -119,12 +106,10 @@ def _detect_coder_paradigm_pairs(columns, cu_paradigms=None):
                 }
             )
 
-    # Optional filter by explicit paradigms
     if cu_paradigms is not None:
         allowed = set(cu_paradigms)
         pairs = [p for p in pairs if p["paradigm"] in allowed]
 
-    # Deduplicate while preserving order
     seen = set()
     unique_pairs = []
     for p in pairs:
@@ -158,7 +143,7 @@ def _make_output_cu_col(coder_prefix, paradigm):
 
 def _make_summary_columns(coder_prefix, paradigm):
     """
-    Build output summary column names for a coder/paradigm combination.
+    Build wide-format summary column names for a coder/paradigm combination.
 
     Uses 'base' for the unsuffixed paradigm in summary outputs to avoid
     names like 'no_utt_None'.
@@ -184,6 +169,123 @@ def _make_summary_columns(coder_prefix, paradigm):
     }
 
 
+def _drop_coder_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
+    """Drop coder/admin columns not needed in analysis outputs."""
+    df = df.copy()
+    df.drop(
+        columns=[
+            c for c in
+            ["id", "comment", "c1_id", "c1_comment", "c2_id", "c2_comment", "c3_id", "c3_comment"]
+            if c in df.columns
+        ],
+        inplace=True,
+        errors="ignore",
+    )
+    return df
+
+
+def _summarize_pair(cu_coding, pair):
+    """
+    Summarize one coder/paradigm SV-REL pair at the sample level.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.DataFrame]
+        summary_long, summary_wide
+    """
+    coder_prefix = pair["coder_prefix"]
+    paradigm = pair["paradigm"]
+    sv_col = pair["sv_col"]
+    rel_col = pair["rel_col"]
+    cu_col = _make_output_cu_col(coder_prefix, paradigm)
+
+    coder_label = coder_prefix or "primary"
+    paradigm_label = paradigm or "base"
+
+    work_df = cu_coding[["sample_id", sv_col, rel_col]].copy()
+    work_df[[sv_col, rel_col]] = work_df[[sv_col, rel_col]].apply(
+        pd.to_numeric,
+        errors="coerce",
+    )
+    work_df[cu_col] = work_df[[sv_col, rel_col]].apply(
+        compute_cu_column,
+        axis=1,
+    )
+
+    cu_sum = work_df.groupby("sample_id").agg(
+        no_utt=(cu_col, utt_ct),
+
+        p_sv=(sv_col, ptotal),
+        m_sv=(sv_col, _negative_total),
+        perc_sv=(sv_col, _percent_positive),
+        miss_sv=(sv_col, _count_missing),
+
+        p_rel=(rel_col, ptotal),
+        m_rel=(rel_col, _negative_total),
+        perc_rel=(rel_col, _percent_positive),
+        miss_rel=(rel_col, _count_missing),
+
+        cu=(cu_col, ptotal),
+        perc_cu=(cu_col, _percent_positive),
+        miss_cu=(cu_col, _count_missing),
+    ).reset_index()
+
+    inconsistency_df = (
+        work_df.groupby("sample_id")
+        .apply(lambda df: _count_pair_inconsistency(df, sv_col, rel_col))
+        .reset_index(name="sv_rel_inconsistent")
+    )
+
+    cu_sum = pd.merge(cu_sum, inconsistency_df, on="sample_id", how="left")
+
+    summary_long = cu_sum.copy()
+    summary_long["coder"] = coder_label
+    summary_long["paradigm"] = paradigm_label
+    summary_long["sv_col"] = sv_col
+    summary_long["rel_col"] = rel_col
+    summary_long["cu_col"] = cu_col
+
+    summary_long = summary_long[
+        [
+            "sample_id",
+            "coder",
+            "paradigm",
+            "sv_col",
+            "rel_col",
+            "cu_col",
+            "no_utt",
+            "p_sv",
+            "m_sv",
+            "perc_sv",
+            "miss_sv",
+            "p_rel",
+            "m_rel",
+            "perc_rel",
+            "miss_rel",
+            "cu",
+            "perc_cu",
+            "miss_cu",
+            "sv_rel_inconsistent",
+        ]
+    ]
+
+    wide_cols = _make_summary_columns(coder_prefix, paradigm)
+    summary_wide = cu_sum.rename(columns=wide_cols)
+
+    return summary_long, summary_wide, cu_col
+
+
+def _combine_wide_summaries(summary_wides):
+    """Merge wide summaries across coder/paradigm pairs by sample_id."""
+    if not summary_wides:
+        return None
+
+    merged = summary_wides[0].copy()
+    for df in summary_wides[1:]:
+        merged = pd.merge(merged, df, on="sample_id", how="outer")
+    return merged
+
+
 # ---------------------------------------------------------------------
 # Blinding
 # ---------------------------------------------------------------------
@@ -191,30 +293,23 @@ def _make_summary_columns(coder_prefix, paradigm):
 def _blind_cu_analysis_exports(
     cu_coding: pd.DataFrame,
     summary_long: pd.DataFrame | None,
+    summary_wide: pd.DataFrame | None,
     *,
     blinding_config=None,
-) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None]:
+) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None, pd.DataFrame | None]:
     """
     Apply identifier blinding to CU analysis exports.
 
     Blinding is applied only to the exported analysis tables, not to the
     in-memory data used for aggregation.
-
-    Returns
-    -------
-    export_cu_coding
-        Utterance-level analysis dataframe, possibly blinded.
-    export_summary_long
-        Sample-level summary dataframe, possibly blinded.
-    codebook_df
-        Codebook used for blinding, or None if blinding was not applied.
     """
     export_cu_coding = cu_coding.copy()
     export_summary_long = summary_long.copy() if summary_long is not None else None
+    export_summary_wide = summary_wide.copy() if summary_wide is not None else None
     codebook_df = None
 
     if blinding_config is None or not getattr(blinding_config, "blind_analysis", False):
-        return export_cu_coding, export_summary_long, codebook_df
+        return export_cu_coding, export_summary_long, export_summary_wide, codebook_df
 
     export_cu_coding, codebook_df = blind_file_identifiers(
         export_cu_coding,
@@ -228,7 +323,14 @@ def _blind_cu_analysis_exports(
             existing_codebook=codebook_df,
         )
 
-    return export_cu_coding, export_summary_long, codebook_df
+    if export_summary_wide is not None:
+        export_summary_wide, _ = blind_file_identifiers(
+            export_summary_wide,
+            config=blinding_config,
+            existing_codebook=codebook_df,
+        )
+
+    return export_cu_coding, export_summary_long, export_summary_wide, codebook_df
 
 
 # ---------------------------------------------------------------------
@@ -237,24 +339,25 @@ def _blind_cu_analysis_exports(
 
 def _write_cu_analysis_outputs(
     cu_coding,
-    summaries,
+    summary_long,
+    summary_wide,
     out_dir,
-    partition_labels,
     *,
     blinding_config=None,
 ):
     """Write utterance- and sample-level CU analysis files with optional blinding."""
-    label_str = "_".join(partition_labels) if partition_labels else "all_samples"
-    utterance_path = Path(out_dir, f"{label_str}_cu_coding_by_utterance.xlsx")
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    summary_long = pd.concat(summaries, ignore_index=True) if summaries else None
-
-    export_cu_coding, export_summary_long, codebook_df = _blind_cu_analysis_exports(
-        cu_coding=cu_coding,
-        summary_long=summary_long,
-        blinding_config=blinding_config,
+    export_cu_coding, export_summary_long, export_summary_wide, codebook_df = (
+        _blind_cu_analysis_exports(
+            cu_coding=cu_coding,
+            summary_long=summary_long,
+            summary_wide=summary_wide,
+            blinding_config=blinding_config,
+        )
     )
 
+    utterance_path = out_dir / "cu_coding_by_utterance.xlsx"
     try:
         export_cu_coding.to_excel(utterance_path, index=False)
         logger.info(f"Saved utterance-level CU analysis: {_rel(utterance_path)}")
@@ -263,17 +366,27 @@ def _write_cu_analysis_outputs(
         return
 
     if export_summary_long is None or export_summary_long.empty:
-        logger.warning(f"No valid CU summaries for {_rel(out_dir)}")
+        logger.warning(f"No valid CU long summaries for {_rel(out_dir)}")
     else:
         try:
-            summary_path = Path(out_dir, f"{label_str}_cu_coding_by_sample.xlsx")
-            export_summary_long.to_excel(summary_path, index=False)
-            logger.info(f"Saved CU summary file: {_rel(summary_path)}")
+            summary_long_path = out_dir / "cu_coding_by_sample_long.xlsx"
+            export_summary_long.to_excel(summary_long_path, index=False)
+            logger.info(f"Saved CU long summary file: {_rel(summary_long_path)}")
         except Exception as e:
-            logger.error(f"Failed saving CU summary to {_rel(out_dir)}: {e}")
+            logger.error(f"Failed saving CU long summary to {_rel(summary_long_path)}: {e}")
+
+    if export_summary_wide is None or export_summary_wide.empty:
+        logger.warning(f"No valid CU wide summaries for {_rel(out_dir)}")
+    else:
+        try:
+            summary_wide_path = out_dir / "cu_coding_by_sample.xlsx"
+            export_summary_wide.to_excel(summary_wide_path, index=False)
+            logger.info(f"Saved CU wide summary file: {_rel(summary_wide_path)}")
+        except Exception as e:
+            logger.error(f"Failed saving CU wide summary to {_rel(summary_wide_path)}: {e}")
 
     if codebook_df is not None and not codebook_df.empty:
-        codebook_path = Path(out_dir, f"{label_str}_cu_analysis_blind_codebook.xlsx")
+        codebook_path = out_dir / "cu_analysis_blind_codebook.xlsx"
         try:
             write_blind_codebook(codebook_df, codebook_path)
         except Exception as e:
@@ -285,7 +398,6 @@ def _write_cu_analysis_outputs(
 # ---------------------------------------------------------------------
 
 def analyze_cu_coding(
-    tiers,
     input_dir,
     output_dir,
     cu_paradigms=None,
@@ -293,7 +405,7 @@ def analyze_cu_coding(
 ):
     """
     Summarize Complete Utterance (CU) coding by sample across all available
-    coder schemas and paradigms in each workbook.
+    coder schemas and paradigms in a CU coding workbook.
 
     Supported input schemas
     -----------------------
@@ -307,152 +419,92 @@ def analyze_cu_coding(
 
     Behavior
     --------
-    - Reads all *cu_coding*.xlsx files under `input_dir`.
-    - Detects all valid coder/paradigm SV-REL pairs.
+    - Finds CU coding workbooks.
+    - If multiple are found, warns and uses only the first returned file.
+    - Detects valid coder/paradigm SV-REL pairs.
     - Computes CU = 1 if SV == REL == 1,
       0 if both are present but not both 1,
       NaN otherwise.
     - Writes:
         * utterance-level file with derived CU columns added
-        * sample-level merged summary across all detected coder/paradigm pairs
-    - If analysis blinding is enabled, identifiers are blinded only at export time.
+        * long sample-level summary (compact, tidy)
+        * wide sample-level summary (uses suffixed metric columns)
 
-    Parameters
-    ----------
-    tiers : dict[str, Tier]
-    input_dir, output_dir : Path or str
-    cu_paradigms : list[str] | None
-        Optional explicit list of paradigms to include. If None, infer from columns.
-    blinding_config
-        Optional normalized blinding configuration.
+    Blinding
+    --------
+    If analysis blinding is enabled, blinding is applied only at export time
+    to the utterance- and sample-level outputs, and the same codebook is reused
+    across those exports.
     """
     cu_analysis_dir = Path(output_dir) / "cu_coding_analysis"
     cu_analysis_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = list(Path(input_dir).rglob("*cu_coding*.xlsx"))
+    coding_files = find_matching_files(
+        directories=[input_dir, output_dir],
+        search_base="cu_coding",
+    )
 
-    for cod in tqdm(coding_files, desc="Analyzing CU coding..."):
+    if not coding_files:
+        logger.warning("No CU coding files found for analysis.")
+        return
+
+    if len(coding_files) > 1:
+        logger.warning(
+            "Multiple CU coding files detected for analysis. "
+            f"Using only the first returned file: {_rel(coding_files[0])}"
+        )
+
+    cod = coding_files[0]
+
+    try:
+        cu_coding = pd.read_excel(cod)
+        logger.info(f"Processing CU coding file: {_rel(cod)}")
+    except Exception as e:
+        logger.error(f"Failed reading {_rel(cod)}: {e}")
+        return
+
+    cu_coding = _drop_coder_admin_cols(cu_coding)
+
+    coder_pairs = _detect_coder_paradigm_pairs(
+        cu_coding.columns,
+        cu_paradigms=cu_paradigms,
+    )
+
+    if not coder_pairs:
+        logger.warning(f"No valid SV/REL coder-paradigm pairs found in {_rel(cod)}")
+        return
+
+    summary_longs = []
+    summary_wides = []
+
+    for pair in coder_pairs:
+        coder_label = pair["coder_prefix"] or "primary"
+        paradigm_label = pair["paradigm"] or "base"
+
         try:
-            cu_coding = pd.read_excel(cod)
-            logger.info(f"Processing CU coding file: {_rel(cod)}")
+            summary_long, summary_wide, cu_col = _summarize_pair(cu_coding, pair)
+
+            # Add derived CU column back to utterance dataframe.
+            work_df = cu_coding[[pair["sv_col"], pair["rel_col"]]].apply(
+                pd.to_numeric,
+                errors="coerce",
+            )
+            cu_coding[cu_col] = work_df.apply(compute_cu_column, axis=1)
+
+            summary_longs.append(summary_long)
+            summary_wides.append(summary_wide)
+
         except Exception as e:
-            logger.error(f"Failed reading {_rel(cod)}: {e}")
-            continue
+            label = f"{coder_label} / {paradigm_label}"
+            logger.error(f"Aggregation failed for {_rel(cod)} ({label}): {e}")
 
-        cu_coding.drop(
-            columns=[
-                c for c in
-                ["c1_id", "c1_comment", "c2_id", "c2_comment", "c3_id", "c3_comment"]
-                if c in cu_coding
-            ],
-            inplace=True,
-            errors="ignore",
-        )
+    summary_long = pd.concat(summary_longs, ignore_index=True) if summary_longs else None
+    summary_wide = _combine_wide_summaries(summary_wides)
 
-        coder_pairs = _detect_coder_paradigm_pairs(
-            cu_coding.columns,
-            cu_paradigms=cu_paradigms,
-        )
-
-        if not coder_pairs:
-            logger.warning(f"No valid SV/REL coder-paradigm pairs found in {_rel(cod)}")
-            continue
-
-        summaries = []
-
-        for pair in coder_pairs:
-            coder_prefix = pair["coder_prefix"]
-            paradigm = pair["paradigm"]
-            sv_col = pair["sv_col"]
-            rel_col = pair["rel_col"]
-            cu_col = _make_output_cu_col(coder_prefix, paradigm)
-
-            coder_label = coder_prefix or "primary"
-            paradigm_label = paradigm or "base"
-
-            try:
-                cu_coding[[sv_col, rel_col]] = cu_coding[[sv_col, rel_col]].apply(
-                    pd.to_numeric,
-                    errors="coerce",
-                )
-
-                cu_coding[cu_col] = cu_coding[[sv_col, rel_col]].apply(
-                    compute_cu_column,
-                    axis=1,
-                )
-
-                agg_df = cu_coding[["sample_id", sv_col, rel_col, cu_col]].copy()
-
-                cu_sum = agg_df.groupby("sample_id").agg(
-                    no_utt=(cu_col, utt_ct),
-
-                    p_sv=(sv_col, ptotal),
-                    m_sv=(sv_col, _negative_total),
-                    perc_sv=(sv_col, _percent_positive),
-                    miss_sv=(sv_col, _count_missing),
-
-                    p_rel=(rel_col, ptotal),
-                    m_rel=(rel_col, _negative_total),
-                    perc_rel=(rel_col, _percent_positive),
-                    miss_rel=(rel_col, _count_missing),
-
-                    cu=(cu_col, ptotal),
-                    perc_cu=(cu_col, _percent_positive),
-                    miss_cu=(cu_col, _count_missing),
-                ).reset_index()
-
-                inconsistency_df = (
-                    cu_coding.groupby("sample_id")
-                    .apply(lambda df: _count_pair_inconsistency(df, sv_col, rel_col))
-                    .reset_index(name="sv_rel_inconsistent")
-                )
-
-                cu_sum = pd.merge(cu_sum, inconsistency_df, on="sample_id", how="left")
-
-                cu_sum["coder"] = coder_label
-                cu_sum["paradigm"] = paradigm_label
-                cu_sum["sv_col"] = sv_col
-                cu_sum["rel_col"] = rel_col
-                cu_sum["cu_col"] = cu_col
-
-                cu_sum = cu_sum[
-                    [
-                        "sample_id",
-                        "coder",
-                        "paradigm",
-                        "sv_col",
-                        "rel_col",
-                        "cu_col",
-                        "no_utt",
-                        "p_sv",
-                        "m_sv",
-                        "perc_sv",
-                        "miss_sv",
-                        "p_rel",
-                        "m_rel",
-                        "perc_rel",
-                        "miss_rel",
-                        "cu",
-                        "perc_cu",
-                        "miss_cu",
-                        "sv_rel_inconsistent",
-                    ]
-                ]
-
-                summaries.append(cu_sum)
-
-            except Exception as e:
-                label = f"{coder_label} / {paradigm_label}"
-                logger.error(f"Aggregation failed for {_rel(cod)} ({label}): {e}")
-
-        partition_labels = [t.match(cod.name) for t in tiers.values() if t.partition]
-        out_dir = Path(cu_analysis_dir, *partition_labels)
-        out_dir.mkdir(parents=True, exist_ok=True)
-
-        _write_cu_analysis_outputs(
-            cu_coding=cu_coding,
-            summaries=summaries,
-            out_dir=out_dir,
-            partition_labels=partition_labels,
-            blinding_config=blinding_config,
-        )
+    _write_cu_analysis_outputs(
+        cu_coding=cu_coding,
+        summary_long=summary_long,
+        summary_wide=summary_wide,
+        out_dir=cu_analysis_dir,
+        blinding_config=blinding_config,
+    )

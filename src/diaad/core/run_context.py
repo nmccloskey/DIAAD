@@ -377,7 +377,6 @@ class RunContext:
         CU analysis.
         """
         return {
-            "tiers": self.tiers,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
