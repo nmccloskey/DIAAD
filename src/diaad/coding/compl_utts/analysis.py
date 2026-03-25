@@ -6,7 +6,7 @@ from pathlib import Path
 from diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
-from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
+from diaad.metadata.unblinding import maybe_unblind_dataframe
 
 
 # ---------------------------------------------------------------------
@@ -53,7 +53,8 @@ def _detect_coder_paradigm_pairs(columns, cu_paradigms=None):
     Supported column families
     -------------------------
     Unprefixed:
-        sv, rel, sv_AAE, rel_AAE, ...
+        sv, rel
+        sv_AAE, rel_AAE, ...
 
     Prefixed:
         c2_sv, c2_rel, c2_sv_AAE, c2_rel_AAE, ...
@@ -286,111 +287,98 @@ def _combine_wide_summaries(summary_wides):
     return merged
 
 
-# ---------------------------------------------------------------------
-# Blinding
-# ---------------------------------------------------------------------
-
-def _blind_cu_analysis_exports(
+def _maybe_unblind_cu_outputs(
+    *,
     cu_coding: pd.DataFrame,
     summary_long: pd.DataFrame | None,
     summary_wide: pd.DataFrame | None,
-    *,
     blinding_config=None,
-) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None, pd.DataFrame | None]:
+    blind_codebook=None,
+    input_dir=None,
+    output_dir=None,
+):
     """
-    Apply identifier blinding to CU analysis exports.
+    Unblind sample identifiers in CU analysis outputs if a coding-stage
+    blind codebook is available.
 
-    Blinding is applied only to the exported analysis tables, not to the
-    in-memory data used for aggregation.
+    This function does not require transcript tables and does not reblind
+    any outputs.
     """
-    export_cu_coding = cu_coding.copy()
-    export_summary_long = summary_long.copy() if summary_long is not None else None
-    export_summary_wide = summary_wide.copy() if summary_wide is not None else None
-    codebook_df = None
+    if blinding_config is None:
+        return cu_coding, summary_long, summary_wide, None
 
-    if blinding_config is None or not getattr(blinding_config, "blind_analysis", False):
-        return export_cu_coding, export_summary_long, export_summary_wide, codebook_df
+    target_cols = ["sample_id"]
 
-    export_cu_coding, codebook_df = blind_file_identifiers(
-        export_cu_coding,
+    unblinded_cu_coding, codebook_df = maybe_unblind_dataframe(
+        df=cu_coding,
         config=blinding_config,
+        blind_codebook=blind_codebook,
+        target_cols=target_cols,
+        directories=[input_dir, output_dir],
+        strict=False,
     )
 
-    if export_summary_long is not None:
-        export_summary_long, _ = blind_file_identifiers(
-            export_summary_long,
+    unblinded_summary_long = None
+    if summary_long is not None:
+        unblinded_summary_long, _ = maybe_unblind_dataframe(
+            df=summary_long,
             config=blinding_config,
-            existing_codebook=codebook_df,
+            blind_codebook=codebook_df if codebook_df is not None else blind_codebook,
+            target_cols=target_cols,
+            directories=[input_dir, output_dir],
+            strict=False,
         )
 
-    if export_summary_wide is not None:
-        export_summary_wide, _ = blind_file_identifiers(
-            export_summary_wide,
+    unblinded_summary_wide = None
+    if summary_wide is not None:
+        unblinded_summary_wide, _ = maybe_unblind_dataframe(
+            df=summary_wide,
             config=blinding_config,
-            existing_codebook=codebook_df,
+            blind_codebook=codebook_df if codebook_df is not None else blind_codebook,
+            target_cols=target_cols,
+            directories=[input_dir, output_dir],
+            strict=False,
         )
 
-    return export_cu_coding, export_summary_long, export_summary_wide, codebook_df
+    return unblinded_cu_coding, unblinded_summary_long, unblinded_summary_wide, codebook_df
 
-
-# ---------------------------------------------------------------------
-# Output writing
-# ---------------------------------------------------------------------
 
 def _write_cu_analysis_outputs(
     cu_coding,
     summary_long,
     summary_wide,
     out_dir,
-    *,
-    blinding_config=None,
 ):
-    """Write utterance- and sample-level CU analysis files with optional blinding."""
+    """Write utterance- and sample-level CU analysis files."""
     out_dir.mkdir(parents=True, exist_ok=True)
-
-    export_cu_coding, export_summary_long, export_summary_wide, codebook_df = (
-        _blind_cu_analysis_exports(
-            cu_coding=cu_coding,
-            summary_long=summary_long,
-            summary_wide=summary_wide,
-            blinding_config=blinding_config,
-        )
-    )
 
     utterance_path = out_dir / "cu_coding_by_utterance.xlsx"
     try:
-        export_cu_coding.to_excel(utterance_path, index=False)
+        cu_coding.to_excel(utterance_path, index=False)
         logger.info(f"Saved utterance-level CU analysis: {_rel(utterance_path)}")
     except Exception as e:
         logger.error(f"Failed writing utterance-level file {_rel(utterance_path)}: {e}")
         return
 
-    if export_summary_long is None or export_summary_long.empty:
+    if summary_long is None or summary_long.empty:
         logger.warning(f"No valid CU long summaries for {_rel(out_dir)}")
     else:
         try:
             summary_long_path = out_dir / "cu_coding_by_sample_long.xlsx"
-            export_summary_long.to_excel(summary_long_path, index=False)
+            summary_long.to_excel(summary_long_path, index=False)
             logger.info(f"Saved CU long summary file: {_rel(summary_long_path)}")
         except Exception as e:
             logger.error(f"Failed saving CU long summary to {_rel(summary_long_path)}: {e}")
 
-    if export_summary_wide is None or export_summary_wide.empty:
+    if summary_wide is None or summary_wide.empty:
         logger.warning(f"No valid CU wide summaries for {_rel(out_dir)}")
     else:
         try:
             summary_wide_path = out_dir / "cu_coding_by_sample.xlsx"
-            export_summary_wide.to_excel(summary_wide_path, index=False)
+            summary_wide.to_excel(summary_wide_path, index=False)
             logger.info(f"Saved CU wide summary file: {_rel(summary_wide_path)}")
         except Exception as e:
             logger.error(f"Failed saving CU wide summary to {_rel(summary_wide_path)}: {e}")
-
-    if codebook_df is not None and not codebook_df.empty:
-        codebook_path = out_dir / "cu_analysis_blind_codebook.xlsx"
-        try:
-            write_blind_codebook(codebook_df, codebook_path)
-        except Exception as e:
-            logger.error(f"Failed writing blind codebook {_rel(codebook_path)}: {e}")
 
 
 # ---------------------------------------------------------------------
@@ -402,6 +390,7 @@ def analyze_cu_coding(
     output_dir,
     cu_paradigms=None,
     blinding_config=None,
+    blind_codebook=None,
 ):
     """
     Summarize Complete Utterance (CU) coding by sample across all available
@@ -427,14 +416,14 @@ def analyze_cu_coding(
       NaN otherwise.
     - Writes:
         * utterance-level file with derived CU columns added
-        * long sample-level summary (compact, tidy)
-        * wide sample-level summary (uses suffixed metric columns)
+        * long sample-level summary
+        * wide sample-level summary
 
-    Blinding
-    --------
-    If analysis blinding is enabled, blinding is applied only at export time
-    to the utterance- and sample-level outputs, and the same codebook is reused
-    across those exports.
+    Unblinding
+    ----------
+    If a coding-stage blind codebook is available, sample identifiers are
+    unblinded in the analysis outputs. No transcript tables are required.
+    This function does not reblind outputs.
     """
     cu_analysis_dir = Path(output_dir) / "cu_coding_analysis"
     cu_analysis_dir.mkdir(parents=True, exist_ok=True)
@@ -484,7 +473,6 @@ def analyze_cu_coding(
         try:
             summary_long, summary_wide, cu_col = _summarize_pair(cu_coding, pair)
 
-            # Add derived CU column back to utterance dataframe.
             work_df = cu_coding[[pair["sv_col"], pair["rel_col"]]].apply(
                 pd.to_numeric,
                 errors="coerce",
@@ -501,10 +489,19 @@ def analyze_cu_coding(
     summary_long = pd.concat(summary_longs, ignore_index=True) if summary_longs else None
     summary_wide = _combine_wide_summaries(summary_wides)
 
+    cu_coding, summary_long, summary_wide, _ = _maybe_unblind_cu_outputs(
+        cu_coding=cu_coding,
+        summary_long=summary_long,
+        summary_wide=summary_wide,
+        blinding_config=blinding_config,
+        blind_codebook=blind_codebook,
+        input_dir=input_dir,
+        output_dir=output_dir,
+    )
+
     _write_cu_analysis_outputs(
         cu_coding=cu_coding,
         summary_long=summary_long,
         summary_wide=summary_wide,
         out_dir=cu_analysis_dir,
-        blinding_config=blinding_config,
     )
