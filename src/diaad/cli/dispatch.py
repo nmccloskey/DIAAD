@@ -18,6 +18,7 @@ from diaad.run_wrappers import (
     run_reselect_powers_reliability_coding,
     run_reselect_transcription_reliability_samples,
     run_reselect_wc_rel,
+    run_calculate_cu_rates,
     run_select_for_validation,
     run_select_transcription_reliability_samples,
     run_tabularize_transcripts,
@@ -93,6 +94,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         "cus reselect": lambda: run_reselect_cu_rel(ctx),
         "cus evaluate": lambda: run_evaluate_cu_reliability(ctx),
         "cus analyze": lambda: run_analyze_cu_coding(ctx),
+        "cus rates": lambda: run_calculate_cu_rates(ctx),
 
         # --------------------------------------------------------------
         # Manual word counting
