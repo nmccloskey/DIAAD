@@ -41,6 +41,7 @@ class ProjectConfig:
 
     word_count_file: Path | str = "word_counting.xlsx"
     word_count_field: str = "word_count"
+    wc_samples_file: str = "word_counting_by_sample.xlsx"
 
     automate_powers: bool = True
     just_c2_powers: bool = False
@@ -348,6 +349,7 @@ class ConfigManager:
                 "cu_utts_file": self.project.cu_utts_file,
                 "word_count_file": self.project.word_count_file,
                 "word_count_field": self.project.word_count_field,
+                "wc_samples_file": self.project.wc_samples_file,
                 "automate_powers": self.project.automate_powers,
                 "just_c2_powers": self.project.just_c2_powers,
                 "speaking_time_file": self.project.speaking_time_file,
@@ -429,6 +431,7 @@ class ConfigManager:
             cu_utts_file=self._as_str(data.get("cu_utts_file"), default="cu_coding_by_utterance.xlsx"),
             word_count_file=self._as_str(data.get("word_count_file"), default="word_counting.xlsx"),
             word_count_field=self._as_str(data.get("word_count_field"), default="word_count"),
+            wc_samples_file=self._as_str(data.get("wc_samples_file"), default="word_counting_by_sample.xlsx"),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),
             just_c2_powers=self._as_bool(data.get("just_c2_powers"), default=False),
             speaking_time_file=self._as_str(

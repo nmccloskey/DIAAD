@@ -115,6 +115,13 @@ def run_analyze_word_counts(ctx):
 
     return analyze_word_counts(**ctx.kwargs_analyze_word_counts())
 
+def run_calculate_word_count_rates(ctx):
+    """ Calculate CU rates from speaking times."""
+    from diaad.coding.word_counts.rates import calculate_word_count_rates
+
+    return calculate_word_count_rates(**ctx.kwargs_wc_rates())
+
+
 # ------------------------------------------------------------------
 # CoreLex
 # ------------------------------------------------------------------

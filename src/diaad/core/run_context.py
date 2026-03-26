@@ -429,6 +429,18 @@ class RunContext:
             "blinding_config": self.config.blinding,
         }
 
+    def kwargs_wc_rates(self) -> dict[str, Any]:
+        """
+        Return shared kwargs for word count rate calculation.
+        """
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "wc_samples_file": self.config.project.wc_samples_file,
+            "speaking_time_file": self.config.project.speaking_time_file,
+            "speaking_time_field": self.config.project.speaking_time_field,
+        }
+
     # ------------------------------------------------------------------
     # CoreLex
     # ------------------------------------------------------------------

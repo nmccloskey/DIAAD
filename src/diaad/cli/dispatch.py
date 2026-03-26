@@ -20,6 +20,7 @@ from diaad.run_wrappers import (
     run_reselect_transcription_reliability_samples,
     run_reselect_wc_rel,
     run_calculate_cu_rates,
+    run_calculate_word_count_rates,
     run_select_for_validation,
     run_select_transcription_reliability_samples,
     run_tabularize_transcripts,
@@ -104,6 +105,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         "words reselect": lambda: run_reselect_wc_rel(ctx),
         "words evaluate": lambda: run_evaluate_word_count_reliability(ctx),
         "words analyze": lambda: run_analyze_word_counts(ctx),
+        "words rates": lambda: run_calculate_word_count_rates(ctx),
 
         # --------------------------------------------------------------
         # CoreLex
