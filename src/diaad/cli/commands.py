@@ -22,6 +22,8 @@ MODULE_COMMANDS = {
         "words make",
         "words evaluate",
         "words reselect",
+        "words analyze",
+        "words rates",
     ],
     "corelex": [
         "corelex analyze",

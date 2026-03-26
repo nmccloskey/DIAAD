@@ -117,7 +117,7 @@ def _find_input_file(input_dir, output_dir):
     """
     cu_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="cu_coding_by_utterance.xlsx",
+        search_base="cu_coding_by_utterance",
     )
 
     if cu_files:
