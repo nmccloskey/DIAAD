@@ -39,6 +39,9 @@ class ProjectConfig:
     cu_samples_file: Path | str = "cu_coding_by_sample_long.xlsx"
     cu_utts_file: Path | str = "cu_coding_by_utterance.xlsx"
 
+    word_count_file: Path | str = "word_counting.xlsx"
+    word_count_field: str = "word_count"
+
     automate_powers: bool = True
     just_c2_powers: bool = False
 
@@ -343,54 +346,14 @@ class ConfigManager:
                 "cu_paradigms": self.project.cu_paradigms,
                 "cu_samples_file": self.project.cu_samples_file,
                 "cu_utts_file": self.project.cu_utts_file,
+                "word_count_file": self.project.word_count_file,
+                "word_count_field": self.project.word_count_field,
                 "automate_powers": self.project.automate_powers,
                 "just_c2_powers": self.project.just_c2_powers,
                 "speaking_time_file": self.project.speaking_time_file,
                 "speaking_time_field": self.project.speaking_time_field,
             },
             "tiers": self.tiers_section.tiers,
-            "blinding": {
-                "default_strategy": self.blinding.default_strategy,
-                "strategies": self.blinding.strategies,
-                "default_id_cols": self.blinding.default_id_cols,
-                "code_prefixes": self.blinding.code_prefixes,
-            },
-            "validation": {
-                "stratify_by": self.validation.stratify_by,
-                "num_strata": self.validation.num_strata,
-                "selection_table": self.validation.selection_table,
-                "stratum_numbers": self.validation.stratum_numbers,
-            },
-        }
-
-    def as_termination_dict(self) -> dict[str, Any]:
-        """
-        Return a compact config payload suitable for logging and
-        run-finalization metadata.
-        """
-        return {
-            "config_dir": str(self.config_dir),
-            "project": {
-                "input_dir": self.input_dir,
-                "output_dir": self.output_dir,
-                "random_seed": self.random_seed,
-                "reliability_fraction": self.reliability_fraction,
-                "shuffle_samples": self.shuffle_samples,
-                "strip_clan": self.strip_clan,
-                "prefer_correction": self.prefer_correction,
-                "lowercase": self.lowercase,
-                "exclude_participants": self.exclude_participants,
-                "num_coders": self.num_coders,
-                "narrative_field": self.narrative_field,
-                "cu_paradigms": self.cu_paradigms,
-                "cu_samples_file": self.cu_samples_file,
-                "cu_utts_file": self.cu_utts_file,
-                "automate_powers": self.automate_powers,
-                "just_c2_powers": self.just_c2_powers,
-                "speaking_time_file": self.speaking_time_file,
-                "speaking_time_field": self.speaking_time_field,
-            },
-            "tiers": self.tiers_config,
             "blinding": {
                 "blind_files": self.blind_files,
                 "blind_analysis": self.blind_analysis,
@@ -401,10 +364,10 @@ class ConfigManager:
                 "blinded_suffix": self.blinded_suffix,
             },
             "validation": {
-                "stratify_by": self.stratify_by,
-                "num_strata": self.num_strata,
-                "selection_table": self.selection_table,
-                "stratum_numbers": self.stratum_numbers,
+                "stratify_by": self.validation.stratify_by,
+                "num_strata": self.validation.num_strata,
+                "selection_table": self.validation.selection_table,
+                "stratum_numbers": self.validation.stratum_numbers,
             },
         }
 
@@ -464,6 +427,8 @@ class ConfigManager:
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
             cu_samples_file=self._as_str(data.get("cu_samples_file"), default="cu_coding_by_sample_long.xlsx"),
             cu_utts_file=self._as_str(data.get("cu_utts_file"), default="cu_coding_by_utterance.xlsx"),
+            word_count_file=self._as_str(data.get("word_count_file"), default="word_counting.xlsx"),
+            word_count_field=self._as_str(data.get("word_count_field"), default="word_count"),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),
             just_c2_powers=self._as_bool(data.get("just_c2_powers"), default=False),
             speaking_time_file=self._as_str(

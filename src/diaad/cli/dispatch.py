@@ -4,6 +4,7 @@ from collections.abc import Callable, Iterable
 
 from diaad.run_wrappers import (
     run_analyze_cu_coding,
+    run_analyze_word_counts,
     run_analyze_digital_convo_turns,
     run_analyze_powers_coding,
     run_corelex,
@@ -102,6 +103,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         "words make": lambda: run_make_word_count_files(ctx),
         "words reselect": lambda: run_reselect_wc_rel(ctx),
         "words evaluate": lambda: run_evaluate_word_count_reliability(ctx),
+        "words analyze": lambda: run_analyze_word_counts(ctx),
 
         # --------------------------------------------------------------
         # CoreLex

@@ -1,0 +1,314 @@
+from __future__ import annotations
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+
+from diaad.core.logger import logger, _rel
+from diaad.io.discovery import find_matching_files
+from diaad.metadata.unblinding import maybe_unblind_dataframe
+
+
+# ---------------------------------------------------------------------
+# Defaults
+# ---------------------------------------------------------------------
+
+DEFAULT_WORD_COUNT_FILE = "word_counting.xlsx"
+DEFAULT_WORD_COUNT_FIELD = "word_count"
+
+
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+
+def _drop_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
+    """Drop coder/admin columns not needed in analysis outputs."""
+    df = df.copy()
+    df.drop(
+        columns=[c for c in ["id", "comment", "wc_comment"] if c in df.columns],
+        inplace=True,
+        errors="ignore",
+    )
+    return df
+
+
+def _coerce_word_count_series(series: pd.Series) -> pd.Series:
+    """
+    Coerce a word-count series to numeric.
+
+    Assumptions
+    -----------
+    - Numeric values are valid counts.
+    - Explicit neutral values like 'NA' become NaN.
+    - Non-numeric junk becomes NaN.
+    """
+    return pd.to_numeric(series, errors="coerce")
+
+
+def _count_nonmissing(x: pd.Series) -> float:
+    """Count non-missing values; return NaN if the group is empty."""
+    return int(x.notna().sum()) if len(x) > 0 else np.nan
+
+
+def _count_missing(x: pd.Series) -> float:
+    """Count missing values; return NaN if the group is empty."""
+    return int(x.isna().sum()) if len(x) > 0 else np.nan
+
+
+def _sum_words(x: pd.Series) -> float:
+    """Sum non-missing word counts; NaN if no coded utterances exist."""
+    return x.sum(min_count=1)
+
+
+def _mean_words(x: pd.Series) -> float:
+    """Mean words per coded utterance."""
+    return x.mean()
+
+
+def _sd_words(x: pd.Series) -> float:
+    """Sample standard deviation of words per coded utterance."""
+    return x.std(ddof=1)
+
+
+def _min_words(x: pd.Series) -> float:
+    """Minimum words among coded utterances."""
+    return x.min()
+
+
+def _max_words(x: pd.Series) -> float:
+    """Maximum words among coded utterances."""
+    return x.max()
+
+
+def _summarize_word_counts(
+    wc_df: pd.DataFrame,
+    word_count_field: str,
+) -> pd.DataFrame:
+    """
+    Summarize utterance-level word counts by sample.
+
+    Output metrics
+    --------------
+    - no_utt_coded: number of non-missing coded utterances
+    - no_utt_missing: number of missing / neutral utterances
+    - total_words: sum of utterance word counts
+    - mean_words_per_utt
+    - sd_words_per_utt
+    - min_words_per_utt
+    - max_words_per_utt
+    """
+    grouped = wc_df.groupby("sample_id")[word_count_field]
+
+    summary = grouped.agg(
+        no_utt_coded=_count_nonmissing,
+        no_utt_missing=_count_missing,
+        total_words=_sum_words,
+        mean_words_per_utt=_mean_words,
+        sd_words_per_utt=_sd_words,
+        min_words_per_utt=_min_words,
+        max_words_per_utt=_max_words,
+    ).reset_index()
+
+    numeric_cols = [
+        "total_words",
+        "mean_words_per_utt",
+        "sd_words_per_utt",
+        "min_words_per_utt",
+        "max_words_per_utt",
+    ]
+    for col in numeric_cols:
+        if col in summary.columns:
+            summary[col] = summary[col].round(3)
+
+    return summary
+
+
+def _maybe_unblind_word_count_outputs(
+    *,
+    wc_utts: pd.DataFrame,
+    wc_summary: pd.DataFrame | None,
+    blinding_config=None,
+    blind_codebook=None,
+    input_dir=None,
+    output_dir=None,
+):
+    """
+    Unblind sample identifiers in word-count analysis outputs if a coding-stage
+    blind codebook is available.
+
+    This function does not require transcript tables and does not reblind
+    any outputs.
+    """
+    if blinding_config is None:
+        return wc_utts, wc_summary, None
+
+    target_cols = ["sample_id"]
+
+    unblinded_wc_utts, codebook_df = maybe_unblind_dataframe(
+        df=wc_utts,
+        config=blinding_config,
+        blind_codebook=blind_codebook,
+        target_cols=target_cols,
+        directories=[input_dir, output_dir],
+        strict=False,
+    )
+
+    unblinded_wc_summary = None
+    if wc_summary is not None:
+        unblinded_wc_summary, _ = maybe_unblind_dataframe(
+            df=wc_summary,
+            config=blinding_config,
+            blind_codebook=codebook_df if codebook_df is not None else blind_codebook,
+            target_cols=target_cols,
+            directories=[input_dir, output_dir],
+            strict=False,
+        )
+
+    return unblinded_wc_utts, unblinded_wc_summary, codebook_df
+
+
+def _write_word_count_analysis_outputs(
+    wc_utts: pd.DataFrame,
+    wc_summary: pd.DataFrame | None,
+    out_dir,
+) -> None:
+    """Write utterance- and sample-level word-count analysis files."""
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    utterance_path = out_dir / "word_counting_by_utterance.xlsx"
+    try:
+        wc_utts.to_excel(utterance_path, index=False)
+        logger.info(f"Saved utterance-level word-count analysis: {_rel(utterance_path)}")
+    except Exception as e:
+        logger.error(f"Failed writing utterance-level file {_rel(utterance_path)}: {e}")
+        return
+
+    if wc_summary is None or wc_summary.empty:
+        logger.warning(f"No valid word-count summaries for {_rel(out_dir)}")
+        return
+
+    summary_path = out_dir / "word_counting_by_sample.xlsx"
+    try:
+        wc_summary.to_excel(summary_path, index=False)
+        logger.info(f"Saved word-count summary file: {_rel(summary_path)}")
+    except Exception as e:
+        logger.error(f"Failed saving word-count summary to {_rel(summary_path)}: {e}")
+
+
+# ---------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------
+
+def analyze_word_counts(
+    input_dir,
+    output_dir,
+    word_count_file: str | Path | None = None,
+    word_count_field: str = DEFAULT_WORD_COUNT_FIELD,
+    blinding_config=None,
+    blind_codebook=None,
+):
+    """
+    Summarize utterance-level word-count coding by sample.
+
+    Expected input
+    --------------
+    A workbook such as `word_counting.xlsx` with columns like:
+        sample_id, utterance_id, speaker, utterance, comment, id,
+        word_count, wc_comment
+
+    Behavior
+    --------
+    - Finds the word-count coding workbook.
+    - If multiple are found, warns and uses only the first returned file.
+    - Coerces the configured word-count field to numeric.
+    - Treats non-numeric / neutral entries (e.g., 'NA') as missing.
+    - Writes:
+        * utterance-level file with cleaned numeric word-count column
+        * sample-level summary with total, mean, SD, min, max
+
+    Unblinding
+    ----------
+    If a coding-stage blind codebook is available, sample identifiers are
+    unblinded in the analysis outputs. No transcript tables are required.
+    This function does not reblind outputs.
+    """
+    word_count_file = word_count_file or DEFAULT_WORD_COUNT_FILE
+
+    wc_analysis_dir = Path(output_dir) / "word_count_analysis"
+    wc_analysis_dir.mkdir(parents=True, exist_ok=True)
+
+    candidate_path = Path(word_count_file)
+    if candidate_path.exists():
+        coding_files = [candidate_path]
+    else:
+        search_base = Path(word_count_file).stem
+        coding_files = find_matching_files(
+            directories=[input_dir, output_dir],
+            search_base=search_base,
+            search_ext=".xlsx",
+        )
+
+    if not coding_files:
+        logger.warning("No word-count coding files found for analysis.")
+        return
+
+    if len(coding_files) > 1:
+        logger.warning(
+            "Multiple word-count coding files detected for analysis. "
+            f"Using only the first returned file: {_rel(coding_files[0])}"
+        )
+
+    cod = Path(coding_files[0])
+
+    try:
+        wc_df = pd.read_excel(cod)
+        logger.info(f"Processing word-count coding file: {_rel(cod)}")
+    except Exception as e:
+        logger.error(f"Failed reading {_rel(cod)}: {e}")
+        return
+
+    required_cols = ["sample_id", word_count_field]
+    missing = [c for c in required_cols if c not in wc_df.columns]
+    if missing:
+        logger.error(
+            f"Word-count coding file is missing required columns: {missing}. "
+            f"Available columns: {list(wc_df.columns)}"
+        )
+        return
+
+    wc_df = _drop_admin_cols(wc_df)
+    wc_df[word_count_field] = _coerce_word_count_series(wc_df[word_count_field])
+
+    n_missing = int(wc_df[word_count_field].isna().sum())
+    if n_missing:
+        logger.info(
+            f"{n_missing} utterance rows have missing/non-numeric `{word_count_field}` "
+            "after coercion."
+        )
+
+    try:
+        wc_summary = _summarize_word_counts(
+            wc_df=wc_df,
+            word_count_field=word_count_field,
+        )
+    except Exception as e:
+        logger.error(f"Word-count aggregation failed for {_rel(cod)}: {e}")
+        return
+
+    wc_df, wc_summary, _ = _maybe_unblind_word_count_outputs(
+        wc_utts=wc_df,
+        wc_summary=wc_summary,
+        blinding_config=blinding_config,
+        blind_codebook=blind_codebook,
+        input_dir=input_dir,
+        output_dir=output_dir,
+    )
+
+    _write_word_count_analysis_outputs(
+        wc_utts=wc_df,
+        wc_summary=wc_summary,
+        out_dir=wc_analysis_dir,
+    )
+
+    return wc_summary

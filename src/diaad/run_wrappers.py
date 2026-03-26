@@ -109,6 +109,11 @@ def run_evaluate_word_count_reliability(ctx):
 
     return evaluate_word_count_reliability(**ctx.kwargs_io())
 
+def run_analyze_word_counts(ctx):
+    """Analyze word counts."""
+    from diaad.coding.word_counts.analysis import analyze_word_counts
+
+    return analyze_word_counts(**ctx.kwargs_analyze_word_counts())
 
 # ------------------------------------------------------------------
 # CoreLex

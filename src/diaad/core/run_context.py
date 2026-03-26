@@ -257,7 +257,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "config_path": self.config_dir,
-            "config": self.config.as_termination_dict(),
+            "config": self.config.to_dict(),
             "start_time": self.start_time,
             "program_name": "DIAAD",
             "version": self.version,
@@ -417,6 +417,16 @@ class RunContext:
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
             "random_seed": self.random_seed,
+        }
+    
+    def kwargs_analyze_word_counts(self) -> dict[str, Any]:
+        """Return kwargs for word-count analysis."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "word_count_file": self.config.project.word_count_file,
+            "word_count_field": self.config.project.word_count_field,
+            "blinding_config": self.config.blinding,
         }
 
     # ------------------------------------------------------------------
