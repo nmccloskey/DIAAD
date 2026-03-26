@@ -36,13 +36,14 @@ class ProjectConfig:
     narrative_field: str = ""
 
     cu_paradigms: list[str] | None = None
+    cu_samples_file: Path | str = "cu_coding_by_sample_long.xlsx"
+    cu_utts_file: Path | str = "cu_coding_by_utterance.xlsx"
 
     automate_powers: bool = True
     just_c2_powers: bool = False
 
-    compute_rates: bool = True
+    speaking_time_file: Path | str = "speaking_times.xlsx"
     speaking_time_field: str = "speaking_time"
-    rate_unit: str = "minute"
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -237,6 +238,14 @@ class ConfigManager:
         return self.project.cu_paradigms
 
     @property
+    def cu_utts_file(self) -> str:
+        return self.project.cu_utts_file
+
+    @property
+    def cu_samples_file(self) -> str:
+        return self.project.cu_samples_file
+
+    @property
     def automate_powers(self) -> bool:
         return self.project.automate_powers
 
@@ -245,16 +254,12 @@ class ConfigManager:
         return self.project.just_c2_powers
 
     @property
-    def compute_rates(self) -> bool:
-        return self.project.compute_rates
+    def speaking_time_file(self) -> str:
+        return self.project.speaking_time_file
 
     @property
     def speaking_time_field(self) -> str:
         return self.project.speaking_time_field
-
-    @property
-    def rate_unit(self) -> str:
-        return self.project.rate_unit
 
     @property
     def tiers_config(self) -> dict[str, Any]:
@@ -336,11 +341,12 @@ class ConfigManager:
                 "num_coders": self.project.num_coders,
                 "narrative_field": self.project.narrative_field,
                 "cu_paradigms": self.project.cu_paradigms,
+                "cu_samples_file": self.project.cu_samples_file,
+                "cu_utts_file": self.project.cu_utts_file,
                 "automate_powers": self.project.automate_powers,
                 "just_c2_powers": self.project.just_c2_powers,
-                "compute_rates": self.project.compute_rates,
+                "speaking_time_file": self.project.speaking_time_file,
                 "speaking_time_field": self.project.speaking_time_field,
-                "rate_unit": self.project.rate_unit,
             },
             "tiers": self.tiers_section.tiers,
             "blinding": {
@@ -377,11 +383,12 @@ class ConfigManager:
                 "num_coders": self.num_coders,
                 "narrative_field": self.narrative_field,
                 "cu_paradigms": self.cu_paradigms,
+                "cu_samples_file": self.cu_samples_file,
+                "cu_utts_file": self.cu_utts_file,
                 "automate_powers": self.automate_powers,
                 "just_c2_powers": self.just_c2_powers,
-                "compute_rates": self.compute_rates,
+                "speaking_time_file": self.speaking_time_file,
                 "speaking_time_field": self.speaking_time_field,
-                "rate_unit": self.rate_unit,
             },
             "tiers": self.tiers_config,
             "blinding": {
@@ -455,25 +462,23 @@ class ConfigManager:
             num_coders=self._as_int(data.get("num_coders"), default=0),
             narrative_field=self._as_str(data.get("narrative_field"), default=""),
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
+            cu_samples_file=self._as_str(data.get("cu_samples_file"), default="cu_coding_by_sample_long.xlsx"),
+            cu_utts_file=self._as_str(data.get("cu_utts_file"), default="cu_coding_by_utterance.xlsx"),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),
             just_c2_powers=self._as_bool(data.get("just_c2_powers"), default=False),
-            compute_rates=self._as_bool(data.get("compute_rates"), default=True),
+            speaking_time_file=self._as_str(
+                data.get("speaking_time_file"),
+                default="speaking_times.xlsx",
+            ),
             speaking_time_field=self._as_str(
                 data.get("speaking_time_field"),
                 default="speaking_time",
             ),
-            rate_unit=self._as_str(data.get("rate_unit"), default="minute"),
         )
 
         if not 0 < project.reliability_fraction <= 1:
             raise ValueError(
                 f"reliability_fraction must be > 0 and <= 1; got {project.reliability_fraction}"
-            )
-
-        allowed_rate_units = {"second", "minute", "hour"}
-        if project.rate_unit not in allowed_rate_units:
-            raise ValueError(
-                f"rate_unit must be one of {sorted(allowed_rate_units)}; got {project.rate_unit!r}"
             )
 
         return project

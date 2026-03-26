@@ -382,6 +382,18 @@ class RunContext:
             "cu_paradigms": self.cu_paradigms,
             "blinding_config": self.config.blinding,
         }
+    
+    def kwargs_cu_rates(self) -> dict[str, Any]:
+        """
+        Return shared kwargs for CU rate calculation.
+        """
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "cu_samples_file": self.config.project.cu_samples_file,
+            "speaking_time_file": self.config.project.speaking_time_file,
+            "speaking_time_field": self.config.project.speaking_time_field,
+        }
 
     # ------------------------------------------------------------------
     # Manual word counting

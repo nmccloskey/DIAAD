@@ -76,6 +76,12 @@ def run_analyze_cu_coding(ctx):
 
     return analyze_cu_coding(**ctx.kwargs_cu_analysis())
 
+def run_calculate_cu_rates(ctx):
+    """ Calculate CU rates from speaking times."""
+    from diaad.coding.compl_utts.rates import calculate_cu_rates
+
+    return calculate_cu_rates(**ctx.kwargs_cu_rates())
+
 
 # ------------------------------------------------------------------
 # Manual word counting
