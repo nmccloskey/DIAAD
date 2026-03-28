@@ -8,7 +8,17 @@ from sklearn.metrics import cohen_kappa_score
 from diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 
-TURN_AGG_COLS = ["speech_units", "content_words", "num_nouns", "filled_pauses"]
+TURN_AGG_COLS = [
+    "speech_units",
+    "content_words",
+    "num_nouns",
+    "filled_pauses",
+    "circumlocutions",
+    "sem_paras",
+    "phon_errs",
+    "neologisms",
+    "lg_pauses",
+]
 
 def match_reliability_files(input_dir, output_dir):
     """

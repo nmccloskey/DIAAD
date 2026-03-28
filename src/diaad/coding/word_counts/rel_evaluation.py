@@ -1,33 +1,10 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from pingouin import intraclass_corr
 
 from diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
-
-
-def percent_difference(value1, value2):
-    """
-    Calculate percentage difference between two values.
-
-    Returns
-    -------
-    float
-        Percentage difference.
-        - 0 when both values are 0
-        - 100 when one value is 0 and the other is nonzero
-    """
-    if value1 == 0 and value2 == 0:
-        return 0
-
-    if value1 == 0 or value2 == 0:
-        logger.warning("One of the values is zero, returning 100%.")
-        return 100
-
-    diff = abs(value1 - value2)
-    avg = (value1 + value2) / 2
-    return round((diff / avg) * 100, 2)
+from diaad.coding.rel_eval_utils import percent_difference, calculate_icc_from_pingouin
 
 
 def agreement(row):
@@ -43,67 +20,6 @@ def agreement(row):
     perc_diff = percent_difference(row["word_count_org"], row["word_count_rel"])
     perc_sim = 100 - perc_diff
     return 1 if perc_sim >= 85 else 0
-
-
-def _calculate_icc_from_pingouin(wc_merged: pd.DataFrame) -> float:
-    """
-    Calculate ICC(2,1) using pingouin.intraclass_corr.
-
-    Parameters
-    ----------
-    wc_merged : pd.DataFrame
-        Merged dataframe with columns:
-          - utterance_id
-          - word_count_org
-          - word_count_rel
-
-    Returns
-    -------
-    float | np.nan
-        ICC(2,1), rounded to 4 decimals when available.
-    """
-    if wc_merged is None or wc_merged.empty:
-        logger.warning("ICC calculation skipped: merged dataframe is empty.")
-        return np.nan
-
-    icc_df = wc_merged[["utterance_id", "word_count_org", "word_count_rel"]].copy()
-    icc_df = icc_df.dropna(subset=["utterance_id", "word_count_org", "word_count_rel"])
-
-    if len(icc_df) < 2:
-        logger.warning("ICC calculation skipped: fewer than 2 paired utterances.")
-        return np.nan
-
-    long_df = pd.concat(
-        [
-            icc_df[["utterance_id", "word_count_org"]].rename(
-                columns={"utterance_id": "targets", "word_count_org": "scores"}
-            ).assign(raters="org"),
-            icc_df[["utterance_id", "word_count_rel"]].rename(
-                columns={"utterance_id": "targets", "word_count_rel": "scores"}
-            ).assign(raters="rel"),
-        ],
-        ignore_index=True,
-    )
-
-    try:
-        icc_table = intraclass_corr(
-            data=long_df,
-            targets="targets",
-            raters="raters",
-            ratings="scores",
-        )
-
-        icc_row = icc_table.loc[icc_table["Type"] == "ICC2"]
-        if icc_row.empty:
-            logger.warning("Pingouin ICC table did not contain ICC2.")
-            return np.nan
-
-        icc_value = icc_row["ICC"].iloc[0]
-        return round(float(icc_value), 4)
-
-    except Exception as e:
-        logger.error(f"ICC calculation failed: {e}")
-        return np.nan
 
 
 def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
@@ -124,7 +40,7 @@ def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
         return
 
     # ICC
-    icc_value = _calculate_icc_from_pingouin(wc_merged)
+    icc_value = calculate_icc_from_pingouin(wc_merged)
     logger.info(f"Calculated ICC(2,1) for {rel_name}: {icc_value}")
 
     # Agreement summary
