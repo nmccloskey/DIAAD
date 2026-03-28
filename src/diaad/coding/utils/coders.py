@@ -10,9 +10,9 @@ UNINTELLIGIBLE = {"xxx", "yyy", "www"}
 DEFAULT_STIM_COLS = ["narrative", "scene", "story", "stimulus"]
 
 
-def resolve_stim_cols(narrative_field):
-    """Use explicit narrative_field when provided; otherwise fall back to legacy stimulus columns."""
-    return [narrative_field] if narrative_field else DEFAULT_STIM_COLS
+def resolve_stim_cols(stimulus_column):
+    """Use explicit stimulus_column when provided; otherwise fall back to legacy stimulus columns."""
+    return [stimulus_column] if stimulus_column else DEFAULT_STIM_COLS
 
 
 def segment(x, n):

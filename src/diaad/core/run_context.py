@@ -100,8 +100,8 @@ class RunContext:
         return self.config.cu_paradigms
 
     @property
-    def narrative_field(self) -> str:
-        return self.config.narrative_field
+    def stimulus_column(self) -> str:
+        return self.config.stimulus_column
 
     @property
     def exclude_participants(self) -> list[str]:
@@ -349,7 +349,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
             "exclude_participants": self.exclude_participants,
-            "narrative_field": self.narrative_field,
+            "stimulus_column": self.stimulus_column,
             "blinding_config": self.config.blinding,
         }
     
@@ -451,7 +451,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
-            "narrative_field": self.narrative_field,
+            "stimulus_column": self.stimulus_column,
         }
 
     # ------------------------------------------------------------------
