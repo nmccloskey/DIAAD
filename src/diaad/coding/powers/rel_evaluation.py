@@ -8,7 +8,7 @@ from sklearn.metrics import cohen_kappa_score
 
 from diaad.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
-from diaad.coding.rel_eval_utils import (
+from src.diaad.coding.utils.rel_eval_utils import (
     percent_difference,
     calculate_icc_from_pingouin,
 )

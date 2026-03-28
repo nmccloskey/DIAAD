@@ -4,7 +4,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from diaad.core.logger import logger
-from diaad.coding.reselection_utils import (
+from src.diaad.coding.utils.reselection_utils import (
     cols_to_comment,
     post_comment_cols,
     ordered_union,
