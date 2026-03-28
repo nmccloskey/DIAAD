@@ -32,6 +32,7 @@ class ProjectConfig:
     reliability_dirname: str = "reliability"
 
     exclude_participants: list[str] | None = None
+    num_bins: int = 4
     num_coders: int = 0
     stimulus_field: str = ""
 
@@ -234,6 +235,10 @@ class ConfigManager:
         return self.project.num_coders
 
     @property
+    def num_bins(self) -> int:
+        return self.project.num_bins
+
+    @property
     def stimulus_field(self) -> str:
         return self.project.stimulus_field
 
@@ -342,6 +347,7 @@ class ConfigManager:
                 "reliability_tag": self.project.reliability_tag,
                 "reliability_dirname": self.project.reliability_dirname,
                 "exclude_participants": self.project.exclude_participants,
+                "num_bins": self.project.num_bins,
                 "num_coders": self.project.num_coders,
                 "stimulus_field": self.project.stimulus_field,
                 "cu_paradigms": self.project.cu_paradigms,
@@ -424,6 +430,7 @@ class ConfigManager:
                 data.get("exclude_participants"),
                 default=[],
             ),
+            num_bins=self._as_int(data.get("num_bins"), default=4),
             num_coders=self._as_int(data.get("num_coders"), default=0),
             stimulus_field=self._as_str(data.get("stimulus_field"), default=""),
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
@@ -448,6 +455,8 @@ class ConfigManager:
             raise ValueError(
                 f"reliability_fraction must be > 0 and <= 1; got {project.reliability_fraction}"
             )
+        if project.num_bins < 1:
+            raise ValueError(f"num_bins must be >= 1; got {project.num_bins}")
 
         return project
 

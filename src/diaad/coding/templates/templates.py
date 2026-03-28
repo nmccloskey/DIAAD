@@ -177,6 +177,32 @@ def _prepare_sample_template(
     return out
 
 
+def _expand_sample_template_bins(
+    df: pd.DataFrame,
+    *,
+    num_bins: int,
+    bin_col: str = "bin",
+) -> pd.DataFrame:
+    """
+    Expand each sample row into one row per configured bin label.
+    """
+    if bin_col not in df.columns:
+        raise ValueError(f"'{bin_col}' not found in dataframe.")
+
+    bin_labels = _coerce_bin_labels(num_bins)
+    frames: list[pd.DataFrame] = []
+
+    for label in bin_labels:
+        part = df.copy()
+        part[bin_col] = label
+        frames.append(part)
+
+    if not frames:
+        return df.iloc[0:0].copy()
+
+    return pd.concat(frames, ignore_index=True)
+
+
 def _expand_by_coder(
     df: pd.DataFrame,
     coder_ids: list[str],
@@ -604,6 +630,7 @@ def make_utterance_template_files(
     input_dir: str | Path,
     output_dir: str | Path,
     frac: float,
+    num_bins: int = DEFAULT_NUM_BINS,
     num_coders: int,
     stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     blinding_config=None,
@@ -620,6 +647,7 @@ def make_utterance_template_files(
     template_dir.mkdir(parents=True, exist_ok=True)
 
     config = CodingTemplateConfig(
+        num_bins=num_bins,
         stimulus_field=stimulus_field,
     )
 
@@ -683,9 +711,9 @@ def make_sample_template_files(
     input_dir: str | Path,
     output_dir: str | Path,
     frac: float,
+    num_bins: int = DEFAULT_NUM_BINS,
     num_coders: int,
     stimulus_field: str = DEFAULT_STIMULUS_FIELD,
-    prefill_bins: bool = False,
     blinding_config=None,
     seed: int = 99,
 ) -> Path | None:
@@ -700,6 +728,7 @@ def make_sample_template_files(
     template_dir.mkdir(parents=True, exist_ok=True)
 
     config = CodingTemplateConfig(
+        num_bins=num_bins,
         stimulus_field=stimulus_field,
     )
 
@@ -711,8 +740,7 @@ def make_sample_template_files(
         seed=seed,
     )
 
-    if prefill_bins:
-        df = add_balanced_bins(df, num_bins=config.num_bins)
+    df = _expand_sample_template_bins(df, num_bins=config.num_bins)
 
     coder_ids = _resolve_template_coder_ids(num_coders)
     df, segments, assignments = _assign_template_coders(df, coder_ids=coder_ids)

@@ -96,6 +96,10 @@ class RunContext:
         return self.config.num_coders
 
     @property
+    def num_bins(self) -> int:
+        return self.config.num_bins
+
+    @property
     def cu_paradigms(self) -> list[str]:
         return self.config.cu_paradigms
 
@@ -470,6 +474,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
+            "num_bins": self.num_bins,
             "num_coders": self.num_coders,
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
@@ -482,6 +487,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
+            "num_bins": self.num_bins,
             "num_coders": self.num_coders,
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
