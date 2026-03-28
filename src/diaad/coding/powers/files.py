@@ -1,497 +1,380 @@
-import re
-import spacy
+from __future__ import annotations
+
 import random
-from tqdm import tqdm
 import pandas as pd
 import numpy as np
-import contractions
 from pathlib import Path
 
 from diaad.core.logger import logger, _rel
-from diaad.coding.utils import segment, assign_coders
+from diaad.coding.utils import segment
 from diaad.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
-from diaad.transcripts.transcription_reliability_evaluation import process_utterances
+from diaad.metadata.blinding import blind_file_identifiers
+from diaad.coding.powers.automation import run_automation
 
 
-POWERS_cols = [
-    "id", "turn_type", "speech_units", "content_words", "num_nouns", "filled_pauses", "collab_repair", "POWERS_comment"
+# ---------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------
+
+SECTION_C_cols = [
+    "content_words",
+    "num_nouns",
+    "circumlocutions",
+    "sem_paras",
+    "phon_errs",
+    "neologisms",
+    "comments",
+    "lg_pauses",
+    "filled_pauses",
 ]
 
-coder_cols = [f"c{n}_{col}" for n in ["1", "2"] for col in POWERS_cols]
-
-client_only_cols = [col for col in coder_cols if col.endswith(
-    ( "content_words", "num_nouns", "filled_pauses"))]
+POWERS_cols = [
+    # Meta
+    "id",
+    "POWERS_comment",
+    # Section A
+    "speech_units",
+    # Section B
+    "turn_type",
+] + SECTION_C_cols + [
+    # Section D
+    "collab_repair",
+]
 
 COMM_cols = [
-    "communication", "topic", "subject", "dialogue", "conversation"
+    "communication",
+    "topic",
+    "subject",
+    "dialogue",
+    "conversation",
 ]
 
 TT_DROP_COLS = [
-    "file", "input_order", "shuffled_order", "position", "position_sub"
+    "file",
+    "input_order",
+    "shuffled_order",
+    "position",
+    "position_sub",
 ]
 
-CONTENT_UPOS = {"NOUN", "PROPN", "VERB", "ADJ", "ADV", "NUM"}
 
-GENERIC_TERMS = {"stuff", "thing", "things", "something", "anything", "everything", "nothing"}
+# ---------------------------------------------------------------------
+# POWERS file generation helpers
+# ---------------------------------------------------------------------
 
-UNINTELLIGIBLES = {"xx","xxx","yy","yyy"}
-
-# count speech units after cleaning
-def compute_speech_units(utt):
-    cleaned = process_utterances(utt)
-    tokens = cleaned.split()
-    su = sum(tok.lower() not in UNINTELLIGIBLES for tok in tokens)
-    return su
-
-FILLER_PATTERN = re.compile(
-    r"(?<!\w)(?:&-?)?(?:um+|uh+|erm+|er+|eh+)(?!\w)",
-    re.IGNORECASE
-)
-
-# Count filled pauses Without cleaning
-def count_fillers(utt: str) -> int:
-    return len(FILLER_PATTERN.findall(utt))
-
-# Expand contractions
-def expand_contractions(utt: str) -> str:
-    return contractions.fix(utt)
-
-# Modified processing
-def expand_and_process_utterances(utt: str) -> str:
-    codeless_utt = " ".join([t for t in utt.split() if t and not t.startswith("&")])
-    expanded_utt = expand_contractions(codeless_utt)
-    modified_utt = expanded_utt.replace("-", "_")
-    return process_utterances(modified_utt)
-
-# --- NLP model singleton (your version, trimmed to essentials here) ---
-class NLPmodel:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._nlp_models = {}
-            cls._instance.load_nlp()
-        return cls._instance
-
-    def load_nlp(self, model_name="en_core_web_trf"):
-        if model_name not in self._nlp_models:
-            self._nlp_models[model_name] = spacy.load(model_name)
-
-    def get_nlp(self, model_name="en_core_web_trf"):
-        if model_name not in self._nlp_models:
-            self.load_nlp(model_name)
-        return self._nlp_models[model_name]
-
-# ---------- Rule helpers ----------
-def is_generic(token) -> bool:
-    return token.text.lower() in GENERIC_TERMS
-
-def is_aux_or_modal(token) -> bool:
+def _get_transcript_table(input_dir, output_dir) -> Path | None:
     """
-    True for auxiliaries and modals you want to EXCLUDE.
-    - SpaCy marks helping verbs as AUX (be/have/do/will/shall, etc.).
-    - Modals have PTB tag 'MD'.
+    Locate the transcript table used to generate POWERS files.
     """
-    if token.pos_ != "AUX":
-        return False
-    # If it's AUX, always exclude for your rule set
-    return True  # (covers modals + non-modal auxiliaries)
+    transcript_tables = find_matching_files(
+        directories=[input_dir, output_dir],
+        search_base="transcript_tables",
+    )
 
-def is_unintelligble(token) -> bool:
-    """Exclude unintelligible speech"""
-    return token.text.lower() in UNINTELLIGIBLES
+    if not transcript_tables:
+        logger.error("No transcript_tables file found.")
+        return None
 
-def is_ly_adverb(token) -> bool:
-    # Only count adverbs that end with -ly
-    return token.pos_ == "ADV" and token.text.lower().endswith("ly")
+    if len(transcript_tables) > 1:
+        logger.warning(
+            "Multiple transcript tables detected. "
+            f"Processing only the first returned file: {_rel(transcript_tables[0])}"
+        )
 
-def is_numeral(token) -> bool:
-    # Count numerals; SpaCy may set pos_==NUM, tag_==CD, and/or like_num==True
-    return token.pos_ == "NUM" or token.tag_ == "CD" or token.like_num
+    return transcript_tables[0]
 
-def is_main_verb(token) -> bool:
-    # Count ONLY main verbs (VERB); exclude AUX (handled separately)
-    return token.pos_ == "VERB"
 
-def is_noun_or_propn(token) -> bool:
-    return token.pos_ in {"NOUN", "PROPN"}
-
-def is_adjective(token) -> bool:
-    return token.pos_ == "ADJ"
-
-def is_chat_code(token) -> bool:
-    return token.text.startswith("&")
-
-def is_content_token(token) -> bool:
+def _load_utterance_table(transcript_table: Path) -> pd.DataFrame | None:
     """
-    Master predicate implementing your rules:
-    - Include: NOUN, PROPN, VERB (main only), ADJ, ADV(-ly only), NUM
-    - Exclude: AUX (including modals), generic terms
+    Load utterance-level transcript data from a transcript table file.
     """
-    if is_generic(token):
-        return False
-    if is_aux_or_modal(token):
-        return False
-    if is_unintelligble(token):
-        return False
-    if is_chat_code(token):
-        return False
+    try:
+        return extract_transcript_data(transcript_table)
+    except Exception as e:
+        logger.error(f"Failed to read transcript table {_rel(transcript_table)}: {e}")
+        return None
 
-    if is_noun_or_propn(token):
-        return True
-    if is_main_verb(token):
-        return True
-    if is_adjective(token):
-        return True
-    if is_ly_adverb(token):
-        return True
-    if is_numeral(token):
-        return True
 
-    return False
-
-def check_main_verb(tagged_utt: str, total_cw: int) -> tuple[str, int]:
+def _match_tier_labels(tiers, filename: str) -> list[str]:
     """
-    Treat 'be' form as a main verb in the absence of any other VERB tag.
-
-    Parameters
-    ----------
-    tagged_utt : str
-        Utterance tagged with POS markers (e.g., "_VERB_CW").
-    total_cw : int
-        Current count of content words.
-
-    Returns
-    -------
-    tuple[str, int]
-        Possibly updated tagged utterance and content word count.
+    Extract tier labels from a filename using tier matchers.
     """
-    # Only apply if spaCy found no main verbs
-    if "_VERB" not in tagged_utt:
-        # Match standalone forms of 'be' (case-insensitive)
-        m = re.search(r"\b(?:be|am|are|is|was|were|been|being)\b", tagged_utt, flags=re.IGNORECASE)
-        if m:
-            tagged_utt += "_BE_FORM_MAIN"
-            total_cw += 1
-    return tagged_utt, total_cw
+    labels = [tier.match(filename, return_none=True) for tier in tiers.values()]
+    return [label for label in labels if label is not None]
 
-# ---------- Core counting function ----------
-def count_content_words_from_doc(doc):
+
+def _prepare_powers_dataframe(
+    uttdf: pd.DataFrame,
+    tiers,
+    exclude_participants,
+) -> pd.DataFrame:
     """
-    Tally content words & nouns from a spaCy Doc object.
-    Also tag tokens for manual review.
+    Shuffle by sample, drop non-POWERS transcript columns, and initialize fields.
     """
-    total_cw = total_nouns = 0
-    tagged_utt = ""
-    for tok in doc:
-        tagged_utt += f"{tok}"
-        if is_content_token(tok):
-            total_cw += 1
-            tagged_utt += f"_{tok.pos_}_CW"
-            if tok.pos_ in ("NOUN", "PROPN"):
-                total_nouns += 1
-                tagged_utt += "_N"
-        tagged_utt += " "
-    tagged_utt, total_cw = check_main_verb(tagged_utt, total_cw)
-    return total_cw, total_nouns, tagged_utt
+    shuffled = _shuffle_by_sample(uttdf)
+    drop_cols = _get_powers_drop_cols(shuffled, tiers)
+    df = shuffled.drop(columns=drop_cols).copy()
 
-def run_automation(df, coder_num):
+    logger.info(f"Transcript columns: {list(shuffled.columns)}")
+    logger.info(f"Final drop cols: {drop_cols}")
+
+    df["coder_id"] = ""
+    for col in POWERS_cols:
+        if col in SECTION_C_cols:
+            df[col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+        else:
+            df[col] = ""
+
+    return df
+
+
+def _shuffle_by_sample(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Apply automated linguistic measures to a POWERS coding dataframe.
-
-    Loads a spaCy transformer pipeline (en_core_web_trf) and applies:
-      - Speech unit counts
-      - Filled pause counts
-      - Content word counts (all and nouns)
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame containing at least an "utterance" column.
-    coder_num : str or int
-        Coder identifier (e.g., "1", "2", "3"). Used to prefix new columns.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Input dataframe with added columns:
-        - c{coder_num}_speech_units
-        - c{coder_num}_filled_pauses
-        - c{coder_num}_content_words
-        - c{coder_num}_num_nouns
+    Shuffle transcript rows at the sample level.
     """
+    subdfs = [subdf for _, subdf in df.groupby("sample_id", sort=False)]
+    random.shuffle(subdfs)
+    if not subdfs:
+        return df.copy()
+    return pd.concat(subdfs, ignore_index=True)
+
+
+def _get_powers_drop_cols(df: pd.DataFrame, tiers) -> list[str]:
+    """
+    Identify transcript-table columns to drop before POWERS export.
+    """
+    non_comm_tier_cols = [
+        tier.name for tier in tiers.values()
+        if tier.name.lower() not in COMM_cols
+    ]
+    return [
+        col for col in TT_DROP_COLS + non_comm_tier_cols
+        if col in df.columns
+    ]
+
+
+def _resolve_powers_coder_ids(num_coders: int) -> list[str]:
+    """
+    Resolve POWERS coder IDs from num_coders.
+    """
+    if num_coders <= 0:
+        return [""]
+    return [str(i) for i in range(1, num_coders + 1)]
+
+
+def _assign_primary_coders(
+    df: pd.DataFrame,
+    coder_ids: list[str],
+) -> tuple[pd.DataFrame, dict[str, str], list[list[str]]]:
+    """
+    Assign primary coders across samples and populate `coder_id`.
+    """
+    sample_ids = list(df["sample_id"].drop_duplicates())
+    if not sample_ids:
+        logger.warning("No sample_ids found in transcript table.")
+        return df, {}, []
+
+    segments = segment(sample_ids, n=len(coder_ids))
+    primary_assignment: dict[str, str] = {}
+
+    for seg, coder_id in zip(segments, coder_ids):
+        for sample_id in seg:
+            primary_assignment[sample_id] = coder_id
+
+    df["coder_id"] = df["sample_id"].map(primary_assignment).fillna("")
+    return df, primary_assignment, segments
+
+
+def _build_reliability_dataframe(
+    pc_df: pd.DataFrame,
+    frac: float,
+    coder_ids: list[str],
+    primary_assignment: dict[str, str],
+    segments: list[list[str]],
+) -> pd.DataFrame | None:
+    """
+    Build a reliability subset dataframe when frac > 0.
+    """
+    if frac == 0:
+        logger.info("frac=0 detected; no reliability subset will be generated.")
+        return None
+
+    rel_samples = _select_reliability_samples(segments, frac)
+    if not rel_samples:
+        logger.info("No reliability samples were selected.")
+        return None
+
+    rel_df = pc_df[pc_df["sample_id"].isin(rel_samples)].copy()
+    rel_assignment = _rotate_reliability_assignments(primary_assignment, coder_ids)
+    rel_df["coder_id"] = rel_df["sample_id"].map(rel_assignment).fillna("")
+
+    logger.info(
+        f"Selected {len(set(rel_df['sample_id']))} samples for reliability "
+        f"from {len(set(pc_df['sample_id']))} total samples."
+    )
+    return rel_df
+
+
+def _select_reliability_samples(segments: list[list[str]], frac: float) -> list[str]:
+    """
+    Sample reliability items within each primary coder segment.
+    """
+    rel_samples: list[str] = []
+    for seg in segments:
+        if not seg:
+            continue
+        n_rel = calc_subset_size(frac=frac, samples=seg)
+        if n_rel == 0:
+            continue
+        rel_samples.extend(random.sample(seg, k=n_rel))
+    return rel_samples
+
+
+def _rotate_reliability_assignments(
+    primary_map: dict[str, str],
+    coder_ids: list[str],
+) -> dict[str, str]:
+    """
+    Derive reliability coder IDs from primary assignment.
+    """
+    if not coder_ids or coder_ids == [""]:
+        return {sample_id: "" for sample_id in primary_map}
+
+    if len(coder_ids) == 1:
+        only_id = coder_ids[0]
+        return {sample_id: only_id for sample_id in primary_map}
+
+    idx = {coder_id: i for i, coder_id in enumerate(coder_ids)}
+    return {
+        sample_id: coder_ids[(idx[primary_coder] + 1) % len(coder_ids)]
+        for sample_id, primary_coder in primary_map.items()
+    }
+
+
+def _apply_export_blinding(
+    pc_df: pd.DataFrame,
+    rel_df: pd.DataFrame | None,
+    transcript_table: Path,
+    blinding_config=None,
+) -> tuple[pd.DataFrame, pd.DataFrame | None]:
+    """
+    Blind POWERS exports at write time when configured.
+    """
+    if blinding_config is None or not getattr(blinding_config, "blind_files", False):
+        return pc_df, rel_df
 
     try:
-        NLP = NLPmodel()
-        nlp = NLP.get_nlp("en_core_web_trf")
+        pc_export = blind_file_identifiers(
+            pc_df,
+            blinding_config=blinding_config,
+            transcript_tables=[transcript_table],
+        )
+        rel_export = None
+        if rel_df is not None:
+            rel_export = blind_file_identifiers(
+                rel_df,
+                blinding_config=blinding_config,
+                transcript_tables=[transcript_table],
+            )
+
+        logger.info("Applied file blinding to POWERS exports.")
+        return pc_export, rel_export
+
     except Exception as e:
-        logger.error(f"Failed to load NLP model - automation not available: {e}")
-        return df
-    
+        logger.error(f"Failed to apply file blinding to POWERS exports: {e}")
+        raise
+
+
+def _write_powers_exports(
+    pc_export: pd.DataFrame,
+    rel_export: pd.DataFrame | None,
+    powers_dir: Path,
+    labels: list[str],
+) -> None:
+    """
+    Write POWERS coding and reliability workbooks to disk.
+    """
+    pc_filename = Path(powers_dir, *labels, "powers_coding.xlsx")
+    rel_filename = Path(powers_dir, *labels, "powers_reliability_coding.xlsx")
+
+    _write_excel(pc_export, pc_filename, "POWERS coding")
+    if rel_export is not None:
+        _write_excel(rel_export, rel_filename, "POWERS reliability coding")
+
+
+def _write_excel(df: pd.DataFrame, filename: Path, label: str) -> None:
+    """
+    Write a dataframe to Excel with consistent logging.
+    """
     try:
-        df[f"c{coder_num}_speech_units"] = df["utterance"].apply(compute_speech_units)
-        df[f"c{coder_num}_filled_pauses"] = df["utterance"].apply(count_fillers)
-
-        content_counts, noun_counts, tagged_utts = [], [], []
-        utterances = df["utterance"].fillna("").map(expand_and_process_utterances)
-
-        total_its = len(utterances)
-        for doc in tqdm(nlp.pipe(utterances, batch_size=100, n_process=2),
-                total=total_its, desc="Applying automation to utterances"):
-
-            num_content_words, num_nouns, tagged_utt = count_content_words_from_doc(doc)
-            content_counts.append(num_content_words)
-            noun_counts.append(num_nouns)
-            tagged_utts.append(tagged_utt)
-        
-        df[f"c{coder_num}_content_words"] = content_counts
-        df[f"c{coder_num}_num_nouns"] = noun_counts
-        
-        utt_idx = df.columns.tolist().index("utterance")
-        df.insert(utt_idx + 1, "tagged_utterance", tagged_utts)
-        
-        return df
-    
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        df.to_excel(filename, index=False, na_rep="")
+        logger.info(f"Successfully wrote {label} file: {_rel(filename)}")
     except Exception as e:
-        logger.error(f"Failed to apply automation: {e}")
-        return df
+        logger.error(f"Failed to write {label} file {_rel(filename)}: {e}")
 
-def make_powers_coding_files(tiers, frac, coders, input_dir, output_dir, exclude_participants, automate_powers=True):
+
+def make_powers_coding_files(
+    tiers,
+    frac,
+    num_coders,
+    input_dir,
+    output_dir,
+    exclude_participants,
+    automate_powers=True,
+    blinding_config=None,
+):
     """
-    Generate POWERS coding and reliability files from utterance-level transcripts.
+    Build POWERS coding and reliability workbooks from an utterance table.
 
-    Steps:
-      1. Load transcript table files from input_dir/output_dir.
-      2. Assign two coders per sample and shuffle sample order.
-      3. Write a POWERS coding file with initialized coder columns.
-      4. Select a fraction of samples for a reliability coder, producing a
-         POWERS reliability coding file.
-      5. Optionally run automated speech measures via run_automation.
+    One unprefixed coding layer is used per file. Coder assignment is stored
+    only in `coder_id`; there are no c1_/c2_ column blocks. If `frac > 0`,
+    a reliability subset is also written. For one coder, reliability keeps
+    the same coder ID; for multiple coders, reliability rotates assignment
+    to the next coder. Blinding, when enabled, is applied only at export.
 
-    Parameters
-    ----------
-    tiers : dict
-        Mapping of tier patterns to regex objects for file labeling.
-    frac : float
-        Proportion of samples to assign for reliability coding (0-1).
-    coders : list of str
-        List of coder IDs. If fewer than 3 provided, defaults to ['1','2','3'].
-    input_dir : str or Path
-        Directory containing input Utterances.xlsx files.
-    output_dir : str or Path
-        Base directory for powers_coding output.
-    exclude_participants : list
-        Speakers to exclude (filled with "NA").
-    automate_powers : bool, optional
-        If True, apply run_automation() to coder 1 columns.
-
-    Returns
-    -------
-    None
-        Writes Excel files to output_dir/powers_coding.
+    If multiple transcript tables are found, only the first is processed.
     """
+    powers_dir = Path(output_dir) / "powers_coding"
+    powers_dir.mkdir(parents=True, exist_ok=True)
 
-    if len(coders) < 3:
-        logger.warning(f"Coders entered: {coders} do not meet minimum of 3. Using default 1, 2, 3.")
-        coders = ['1', '2', '3']
-
-    output_dir = Path(output_dir)
-    powers_coding_dir = output_dir / "powers_coding"
-    logger.info(f"Writing POWERS coding files to {_rel(powers_coding_dir)}")
-
-    # Collect utterance tables
-    transcript_tables = find_matching_files(directories=[input_dir, output_dir],
-                                   search_base="transcript_tables")
-    utt_dfs = [extract_transcript_data(tt) for tt in transcript_tables]
-
-    for file, uttdf in tqdm(zip(transcript_tables, utt_dfs), desc="Generating POWERS coding files"):
-        logger.info(f"Processing file: {_rel(file)}")
-        labels = [t.match(file.name, return_none=True) for t in tiers.values()]
-        labels = [l for l in labels if l is not None]
-
-        assignments = assign_coders(coders)
-
-        # Shuffle samples
-        subdfs = []
-        for _, subdf in uttdf.groupby(by="sample_id"):
-            subdfs.append(subdf)
-        random.shuffle(subdfs)
-        shuffled_utt_df = pd.concat(subdfs, ignore_index=True)
-
-        non_comm_tier_cols = [
-            tier.name for tier in tiers.values()
-            if tier.name.lower() not in COMM_cols
-        ]
-
-        drop_cols = [
-            col for col in TT_DROP_COLS + non_comm_tier_cols
-            if col in shuffled_utt_df.columns
-        ]
-
-        pc_df = shuffled_utt_df.drop(columns=drop_cols).copy()
-
-        logger.info(f"Transcript columns: {list(shuffled_utt_df.columns)}")
-        logger.info(f"Non-COMM tier cols to drop: {non_comm_tier_cols}")
-        logger.info(f"Final drop cols: {drop_cols}")
-        
-        pc_df["c1_id"] = pd.Series(dtype="object")
-        pc_df["c2_id"] = pd.Series(dtype="object")
-
-        for col in coder_cols:
-            if col in client_only_cols:
-                pc_df[col] = np.where(pc_df["speaker"].isin(exclude_participants), "NA", "")
-            else:
-                pc_df[col] = ""
-        
-        if automate_powers:
-            pc_df = run_automation(pc_df, "1")
-
-        unique_sample_ids = list(pc_df['sample_id'].drop_duplicates(keep='first'))
-        segments = segment(unique_sample_ids, n=len(coders))
-        rel_subsets = []
-
-        for seg, ass in zip(segments, assignments):
-            pc_df.loc[pc_df['sample_id'].isin(seg), 'c1_id'] = ass[0]
-            pc_df.loc[pc_df['sample_id'].isin(seg), 'c2_id'] = ass[1]
-
-            n_rel_samples = calc_subset_size(frac=frac, samples=seg)
-            rel_samples = random.sample(seg, k=n_rel_samples)
-
-            relsegdf = pc_df[pc_df['sample_id'].isin(rel_samples)].copy()
-
-            rel_subsets.append(relsegdf)
-
-        reldf = pd.concat(rel_subsets)
-
-        rel_drop_cols = [col for col in coder_cols if col.startswith("c2")]
-        reldf.drop(columns=rel_drop_cols, inplace=True, errors='ignore')
-        
-        rename_map = {col:col.replace("1", "3") for col in coder_cols if col.startswith("c1")}
-        reldf.rename(columns=rename_map, inplace=True)
-        
-        logger.info(f"Selected {len(set(reldf['sample_id']))} samples for reliability from {len(set(pc_df['sample_id']))} total samples.")
-
-        lab_str = '_'.join(labels) + '_' if labels else ''
-
-        pc_filename = Path(powers_coding_dir, *labels, f"{lab_str}powers_coding.xlsx")
-        rel_filename = Path(powers_coding_dir, *labels, f"{lab_str}powers_reliability_coding.xlsx")
-
-        try:
-            pc_filename.parent.mkdir(parents=True, exist_ok=True)
-            pc_df.to_excel(pc_filename, index=False, na_rep="")
-            logger.info(f"Successfully wrote POWERS coding file: {_rel(pc_filename)}")
-        except Exception as e:
-            logger.error(f"Failed to write POWERS coding file {_rel(pc_filename)}: {e}")
-
-        try:
-            rel_filename.parent.mkdir(parents=True, exist_ok=True)
-            reldf.to_excel(rel_filename, index=False, na_rep="")
-            logger.info(f"Successfully wrote POWERS reliability coding file: {_rel(rel_filename)}")
-        except Exception as e:
-            logger.error(f"Failed to write POWERS reliability coding file {_rel(rel_filename)}: {e}")
-
-
-def reselect_powers_reliability(input_dir, output_dir, frac, exclude_participants, automate_powers):
-    """
-    Reselect new reliability subsets from existing POWERS coding files.
-
-    Finds powers_coding and powers_reliability_coding files, determines
-    which samples are already covered by reliability coders, and selects
-    new samples from the remaining pool. Optionally applies automation.
-
-    Parameters
-    ----------
-    input_dir : str or Path
-        Directory containing original powers_coding and powers_reliability_coding files.
-    output_dir : str or Path
-        Directory for saving powers_reselected_reliability outputs.
-    frac : float
-        Fraction of samples per file to assign to reliability (0-1).
-    exclude_participants : list
-        Speakers to exclude (filled with "NA").
-    automate_powers : bool
-        If True, apply run_automation() to coder 3 columns.
-
-    Returns
-    -------
-    None
-        Writes new Excel reliability files to output_dir/powers_reselected_reliability.
-    """
-
-    output_dir = Path(output_dir)
-    
-    powers_reselected_reliability_dir = output_dir / "powers_reselected_reliability"
-    try:
-        powers_reselected_reliability_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Created directory: {_rel(powers_reselected_reliability_dir)}")
-    except Exception as e:
-        logger.error(f"Failed to create directory {_rel(powers_reselected_reliability_dir)}: {e}")
+    transcript_table = _get_transcript_table(input_dir, output_dir)
+    if transcript_table is None:
         return
 
-    coding_files = [f for f in Path(input_dir).rglob('*powers_coding*.xlsx')]
-    rel_files = [f for f in Path(input_dir).rglob('*powers_reliability_coding*.xlsx')]
+    uttdf = _load_utterance_table(transcript_table)
+    if uttdf is None:
+        return
 
-    # Match original coding and reliability files.
-    for cod in tqdm(coding_files, desc="Reselecting POWERS reliability coding..."):
-        try:
-            covered_sample_ids = set()
-            powers_coding_df = pd.read_excel(cod)
-            logger.info(f"Processing coding file: {_rel(cod)}")
-        except Exception as e:
-            logger.error(f"Failed to read file {_rel(cod)}: {e}")
-            continue
-        for rel in rel_files:
-            if cod.name.replace("powers_coding", "powers_reliability_coding") == rel.name:
-                try:
-                    powers_rel_df = pd.read_excel(rel)
-                    logger.info(f"Processing reliability file: {_rel(rel)}")
-                except Exception as e:
-                    logger.error(f"Failed to read file {_rel(rel)}: {e}")
-                    continue
-                
-            covered_sample_ids.update(set(powers_rel_df["sample_id"].dropna()))
-        
-        if covered_sample_ids:
-            all_samples = set(powers_coding_df["sample_id"].dropna())
-            available_samples = list(all_samples - covered_sample_ids)
+    labels = _match_tier_labels(tiers, transcript_table.name)
+    pc_df = _prepare_powers_dataframe(uttdf, tiers, exclude_participants)
 
-            if len(available_samples) == 0:
-                logger.warning(f"No available samples to reselect for {cod.name}. Skipping.")
-                continue
-            
-            num_to_select = calc_subset_size(frac=frac, samples=all_samples)
+    if automate_powers:
+        pc_df = run_automation(pc_df)
 
-            if len(available_samples) < num_to_select:
-                logger.warning(
-                    f"Not enough unused samples in {cod.name}. "
-                    f"Selecting {len(available_samples)} instead of target {num_to_select}."
-                )
-                num_to_select = len(available_samples)
-            
-            reselected_rel_samples = set(random.sample(available_samples, k=num_to_select))
-            new_rel_df = powers_coding_df[powers_coding_df['sample_id'].isin(reselected_rel_samples)].copy()
+    coder_ids = _resolve_powers_coder_ids(num_coders)
+    pc_df, primary_assignment, segments = _assign_primary_coders(pc_df, coder_ids)
 
-            for col in coder_cols:
-                new_rel_df[col] = np.where(new_rel_df["speaker"].isin(exclude_participants), "NA", "")
+    rel_df = _build_reliability_dataframe(
+        pc_df=pc_df,
+        frac=frac,
+        coder_ids=coder_ids,
+        primary_assignment=primary_assignment,
+        segments=segments,
+    )
 
-            rel_drop_cols = [col for col in coder_cols if col.startswith("c2")]
-            new_rel_df.drop(columns=rel_drop_cols, inplace=True, errors='ignore')
-            
-            rename_map = {col:col.replace("1", "3") for col in coder_cols if col.startswith("c1")}
-            new_rel_df.rename(columns=rename_map, inplace=True)
-            
-            logger.info(f"Reselected {len(set(new_rel_df['sample_id']))} samples for reliability from {len(set(powers_coding_df['sample_id']))} total samples.")
+    pc_export, rel_export = _apply_export_blinding(
+        pc_df=pc_df,
+        rel_df=rel_df,
+        transcript_table=transcript_table,
+        blinding_config=blinding_config,
+    )
 
-            if automate_powers:
-                new_rel_df = run_automation(new_rel_df, "3")
-
-            try:
-                new_rel_filename = cod.name.replace("powers_coding", "reselected_powers_reliability_coding")
-                new_rel_filepath = powers_reselected_reliability_dir / new_rel_filename
-                new_rel_df.to_excel(new_rel_filepath, index=False)
-                logger.info(f"Successfully wrote reselected POWERS reliability coding file: {_rel(new_rel_filepath)}")
-            except Exception as e:
-                logger.error(f"Failed to write reselected POWERS reliability coding file {_rel(new_rel_filepath)}: {e}")
+    _write_powers_exports(
+        pc_export=pc_export,
+        rel_export=rel_export,
+        powers_dir=powers_dir,
+        labels=labels,
+    )

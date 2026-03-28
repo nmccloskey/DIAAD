@@ -205,7 +205,7 @@ def write_reselected_reliability(df, org_file, out_dir, suffix, stem_token, rel_
     """
     stem = org_file.stem
     base = stem.replace(stem_token, "").rstrip("_")
-    out_path = Path(out_dir) / f"{base}_reselected_{suffix}.xlsx"
+    out_path = Path(out_dir) / f"{base}reselected_{suffix}.xlsx"
 
     try:
         df.to_excel(out_path, index=False)
