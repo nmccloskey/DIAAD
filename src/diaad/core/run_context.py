@@ -462,6 +462,33 @@ class RunContext:
         return self.kwargs_io()
 
     # ------------------------------------------------------------------
+    # Generic coding templates
+    # ------------------------------------------------------------------
+    def kwargs_make_utterance_templates(self) -> dict[str, Any]:
+        """Return kwargs for utterance template generation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "num_coders": self.num_coders,
+            "stimulus_column": self.stimulus_column,
+            "blinding_config": self.config.blinding,
+            "seed": self.random_seed,
+        }
+
+    def kwargs_make_sample_templates(self) -> dict[str, Any]:
+        """Return kwargs for sample template generation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "num_coders": self.num_coders,
+            "stimulus_column": self.stimulus_column,
+            "blinding_config": self.config.blinding,
+            "seed": self.random_seed,
+        }
+
+    # ------------------------------------------------------------------
     # POWERS coding workflow
     # ------------------------------------------------------------------
     def kwargs_make_powers_coding_files(self) -> dict[str, Any]:

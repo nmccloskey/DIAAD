@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 
-from src.diaad.core.run_wrappers import (
+from diaad.core.run_wrappers import (
     run_analyze_cu_coding,
     run_analyze_word_counts,
     run_analyze_digital_convo_turns,
@@ -13,6 +13,8 @@ from src.diaad.core.run_wrappers import (
     run_evaluate_transcription_reliability,
     run_evaluate_word_count_reliability,
     run_make_cu_coding_files,
+    run_make_sample_templates,
+    run_make_utterance_templates,
     run_make_powers_coding_files,
     run_make_word_count_files,
     run_reselect_cu_rel,
@@ -44,6 +46,8 @@ TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "cus make",
     "corelex analyze",
     "powers make",
+    "templates utterances",
+    "templates samples",
 }
 
 def commands_require_chats(commands: Iterable[str]) -> bool:
@@ -116,6 +120,12 @@ def build_dispatch(ctx) -> CommandDispatch:
         # Digital Conversation Turns
         # --------------------------------------------------------------
         "turns analyze": lambda: run_analyze_digital_convo_turns(ctx),
+
+        # --------------------------------------------------------------
+        # Generic coding templates
+        # --------------------------------------------------------------
+        "templates utterances": lambda: run_make_utterance_templates(ctx),
+        "templates samples": lambda: run_make_sample_templates(ctx),
 
         # --------------------------------------------------------------
         # POWERS coding workflow

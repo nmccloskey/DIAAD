@@ -31,6 +31,10 @@ MODULE_COMMANDS = {
     "turns": [
         "turns analyze",
     ],
+    "templates": [
+        "templates utterances",
+        "templates samples",
+    ],
     "powers": [
         "powers make",
         "powers analyze",
