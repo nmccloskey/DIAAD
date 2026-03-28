@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 
-from diaad.run_wrappers import (
+from src.diaad.core.run_wrappers import (
     run_analyze_cu_coding,
     run_analyze_word_counts,
     run_analyze_digital_convo_turns,

@@ -36,7 +36,7 @@ from diaad.core.logger import (
     terminate_logger,
     early_log,
 )
-from diaad.run_wrappers import (
+from src.diaad.core.run_wrappers import (
     run_read_tiers, run_read_cha_files,
     run_select_transcription_reliability_samples,
     run_reselect_transcription_reliability_samples,
