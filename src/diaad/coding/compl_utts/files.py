@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from diaad.core.logger import logger, _rel
-from diaad.utils.sampling import calc_subset_size
+from src.diaad.coding.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders, resolve_stim_cols

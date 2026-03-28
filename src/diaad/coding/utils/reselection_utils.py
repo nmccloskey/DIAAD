@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from diaad.core.logger import logger, _rel
-from diaad.utils.sampling import calc_subset_size
+from src.diaad.coding.utils.sampling import calc_subset_size
 
 
 def label_one(tier_obj, fname: str):
