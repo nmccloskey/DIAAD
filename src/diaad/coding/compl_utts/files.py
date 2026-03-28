@@ -189,12 +189,12 @@ def _prepare_three_coder_reliability_subset(
 def _prepare_cu_base_dataframe(
     uttdf: pd.DataFrame,
     tiers,
-    stimulus_column,
+    stimulus_field,
 ) -> pd.DataFrame:
     """
     Shuffle sample blocks and drop non-coding columns from an utterance dataframe.
     """
-    stim_cols = resolve_stim_cols(stimulus_column)
+    stim_cols = resolve_stim_cols(stimulus_field)
 
     subdfs = [subdf for _, subdf in uttdf.groupby(by="sample_id")]
     random.shuffle(subdfs)
@@ -358,7 +358,7 @@ def make_cu_coding_files(
     output_dir,
     cu_paradigms,
     exclude_participants,
-    stimulus_column,
+    stimulus_field,
     blinding_config=None,
 ):
     """
@@ -386,7 +386,7 @@ def make_cu_coding_files(
     Notes
     -----
     frac == 0 means no reliability subset is generated.
-    stimulus_column overrides legacy stimulus-column fallback behavior.
+    stimulus_field overrides legacy stimulus-column fallback behavior.
 
     Transcript table selection
     --------------------------
@@ -429,7 +429,7 @@ def make_cu_coding_files(
         cu_df = _prepare_cu_base_dataframe(
             uttdf=uttdf,
             tiers=tiers,
-            stimulus_column=stimulus_column,
+            stimulus_field=stimulus_field,
         )
 
         cu_df, rel_df = _build_cu_assignments(

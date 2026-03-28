@@ -33,7 +33,7 @@ class ProjectConfig:
 
     exclude_participants: list[str] | None = None
     num_coders: int = 0
-    stimulus_column: str = ""
+    stimulus_field: str = ""
 
     cu_paradigms: list[str] | None = None
     cu_samples_file: Path | str = "cu_coding_by_sample_long.xlsx"
@@ -234,8 +234,8 @@ class ConfigManager:
         return self.project.num_coders
 
     @property
-    def stimulus_column(self) -> str:
-        return self.project.stimulus_column
+    def stimulus_field(self) -> str:
+        return self.project.stimulus_field
 
     @property
     def cu_paradigms(self) -> list[str]:
@@ -343,7 +343,7 @@ class ConfigManager:
                 "reliability_dirname": self.project.reliability_dirname,
                 "exclude_participants": self.project.exclude_participants,
                 "num_coders": self.project.num_coders,
-                "stimulus_column": self.project.stimulus_column,
+                "stimulus_field": self.project.stimulus_field,
                 "cu_paradigms": self.project.cu_paradigms,
                 "cu_samples_file": self.project.cu_samples_file,
                 "cu_utts_file": self.project.cu_utts_file,
@@ -425,7 +425,7 @@ class ConfigManager:
                 default=[],
             ),
             num_coders=self._as_int(data.get("num_coders"), default=0),
-            stimulus_column=self._as_str(data.get("stimulus_column"), default=""),
+            stimulus_field=self._as_str(data.get("stimulus_field"), default=""),
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
             cu_samples_file=self._as_str(data.get("cu_samples_file"), default="cu_coding_by_sample_long.xlsx"),
             cu_utts_file=self._as_str(data.get("cu_utts_file"), default="cu_coding_by_utterance.xlsx"),

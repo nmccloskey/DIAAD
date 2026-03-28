@@ -17,7 +17,7 @@ from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
 
 DEFAULT_NUM_BINS = 4
-DEFAULT_STIMULUS_COLUMN = "narrative"
+DEFAULT_STIMULUS_FIELD = "narrative"
 TEMPLATE_SUBDIR = "coding_templates"
 UTTERANCE_TEMPLATE_FILENAME = "utterance_coding_template.xlsx"
 UTTERANCE_RELIABILITY_FILENAME = "utterance_reliability_template.xlsx"
@@ -33,11 +33,11 @@ class CodingTemplateConfig:
     Normalized settings for generic manual coding template generation.
     """
     num_bins: int = DEFAULT_NUM_BINS
-    stimulus_column: str = DEFAULT_STIMULUS_COLUMN
+    stimulus_field: str = DEFAULT_STIMULUS_FIELD
 
     @property
     def use_stimulus(self) -> bool:
-        return bool(str(self.stimulus_column or "").strip())
+        return bool(str(self.stimulus_field or "").strip())
 
 
 def _normalize_coder_ids(
@@ -78,30 +78,30 @@ def _coerce_bin_labels(num_bins: int) -> list[int]:
 
 def _prepare_stimulus_lookup(
     sample_df: pd.DataFrame,
-    stimulus_column: str,
+    stimulus_field: str,
 ) -> pd.DataFrame:
     """
     Return sample_id + stimulus lookup table.
 
     The output stimulus column is renamed to 'stimulus'.
     """
-    _require_columns(sample_df, ["sample_id", stimulus_column], "sample_df")
+    _require_columns(sample_df, ["sample_id", stimulus_field], "sample_df")
 
-    stim_df = sample_df.loc[:, ["sample_id", stimulus_column]].copy()
-    stim_df = stim_df.rename(columns={stimulus_column: "stimulus"})
+    stim_df = sample_df.loc[:, ["sample_id", stimulus_field]].copy()
+    stim_df = stim_df.rename(columns={stimulus_field: "stimulus"})
     stim_df = stim_df.drop_duplicates(subset=["sample_id"])
 
     return stim_df
 
 
-def _resolve_available_stimulus_column(
+def _resolve_available_stimulus_field(
     sample_df: pd.DataFrame,
-    stimulus_column: str,
+    stimulus_field: str,
 ) -> str | None:
     """
     Resolve the first stimulus-like column available in sample_df.
     """
-    candidate_cols = resolve_stim_cols(stimulus_column)
+    candidate_cols = resolve_stim_cols(stimulus_field)
 
     for col in candidate_cols:
         if col in sample_df.columns:
@@ -131,13 +131,13 @@ def _prepare_utterance_template(
 
     out = utt_df.loc[:, ["sample_id", "utterance_id", "utterance"]].copy()
 
-    stimulus_column = _resolve_available_stimulus_column(
+    stimulus_field = _resolve_available_stimulus_field(
         sample_df,
-        config.stimulus_column,
+        config.stimulus_field,
     )
 
-    if stimulus_column:
-        stim_df = _prepare_stimulus_lookup(sample_df, stimulus_column)
+    if stimulus_field:
+        stim_df = _prepare_stimulus_lookup(sample_df, stimulus_field)
         out = out.merge(stim_df, on="sample_id", how="left", validate="m:1")
         out = out.loc[:, ["sample_id", "utterance_id", "stimulus", "utterance"]]
 
@@ -157,17 +157,17 @@ def _prepare_sample_template(
     _require_columns(sample_df, ["sample_id"], "sample_df")
 
     cols = ["sample_id"]
-    stimulus_column = _resolve_available_stimulus_column(
+    stimulus_field = _resolve_available_stimulus_field(
         sample_df,
-        config.stimulus_column,
+        config.stimulus_field,
     )
-    if stimulus_column:
-        cols.append(stimulus_column)
+    if stimulus_field:
+        cols.append(stimulus_field)
 
     out = sample_df.loc[:, cols].copy().drop_duplicates(subset=["sample_id"])
 
-    if stimulus_column:
-        out = out.rename(columns={stimulus_column: "stimulus"})
+    if stimulus_field:
+        out = out.rename(columns={stimulus_field: "stimulus"})
         out["bin"] = pd.NA
         out = out.loc[:, ["sample_id", "stimulus", "bin"]]
     else:
@@ -526,7 +526,7 @@ def make_utterance_coding_template(
     *,
     coder_ids: Optional[list[str] | tuple[str, ...] | str] = None,
     num_bins: int = DEFAULT_NUM_BINS,
-    stimulus_column: str = DEFAULT_STIMULUS_COLUMN,
+    stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     blind: bool = False,
     blinding_config=None,
     existing_codebook: pd.DataFrame | None = None,
@@ -538,7 +538,7 @@ def make_utterance_coding_template(
     """
     config = CodingTemplateConfig(
         num_bins=num_bins,
-        stimulus_column=stimulus_column,
+        stimulus_field=stimulus_field,
     )
     df, codebook_df = build_utterance_coding_template(
         transcript_table_path,
@@ -563,7 +563,7 @@ def make_sample_coding_template(
     *,
     coder_ids: Optional[list[str] | tuple[str, ...] | str] = None,
     num_bins: int = DEFAULT_NUM_BINS,
-    stimulus_column: str = DEFAULT_STIMULUS_COLUMN,
+    stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     prefill_bins: bool = False,
     blind: bool = False,
     blinding_config=None,
@@ -576,7 +576,7 @@ def make_sample_coding_template(
     """
     config = CodingTemplateConfig(
         num_bins=num_bins,
-        stimulus_column=stimulus_column,
+        stimulus_field=stimulus_field,
     )
     df, codebook_df = build_sample_coding_template(
         transcript_table_path,
@@ -605,7 +605,7 @@ def make_utterance_template_files(
     output_dir: str | Path,
     frac: float,
     num_coders: int,
-    stimulus_column: str = DEFAULT_STIMULUS_COLUMN,
+    stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     blinding_config=None,
     seed: int = 99,
 ) -> Path | None:
@@ -620,7 +620,7 @@ def make_utterance_template_files(
     template_dir.mkdir(parents=True, exist_ok=True)
 
     config = CodingTemplateConfig(
-        stimulus_column=stimulus_column,
+        stimulus_field=stimulus_field,
     )
 
     df, _ = build_utterance_coding_template(
@@ -684,7 +684,7 @@ def make_sample_template_files(
     output_dir: str | Path,
     frac: float,
     num_coders: int,
-    stimulus_column: str = DEFAULT_STIMULUS_COLUMN,
+    stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     prefill_bins: bool = False,
     blinding_config=None,
     seed: int = 99,
@@ -700,7 +700,7 @@ def make_sample_template_files(
     template_dir.mkdir(parents=True, exist_ok=True)
 
     config = CodingTemplateConfig(
-        stimulus_column=stimulus_column,
+        stimulus_field=stimulus_field,
     )
 
     df, _ = build_sample_coding_template(

@@ -111,7 +111,7 @@ def find_corelex_inputs(input_dir: str, output_dir: str) -> dict | None:
     return "transcripts", utt_df
 
 
-def prepare_corelex_inputs(input_dir, output_dir, exclude_participants, stimulus_column):
+def prepare_corelex_inputs(input_dir, output_dir, exclude_participants, stimulus_field):
     """
     Load and normalize utterance-level CoreLex inputs.
 
@@ -125,7 +125,7 @@ def prepare_corelex_inputs(input_dir, output_dir, exclude_participants, stimulus
         Source and destination directories.
     exclude_participants : set[str]
         Speaker IDs to exclude (e.g., {"INV"}).
-    stimulus_column : str
+    stimulus_field : str
         Column/tier containing stimulus (entries would be BrokenWindow, RefusedUmbrella, etc.)
     Returns
     -------
@@ -138,7 +138,7 @@ def prepare_corelex_inputs(input_dir, output_dir, exclude_participants, stimulus
         if utt_df is None:
             return None, None
         
-        stim_cols = resolve_stim_cols(stimulus_column)
+        stim_cols = resolve_stim_cols(stimulus_field)
 
         if mode == "unblind":
             narr_col = _col(utt_df, stim_cols)

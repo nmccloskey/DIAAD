@@ -100,8 +100,8 @@ class RunContext:
         return self.config.cu_paradigms
 
     @property
-    def stimulus_column(self) -> str:
-        return self.config.stimulus_column
+    def stimulus_field(self) -> str:
+        return self.config.stimulus_field
 
     @property
     def exclude_participants(self) -> list[str]:
@@ -349,7 +349,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
             "exclude_participants": self.exclude_participants,
-            "stimulus_column": self.stimulus_column,
+            "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
         }
     
@@ -451,7 +451,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
-            "stimulus_column": self.stimulus_column,
+            "stimulus_field": self.stimulus_field,
         }
 
     # ------------------------------------------------------------------
@@ -471,7 +471,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
             "num_coders": self.num_coders,
-            "stimulus_column": self.stimulus_column,
+            "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
         }
@@ -483,7 +483,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
             "num_coders": self.num_coders,
-            "stimulus_column": self.stimulus_column,
+            "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
         }
