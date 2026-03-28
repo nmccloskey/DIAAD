@@ -152,14 +152,14 @@ def run_analyze_digital_convo_turns(ctx):
 
 def run_make_utterance_templates(ctx):
     """Create utterance coding templates and reliability subsets."""
-    from diaad.coding.templates.templates import make_utterance_template_files
+    from diaad.coding.templates.utterances import make_utterance_template_files
 
     return make_utterance_template_files(**ctx.kwargs_make_utterance_templates())
 
 
 def run_make_sample_templates(ctx):
     """Create sample coding templates and reliability subsets."""
-    from diaad.coding.templates.templates import make_sample_template_files
+    from diaad.coding.templates.samples import make_sample_template_files
 
     return make_sample_template_files(**ctx.kwargs_make_sample_templates())
 

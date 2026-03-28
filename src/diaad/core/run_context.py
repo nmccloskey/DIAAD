@@ -474,7 +474,6 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
-            "num_bins": self.num_bins,
             "num_coders": self.num_coders,
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
