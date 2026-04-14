@@ -1,3 +1,3 @@
-from diaad.webapp.streamlit_app import main
+from src.diaad.webapp.streamlit_app import main
 
 main()
