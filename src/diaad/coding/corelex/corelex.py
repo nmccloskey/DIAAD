@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from diaad.coding.corelex.resources import get_builtin_resource
+from diaad.coding.corelex.resources import get_resource, load_target_vocabulary_resources
 from diaad.coding.corelex.utils import (
     get_norm_columns,
     get_percentiles,
@@ -56,6 +56,7 @@ def _percentiles_for_metric(
     narrative: str,
     norm_lookup: dict,
     metric: str,
+    resources: dict | None = None,
 ) -> tuple[float, float]:
     norms_for_narrative = norm_lookup.get(narrative, {}) if isinstance(norm_lookup, dict) else {}
     norm_df = norms_for_narrative.get(metric)
@@ -66,7 +67,7 @@ def _percentiles_for_metric(
         return np.nan, np.nan
 
     try:
-        columns = get_norm_columns(narrative, metric)
+        columns = get_norm_columns(narrative, metric, resources)
         pcts = get_percentiles(
             score,
             norm_df,
@@ -82,10 +83,15 @@ def _percentiles_for_metric(
         return np.nan, np.nan
 
 
-def _detail_rows_from_stats(sample_id, narrative: str, core_stats: dict) -> list[dict]:
-    resource = get_builtin_resource(narrative)
+def _detail_rows_from_stats(
+    sample_id,
+    narrative: str,
+    coverage_stats: dict,
+    resources: dict | None = None,
+) -> list[dict]:
+    resource = get_resource(narrative, resources)
     base_forms = resource.get("base_forms", []) if resource else []
-    counts = core_stats.get("base_form_counts", {})
+    counts = coverage_stats.get("base_form_counts", {})
 
     return [
         {
@@ -106,13 +112,15 @@ def compute_target_vocabulary_coverage_for_text(
     narrative: str,
     norm_lookup: dict | None = None,
     sample_id=None,
+    resources: dict | None = None,
 ) -> tuple[dict, list[dict]]:
     """
     Compute target vocabulary coverage metrics for one sample.
 
-    Built-in resources currently cover the canonical CoreLex-style tasks bundled
-    with DIAAD. Norms are optional; missing norm data leaves percentile columns
-    as NaN rather than suppressing coverage metrics.
+    The default resources are bundled with DIAAD. A caller may pass a custom
+    resource registry for project-specific target vocabularies. Norms are
+    optional; missing norm data leaves percentile columns as NaN rather than
+    suppressing coverage metrics.
     """
     if not isinstance(narrative, str) or not narrative.strip():
         logger.warning(
@@ -120,31 +128,33 @@ def compute_target_vocabulary_coverage_for_text(
         )
         return {}, []
 
-    resource = get_builtin_resource(narrative)
+    resources = resources or load_target_vocabulary_resources()
+    resource = get_resource(narrative, resources)
     if resource is None:
         logger.warning(
-            f"Target vocabulary coverage: no built-in resource found for '{narrative}'."
+            f"Target vocabulary coverage: no resource found for '{narrative}'."
         )
         return {}, []
 
     text = "" if text is None else str(text)
     reformatted_text = reformat(text)
     st = _coerce_speaking_time_seconds(speaking_time)
-    core_stats = id_core_words(narrative, reformatted_text)
+    coverage_stats = id_core_words(narrative, reformatted_text, resources)
 
     minutes = (st / 60.0) if pd.notnull(st) and st > 0 else np.nan
     core_tokens_per_min = (
-        core_stats["num_core_token_matches"] / minutes
+        coverage_stats["num_core_token_matches"] / minutes
         if pd.notnull(minutes) and minutes > 0
         else np.nan
     )
 
     norm_lookup = norm_lookup or {}
     accuracy_pwa, accuracy_control = _percentiles_for_metric(
-        score=core_stats["num_base_forms_produced"],
+        score=coverage_stats["num_base_forms_produced"],
         narrative=narrative,
         norm_lookup=norm_lookup,
         metric="accuracy",
+        resources=resources,
     )
     if pd.notnull(core_tokens_per_min):
         efficiency_pwa, efficiency_control = _percentiles_for_metric(
@@ -152,6 +162,7 @@ def compute_target_vocabulary_coverage_for_text(
             narrative=narrative,
             norm_lookup=norm_lookup,
             metric="efficiency",
+            resources=resources,
         )
     else:
         efficiency_pwa = efficiency_control = np.nan
@@ -159,17 +170,17 @@ def compute_target_vocabulary_coverage_for_text(
     summary = {
         "narrative": narrative,
         "speaking_time": st,
-        "num_tokens": core_stats.get("num_tokens", np.nan),
-        "num_base_forms_produced": core_stats.get("num_base_forms_produced", np.nan),
-        "num_core_token_matches": core_stats.get("num_core_token_matches", np.nan),
-        "lexicon_coverage": core_stats.get("lexicon_coverage", np.nan),
+        "num_tokens": coverage_stats.get("num_tokens", np.nan),
+        "num_base_forms_produced": coverage_stats.get("num_base_forms_produced", np.nan),
+        "num_core_token_matches": coverage_stats.get("num_core_token_matches", np.nan),
+        "lexicon_coverage": coverage_stats.get("lexicon_coverage", np.nan),
         "core_tokens_per_min": core_tokens_per_min,
         "accuracy_pwa_percentile": accuracy_pwa,
         "accuracy_control_percentile": accuracy_control,
         "efficiency_pwa_percentile": efficiency_pwa,
         "efficiency_control_percentile": efficiency_control,
     }
-    detail_rows = _detail_rows_from_stats(sample_id, narrative, core_stats)
+    detail_rows = _detail_rows_from_stats(sample_id, narrative, coverage_stats, resources)
     return summary, detail_rows
 
 
@@ -179,6 +190,7 @@ def compute_corelex_for_text(
     speaking_time,
     narrative: str,
     norm_lookup: dict,
+    resources: dict | None = None,
 ) -> dict:
     """
     Backward-compatible wrapper for target vocabulary coverage metrics.
@@ -191,6 +203,7 @@ def compute_corelex_for_text(
             speaking_time=speaking_time,
             narrative=narrative,
             norm_lookup=norm_lookup,
+            resources=resources,
         )
         return summary
     except Exception as e:
@@ -204,7 +217,7 @@ def extract_corelex_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
     """
     Extract text, speaking_time, narrative, and sample_id from a DIAAD sample.
 
-    The function name remains for compatibility with existing CoreLex callers.
+    The function name remains for compatibility with existing callers.
     """
     try:
         if sample_df is None or sample_df.empty:
@@ -243,7 +256,7 @@ def extract_corelex_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         return {}
 
 
-def _compute_corelex_for_sample(sample_df, norm_lookup, partition_tiers, tup):
+def _compute_corelex_for_sample(sample_df, norm_lookup, partition_tiers, tup, resources=None):
     """
     Backward-compatible wrapper that returns a summary row and long detail rows.
     """
@@ -263,6 +276,7 @@ def _compute_corelex_for_sample(sample_df, norm_lookup, partition_tiers, tup):
             narrative=extracted["narrative"],
             norm_lookup=norm_lookup,
             sample_id=extracted["sample_id"],
+            resources=resources,
         )
         if not summary:
             return {}, []
@@ -287,27 +301,30 @@ def run_corelex(
     output_dir,
     exclude_participants=None,
     stimulus_field="narrative",
+    resource_path=None,
 ):
     """
-    Execute target vocabulary coverage analysis using built-in CoreLex-style resources.
+    Execute target vocabulary coverage analysis using built-in or custom resources.
     """
     exclude_participants = set(exclude_participants or [])
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
     corelex_dir = output_dir / "core_lex"
     corelex_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f"Target vocabulary coverage output directory: {_rel(corelex_dir)}")
+    resources = load_target_vocabulary_resources(resource_path)
 
     utt_df, present_narratives = prepare_corelex_inputs(
         input_dir,
         output_dir,
         exclude_participants,
         stimulus_field=stimulus_field,
+        resources=resources,
     )
     if utt_df is None:
         return
 
     partition_tiers = [t.name for t in tiers.values() if getattr(t, "partition", False)]
-    norm_lookup = preload_corelex_norms(present_narratives)
+    norm_lookup = preload_corelex_norms(present_narratives, resources=resources)
     summary_rows = []
     detail_rows = []
 
@@ -327,6 +344,7 @@ def run_corelex(
                 norm_lookup,
                 partition_tiers,
                 tup,
+                resources,
             )
             if summary_row:
                 summary_rows.append(summary_row)

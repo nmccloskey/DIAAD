@@ -35,6 +35,7 @@ class ProjectConfig:
     num_bins: int = 4
     num_coders: int = 0
     stimulus_field: str = ""
+    target_vocabulary_resource_path: str = ""
 
     cu_paradigms: list[str] | None = None
     cu_samples_file: Path | str = "cu_coding_by_sample_long.xlsx"
@@ -230,6 +231,10 @@ class ConfigManager:
         return self.project.stimulus_field
 
     @property
+    def target_vocabulary_resource_path(self) -> str:
+        return self.project.target_vocabulary_resource_path
+
+    @property
     def cu_paradigms(self) -> list[str]:
         return self.project.cu_paradigms
 
@@ -321,6 +326,7 @@ class ConfigManager:
                 "num_bins": self.project.num_bins,
                 "num_coders": self.project.num_coders,
                 "stimulus_field": self.project.stimulus_field,
+                "target_vocabulary_resource_path": self.project.target_vocabulary_resource_path,
                 "cu_paradigms": self.project.cu_paradigms,
                 "cu_samples_file": self.project.cu_samples_file,
                 "cu_utts_file": self.project.cu_utts_file,
@@ -398,6 +404,10 @@ class ConfigManager:
             num_bins=self._as_int(data.get("num_bins"), default=4),
             num_coders=self._as_int(data.get("num_coders"), default=0),
             stimulus_field=self._as_str(data.get("stimulus_field"), default=""),
+            target_vocabulary_resource_path=self._as_str(
+                data.get("target_vocabulary_resource_path"),
+                default="",
+            ),
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
             cu_samples_file=self._as_str(data.get("cu_samples_file"), default="cu_coding_by_sample_long.xlsx"),
             cu_utts_file=self._as_str(data.get("cu_utts_file"), default="cu_coding_by_utterance.xlsx"),

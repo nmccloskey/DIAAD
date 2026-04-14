@@ -15,7 +15,12 @@ _CORELEX_EXPORTS = {
 _RESOURCE_EXPORTS = {
     "get_builtin_resource",
     "get_builtin_resource_ids",
+    "get_resource",
+    "get_resource_ids",
     "load_builtin_resources",
+    "load_resources_from_path",
+    "load_target_vocabulary_resources",
+    "validate_resource",
 }
 
 _UTIL_EXPORTS = {

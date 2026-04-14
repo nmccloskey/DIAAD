@@ -446,16 +446,17 @@ class RunContext:
         }
 
     # ------------------------------------------------------------------
-    # CoreLex
+    # Target vocabulary coverage
     # ------------------------------------------------------------------
     def kwargs_corelex(self) -> dict[str, Any]:
-        """Return kwargs for CoreLex analysis."""
+        """Return kwargs for target vocabulary coverage analysis."""
         return {
             "tiers": self.tiers,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
             "stimulus_field": self.stimulus_field,
+            "resource_path": self.config.project.target_vocabulary_resource_path,
         }
 
     # ------------------------------------------------------------------

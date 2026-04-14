@@ -8,8 +8,8 @@ import pandas as pd
 from scipy.stats import percentileofscore
 
 from diaad.coding.corelex.resources import (
-    get_builtin_resource,
-    get_builtin_resource_ids,
+    get_resource,
+    get_resource_ids,
     load_builtin_resources,
 )
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
@@ -18,14 +18,14 @@ from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 
-def generate_token_columns(present_narratives):
+def generate_token_columns(present_narratives, resources: dict | None = None):
     """
     Build legacy surface-form column names per narrative and base form.
 
     The main target vocabulary coverage output now uses a canonical long detail
     table. This helper remains for older callers that still expect wide names.
     """
-    resources = load_builtin_resources()
+    resources = resources or load_builtin_resources()
     return [
         f"{scene[:3]}_{base_form}"
         for scene in present_narratives
@@ -87,12 +87,13 @@ def prepare_corelex_inputs(
     output_dir,
     exclude_participants,
     stimulus_field="narrative",
+    resources: dict | None = None,
 ):
     """
     Load and normalize utterance-level target vocabulary coverage inputs.
 
-    The function keeps the existing CoreLex command path, but filters stimuli
-    using bundled target vocabulary resources.
+    The function keeps the existing command path, but filters stimuli using the
+    active target vocabulary resources.
     """
     try:
         mode, utt_df = find_corelex_inputs(input_dir, output_dir)
@@ -100,7 +101,7 @@ def prepare_corelex_inputs(
             return None, None
 
         stim_cols = resolve_stim_cols(stimulus_field)
-        resource_ids = get_builtin_resource_ids()
+        resource_ids = get_resource_ids(resources)
 
         if mode == "unblind":
             narr_col = _col(utt_df, stim_cols)
@@ -197,14 +198,14 @@ def reformat(text: str) -> str:
         return ""
 
 
-def id_core_words(scene_name: str, reformatted_text: str) -> dict:
+def id_core_words(scene_name: str, reformatted_text: str, resources: dict | None = None) -> dict:
     """
     Identify target vocabulary base forms in a narrative sample.
 
-    The function name is retained for compatibility with older CoreLex callers.
+    The function name is retained for compatibility with older callers.
     New code should interpret the results as target vocabulary coverage metrics.
     """
-    resource = get_builtin_resource(scene_name)
+    resource = get_resource(scene_name, resources)
     base_forms = resource.get("base_forms", []) if resource else []
     reverse_lookup = resource.get("_reverse_variant_lookup", {}) if resource else {}
 
@@ -244,9 +245,9 @@ def id_core_words(scene_name: str, reformatted_text: str) -> dict:
     }
 
 
-def get_norm_columns(stimulus_name: str, metric: str) -> dict:
+def get_norm_columns(stimulus_name: str, metric: str, resources: dict | None = None) -> dict:
     """Return column metadata for a resource norm table, with legacy fallbacks."""
-    resource = get_builtin_resource(stimulus_name) or {}
+    resource = get_resource(stimulus_name, resources) or {}
     columns = (
         resource.get("norms", {})
         .get(metric, {})
@@ -262,9 +263,13 @@ def get_norm_columns(stimulus_name: str, metric: str) -> dict:
     }
 
 
-def load_corelex_norms_online(stimulus_name: str, metric: str = "accuracy") -> pd.DataFrame:
-    """Load norm data declared by a built-in target vocabulary resource."""
-    resource = get_builtin_resource(stimulus_name)
+def load_norms_online(
+    stimulus_name: str,
+    metric: str = "accuracy",
+    resources: dict | None = None,
+) -> pd.DataFrame:
+    """Load norm data declared by a target vocabulary resource."""
+    resource = get_resource(stimulus_name, resources)
     if resource is None:
         raise ValueError(f"Unknown stimulus/resource '{stimulus_name}'")
 
@@ -282,23 +287,28 @@ def load_corelex_norms_online(stimulus_name: str, metric: str = "accuracy") -> p
         raise RuntimeError(f"Failed to load data from URL: {e}") from e
 
 
-def preload_corelex_norms(present_narratives: set) -> dict:
+def load_corelex_norms_online(stimulus_name: str, metric: str = "accuracy") -> pd.DataFrame:
+    """Compatibility wrapper for loading target vocabulary norm data."""
+    return load_norms_online(stimulus_name, metric)
+
+
+def preload_corelex_norms(present_narratives: set, resources: dict | None = None) -> dict:
     """
-    Preload norms for built-in target vocabulary resources in the current batch.
+    Preload norms for target vocabulary resources in the current batch.
     """
     norm_data = {}
-    resources = load_builtin_resources()
+    resources = resources or load_builtin_resources()
 
     for scene in present_narratives:
         resource = resources.get(scene)
         if resource is None:
-            logger.warning(f"No built-in target vocabulary resource found for: {scene}")
+            logger.warning(f"No target vocabulary resource found for: {scene}")
             continue
 
         try:
             norm_data[scene] = {
-                "accuracy": load_corelex_norms_online(scene, "accuracy"),
-                "efficiency": load_corelex_norms_online(scene, "efficiency"),
+                "accuracy": load_norms_online(scene, "accuracy", resources),
+                "efficiency": load_norms_online(scene, "efficiency", resources),
                 "__metadata__": resource.get("norms", {}),
             }
             logger.info(f"Loaded target vocabulary norms for: {scene}")
