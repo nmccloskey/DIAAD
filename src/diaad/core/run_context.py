@@ -448,7 +448,7 @@ class RunContext:
     # ------------------------------------------------------------------
     # Target vocabulary coverage
     # ------------------------------------------------------------------
-    def kwargs_corelex(self) -> dict[str, Any]:
+    def kwargs_target_vocab(self) -> dict[str, Any]:
         """Return kwargs for target vocabulary coverage analysis."""
         return {
             "tiers": self.tiers,

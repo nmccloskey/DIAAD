@@ -46,4 +46,4 @@ web = ["streamlit>=1.45.1"]
 nlp = ["spacy>=3.8,<3.9"]
 
 [tool.setuptools.package-data]
-diaad = ["coding/corelex/resources/*.json"]
+diaad = ["coding/target_vocab/resources/*.json"]

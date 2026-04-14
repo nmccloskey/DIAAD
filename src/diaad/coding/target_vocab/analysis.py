@@ -9,8 +9,8 @@ from diaad.coding.target_vocab.utils import (
     get_norm_columns,
     get_percentiles,
     id_core_words,
-    prepare_corelex_inputs,
-    preload_corelex_norms,
+    prepare_target_vocab_inputs,
+    preload_target_vocab_norms,
     reformat,
 )
 from diaad.core.logger import _rel, logger
@@ -184,7 +184,7 @@ def compute_target_vocabulary_coverage_for_text(
     return summary, detail_rows
 
 
-def compute_corelex_for_text(
+def compute_target_vocab_for_text(
     *,
     text: str,
     speaking_time,
@@ -213,7 +213,7 @@ def compute_corelex_for_text(
         return {}
 
 
-def extract_corelex_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
+def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
     """
     Extract text, speaking_time, narrative, and sample_id from a DIAAD sample.
 
@@ -256,12 +256,12 @@ def extract_corelex_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         return {}
 
 
-def _compute_corelex_for_sample(sample_df, norm_lookup, partition_tiers, tup, resources=None):
+def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_tiers, tup, resources=None):
     """
     Backward-compatible wrapper that returns a summary row and long detail rows.
     """
     try:
-        extracted = extract_corelex_inputs_from_sample_df(sample_df)
+        extracted = extract_target_vocab_inputs_from_sample_df(sample_df)
         if not extracted:
             return {}, []
 
@@ -295,7 +295,7 @@ def _ordered_summary_columns(df: pd.DataFrame, partition_tiers: list[str]) -> li
     return ordered + [c for c in df.columns if c not in ordered]
 
 
-def run_corelex(
+def run_target_vocab(
     tiers,
     input_dir,
     output_dir,
@@ -308,12 +308,12 @@ def run_corelex(
     """
     exclude_participants = set(exclude_participants or [])
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
-    corelex_dir = output_dir / "core_lex"
-    corelex_dir.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Target vocabulary coverage output directory: {_rel(corelex_dir)}")
+    target_vocab_dir = output_dir / "core_lex"
+    target_vocab_dir.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Target vocabulary coverage output directory: {_rel(target_vocab_dir)}")
     resources = load_target_vocabulary_resources(resource_path)
 
-    utt_df, present_narratives = prepare_corelex_inputs(
+    utt_df, present_narratives = prepare_target_vocab_inputs(
         input_dir,
         output_dir,
         exclude_participants,
@@ -324,7 +324,7 @@ def run_corelex(
         return
 
     partition_tiers = [t.name for t in tiers.values() if getattr(t, "partition", False)]
-    norm_lookup = preload_corelex_norms(present_narratives, resources=resources)
+    norm_lookup = preload_target_vocab_norms(present_narratives, resources=resources)
     summary_rows = []
     detail_rows = []
 
@@ -339,7 +339,7 @@ def run_corelex(
             sample_df = subdf[subdf["sample_id"] == sample]
             if sample_df.empty:
                 continue
-            summary_row, sample_details = _compute_corelex_for_sample(
+            summary_row, sample_details = _compute_target_vocab_for_sample(
                 sample_df,
                 norm_lookup,
                 partition_tiers,
@@ -359,7 +359,7 @@ def run_corelex(
 
     detail_df = pd.DataFrame(detail_rows, columns=DETAIL_COLUMNS)
 
-    output_file = corelex_dir / f"core_lex_data_{timestamp}.xlsx"
+    output_file = target_vocab_dir / f"core_lex_data_{timestamp}.xlsx"
     try:
         with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
             summary_df.to_excel(writer, sheet_name="summary", index=False)

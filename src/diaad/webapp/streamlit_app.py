@@ -45,7 +45,7 @@ from src.diaad.core.run_wrappers import (
     run_evaluate_cu_reliability,
     run_analyze_cu_coding, run_reselect_cu_rel,
     run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_rel, run_summarize_cus, run_run_corelex
+    run_reselect_wc_rel, run_summarize_cus, run_run_target_vocab
 )
 from diaad import __version__
 

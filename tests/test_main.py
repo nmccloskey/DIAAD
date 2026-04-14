@@ -163,8 +163,8 @@ def mock_run_functions(monkeypatch):
     )
     monkeypatch.setattr(
         main_module,
-        "run_run_corelex",
-        make_stub("run_run_corelex"),
+        "run_run_target_vocab",
+        make_stub("run_run_target_vocab"),
     )
     monkeypatch.setattr(
         main_module,

@@ -7,7 +7,7 @@ from diaad.core.run_wrappers import (
     run_analyze_word_counts,
     run_analyze_digital_convo_turns,
     run_analyze_powers_coding,
-    run_corelex,
+    run_target_vocab,
     run_evaluate_cu_reliability,
     run_evaluate_powers_reliability,
     run_evaluate_transcription_reliability,
@@ -44,7 +44,7 @@ CHAT_REQUIRED_COMMANDS = {
 
 TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "cus make",
-    "corelex analyze",
+    "vocab analyze",
     "powers make",
     "templates utterances",
     "templates samples",
@@ -112,9 +112,9 @@ def build_dispatch(ctx) -> CommandDispatch:
         "words rates": lambda: run_calculate_word_count_rates(ctx),
 
         # --------------------------------------------------------------
-        # CoreLex
+        # Target Vocabulary Coverage
         # --------------------------------------------------------------
-        "corelex analyze": lambda: run_corelex(ctx),
+        "vocab analyze": lambda: run_target_vocab(ctx),
 
         # --------------------------------------------------------------
         # Digital Conversation Turns

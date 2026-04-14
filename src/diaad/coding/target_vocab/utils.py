@@ -41,7 +41,7 @@ def _col(df, candidates):
     return None
 
 
-def find_corelex_inputs(input_dir: str, output_dir: str) -> tuple[str | None, pd.DataFrame | None]:
+def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | None, pd.DataFrame | None]:
     """
     Locate valid target vocabulary coverage input files in priority order.
 
@@ -82,7 +82,7 @@ def find_corelex_inputs(input_dir: str, output_dir: str) -> tuple[str | None, pd
     return "transcripts", utt_df
 
 
-def prepare_corelex_inputs(
+def prepare_target_vocab_inputs(
     input_dir,
     output_dir,
     exclude_participants,
@@ -96,7 +96,7 @@ def prepare_corelex_inputs(
     active target vocabulary resources.
     """
     try:
-        mode, utt_df = find_corelex_inputs(input_dir, output_dir)
+        mode, utt_df = find_target_vocab_inputs(input_dir, output_dir)
         if utt_df is None:
             return None, None
 
@@ -287,12 +287,12 @@ def load_norms_online(
         raise RuntimeError(f"Failed to load data from URL: {e}") from e
 
 
-def load_corelex_norms_online(stimulus_name: str, metric: str = "accuracy") -> pd.DataFrame:
+def load_target_vocab_norms_online(stimulus_name: str, metric: str = "accuracy") -> pd.DataFrame:
     """Compatibility wrapper for loading target vocabulary norm data."""
     return load_norms_online(stimulus_name, metric)
 
 
-def preload_corelex_norms(present_narratives: set, resources: dict | None = None) -> dict:
+def preload_target_vocab_norms(present_narratives: set, resources: dict | None = None) -> dict:
     """
     Preload norms for target vocabulary resources in the current batch.
     """

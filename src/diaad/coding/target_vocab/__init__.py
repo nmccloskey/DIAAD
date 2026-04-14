@@ -2,14 +2,14 @@
 
 from importlib import import_module
 
-_CORELEX_EXPORTS = {
+_TARGET_VOCAB_EXPORTS = {
     "DETAIL_COLUMNS",
     "SUMMARY_COLUMNS",
     "base_columns",
-    "compute_corelex_for_text",
+    "compute_target_vocab_for_text",
     "compute_target_vocabulary_coverage_for_text",
-    "extract_corelex_inputs_from_sample_df",
-    "run_corelex",
+    "extract_target_vocab_inputs_from_sample_df",
+    "run_target_vocab",
 }
 
 _RESOURCE_EXPORTS = {
@@ -27,22 +27,22 @@ _UTIL_EXPORTS = {
     "extract_transcript_data",
     "get_percentiles",
     "id_core_words",
-    "prepare_corelex_inputs",
-    "preload_corelex_norms",
+    "prepare_target_vocab_inputs",
+    "preload_target_vocab_norms",
     "reformat",
 }
 
-__all__ = sorted(_CORELEX_EXPORTS | _RESOURCE_EXPORTS | _UTIL_EXPORTS)
+__all__ = sorted(_TARGET_VOCAB_EXPORTS | _RESOURCE_EXPORTS | _UTIL_EXPORTS)
 
 
 def __getattr__(name):
-    if name in _CORELEX_EXPORTS:
-        corelex = import_module("diaad.coding.corelex.corelex")
-        return getattr(corelex, name)
+    if name in _TARGET_VOCAB_EXPORTS:
+        target_vocab = import_module("diaad.coding.target_vocab.analysis")
+        return getattr(target_vocab, name)
     if name in _RESOURCE_EXPORTS:
-        resources = import_module("diaad.coding.corelex.resources")
+        resources = import_module("diaad.coding.target_vocab.resources")
         return getattr(resources, name)
     if name in _UTIL_EXPORTS:
-        utils = import_module("diaad.coding.corelex.utils")
+        utils = import_module("diaad.coding.target_vocab.utils")
         return getattr(utils, name)
-    raise AttributeError(f"module 'diaad.coding.corelex' has no attribute {name!r}")
+    raise AttributeError(f"module 'diaad.coding.target_vocab' has no attribute {name!r}")

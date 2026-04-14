@@ -123,14 +123,14 @@ def run_calculate_word_count_rates(ctx):
 
 
 # ------------------------------------------------------------------
-# CoreLex
+# Target Vocabulary Coverage
 # ------------------------------------------------------------------
 
-def run_corelex(ctx):
-    """Run CoreLex analysis."""
-    from diaad.coding.target_vocab.analysis import run_corelex
+def run_target_vocab(ctx):
+    """Run target vocab coverage analysis."""
+    from diaad.coding.target_vocab.analysis import run_target_vocab
 
-    return run_corelex(**ctx.kwargs_corelex())
+    return run_target_vocab(**ctx.kwargs_target_vocab())
 
 
 # ------------------------------------------------------------------
@@ -204,42 +204,3 @@ def run_reselect_powers_reliability_coding(ctx):
     from diaad.coding.powers.files import reselect_powers_rel
 
     return reselect_powers_rel(**ctx.kwargs_reselect_powers_reliability())
-
-
-# ------------------------------------------------------------------
-# POWERS automation validation
-# ------------------------------------------------------------------
-
-def run_select_for_validation(ctx):
-    """Select samples for POWERS automation validation."""
-    from diaad.coding.powers.validation import (
-        parse_stratify_fields,
-        select_validation_samples,
-    )
-
-    kwargs = ctx.kwargs_select_for_validation()
-    kwargs["stratify"] = parse_stratify_fields(kwargs.pop("stratify_by"))
-    kwargs["strata"] = kwargs.pop("num_strata")
-
-    return select_validation_samples(**kwargs)
-
-
-def run_validate_automation(ctx):
-    """Validate POWERS automation and analyze resulting coding."""
-    from diaad.coding.powers.validation import (
-        parse_stratify_fields,
-        validate_automation,
-    )
-
-    kwargs = ctx.kwargs_validate_automation()
-    kwargs["selection_table"] = kwargs["selection_table"] or None
-    kwargs["stratum_numbers"] = parse_stratify_fields(kwargs["stratum_numbers"])
-
-    validate_automation(
-        input_dir=kwargs["input_dir"],
-        output_dir=kwargs["output_dir"],
-        selection_table=kwargs["selection_table"],
-        stratum_numbers=kwargs["stratum_numbers"],
-    )
-
-    return run_analyze_powers_coding(ctx)
