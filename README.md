@@ -141,9 +141,7 @@ The relational data architecture can be extended to incorporate any external dat
   - content words
 - **Digital Conversation Turns (DCT)** analysis
 - CLAN wrappers for command-line workflows
-- Core Lexicon analysis via two pathways:
-  - **DIAAD convenience implementation** (web app), leveraging normative data from Cavanaugh et al. (2021)
-  - **CLI wrappers for CLAN’s CoreLex functionality** for broader narrative and language coverage
+- Target vocabulary coverage analysis with built-in CoreLex-style resources and optional normative data from Cavanaugh et al. (2021)
 
 ---
 
@@ -351,11 +349,11 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 
 ---
 
-### CoreLex Module
+### Target Vocabulary Coverage
 
-| Command           | Description                  | Input                    | Output                                  | Function      |
-| ----------------- | ---------------------------- | ------------------------ | --------------------------------------- | ------------- |
-| `corelex analyze` | Run batched CoreLex analysis | CU and WC summary tables | CoreLex coverage and percentile metrics | `run_corelex` |
+| Command           | Description                                                        | Input                    | Output                                                     | Function      |
+| ----------------- | ------------------------------------------------------------------ | ------------------------ | ---------------------------------------------------------- | ------------- |
+| `corelex analyze` | Run target vocabulary coverage analysis with built-in CoreLex tasks | CU and WC summary tables | Summary and long-format detail tables with percentile data | `run_corelex` |
 
 ---
 
@@ -379,7 +377,7 @@ diaad cus analyze
 # Generate final summaries
 diaad cus summarize
 
-# Run CoreLex analysis
+# Run target vocabulary coverage analysis
 diaad corelex analyze
 ```
 
@@ -480,10 +478,10 @@ DIAAD builds on and integrates functionality from two excellent open-source tool
 
 > Liu H, MacWhinney B, Fromm D, Lanzi A. *Automation of Language Sample Analysis*. J Speech Lang Hear Res. 2023 Jul 12;66(7):2421-2433. doi: 10.1044/2023_JSLHR-22-00642. Epub 2023 Jun 22. PMID: 37348510; PMCID: PMC10555460.
 
-- [**coreLexicon**](https://github.com/rbcavanaugh/coreLexicon) – A web-based interface for Core Lexicon analysis developed by Rob Cavanaugh, et al (2021). DIAAD implements its own Core Lexicon analysis that has high reliability with this web app: ICC(2) values (two-way random, absolute agreement) on primary metrics were 0.9627 for accuracy (number of core words) and 0.9689 for efficiency (core words per minute) - measured on 402 narratives (Brokem Window, Cat Rescue, and Refused Umbrella) from our conversation treatment study. DIAAD does not use the webapp but accesses the normative data associated with this repository (using Google sheet IDs) to calculate percentiles.
+- [**coreLexicon**](https://github.com/rbcavanaugh/coreLexicon) – A web-based interface for Core Lexicon analysis developed by Rob Cavanaugh, et al (2021). DIAAD's target vocabulary coverage workflow uses built-in CoreLex-style resources and accesses associated normative data using resource-declared Google Sheet URLs to calculate optional percentiles.
 
-  - **Inspiration & overlap:** DIAAD’s output table design was directly inspired by the original web app, with many of the same fields (accuracy, efficiency, percentiles, CoreLex tokens produced).
-  - **Enhancements:** DIAAD extends this model by (a) supporting batch analysis of uploaded/input tabular data (rather than manual entry through a web interface), and (b) including some new metrics, particularly a normalized lexicon coverage, which enables aggregate comparisons across narratives.
-  - **Recommended use cases:** The original web app remains an excellent choice for users working with a small number of samples who want individualized reports, while DIAAD's CoreLex functionality fills the niche of higher-throughput analysis ready for downstream statistical workflows.
+  - **Inspiration & overlap:** DIAAD retains the accuracy, efficiency, and percentile concepts from the original web app while exporting batch-friendly summary and long-format detail tables.
+  - **Enhancements:** DIAAD supports batch analysis of uploaded/input tabular data and reports normalized target vocabulary coverage for aggregate comparisons across tasks.
+  - **Recommended use cases:** The original web app remains an excellent choice for small numbers of individualized reports, while DIAAD's workflow focuses on higher-throughput downstream statistical workflows.
 
 > Cavanaugh, R., Dalton, S. G., & Richardson, J. (2021). coreLexicon: *An open-source web-app for scoring core lexicon analysis*. R package version 0.0.1.0000. https://github.com/aphasia-apps/coreLexicon

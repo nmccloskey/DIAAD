@@ -1,0 +1,315 @@
+{
+  "id": "Cinderella",
+  "display_name": "Cinderella",
+  "language": "en",
+  "task_type": "story_retell",
+  "base_forms": [
+    "a",
+    "after",
+    "all",
+    "and",
+    "as",
+    "at",
+    "away",
+    "back",
+    "ball",
+    "be",
+    "beautiful",
+    "because",
+    "but",
+    "by",
+    "cinderella",
+    "clock",
+    "come",
+    "could",
+    "dance",
+    "daughter",
+    "do",
+    "dress",
+    "ever",
+    "fairy",
+    "father",
+    "find",
+    "fit",
+    "foot",
+    "for",
+    "get",
+    "girl",
+    "glass",
+    "go",
+    "godmother",
+    "happy",
+    "have",
+    "he",
+    "home",
+    "horse",
+    "house",
+    "i",
+    "in",
+    "into",
+    "it",
+    "know",
+    "leave",
+    "like",
+    "little",
+    "live",
+    "look",
+    "lose",
+    "make",
+    "marry",
+    "midnight",
+    "mother",
+    "mouse",
+    "not",
+    "of",
+    "off",
+    "on",
+    "one",
+    "out",
+    "prince",
+    "pumpkin",
+    "run",
+    "say",
+    "'s",
+    "she",
+    "shoe",
+    "sister",
+    "slipper",
+    "so",
+    "strike",
+    "take",
+    "tell",
+    "that",
+    "the",
+    "then",
+    "there",
+    "they",
+    "this",
+    "time",
+    "to",
+    "try",
+    "turn",
+    "two",
+    "up",
+    "very",
+    "want",
+    "well",
+    "when",
+    "who",
+    "will",
+    "with"
+  ],
+  "variant_map": {
+    "a": [
+      "an"
+    ],
+    "ball": [
+      "balls"
+    ],
+    "be": [
+      "is",
+      "are",
+      "was",
+      "were",
+      "am",
+      "being",
+      "been",
+      "bein",
+      "'m",
+      "'re"
+    ],
+    "come": [
+      "comin",
+      "comes",
+      "came",
+      "coming",
+      "cmon"
+    ],
+    "could": [
+      "cannot",
+      "couldnt",
+      "coulda"
+    ],
+    "daughter": [
+      "daughters"
+    ],
+    "do": [
+      "doin",
+      "didnt",
+      "dont",
+      "doesnt",
+      "did",
+      "does",
+      "doing"
+    ],
+    "father": [
+      "daddy",
+      "dad",
+      "papa",
+      "pa"
+    ],
+    "find": [
+      "finds",
+      "found",
+      "finding"
+    ],
+    "get": [
+      "gettin",
+      "gets",
+      "got",
+      "getting",
+      "gotta"
+    ],
+    "girl": [
+      "girls"
+    ],
+    "go": [
+      "goin",
+      "goes",
+      "gone",
+      "went",
+      "going",
+      "gonna"
+    ],
+    "have": [
+      "havin",
+      "havent",
+      "hasnt",
+      "hadnt"
+    ],
+    "he": [
+      "him",
+      "himself",
+      "his"
+    ],
+    "i": [
+      "me",
+      "my",
+      "mine",
+      "myself"
+    ],
+    "in": [
+      "inna"
+    ],
+    "it": [
+      "its",
+      "itself"
+    ],
+    "know": [
+      "knows",
+      "knew",
+      "knowing"
+    ],
+    "leave": [
+      "leaves",
+      "left",
+      "leaving"
+    ],
+    "look": [
+      "lookin",
+      "looks",
+      "looked",
+      "looking"
+    ],
+    "make": [
+      "makes",
+      "made",
+      "making"
+    ],
+    "mother": [
+      "mommy",
+      "mom",
+      "mama",
+      "ma"
+    ],
+    "not": [
+      "aint"
+    ],
+    "out": [
+      "outta"
+    ],
+    "run": [
+      "runs",
+      "ran",
+      "running"
+    ],
+    "say": [
+      "sayin",
+      "says",
+      "said",
+      "saying"
+    ],
+    "she": [
+      "her",
+      "herself"
+    ],
+    "shoe": [
+      "shoes"
+    ],
+    "sister": [
+      "sisters"
+    ],
+    "slipper": [
+      "slippers"
+    ],
+    "take": [
+      "takin",
+      "takes",
+      "took",
+      "taking"
+    ],
+    "tell": [
+      "tells",
+      "told",
+      "telling"
+    ],
+    "the": [
+      "da"
+    ],
+    "they": [
+      "them",
+      "themselves",
+      "their",
+      "theirs",
+      "themself"
+    ],
+    "try": [
+      "tries",
+      "tried",
+      "trying"
+    ],
+    "turn": [
+      "turns",
+      "turned",
+      "turning"
+    ],
+    "want": [
+      "wanna",
+      "wants",
+      "wanted",
+      "wanting"
+    ]
+  },
+  "norms": {
+    "accuracy": {
+      "url": "https://docs.google.com/spreadsheets/d/1fpDq7aTrKVkfjdv8ka7BS5_iHEJ8HHI-q9nJI6wDAEA/export?format=csv&gid=280451139",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex Score",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    },
+    "efficiency": {
+      "url": "https://docs.google.com/spreadsheets/d/1fpDq7aTrKVkfjdv8ka7BS5_iHEJ8HHI-q9nJI6wDAEA/export?format=csv&gid=285651009",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex/min",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    }
+  }
+}

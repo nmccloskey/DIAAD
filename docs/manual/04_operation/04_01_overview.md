@@ -32,7 +32,7 @@
 | 9a | words evaluate | Evaluate word count reliability | Manually completed word counts (from **7b**) | Reliability summaries + agreement reports | `evaluate_word_count_reliability` |
 | 9b | words reselect | Reselect word count reliability samples | Manually completed word counts (from **7b**) | New reliability subset(s) | `reselect_cu_wc_reliability` |
 | 10a | cus summarize | Summarize CU coding & word counts | CU and WC coding results | Blind + unblind utterance and sample summaries + blind codes | `summarize_cus` |
-| 10b | corelex analyze | Run CoreLex analysis | CU and WC sample summaries | CoreLex coverage and percentile metrics | `run_corelex` |
+| 10b | corelex analyze | Run target vocabulary coverage analysis | CU and WC sample summaries | Summary and long-format detail tables with percentile data | `run_corelex` |
 
 ---
 
@@ -56,7 +56,7 @@ diaad 4            # runs 4a,4b
 # Full CU analysis after manual CU coding is finished
 diaad 6a,7a,10a
 
-# Minimal batched CoreLex on input .cha files
+# Minimal target vocabulary coverage on input .cha files
 diaad 10b
 ```
 

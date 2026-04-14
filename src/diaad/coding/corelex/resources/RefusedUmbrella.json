@@ -1,0 +1,188 @@
+{
+  "id": "RefusedUmbrella",
+  "display_name": "Refused Umbrella",
+  "language": "en",
+  "task_type": "picture_description",
+  "base_forms": [
+    "a",
+    "and",
+    "back",
+    "be",
+    "boy",
+    "do",
+    "get",
+    "go",
+    "have",
+    "he",
+    "home",
+    "i",
+    "in",
+    "it",
+    "little",
+    "mother",
+    "need",
+    "not",
+    "out",
+    "rain",
+    "say",
+    "school",
+    "she",
+    "so",
+    "start",
+    "take",
+    "that",
+    "the",
+    "then",
+    "to",
+    "umbrella",
+    "walk",
+    "wet",
+    "with",
+    "you"
+  ],
+  "variant_map": {
+    "a": [
+      "an"
+    ],
+    "be": [
+      "is",
+      "are",
+      "was",
+      "were",
+      "am",
+      "being",
+      "been",
+      "bein",
+      "'m",
+      "'re"
+    ],
+    "boy": [
+      "boys"
+    ],
+    "do": [
+      "doin",
+      "didnt",
+      "dont",
+      "doesnt",
+      "did",
+      "does",
+      "doing"
+    ],
+    "get": [
+      "gettin",
+      "gets",
+      "got",
+      "getting",
+      "gotta"
+    ],
+    "go": [
+      "goin",
+      "goes",
+      "gone",
+      "went",
+      "going",
+      "gonna"
+    ],
+    "have": [
+      "havin",
+      "havent",
+      "hasnt",
+      "hadnt"
+    ],
+    "he": [
+      "him",
+      "himself",
+      "his"
+    ],
+    "i": [
+      "me",
+      "my",
+      "mine",
+      "myself"
+    ],
+    "in": [
+      "inna"
+    ],
+    "it": [
+      "its",
+      "itself"
+    ],
+    "mother": [
+      "mommy",
+      "mom",
+      "mama",
+      "ma"
+    ],
+    "need": [
+      "needin"
+    ],
+    "not": [
+      "aint"
+    ],
+    "out": [
+      "outta"
+    ],
+    "rain": [
+      "rainin"
+    ],
+    "say": [
+      "sayin",
+      "says",
+      "said",
+      "saying"
+    ],
+    "she": [
+      "her",
+      "herself"
+    ],
+    "start": [
+      "startin",
+      "starts",
+      "started",
+      "starting"
+    ],
+    "take": [
+      "takin",
+      "takes",
+      "took",
+      "taking"
+    ],
+    "the": [
+      "da"
+    ],
+    "walk": [
+      "walkin",
+      "walks",
+      "walked",
+      "walking"
+    ],
+    "you": [
+      "your",
+      "yours",
+      "yourself",
+      "yall"
+    ]
+  },
+  "norms": {
+    "accuracy": {
+      "url": "https://docs.google.com/spreadsheets/d/1oYiwnUdO0dOsFVTmdZBCxkAQc5Ui-71GhUSchK_YY44/export?format=csv&gid=1670315041",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex Score",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    },
+    "efficiency": {
+      "url": "https://docs.google.com/spreadsheets/d/1oYiwnUdO0dOsFVTmdZBCxkAQc5Ui-71GhUSchK_YY44/export?format=csv&gid=1362214973",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex/min",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    }
+  }
+}

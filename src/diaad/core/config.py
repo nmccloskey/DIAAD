@@ -142,16 +142,6 @@ class BlindingConfig:
         raise ValueError(f"Unknown blinding mode: {mode}")
 
 
-@dataclass(frozen=True)
-class ValidationConfig:
-    """Normalized POWERS validation configuration."""
-
-    stratify_by: list[str]
-    num_strata: int
-    selection_table: str
-    stratum_numbers: list[int]
-
-
 # ------------------------------------------------------------------
 # Config manager
 # ------------------------------------------------------------------
@@ -171,7 +161,6 @@ class ConfigManager:
         "project.yaml",
         "tiers.yaml",
         "blinding.yaml",
-        "validation.yaml",
     )
 
     def __init__(self, config_dir: str | Path) -> None:
@@ -181,12 +170,10 @@ class ConfigManager:
         self._raw_project = self._read_yaml("project.yaml")
         self._raw_tiers = self._read_yaml("tiers.yaml")
         self._raw_blinding = self._read_yaml("blinding.yaml")
-        self._raw_validation = self._read_yaml("validation.yaml")
 
         self.project = self._parse_project(self._raw_project)
         self.tiers_section = self._parse_tiers(self._raw_tiers)
         self.blinding = self._parse_blinding(self._raw_blinding)
-        self.validation = self._parse_validation(self._raw_validation)
 
         logger.info("Loaded configuration from %s", self.config_dir)
 
@@ -305,22 +292,6 @@ class ConfigManager:
         return self.blinding.get_blind_cols(mode="analysis")
 
     @property
-    def stratify_by(self) -> list[str]:
-        return self.validation.stratify_by
-
-    @property
-    def num_strata(self) -> int:
-        return self.validation.num_strata
-
-    @property
-    def selection_table(self) -> str:
-        return self.validation.selection_table
-
-    @property
-    def stratum_numbers(self) -> list[int]:
-        return self.validation.stratum_numbers
-
-    @property
     def metadata_source(self) -> str:
         return self.blinding.metadata_source
     
@@ -370,12 +341,6 @@ class ConfigManager:
                 "analysis_blind_cols": self.analysis_blind_cols,
                 "id_cols": self.id_cols,
                 "blinded_suffix": self.blinded_suffix,
-            },
-            "validation": {
-                "stratify_by": self.validation.stratify_by,
-                "num_strata": self.validation.num_strata,
-                "selection_table": self.validation.selection_table,
-                "stratum_numbers": self.validation.stratum_numbers,
             },
         }
 
@@ -534,26 +499,6 @@ class ConfigManager:
             analysis_blind_cols=analysis_blind_cols,
             id_cols=id_cols,
         )
-
-    # ------------------------------------------------------------------
-    # Validation parsing
-    # ------------------------------------------------------------------
-
-    def _parse_validation(self, data: dict[str, Any]) -> ValidationConfig:
-        validation = ValidationConfig(
-            stratify_by=self._as_str_list(data.get("stratify_by"), default=[]),
-            num_strata=self._as_int(data.get("num_strata"), default=0),
-            selection_table=self._as_str(data.get("selection_table"), default=""),
-            stratum_numbers=self._as_int_list(
-                data.get("stratum_numbers"),
-                default=[],
-            ),
-        )
-
-        if validation.num_strata < 0:
-            raise ValueError(f"num_strata must be >= 0; got {validation.num_strata}")
-
-        return validation
 
     # ------------------------------------------------------------------
     # Normalization helpers

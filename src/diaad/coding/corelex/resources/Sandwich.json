@@ -1,0 +1,102 @@
+{
+  "id": "Sandwich",
+  "display_name": "Sandwich",
+  "language": "en",
+  "task_type": "procedural_description",
+  "base_forms": [
+    "a",
+    "and",
+    "bread",
+    "butter",
+    "get",
+    "it",
+    "jelly",
+    "knife",
+    "of",
+    "on",
+    "one",
+    "other",
+    "out",
+    "peanut",
+    "piece",
+    "put",
+    "slice",
+    "spread",
+    "take",
+    "the",
+    "then",
+    "to",
+    "together",
+    "two",
+    "you"
+  ],
+  "variant_map": {
+    "a": [
+      "an"
+    ],
+    "get": [
+      "gettin",
+      "gets",
+      "got",
+      "getting",
+      "gotta"
+    ],
+    "it": [
+      "its",
+      "itself"
+    ],
+    "knife": [
+      "knives"
+    ],
+    "out": [
+      "outta"
+    ],
+    "piece": [
+      "pieces"
+    ],
+    "put": [
+      "puts",
+      "putting"
+    ],
+    "slice": [
+      "slices"
+    ],
+    "take": [
+      "takin",
+      "takes",
+      "took",
+      "taking"
+    ],
+    "the": [
+      "da"
+    ],
+    "you": [
+      "your",
+      "yours",
+      "yourself",
+      "yall"
+    ]
+  },
+  "norms": {
+    "accuracy": {
+      "url": "https://docs.google.com/spreadsheets/d/1o29bBQbyNlmtL05kkTuLV6z5auz1msDeLSxIO1p_3EA/export?format=csv&gid=342443913",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex Score",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    },
+    "efficiency": {
+      "url": "https://docs.google.com/spreadsheets/d/1o29bBQbyNlmtL05kkTuLV6z5auz1msDeLSxIO1p_3EA/export?format=csv&gid=2140143611",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex/min",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    }
+  }
+}

@@ -5,7 +5,8 @@ import pytest
 
 # Import target module
 try:
-    from diaad.coding import corelex as clx
+    from diaad.coding.corelex import corelex as clx
+    from diaad.coding.corelex import utils as clx_utils
 except Exception as e:
     pytest.skip(f"Could not import diaad.coding.corelex: {e}", allow_module_level=True)
 
@@ -50,53 +51,40 @@ def test_run_corelex_unblind_mode(tmp_path, monkeypatch, dummy_tiers):
         "c2_cu": [1],
     })
 
-    # Monkeypatch I/O
-    def fake_read_excel(path, *a, **k):
-        if str(path).endswith("unblind_utterance_data.xlsx"):
-            return unblind_df.copy()
-        raise AssertionError(f"Unexpected read_excel path in unblind test: {path}")
-
-    captured = {}
-    def fake_to_excel(self, path, index=False):
-        if str(path).endswith(".xlsx"):
-            captured["df"] = self.copy()
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_bytes(b"stub")
-
-    monkeypatch.setattr(pd, "read_excel", fake_read_excel)
-    monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel)
+    monkeypatch.setattr(clx_utils, "read_excel_safely", lambda path: unblind_df.copy())
 
     # Stub norms + percentile calculations
     monkeypatch.setattr(clx, "preload_corelex_norms",
                         lambda present: {scene: {"accuracy": object(), "efficiency": object()}
                                          for scene in present})
     monkeypatch.setattr(clx, "get_percentiles",
-                        lambda score, df, col: {"control_percentile": 60.0, "pwa_percentile": 80.0})
+                        lambda score, df, col, **k: {"control_percentile": 60.0, "pwa_percentile": 80.0})
 
     clx.run_corelex(dummy_tiers, Path(input_dir), Path(output_dir))
 
     corelex_dir = output_dir / "core_lex"
     files = list(corelex_dir.glob("core_lex_data_*.xlsx"))
     assert files, "Expected a core_lex_data_<timestamp>.xlsx file."
-    assert "df" in captured
 
-    df = captured["df"]
+    df = pd.read_excel(files[0], sheet_name="summary")
+    detail_df = pd.read_excel(files[0], sheet_name="details")
     row = df.iloc[0]
     assert row["sample_id"] == "S1"
     assert row["narrative"] == "Sandwich"
     assert row["num_tokens"] == 9
-    assert row["num_core_words"] == 8
-    assert row["num_core_word_tokens"] == 9
+    assert row["num_base_forms_produced"] == 8
+    assert row["num_core_token_matches"] == 9
     assert row["speaking_time"] == 120
-    assert pytest.approx(row["core_words_per_min"], 1e-6) == 4.0
-    assert row["core_words_control_percentile"] == 60.0
-    assert row["core_words_pwa_percentile"] == 80.0
-    assert row["cwpm_control_percentile"] == 60.0
-    assert row["cwpm_pwa_percentile"] == 80.0
-    token_cols = [c for c in df.columns if c.startswith("San_")]
-    assert token_cols, "Expected Sandwich token columns in output."
-    assert "San_bread" in df.columns
-    assert "San_put" in df.columns
+    assert pytest.approx(row["core_tokens_per_min"], 1e-6) == 4.5
+    assert row["accuracy_control_percentile"] == 60.0
+    assert row["accuracy_pwa_percentile"] == 80.0
+    assert row["efficiency_control_percentile"] == 60.0
+    assert row["efficiency_pwa_percentile"] == 80.0
+    assert list(detail_df.columns) == clx.DETAIL_COLUMNS
+    assert len(detail_df) == 25
+    put = detail_df[detail_df["base_form"] == "put"].iloc[0]
+    assert put["num_tokens_matched"] == 2
+    assert put["score"] == 1
 
 
 def test_run_corelex_transcript_table_mode(tmp_path, monkeypatch, dummy_tiers):
@@ -111,47 +99,31 @@ def test_run_corelex_transcript_table_mode(tmp_path, monkeypatch, dummy_tiers):
         "speaking_time": [np.nan, 60]
     })
 
-    def fake_read_excel(path, *a, **k):
-        if str(path).endswith("_transcript_tables.xlsx"):
-            return utts.copy()
-        raise AssertionError(f"Unexpected read_excel path in fallback test: {path}")
-
-    captured = {}
-    def fake_to_excel(self, path, index=False):
-        if str(path).endswith(".xlsx"):
-            captured["df"] = self.copy()
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_bytes(b"stub")
-
-    monkeypatch.setattr(pd, "read_excel", fake_read_excel)
-    monkeypatch.setattr(pd.DataFrame, "to_excel", fake_to_excel)
-
     monkeypatch.setattr(clx, "preload_corelex_norms",
                         lambda present: {scene: {"accuracy": object(), "efficiency": object()}
                                          for scene in present})
     monkeypatch.setattr(clx, "get_percentiles",
-                        lambda score, df, col: {"control_percentile": 55.0, "pwa_percentile": 65.0})
+                        lambda score, df, col, **k: {"control_percentile": 55.0, "pwa_percentile": 65.0})
 
-    # Patch all possible Excel readers inside CoreLex
-    monkeypatch.setattr(clx, "_read_excel_safely", lambda path: utts.copy())
-    monkeypatch.setattr(clx, "extract_transcript_data", lambda path: utts.copy())
+    monkeypatch.setattr(clx_utils, "extract_transcript_data", lambda path: utts.copy())
 
     clx.run_corelex(dummy_tiers, Path(input_dir), Path(output_dir), exclude_participants={"INV"})
 
     corelex_dir = output_dir / "core_lex"
     files = list(corelex_dir.glob("core_lex_data_*.xlsx"))
     assert files, "Expected a core_lex_data_<timestamp>.xlsx file."
-    assert "df" in captured
 
-    df = captured["df"]
+    df = pd.read_excel(files[0], sheet_name="summary")
+    detail_df = pd.read_excel(files[0], sheet_name="details")
     row = df.iloc[0]
     assert row["sample_id"] == "S2"
     assert row["narrative"] == "Sandwich"
-    assert row["num_core_words"] == 1
-    assert row["num_core_word_tokens"] == 1
+    assert row["num_base_forms_produced"] == 1
+    assert row["num_core_token_matches"] == 1
     assert row["speaking_time"] == 60
-    assert pytest.approx(row["core_words_per_min"], 1e-6) == 1.0
-    assert row["core_words_control_percentile"] == 55.0
-    assert row["core_words_pwa_percentile"] == 65.0
-    assert row["cwpm_control_percentile"] == 55.0
-    assert row["cwpm_pwa_percentile"] == 65.0
+    assert pytest.approx(row["core_tokens_per_min"], 1e-6) == 1.0
+    assert row["accuracy_control_percentile"] == 55.0
+    assert row["accuracy_pwa_percentile"] == 65.0
+    assert row["efficiency_control_percentile"] == 55.0
+    assert row["efficiency_pwa_percentile"] == 65.0
+    assert len(detail_df) == 25

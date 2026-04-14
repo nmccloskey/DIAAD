@@ -22,7 +22,7 @@ The program automates or facilitates:
 
 - **Transcription reliability** selection and evaluation  
 - **Complete Utterance (CU)** coding summaries and reliability calculations  
-- **Batched Core Lexicon analysis** with detailed output  
+- **Target vocabulary coverage analysis** with built-in CoreLex-style resources  
 - **Blinded sample management** for clinical coding teams  
 - **Integrated data organization** for tiered multi-speaker transcripts  
 
@@ -75,6 +75,6 @@ Note that Streamlit flattens directories upon file upload. This matters in parti
 
 ### 3.2  Local Use
 
-When installed and run locally (via the CLI), all data remain within the user’s computer environment. For the CoreLex functionality, normative data for percentile calculation (Cavanaugh et al., 2021) is accessed online using Google Sheet IDs, but otherwise the CLI version runs offline. The program never collects or transmits any user information. DIAAD therefore supports secure use under HIPAA-compliant privacy frameworks.
+When installed and run locally (via the CLI), all data remain within the user’s computer environment. For target vocabulary coverage, optional normative data for percentile calculation (Cavanaugh et al., 2021) is accessed online using resource-declared Google Sheet URLs, but otherwise the CLI version runs offline. The program never collects or transmits any user information. DIAAD therefore supports secure use under HIPAA-compliant privacy frameworks.
 
 ---

@@ -1,0 +1,132 @@
+{
+  "id": "BrokenWindow",
+  "display_name": "Broken Window",
+  "language": "en",
+  "task_type": "picture_description",
+  "base_forms": [
+    "a",
+    "and",
+    "ball",
+    "be",
+    "boy",
+    "break",
+    "go",
+    "he",
+    "in",
+    "it",
+    "kick",
+    "lamp",
+    "look",
+    "of",
+    "out",
+    "over",
+    "play",
+    "sit",
+    "soccer",
+    "the",
+    "through",
+    "to",
+    "up",
+    "window"
+  ],
+  "variant_map": {
+    "a": [
+      "an"
+    ],
+    "ball": [
+      "balls"
+    ],
+    "be": [
+      "is",
+      "are",
+      "was",
+      "were",
+      "am",
+      "being",
+      "been",
+      "bein",
+      "'m",
+      "'re"
+    ],
+    "boy": [
+      "boys"
+    ],
+    "break": [
+      "breakin",
+      "breaks",
+      "broke",
+      "breaking"
+    ],
+    "go": [
+      "goin",
+      "goes",
+      "gone",
+      "went",
+      "going",
+      "gonna"
+    ],
+    "he": [
+      "him",
+      "himself",
+      "his"
+    ],
+    "in": [
+      "inna"
+    ],
+    "it": [
+      "its",
+      "itself"
+    ],
+    "kick": [
+      "kickin"
+    ],
+    "look": [
+      "lookin",
+      "looks",
+      "looked",
+      "looking"
+    ],
+    "out": [
+      "outta"
+    ],
+    "play": [
+      "playin",
+      "plays",
+      "played",
+      "playing"
+    ],
+    "sit": [
+      "sits",
+      "sat",
+      "sitting"
+    ],
+    "the": [
+      "da"
+    ],
+    "window": [
+      "windows"
+    ]
+  },
+  "norms": {
+    "accuracy": {
+      "url": "https://docs.google.com/spreadsheets/d/12SAkAG8VCAkhCFv4ceJiqgRZ7U9-P9bEcet--hDeW2s/export?format=csv&gid=1059193656",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex Score",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    },
+    "efficiency": {
+      "url": "https://docs.google.com/spreadsheets/d/12SAkAG8VCAkhCFv4ceJiqgRZ7U9-P9bEcet--hDeW2s/export?format=csv&gid=1542250565",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex/min",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    }
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "id": "CatRescue",
+  "display_name": "Cat Rescue",
+  "language": "en",
+  "task_type": "picture_description",
+  "base_forms": [
+    "a",
+    "and",
+    "bark",
+    "be",
+    "call",
+    "cat",
+    "climb",
+    "come",
+    "department",
+    "dog",
+    "down",
+    "father",
+    "fire",
+    "fireman",
+    "get",
+    "girl",
+    "go",
+    "have",
+    "he",
+    "in",
+    "ladder",
+    "little",
+    "not",
+    "out",
+    "she",
+    "so",
+    "stick",
+    "the",
+    "their",
+    "there",
+    "to",
+    "tree",
+    "up",
+    "with"
+  ],
+  "variant_map": {
+    "a": [
+      "an"
+    ],
+    "bark": [
+      "barkin"
+    ],
+    "be": [
+      "is",
+      "are",
+      "was",
+      "were",
+      "am",
+      "being",
+      "been",
+      "bein",
+      "'m",
+      "'re"
+    ],
+    "call": [
+      "callin",
+      "calls",
+      "called",
+      "calling"
+    ],
+    "cat": [
+      "cats"
+    ],
+    "climb": [
+      "climbin",
+      "climbs",
+      "climbed",
+      "climbing"
+    ],
+    "come": [
+      "comin",
+      "comes",
+      "came",
+      "coming",
+      "cmon"
+    ],
+    "dog": [
+      "dogs"
+    ],
+    "father": [
+      "daddy",
+      "dad",
+      "papa",
+      "pa"
+    ],
+    "fire": [
+      "fires"
+    ],
+    "get": [
+      "gettin",
+      "gets",
+      "got",
+      "getting",
+      "gotta"
+    ],
+    "girl": [
+      "girls"
+    ],
+    "go": [
+      "goin",
+      "goes",
+      "gone",
+      "went",
+      "going",
+      "gonna"
+    ],
+    "have": [
+      "havin",
+      "havent",
+      "hasnt",
+      "hadnt"
+    ],
+    "he": [
+      "him",
+      "himself",
+      "his"
+    ],
+    "in": [
+      "inna"
+    ],
+    "ladder": [
+      "ladders"
+    ],
+    "not": [
+      "aint"
+    ],
+    "out": [
+      "outta"
+    ],
+    "she": [
+      "her",
+      "herself"
+    ],
+    "stick": [
+      "stickin",
+      "sticks"
+    ],
+    "the": [
+      "da"
+    ],
+    "tree": [
+      "trees"
+    ]
+  },
+  "norms": {
+    "accuracy": {
+      "url": "https://docs.google.com/spreadsheets/d/1sTvSX0Ws0kPTw-5HHyY8JO2CubqWVgEzDvE5BuGSefc/export?format=csv&gid=1916867784",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex Score",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    },
+    "efficiency": {
+      "url": "https://docs.google.com/spreadsheets/d/1sTvSX0Ws0kPTw-5HHyY8JO2CubqWVgEzDvE5BuGSefc/export?format=csv&gid=1346760459",
+      "format": "csv",
+      "columns": {
+        "raw_score": "CoreLex/min",
+        "group": "Aphasia",
+        "pwa_percentile": "pwa_percentile",
+        "control_percentile": "control_percentile"
+      }
+    }
+  }
+}
