@@ -1,21 +1,65 @@
-import yaml
-import zipfile
+from __future__ import annotations
+
 import tempfile
-from io import BytesIO
-import streamlit as st
-from pathlib import Path
-import random, numpy as np
+import zipfile
 from datetime import datetime
+from io import BytesIO
+from pathlib import Path
+
+import streamlit as st
+import yaml
+
+from diaad import __version__
+from diaad.cli.commands import MODULE_COMMANDS
+from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
+from diaad.core.logger import initialize_logger, logger, set_root, terminate_logger
+from diaad.core.run_context import RunContext
 from diaad.webapp.config_builder import build_config_ui
 
-start_time = datetime.now()
 
-# ------------------------------------------------------------------
-# Zip utility
-# ------------------------------------------------------------------
+try:
+    from iridic.webapp.manual_viewer import render_manual_ui
+except Exception:
+    render_manual_ui = None
+
+
+CONFIG_FILENAMES = {
+    "project.yaml": "project",
+    "project.yml": "project",
+    "tiers.yaml": "tiers",
+    "tiers.yml": "tiers",
+    "blinding.yaml": "blinding",
+    "blinding.yml": "blinding",
+}
+
+DISPATCHED_COMMANDS = {
+    "transcripts tabularize",
+    "transcripts select",
+    "transcripts reselect",
+    "transcripts evaluate",
+    "cus make",
+    "cus reselect",
+    "cus evaluate",
+    "cus analyze",
+    "cus rates",
+    "words make",
+    "words reselect",
+    "words evaluate",
+    "words analyze",
+    "words rates",
+    "vocab analyze",
+    "turns analyze",
+    "templates utterances",
+    "templates samples",
+    "powers make",
+    "powers analyze",
+    "powers evaluate",
+    "powers reselect",
+}
+
 
 def zip_folder(folder_path: Path) -> BytesIO:
-    """Compress the given folder into an in-memory ZIP buffer."""
+    """Compress a folder into an in-memory ZIP buffer."""
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         for file_path in folder_path.rglob("*"):
@@ -26,258 +70,243 @@ def zip_folder(folder_path: Path) -> BytesIO:
     return zip_buffer
 
 
-# ------------------------------------------------------------------
-# DIAAD imports
-# ------------------------------------------------------------------
-from diaad.io.discovery import find_matching_files
-from diaad.core.logger import (
-    logger,
-    initialize_logger,
-    terminate_logger,
-    early_log,
-)
-from src.diaad.core.run_wrappers import (
-    run_read_tiers, run_read_cha_files,
-    run_select_transcription_reliability_samples,
-    run_reselect_transcription_reliability_samples,
-    run_evaluate_transcription_reliability,
-    run_tabularize_transcripts, run_make_cu_coding_files,
-    run_evaluate_cu_reliability,
-    run_analyze_cu_coding, run_reselect_cu_rel,
-    run_make_word_count_files, run_evaluate_word_count_reliability,
-    run_reselect_wc_rel, run_summarize_cus, run_run_target_vocab
-)
-from diaad import __version__
-
-from iridic.webapp.manual_viewer import render_manual_ui
+def _write_yaml(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
 
 
-# ------------------------------------------------------------------
-# Streamlit header
-# ------------------------------------------------------------------
-st.title("DIAAD Web App")
-st.subheader("Database-oriented, Integrative Architecture for Analyzing Discourse")
+def _read_uploaded_configs(files) -> tuple[dict[str, dict] | None, list[str]]:
+    if not files:
+        return None, []
 
-# ------------------------------------------------------------------
-# Instruction manual toggle
-# ------------------------------------------------------------------
-REPO_ROOT = Path(__file__).resolve().parents[3]
+    configs: dict[str, dict] = {}
+    errors: list[str] = []
 
-render_manual_ui(
-    repo_root=REPO_ROOT,
-    manual_rel_dir="docs/manual",
-    expander_label="📘 Show / Hide DIAAD Manual Menu",
-)
+    for uploaded in files:
+        filename = Path(uploaded.name).name.lower()
+        part = CONFIG_FILENAMES.get(filename)
+        if part is None:
+            errors.append(
+                f"Ignoring {uploaded.name}: expected project.yaml, tiers.yaml, or blinding.yaml."
+            )
+            continue
 
-# ---------------------------------------------------------------
-# PART 1: CONFIG
-# ---------------------------------------------------------------
-if "confirmed_config" not in st.session_state:
-    st.session_state.confirmed_config = False
+        try:
+            data = yaml.safe_load(uploaded.getvalue().decode("utf-8")) or {}
+        except Exception as e:
+            errors.append(f"Could not parse {uploaded.name}: {e}")
+            continue
 
-st.header("Part 1: Create or upload config file")
-config_file = st.file_uploader("Upload your config.yaml", type=["yaml", "yml"])
-config = None
+        if not isinstance(data, dict):
+            errors.append(f"{uploaded.name} must contain a YAML mapping.")
+            continue
 
-if config_file:
-    st.session_state.confirmed_config = False
-    config = yaml.safe_load(config_file)
-    st.success("✅ Config file uploaded")
-else:
-    with st.expander("No config uploaded? Build one here"):
-        config = build_config_ui()
-        if st.button("✅ Use this built config"):
-            st.session_state.confirmed_config = True
-            st.success("Built config confirmed.")
+        configs[part] = data
+
+    missing = [name for name in ("project", "tiers", "blinding") if name not in configs]
+    if missing:
+        errors.append(
+            "Missing config file(s): "
+            + ", ".join(f"{name}.yaml" for name in missing)
+            + "."
+        )
+        return None, errors
+
+    return configs, errors
 
 
-# ---------------------------------------------------------------
-# PART 2: INPUT FILES
-# ---------------------------------------------------------------
-st.header("Part 2: Upload input files")
-cha_files = st.file_uploader("Upload input files", type=["cha", "xlsx"], accept_multiple_files=True)
+def _web_project_config(project_config: dict) -> dict:
+    """
+    Keep web runs inside the temporary project root regardless of uploaded paths.
+    """
+    project = dict(project_config)
+    project["input_dir"] = "input"
+    project["output_dir"] = "output"
+    return project
 
-if (config_file or st.session_state.confirmed_config) and cha_files:
+
+def _write_config_dir(config_dir: Path, configs: dict[str, dict]) -> None:
+    _write_yaml(config_dir / "project.yaml", _web_project_config(configs["project"]))
+    _write_yaml(config_dir / "tiers.yaml", configs["tiers"])
+    _write_yaml(config_dir / "blinding.yaml", configs["blinding"])
+
+
+def _save_uploaded_inputs(input_dir: Path, uploaded_files) -> None:
+    input_dir.mkdir(parents=True, exist_ok=True)
+    for uploaded in uploaded_files:
+        file_path = input_dir / Path(uploaded.name).name
+        with file_path.open("wb") as f:
+            f.write(uploaded.getbuffer())
+
+
+def _command_options() -> list[str]:
+    return [
+        command
+        for module_commands in MODULE_COMMANDS.values()
+        for command in module_commands
+        if command in DISPATCHED_COMMANDS
+    ]
+
+
+def _render_manual() -> None:
+    if render_manual_ui is None:
+        return
+    repo_root = Path(__file__).resolve().parents[3]
+    render_manual_ui(
+        repo_root=repo_root,
+        manual_rel_dir="docs/manual",
+        expander_label="Show / Hide DIAAD Manual Menu",
+    )
+
+
+def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str]) -> BytesIO:
+    start_time = datetime.now()
+
     with tempfile.TemporaryDirectory() as tmpdir:
-        root_dir = Path(tmpdir).resolve()
-        early_log("info", f"DIAAD web run initialized (temporary root: {root_dir})")
+        project_root = Path(tmpdir).resolve()
+        set_root(project_root)
 
-        input_dir = (root_dir / "input").resolve()
-        output_dir = (root_dir / "output").resolve()
-        input_dir.mkdir(exist_ok=True)
-        output_dir.mkdir(exist_ok=True)
+        config_dir = project_root / "config"
+        _write_config_dir(config_dir, configs)
 
-        # Save uploaded input files
-        for file in cha_files:
-            file_path = input_dir / file.name
-            with file_path.open("wb") as f:
-                f.write(file.read())
+        ctx = RunContext(
+            config_dir=config_dir,
+            project_root=project_root,
+            start_time=start_time,
+        )
+        _save_uploaded_inputs(ctx.input_dir, uploaded_inputs)
 
-        # Create timestamped output folder and logger
-        timestamp = start_time.strftime("%y%m%d_%H%M")
-        out_dir = (output_dir / f"diaad_output_{timestamp}").resolve()
-        out_dir.mkdir(parents=True, exist_ok=True)
+        initialize_logger(
+            start_time,
+            ctx.out_dir,
+            program_name="DIAAD",
+            version=__version__,
+        )
+        logger.info("DIAAD web run initialized.")
+        logger.info("Executing command(s): %s", ", ".join(commands))
 
-        # --- Save the effective config into the output folder ---
-        config_path = out_dir / "config.yaml"
-        if config_file:
-            # Preserve uploaded config
-            with config_path.open("wb") as f:
-                f.write(config_file.getbuffer())
-        else:
-            # Save the UI-built config
-            with config_path.open("w", encoding="utf-8") as f:
-                yaml.safe_dump(config, f, sort_keys=False)
+        try:
+            ctx.set_commands(commands)
+            prepare_dispatch_prerequisites(ctx, commands)
+            dispatch = build_dispatch(ctx)
 
-        # Set root for nicer relative paths in logs
-        from diaad.core.logger import set_root
-        set_root(root_dir)
+            executed: list[str] = []
+            for command in commands:
+                func = dispatch.get(command)
+                if func is None:
+                    logger.error("Unknown command: %s", command)
+                    continue
+                func()
+                executed.append(command)
 
-        # Initialize the logger
-        initialize_logger(start_time, out_dir, program_name="DIAAD", version=__version__)
+            if executed:
+                logger.info("Completed: %s", ", ".join(executed))
+        finally:
+            terminate_logger(**ctx.termination_kwargs())
 
-        # ------------------------------------------------------------------
-        # Load config parameters
-        # ------------------------------------------------------------------
-        random_seed = config.get("random_seed", 99) or 99
-        random.seed(random_seed)
-        np.random.seed(random_seed)
-        logger.info(f"Random seed set to {random_seed}")
+        return zip_folder(ctx.out_dir)
 
-        frac = config.get("reliability_fraction", 0.2)
-        shuffle_samples = config.get("shuffle_samples", True) or True
-        coders = config.get("coders", []) or []
-        cu_paradigms = config.get("cu_paradigms", []) or []
-        exclude_participants = config.get("exclude_participants", []) or []
-        strip_clan = config.get("strip_clan", True)
-        prefer_correction = config.get("prefer_correction", True)
-        lowercase = config.get("lowercase", True)
 
-        tiers, TM = run_read_tiers(config.get("tiers", {})) or {}
+def render_app() -> None:
+    st.title("DIAAD Web App")
+    st.subheader("Database-oriented, Integrative Architecture for Analyzing Discourse")
+    _render_manual()
 
-        # ---------------------------------------------------------------
-        # PART 3: FUNCTION SELECTION
-        # ---------------------------------------------------------------
-        st.header("Part 3: Select function(s) to run")
-        all_functions = [
-            "1a. Select transcription reliability samples",
-            "3a. Evaluate transcription reliability",
-            "3b. Reselect transcription reliability samples",
-            "4a. Make transcript tables",
-            "4b. Make CU coding & reliability files",
-            "6a. Evaluate CU reliability",
-            "6b. Reselect CU reliability samples",
-            "7a. Analyze CU coding",
-            "7b. Make word count files",
-            "9a. Evaluate word count reliability",
-            "9b. Reselect word count reliability samples",
-            "10a. Summarize CU samples",
-            "10b. Run CoreLex analysis"
-        ]
+    if "confirmed_config" not in st.session_state:
+        st.session_state.confirmed_config = False
+    if "built_configs" not in st.session_state:
+        st.session_state.built_configs = None
 
-        selected_funcs = st.multiselect("Select functions", all_functions)
+    st.header("Part 1: Configuration")
+    uploaded_config_files = st.file_uploader(
+        "Upload project.yaml, tiers.yaml, and blinding.yaml",
+        type=["yaml", "yml"],
+        accept_multiple_files=True,
+    )
 
-        if st.button("Run selected functions"):
-            if not selected_funcs:
-                st.warning("Please select at least one function.")
-                st.stop()
+    configs = None
+    config_errors: list[str] = []
+    if uploaded_config_files:
+        configs, config_errors = _read_uploaded_configs(uploaded_config_files)
+        for error in config_errors:
+            st.warning(error)
+        if configs:
+            st.session_state.confirmed_config = False
+            st.success("Config files uploaded.")
+    else:
+        with st.expander("No config files uploaded? Build them here", expanded=False):
+            built_configs, valid = build_config_ui()
+            if st.button("Use this built config", disabled=not valid):
+                st.session_state.built_configs = built_configs
+                st.session_state.confirmed_config = True
+                st.success("Built config confirmed.")
+        if st.session_state.confirmed_config:
+            configs = st.session_state.built_configs
 
-            try:
-                logger.info(f"Running selected functions: {selected_funcs}")
+    st.header("Part 2: Input Files")
+    uploaded_inputs = st.file_uploader(
+        "Upload input files",
+        type=["cha", "xlsx", "csv", "json"],
+        accept_multiple_files=True,
+    )
 
-                # --- Read .cha if needed ---
-                chats = None
-                if any(f.startswith(("1a", "4a")) for f in selected_funcs):
-                    chats = run_read_cha_files(input_dir)
+    st.header("Part 3: Commands")
+    commands = st.multiselect(
+        "Select commands",
+        _command_options(),
+        help="These are the same canonical commands used by the CLI.",
+    )
 
-                # --- Prepare utterance files if needed ---
-                needs_utt = any(
-                    f.startswith(x)
-                    for x in ("4b", "7b", "10b")
-                    for f in selected_funcs
-                )
-                if needs_utt and not any(f.startswith("4a") for f in selected_funcs):
-                    transcript_tables = find_matching_files(
-                        directories=[input_dir, out_dir],
-                        search_base="transcript_tables",
-                    )
-                    if not transcript_tables:
-                        logger.info("No utterance files detected — creating automatically.")
-                        chats = chats or run_read_cha_files(input_dir)
-                        run_tabularize_transcripts(tiers, chats, out_dir, shuffle_samples, random_seed)
+    if st.button("Run selected commands"):
+        if configs is None:
+            st.warning("Please upload or build a complete three-file config first.")
+            st.stop()
+        if not uploaded_inputs:
+            st.warning("Please upload at least one input file.")
+            st.stop()
+        if not commands:
+            st.warning("Please select at least one command.")
+            st.stop()
 
-                # --- Execute selected functions ---
-                for func in selected_funcs:
-                    if func.startswith("1a."):
-                        run_select_transcription_reliability_samples(tiers, chats, frac, out_dir)
-                    elif func.startswith("3a."):
-                        run_evaluate_transcription_reliability(
-                            tiers, input_dir, out_dir,
-                            exclude_participants, strip_clan, prefer_correction, lowercase
-                        )
-                    elif func.startswith("3b."):
-                        run_reselect_transcription_reliability_samples(input_dir, out_dir, frac)
-                    elif func.startswith("4a."):
-                        run_tabularize_transcripts(tiers, chats, out_dir, shuffle_samples, random_seed)
-                    elif func.startswith("4b."):
-                        run_make_cu_coding_files(
-                            tiers, frac, coders, input_dir, out_dir,
-                            cu_paradigms, exclude_participants
-                        )
-                    elif func.startswith("6a."):
-                        run_evaluate_cu_reliability(tiers, input_dir, out_dir, cu_paradigms)
-                    elif func.startswith("6b."):
-                        run_reselect_cu_rel(tiers, input_dir, out_dir, "CU", frac)
-                    elif func.startswith("7a."):
-                        run_analyze_cu_coding(tiers, input_dir, out_dir, cu_paradigms)
-                    elif func.startswith("7b."):
-                        run_make_word_count_files(tiers, frac, coders, input_dir, out_dir)
-                    elif func.startswith("9a."):
-                        run_evaluate_word_count_reliability(tiers, input_dir, out_dir)
-                    elif func.startswith("9b."):
-                        run_reselect_wc_rel(tiers, input_dir, out_dir, "WC", frac)
-                    elif func.startswith("10a."):
-                        run_summarize_cus(tiers, input_dir, out_dir, random_seed, TM)
-                    elif func.startswith("10b."):
-                        run_run_corelex(tiers, input_dir, out_dir, exclude_participants)
-
-                st.success("✅ All selected functions completed successfully!")
-
-            except Exception as e:
-                logger.exception("Unhandled error during DIAAD web run.")
-                st.error(
-                    "❌ An unexpected error occurred while running DIAAD. "
-                    "Please check the logs in the downloaded ZIP for details."
-                )
-
-            finally:
-                # Only terminate if out_dir + config_path has been set up
-                try:
-                    terminate_logger(
-                        input_dir=input_dir,
-                        output_dir=out_dir,
-                        config_path=config_path,
-                        config=config,
-                        start_time=start_time,
-                        program_name="DIAAD",
-                        version=__version__,
-                    )
-                except Exception:
-                    # Last-resort: don’t crash Streamlit while shutting down logging
-                    logger.exception("Error while terminating logger.")
-
-            # --- Create timestamped ZIP for download ---
-            timestamp = start_time.strftime("%y%m%d_%H%M")
-            zip_buffer = zip_folder(out_dir)
+        try:
+            zip_buffer = _run_diaad_web(configs, uploaded_inputs, commands)
+            st.success("All selected commands completed successfully.")
+            timestamp = datetime.now().strftime("%y%m%d_%H%M")
             st.download_button(
-                label="⬇️ Download Results ZIP",
+                label="Download Results ZIP",
                 data=zip_buffer,
                 file_name=f"diaad_web_output_{timestamp}.zip",
-                mime="application/zip"
+                mime="application/zip",
+            )
+        except Exception:
+            logger.exception("Unhandled error during DIAAD web run.")
+            st.error(
+                "An unexpected error occurred while running DIAAD. "
+                "Please check the logs in the downloaded ZIP if one was created."
             )
 
 
-def main():
-    """Launch this file as a Streamlit app."""
-    import subprocess, sys
-    subprocess.run([sys.executable, "-m", "streamlit", "run", __file__])
+def _running_under_streamlit() -> bool:
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+        return get_script_run_ctx() is not None
+    except Exception:
+        return False
+
+
+def main() -> None:
+    """Launch the Streamlit app, or render it when already inside Streamlit."""
+    if _running_under_streamlit():
+        render_app()
+        return
+
+    import subprocess
+    import sys
+
+    subprocess.run([sys.executable, "-m", "streamlit", "run", __file__], check=False)
+
+
+if __name__ == "__main__":
+    render_app()

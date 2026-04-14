@@ -40,8 +40,6 @@ MODULE_COMMANDS = {
         "powers analyze",
         "powers evaluate",
         "powers reselect",
-        "powers select",
-        "powers validate",
     ],
 }
 
