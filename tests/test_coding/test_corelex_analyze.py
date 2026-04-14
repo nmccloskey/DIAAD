@@ -62,9 +62,9 @@ def test_run_corelex_unblind_mode(tmp_path, monkeypatch, dummy_tiers):
 
     clx.run_corelex(dummy_tiers, Path(input_dir), Path(output_dir))
 
-    corelex_dir = output_dir / "core_lex"
-    files = list(corelex_dir.glob("core_lex_data_*.xlsx"))
-    assert files, "Expected a core_lex_data_<timestamp>.xlsx file."
+    target_vocab_dir = output_dir / "target_vocab"
+    files = list(target_vocab_dir.glob("target_vocab_data_*.xlsx"))
+    assert files, "Expected a target_vocab_data_<timestamp>.xlsx file."
 
     df = pd.read_excel(files[0], sheet_name="summary")
     detail_df = pd.read_excel(files[0], sheet_name="details")

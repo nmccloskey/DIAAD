@@ -308,7 +308,7 @@ def run_target_vocab(
     """
     exclude_participants = set(exclude_participants or [])
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
-    target_vocab_dir = output_dir / "core_lex"
+    target_vocab_dir = output_dir / "target_vocab"
     target_vocab_dir.mkdir(parents=True, exist_ok=True)
     logger.info(f"Target vocabulary coverage output directory: {_rel(target_vocab_dir)}")
     resources = load_target_vocabulary_resources(resource_path)
@@ -359,7 +359,7 @@ def run_target_vocab(
 
     detail_df = pd.DataFrame(detail_rows, columns=DETAIL_COLUMNS)
 
-    output_file = target_vocab_dir / f"core_lex_data_{timestamp}.xlsx"
+    output_file = target_vocab_dir / f"target_vocab_data_{timestamp}.xlsx"
     try:
         with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
             summary_df.to_excel(writer, sheet_name="summary", index=False)

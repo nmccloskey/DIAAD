@@ -23,10 +23,8 @@ from diaad.core.run_wrappers import (
     run_reselect_wc_rel,
     run_calculate_cu_rates,
     run_calculate_word_count_rates,
-    run_select_for_validation,
     run_select_transcription_reliability_samples,
     run_tabularize_transcripts,
-    run_validate_automation,
 )
 
 
@@ -134,10 +132,4 @@ def build_dispatch(ctx) -> CommandDispatch:
         "powers analyze": lambda: run_analyze_powers_coding(ctx),
         "powers evaluate": lambda: run_evaluate_powers_reliability(ctx),
         "powers reselect": lambda: run_reselect_powers_reliability_coding(ctx),
-
-        # --------------------------------------------------------------
-        # POWERS automation validation
-        # --------------------------------------------------------------
-        "powers select": lambda: run_select_for_validation(ctx),
-        "powers validate": lambda: run_validate_automation(ctx),
     }
