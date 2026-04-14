@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import percentileofscore
 
-from diaad.coding.corelex.resources import (
+from diaad.coding.target_vocab.resources import (
     get_resource,
     get_resource_ids,
     load_builtin_resources,

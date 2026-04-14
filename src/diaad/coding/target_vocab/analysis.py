@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from diaad.coding.corelex.resources import get_resource, load_target_vocabulary_resources
-from diaad.coding.corelex.utils import (
+from diaad.coding.target_vocab.resources import get_resource, load_target_vocabulary_resources
+from diaad.coding.target_vocab.utils import (
     get_norm_columns,
     get_percentiles,
     id_core_words,

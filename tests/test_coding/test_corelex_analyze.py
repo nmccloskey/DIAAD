@@ -5,8 +5,8 @@ import pytest
 
 # Import target module
 try:
-    from diaad.coding.corelex import corelex as clx
-    from diaad.coding.corelex import utils as clx_utils
+    from diaad.coding.target_vocab import analysis as clx
+    from diaad.coding.target_vocab import utils as clx_utils
 except Exception as e:
     pytest.skip(f"Could not import diaad.coding.corelex: {e}", allow_module_level=True)
 

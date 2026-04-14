@@ -6,7 +6,7 @@ remain for older imports while the rest of the module migrates to the broader
 target vocabulary coverage framing.
 """
 
-from diaad.coding.corelex.resources import load_builtin_resources
+from diaad.coding.target_vocab.resources import load_builtin_resources
 
 
 _resources = load_builtin_resources()

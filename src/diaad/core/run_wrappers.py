@@ -128,7 +128,7 @@ def run_calculate_word_count_rates(ctx):
 
 def run_corelex(ctx):
     """Run CoreLex analysis."""
-    from diaad.coding.corelex.corelex import run_corelex
+    from diaad.coding.target_vocab.analysis import run_corelex
 
     return run_corelex(**ctx.kwargs_corelex())
 
