@@ -1,3 +1,14 @@
-from src.diaad.webapp.streamlit_app import main
+from pathlib import Path
+import sys
+
+
+ROOT = Path(__file__).resolve().parent
+SRC = ROOT / "src"
+
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from diaad.webapp.streamlit_app import main
+
 
 main()
