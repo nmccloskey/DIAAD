@@ -18,7 +18,7 @@ from diaad.webapp.config_builder import build_config_ui
 
 
 try:
-    from iridic.webapp.manual_viewer import render_manual_ui
+    from psair.webapp.manual_viewer import render_manual_ui
 except Exception:
     render_manual_ui = None
 
