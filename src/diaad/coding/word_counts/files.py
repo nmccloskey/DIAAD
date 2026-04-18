@@ -426,7 +426,7 @@ def _blind_wc_exports(
     export_wc_rel_df = wc_rel_df.copy()
     codebook_df = None
 
-    if blinding_config is None or not getattr(blinding_config, "blind_files", False):
+    if blinding_config is None or not blinding_config.should_blind("coding"):
         return export_wc_df, export_wc_rel_df, codebook_df
 
     export_wc_df, codebook_df = blind_file_identifiers(
@@ -570,4 +570,3 @@ def make_word_count_files(
 
     except Exception as e:
         logger.error(f"Failed processing {get_rel_path(file)}: {e}")
-    

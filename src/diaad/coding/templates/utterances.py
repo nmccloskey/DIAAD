@@ -181,7 +181,7 @@ def make_utterance_template_files(
     export_df = df
     export_rel_df = rel_df
 
-    if blinding_config is not None and getattr(blinding_config, "blind_files", False):
+    if blinding_config is not None and blinding_config.should_blind("coding"):
         export_df, codebook_df = apply_optional_identifier_blinding(
             df,
             blind=True,

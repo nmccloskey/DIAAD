@@ -127,26 +127,6 @@ class RunContext:
     def automate_powers(self) -> bool:
         return self.config.automate_powers
 
-    @property
-    def just_c2_powers(self) -> bool:
-        return self.config.just_c2_powers
-
-    @property
-    def stratify_by(self) -> list[str]:
-        return self.config.stratify_by
-
-    @property
-    def num_strata(self) -> int:
-        return self.config.num_strata
-
-    @property
-    def selection_table(self) -> str:
-        return self.config.selection_table
-
-    @property
-    def stratum_numbers(self) -> list[int]:
-        return self.config.stratum_numbers
-
     # ------------------------------------------------------------------
     # Setup helpers
     # ------------------------------------------------------------------
@@ -336,8 +316,8 @@ class RunContext:
             "strip_clan": self.strip_clan,
             "prefer_correction": self.prefer_correction,
             "lowercase": self.lowercase,
-            "reliability_tag": self.config.project.reliability_tag,
-            "reliability_dirname": self.config.project.reliability_dirname,
+            "reliability_tag": self.config.advanced.reliability_tag,
+            "reliability_dirname": self.config.advanced.reliability_dirname,
         }
 
     # ------------------------------------------------------------------
@@ -394,9 +374,9 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "cu_samples_file": self.config.project.cu_samples_file,
-            "speaking_time_file": self.config.project.speaking_time_file,
-            "speaking_time_field": self.config.project.speaking_time_field,
+            "cu_samples_file": self.config.advanced.cu_samples_file,
+            "speaking_time_file": self.config.advanced.speaking_time_file,
+            "speaking_time_field": self.config.advanced.speaking_time_field,
         }
 
     # ------------------------------------------------------------------
@@ -428,8 +408,8 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "word_count_file": self.config.project.word_count_file,
-            "word_count_field": self.config.project.word_count_field,
+            "word_count_file": self.config.advanced.word_count_file,
+            "word_count_field": self.config.advanced.word_count_field,
             "blinding_config": self.config.blinding,
         }
 
@@ -440,9 +420,9 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "wc_samples_file": self.config.project.wc_samples_file,
-            "speaking_time_file": self.config.project.speaking_time_file,
-            "speaking_time_field": self.config.project.speaking_time_field,
+            "wc_samples_file": self.config.advanced.wc_samples_file,
+            "speaking_time_file": self.config.advanced.speaking_time_file,
+            "speaking_time_field": self.config.advanced.speaking_time_field,
         }
 
     # ------------------------------------------------------------------
@@ -456,7 +436,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
             "stimulus_field": self.stimulus_field,
-            "resource_path": self.config.project.target_vocabulary_resource_path,
+            "resource_path": self.config.advanced.target_vocabulary_resource_path,
         }
 
     # ------------------------------------------------------------------
@@ -507,64 +487,20 @@ class RunContext:
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
             "automate_powers": self.automate_powers,
+            "blinding_config": self.config.blinding,
         }
 
-    def kwargs_analyze_powers_coding(
-        self,
-        *,
-        reliability: bool = False,
-        just_c2_powers: bool | None = None,
-    ) -> dict[str, Any]:
-        """
-        Return kwargs for POWERS analysis.
-
-        Parameters
-        ----------
-        reliability:
-            Whether the analysis is running in reliability mode.
-        just_c2_powers:
-            Override for the configured just_c2_powers setting. If None,
-            the configured value is used.
-        """
-        return {
-            "input_dir": self.input_dir,
-            "output_dir": self.out_dir,
-            "reliability": reliability,
-            "just_c2_powers": (
-                self.just_c2_powers if just_c2_powers is None else just_c2_powers
-            ),
-            "exclude_participants": self.exclude_participants,
-        }
+    def kwargs_analyze_powers_coding(self) -> dict[str, Any]:
+        """Return kwargs for POWERS analysis."""
+        return self.kwargs_io()
 
     def kwargs_reselect_powers_reliability(self) -> dict[str, Any]:
         """Return kwargs for POWERS reliability reselection."""
         return {
+            "tiers": self.tiers,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
-            "exclude_participants": self.exclude_participants,
-            "automate_powers": self.automate_powers,
-        }
-
-    # ------------------------------------------------------------------
-    # POWERS automation validation
-    # ------------------------------------------------------------------
-    def kwargs_select_for_validation(self) -> dict[str, Any]:
-        """Return base kwargs for POWERS validation sample selection."""
-        return {
-            "input_dir": self.input_dir,
-            "output_dir": self.out_dir,
-            "stratify_by": self.stratify_by,
-            "num_strata": self.num_strata,
             "random_seed": self.random_seed,
-        }
-
-    def kwargs_validate_automation(self) -> dict[str, Any]:
-        """Return base kwargs for POWERS automation validation."""
-        return {
-            "selection_table": self.selection_table,
-            "stratum_numbers": self.stratum_numbers,
-            "input_dir": self.input_dir,
-            "output_dir": self.out_dir,
-            "exclude_participants": self.exclude_participants,
+            "automate_powers": self.automate_powers,
         }

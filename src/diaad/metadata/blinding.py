@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import random
 import pandas as pd
 from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
-from diaad.core.config import BlindingConfig
 from diaad.metadata.utils import (
     present_cols,
     validate_columns,
     load_metadata_from_transcript_tables
 )
+
+if TYPE_CHECKING:
+    from diaad.core.config import AdvancedConfig
 
 
 def _choose_join_keys(
@@ -349,7 +351,7 @@ def _replace_columns_with_blinded_versions(
 
 def blind_analysis_dataframe(
     df: pd.DataFrame,
-    config: BlindingConfig,
+    config: AdvancedConfig,
     *,
     metadata_df: pd.DataFrame | str | Path | list[str | Path] | None = None,
     match_tiers=None,
@@ -468,7 +470,7 @@ def blind_analysis_dataframe(
 
 def blind_file_identifiers(
     df: pd.DataFrame,
-    config: BlindingConfig,
+    config: AdvancedConfig,
     *,
     existing_codebook: Optional[pd.DataFrame] = None,
     seed: int = 99,

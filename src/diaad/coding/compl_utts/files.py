@@ -300,7 +300,7 @@ def _blind_coding_exports(
     export_rel_df = rel_df.copy() if rel_df is not None else None
     codebook_df = None
 
-    if blinding_config is None or not getattr(blinding_config, "blind_files", False):
+    if blinding_config is None or not blinding_config.should_blind("coding"):
         return export_cu_df, export_rel_df, codebook_df
 
     export_cu_df, codebook_df = blind_file_identifiers(

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
-from diaad.core.config import BlindingConfig
 from diaad.metadata.utils import (
     validate_columns,
     normalize_to_list,
     load_metadata_from_transcript_tables
 )
+
+if TYPE_CHECKING:
+    from diaad.core.config import AdvancedConfig
 
 
 def _read_tabular_file(path: str | Path) -> pd.DataFrame:
@@ -346,7 +350,7 @@ def unblind_dataframe(
 
 def maybe_unblind_dataframe(
     df: pd.DataFrame,
-    config: BlindingConfig,
+    config: AdvancedConfig,
     *,
     blind_codebook=None,
     target_cols: list[str] | None = None,

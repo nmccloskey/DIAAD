@@ -262,7 +262,7 @@ def _apply_export_blinding(
     """
     Blind POWERS exports at write time when configured.
     """
-    if blinding_config is None or not getattr(blinding_config, "blind_files", False):
+    if blinding_config is None or not blinding_config.should_blind("coding"):
         return pc_df, rel_df
 
     try:

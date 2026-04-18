@@ -183,20 +183,10 @@ def run_analyze_powers_coding(ctx):
 
 
 def run_evaluate_powers_reliability(ctx):
-    """Match reliability files and analyze POWERS reliability."""
-    from diaad.coding.powers.analysis import (
-        analyze_powers_coding,
-        match_reliability_files,
-    )
+    """Evaluate POWERS reliability."""
+    from diaad.coding.powers.rel_evaluation import evaluate_powers_reliability
 
-    match_reliability_files(**ctx.kwargs_io())
-
-    return analyze_powers_coding(
-        **ctx.kwargs_analyze_powers_coding(
-            reliability=True,
-            just_c2_powers=False,
-        )
-    )
+    return evaluate_powers_reliability(**ctx.kwargs_io())
 
 
 def run_reselect_powers_reliability_coding(ctx):

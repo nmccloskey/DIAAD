@@ -13,9 +13,12 @@ from psair.core.logger import logger
 # Section dataclasses
 # ------------------------------------------------------------------
 
+TierSpec: TypeAlias = str | list[str]
+
+
 @dataclass(frozen=True)
 class ProjectConfig:
-    """Normalized project-level configuration."""
+    """Normalized user-facing project configuration."""
 
     input_dir: str = "diaad_data/input"
     output_dir: str = "diaad_data/output"
@@ -27,29 +30,14 @@ class ProjectConfig:
     strip_clan: bool = True
     prefer_correction: bool = True
     lowercase: bool = True
-
-    reliability_tag: str = "_reliability"
-    reliability_dirname: str = "reliability"
-
     exclude_participants: list[str] | None = None
+
     num_bins: int = 4
     num_coders: int = 0
     stimulus_field: str = ""
-    target_vocabulary_resource_path: str = ""
-
-    cu_paradigms: list[str] | None = None
-    cu_samples_file: Path | str = "cu_coding_by_sample_long.xlsx"
-    cu_utts_file: Path | str = "cu_coding_by_utterance.xlsx"
-
-    word_count_file: Path | str = "word_counting.xlsx"
-    word_count_field: str = "word_count"
-    wc_samples_file: str = "word_counting_by_sample.xlsx"
-
     automate_powers: bool = True
-    just_c2_powers: bool = False
 
-    speaking_time_file: Path | str = "speaking_times.xlsx"
-    speaking_time_field: str = "speaking_time"
+    tiers: dict[str, TierSpec] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -57,30 +45,36 @@ class ProjectConfig:
             "exclude_participants",
             list(self.exclude_participants or []),
         )
-        object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
-
-
-TierSpec: TypeAlias = str | list[str]
-
-@dataclass(frozen=True)
-class TiersConfig:
-    """Normalized tier-definition configuration."""
-    tiers: dict[str, TierSpec]
+        object.__setattr__(self, "tiers", dict(self.tiers or {}))
 
 
 @dataclass(frozen=True)
-class BlindingConfig:
-    """Normalized blinding configuration."""
+class AdvancedConfig:
+    """Normalized advanced configuration."""
 
-    blind_files: bool = True
-    blind_analysis: bool = True
+    reliability_tag: str = "_reliability"
+    reliability_dirname: str = "reliability"
+
+    cu_paradigms: list[str] | None = None
+    cu_samples_file: str = "cu_coding_by_sample_long.xlsx"
+    cu_utts_file: str = "cu_coding_by_utterance.xlsx"
+
+    word_count_file: str = "word_counting.xlsx"
+    word_count_field: str = "word_count"
+    wc_samples_file: str = "word_counting_by_sample.xlsx"
+
+    speaking_time_file: str = "speaking_times.xlsx"
+    speaking_time_field: str = "speaking_time"
+
+    target_vocabulary_resource_path: str = ""
+
     metadata_source: str = "transcript_tables"
-
     coding_blind_cols: list[str] | None = None
     analysis_blind_cols: list[str] | None = None
     id_cols: list[str] | None = None
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
         object.__setattr__(
             self,
             "coding_blind_cols",
@@ -103,19 +97,7 @@ class BlindingConfig:
         return "_blinded"
 
     def get_blind_cols(self, mode: str) -> list[str]:
-        """
-        Return columns configured for a blinding mode.
-
-        Parameters
-        ----------
-        mode : str
-            Either "coding" or "analysis".
-
-        Returns
-        -------
-        list[str]
-            Columns configured for blinding in that mode.
-        """
+        """Return columns configured for a blinding mode."""
         if mode == "coding":
             return self.coding_blind_cols
         if mode == "analysis":
@@ -123,24 +105,8 @@ class BlindingConfig:
         raise ValueError(f"Unknown blinding mode: {mode}")
 
     def should_blind(self, mode: str) -> bool:
-        """
-        Return whether blinding is enabled for a given mode.
-
-        Parameters
-        ----------
-        mode : str
-            Either "coding" or "analysis".
-
-        Returns
-        -------
-        bool
-            True if blinding is enabled for that mode.
-        """
-        if mode == "coding":
-            return self.blind_files
-        if mode == "analysis":
-            return self.blind_analysis
-        raise ValueError(f"Unknown blinding mode: {mode}")
+        """Return True when a blinding mode has configured columns."""
+        return bool(self.get_blind_cols(mode))
 
 
 # ------------------------------------------------------------------
@@ -153,15 +119,12 @@ class ConfigManager:
 
     Expected config directory contents:
         project.yaml
-        tiers.yaml
-        blinding.yaml
-        validation.yaml
+        advanced.yaml
     """
 
     REQUIRED_FILES = (
         "project.yaml",
-        "tiers.yaml",
-        "blinding.yaml",
+        "advanced.yaml",
     )
 
     def __init__(self, config_dir: str | Path) -> None:
@@ -169,12 +132,10 @@ class ConfigManager:
         self._validate_config_dir()
 
         self._raw_project = self._read_yaml("project.yaml")
-        self._raw_tiers = self._read_yaml("tiers.yaml")
-        self._raw_blinding = self._read_yaml("blinding.yaml")
+        self._raw_advanced = self._read_yaml("advanced.yaml")
 
         self.project = self._parse_project(self._raw_project)
-        self.tiers_section = self._parse_tiers(self._raw_tiers)
-        self.blinding = self._parse_blinding(self._raw_blinding)
+        self.advanced = self._parse_advanced(self._raw_advanced)
 
         logger.info("Loaded configuration from %s", self.config_dir)
 
@@ -219,7 +180,7 @@ class ConfigManager:
         return self.project.exclude_participants
 
     @property
-    def num_coders(self) -> list[Any]:
+    def num_coders(self) -> int:
         return self.project.num_coders
 
     @property
@@ -231,36 +192,52 @@ class ConfigManager:
         return self.project.stimulus_field
 
     @property
-    def target_vocabulary_resource_path(self) -> str:
-        return self.project.target_vocabulary_resource_path
-
-    @property
-    def cu_paradigms(self) -> list[str]:
-        return self.project.cu_paradigms
-
-    @property
-    def cu_utts_file(self) -> str:
-        return self.project.cu_utts_file
-
-    @property
-    def cu_samples_file(self) -> str:
-        return self.project.cu_samples_file
-
-    @property
     def automate_powers(self) -> bool:
         return self.project.automate_powers
 
     @property
-    def just_c2_powers(self) -> bool:
-        return self.project.just_c2_powers
+    def reliability_tag(self) -> str:
+        return self.advanced.reliability_tag
+
+    @property
+    def reliability_dirname(self) -> str:
+        return self.advanced.reliability_dirname
+
+    @property
+    def target_vocabulary_resource_path(self) -> str:
+        return self.advanced.target_vocabulary_resource_path
+
+    @property
+    def cu_paradigms(self) -> list[str]:
+        return self.advanced.cu_paradigms
+
+    @property
+    def cu_utts_file(self) -> str:
+        return self.advanced.cu_utts_file
+
+    @property
+    def cu_samples_file(self) -> str:
+        return self.advanced.cu_samples_file
+
+    @property
+    def word_count_file(self) -> str:
+        return self.advanced.word_count_file
+
+    @property
+    def word_count_field(self) -> str:
+        return self.advanced.word_count_field
+
+    @property
+    def wc_samples_file(self) -> str:
+        return self.advanced.wc_samples_file
 
     @property
     def speaking_time_file(self) -> str:
-        return self.project.speaking_time_file
+        return self.advanced.speaking_time_file
 
     @property
     def speaking_time_field(self) -> str:
-        return self.project.speaking_time_field
+        return self.advanced.speaking_time_field
 
     @property
     def tiers_config(self) -> dict[str, Any]:
@@ -269,40 +246,42 @@ class ConfigManager:
         with TierManager.
         """
         return {
-            "tiers": self.tiers_section.tiers,
+            "tiers": self.project.tiers,
         }
 
     @property
-    def id_cols(self) -> list[str]:
-        return self.blinding.id_cols
-    
-    @property
-    def blind_files(self) -> bool:
-        return self.blinding.blind_files
-    
-    @property
-    def blinded_suffix(self) -> str:
-        return self.blinding.blinded_suffix
+    def blinding(self) -> AdvancedConfig:
+        """
+        Return advanced config for modules that expect blinding settings.
+
+        Blinding settings now live in advanced.yaml, but downstream code only
+        needs the blinding-related attributes on this object.
+        """
+        return self.advanced
 
     @property
-    def blind_analysis(self) -> bool:
-        return self.blinding.blind_analysis
-    
+    def id_cols(self) -> list[str]:
+        return self.advanced.id_cols
+
+    @property
+    def blinded_suffix(self) -> str:
+        return self.advanced.blinded_suffix
+
     @property
     def coding_blind_cols(self) -> list[str]:
-        return self.blinding.get_blind_cols(mode="coding")
+        return self.advanced.get_blind_cols(mode="coding")
 
     @property
     def analysis_blind_cols(self) -> list[str]:
-        return self.blinding.get_blind_cols(mode="analysis")
+        return self.advanced.get_blind_cols(mode="analysis")
 
     @property
     def metadata_source(self) -> str:
-        return self.blinding.metadata_source
-    
+        return self.advanced.metadata_source
+
     @property
     def metadata_path(self) -> Path:
-        return self.input_dir / self.metadata_source
+        return Path(self.input_dir) / self.metadata_source
 
     # ------------------------------------------------------------------
     # Public serialization helpers
@@ -320,33 +299,31 @@ class ConfigManager:
                 "strip_clan": self.project.strip_clan,
                 "prefer_correction": self.project.prefer_correction,
                 "lowercase": self.project.lowercase,
-                "reliability_tag": self.project.reliability_tag,
-                "reliability_dirname": self.project.reliability_dirname,
                 "exclude_participants": self.project.exclude_participants,
                 "num_bins": self.project.num_bins,
                 "num_coders": self.project.num_coders,
                 "stimulus_field": self.project.stimulus_field,
-                "target_vocabulary_resource_path": self.project.target_vocabulary_resource_path,
-                "cu_paradigms": self.project.cu_paradigms,
-                "cu_samples_file": self.project.cu_samples_file,
-                "cu_utts_file": self.project.cu_utts_file,
-                "word_count_file": self.project.word_count_file,
-                "word_count_field": self.project.word_count_field,
-                "wc_samples_file": self.project.wc_samples_file,
                 "automate_powers": self.project.automate_powers,
-                "just_c2_powers": self.project.just_c2_powers,
-                "speaking_time_file": self.project.speaking_time_file,
-                "speaking_time_field": self.project.speaking_time_field,
+                "tiers": self.project.tiers,
             },
-            "tiers": self.tiers_section.tiers,
-            "blinding": {
-                "blind_files": self.blind_files,
-                "blind_analysis": self.blind_analysis,
-                "metadata_source": self.metadata_source,
-                "coding_blind_cols": self.coding_blind_cols,
-                "analysis_blind_cols": self.analysis_blind_cols,
-                "id_cols": self.id_cols,
-                "blinded_suffix": self.blinded_suffix,
+            "advanced": {
+                "reliability_tag": self.advanced.reliability_tag,
+                "reliability_dirname": self.advanced.reliability_dirname,
+                "cu_paradigms": self.advanced.cu_paradigms,
+                "cu_samples_file": self.advanced.cu_samples_file,
+                "cu_utts_file": self.advanced.cu_utts_file,
+                "word_count_file": self.advanced.word_count_file,
+                "word_count_field": self.advanced.word_count_field,
+                "wc_samples_file": self.advanced.wc_samples_file,
+                "speaking_time_file": self.advanced.speaking_time_file,
+                "speaking_time_field": self.advanced.speaking_time_field,
+                "target_vocabulary_resource_path": (
+                    self.advanced.target_vocabulary_resource_path
+                ),
+                "metadata_source": self.advanced.metadata_source,
+                "coding_blind_cols": self.advanced.coding_blind_cols,
+                "analysis_blind_cols": self.advanced.analysis_blind_cols,
+                "id_cols": self.advanced.id_cols,
             },
         }
 
@@ -376,7 +353,7 @@ class ConfigManager:
         return data
 
     # ------------------------------------------------------------------
-    # Project parsing
+    # Section parsing
     # ------------------------------------------------------------------
 
     def _parse_project(self, data: dict[str, Any]) -> ProjectConfig:
@@ -394,8 +371,6 @@ class ConfigManager:
                 data.get("prefer_correction"),
                 default=True,
             ),
-            reliability_tag=self._as_str(data.get("reliability_tag"), default="_reliability"),
-            reliability_dirname=self._as_str(data.get("reliability_dirname"), default="reliability"),
             lowercase=self._as_bool(data.get("lowercase"), default=True),
             exclude_participants=self._as_str_list(
                 data.get("exclude_participants"),
@@ -404,26 +379,8 @@ class ConfigManager:
             num_bins=self._as_int(data.get("num_bins"), default=4),
             num_coders=self._as_int(data.get("num_coders"), default=0),
             stimulus_field=self._as_str(data.get("stimulus_field"), default=""),
-            target_vocabulary_resource_path=self._as_str(
-                data.get("target_vocabulary_resource_path"),
-                default="",
-            ),
-            cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
-            cu_samples_file=self._as_str(data.get("cu_samples_file"), default="cu_coding_by_sample_long.xlsx"),
-            cu_utts_file=self._as_str(data.get("cu_utts_file"), default="cu_coding_by_utterance.xlsx"),
-            word_count_file=self._as_str(data.get("word_count_file"), default="word_counting.xlsx"),
-            word_count_field=self._as_str(data.get("word_count_field"), default="word_count"),
-            wc_samples_file=self._as_str(data.get("wc_samples_file"), default="word_counting_by_sample.xlsx"),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),
-            just_c2_powers=self._as_bool(data.get("just_c2_powers"), default=False),
-            speaking_time_file=self._as_str(
-                data.get("speaking_time_file"),
-                default="speaking_times.xlsx",
-            ),
-            speaking_time_field=self._as_str(
-                data.get("speaking_time_field"),
-                default="speaking_time",
-            ),
+            tiers=self._parse_tiers(data),
         )
 
         if not 0 < project.reliability_fraction <= 1:
@@ -435,17 +392,71 @@ class ConfigManager:
 
         return project
 
-    # ------------------------------------------------------------------
-    # Tiers parsing
-    # ------------------------------------------------------------------
+    def _parse_advanced(self, data: dict[str, Any]) -> AdvancedConfig:
+        return AdvancedConfig(
+            reliability_tag=self._as_str(
+                data.get("reliability_tag"),
+                default="_reliability",
+            ),
+            reliability_dirname=self._as_str(
+                data.get("reliability_dirname"),
+                default="reliability",
+            ),
+            cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
+            cu_samples_file=self._as_str(
+                data.get("cu_samples_file"),
+                default="cu_coding_by_sample_long.xlsx",
+            ),
+            cu_utts_file=self._as_str(
+                data.get("cu_utts_file"),
+                default="cu_coding_by_utterance.xlsx",
+            ),
+            word_count_file=self._as_str(
+                data.get("word_count_file"),
+                default="word_counting.xlsx",
+            ),
+            word_count_field=self._as_str(
+                data.get("word_count_field"),
+                default="word_count",
+            ),
+            wc_samples_file=self._as_str(
+                data.get("wc_samples_file"),
+                default="word_counting_by_sample.xlsx",
+            ),
+            speaking_time_file=self._as_str(
+                data.get("speaking_time_file"),
+                default="speaking_times.xlsx",
+            ),
+            speaking_time_field=self._as_str(
+                data.get("speaking_time_field"),
+                default="speaking_time",
+            ),
+            target_vocabulary_resource_path=self._as_str(
+                data.get("target_vocabulary_resource_path"),
+                default="",
+            ),
+            metadata_source=self._as_str(
+                data.get("metadata_source"),
+                default="transcript_tables",
+            ),
+            coding_blind_cols=self._as_optional_str_list(
+                data.get("coding_blind_cols"),
+            ),
+            analysis_blind_cols=self._as_optional_str_list(
+                data.get("analysis_blind_cols"),
+            ),
+            id_cols=self._as_optional_str_list(data.get("id_cols")),
+        )
 
-    def _parse_tiers(self, data: dict[str, Any]) -> TiersConfig:
+    def _parse_tiers(self, data: dict[str, Any]) -> dict[str, TierSpec]:
         tiers = data.get("tiers", {})
 
+        if tiers is None:
+            return {}
         if not isinstance(tiers, dict):
-            raise TypeError("tiers.yaml: 'tiers' must be a dictionary.")
+            raise TypeError("project.yaml: 'tiers' must be a dictionary.")
 
-        normalized_tiers: dict[str, Any] = {}
+        normalized_tiers: dict[str, TierSpec] = {}
 
         for tier_name, tier_spec in tiers.items():
             tier_name = str(tier_name)
@@ -467,48 +478,7 @@ class ConfigManager:
                     f"Tier '{tier_name}' must be either a regex string or a list[str]."
                 )
 
-        return TiersConfig(tiers=normalized_tiers)
-
-    # ------------------------------------------------------------------
-    # Blinding parsing
-    # ------------------------------------------------------------------
-
-    def _parse_blinding(self, data: dict[str, Any]) -> BlindingConfig:
-        """Parse blinding.yaml into a normalized BlindingConfig."""
-        blind_files = self._as_bool(
-            data.get("blind_files"),
-            default=True,
-        )
-        blind_analysis = self._as_bool(
-            data.get("blind_analysis"),
-            default=True,
-        )
-        metadata_source = self._as_str(
-            data.get("metadata_source"),
-            default="transcript_tables",
-        )
-
-        coding_blind_cols = self._as_str_list(
-            data.get("coding_blind_cols"),
-            default=None,
-        )
-        analysis_blind_cols = self._as_str_list(
-            data.get("analysis_blind_cols"),
-            default=None,
-        )
-        id_cols = self._as_str_list(
-            data.get("id_cols"),
-            default=None,
-        )
-
-        return BlindingConfig(
-            blind_files=blind_files,
-            blind_analysis=blind_analysis,
-            metadata_source=metadata_source,
-            coding_blind_cols=coding_blind_cols,
-            analysis_blind_cols=analysis_blind_cols,
-            id_cols=id_cols,
-        )
+        return normalized_tiers
 
     # ------------------------------------------------------------------
     # Normalization helpers
@@ -607,6 +577,11 @@ class ConfigManager:
     ) -> list[str]:
         items = self._as_list(value, default=default)
         return [self._as_str(item) for item in items]
+
+    def _as_optional_str_list(self, value: Any) -> list[str] | None:
+        if value is None:
+            return None
+        return self._as_str_list(value)
 
     def _as_int_list(
         self,
