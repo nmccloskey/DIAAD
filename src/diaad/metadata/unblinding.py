@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from diaad.core.config import BlindingConfig
 from diaad.metadata.utils import (
@@ -22,7 +22,7 @@ def _read_tabular_file(path: str | Path) -> pd.DataFrame:
     path = Path(path)
 
     if not path.exists():
-        raise FileNotFoundError(f"File does not exist: {_rel(path)}")
+        raise FileNotFoundError(f"File does not exist: {get_rel_path(path)}")
 
     suffix = path.suffix.lower()
     if suffix == ".xlsx":
@@ -31,7 +31,7 @@ def _read_tabular_file(path: str | Path) -> pd.DataFrame:
         return pd.read_csv(path)
 
     raise ValueError(
-        f"Unsupported file type for {_rel(path)}. Expected .xlsx or .csv"
+        f"Unsupported file type for {get_rel_path(path)}. Expected .xlsx or .csv"
     )
 
 
@@ -54,7 +54,7 @@ def _choose_first_match(
     if len(paths) > 1:
         logger.warning(
             f"Multiple {resource_name} files detected; using first in list: "
-            f"{[_rel(p) for p in paths]}"
+            f"{[get_rel_path(p) for p in paths]}"
         )
 
     return paths[0]
@@ -130,7 +130,7 @@ def _load_blind_codebook(
         return None
 
     codebook_df = _read_tabular_file(codebook_path)
-    logger.info(f"Loaded blind codebook from {_rel(codebook_path)}")
+    logger.info(f"Loaded blind codebook from {get_rel_path(codebook_path)}")
     return codebook_df
 
 

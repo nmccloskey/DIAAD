@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
 from diaad.metadata.unblinding import maybe_unblind_dataframe
@@ -355,30 +355,30 @@ def _write_cu_analysis_outputs(
     utterance_path = out_dir / "cu_coding_by_utterance.xlsx"
     try:
         cu_coding.to_excel(utterance_path, index=False)
-        logger.info(f"Saved utterance-level CU analysis: {_rel(utterance_path)}")
+        logger.info(f"Saved utterance-level CU analysis: {get_rel_path(utterance_path)}")
     except Exception as e:
-        logger.error(f"Failed writing utterance-level file {_rel(utterance_path)}: {e}")
+        logger.error(f"Failed writing utterance-level file {get_rel_path(utterance_path)}: {e}")
         return
 
     if summary_long is None or summary_long.empty:
-        logger.warning(f"No valid CU long summaries for {_rel(out_dir)}")
+        logger.warning(f"No valid CU long summaries for {get_rel_path(out_dir)}")
     else:
         try:
             summary_long_path = out_dir / "cu_coding_by_sample_long.xlsx"
             summary_long.to_excel(summary_long_path, index=False)
-            logger.info(f"Saved CU long summary file: {_rel(summary_long_path)}")
+            logger.info(f"Saved CU long summary file: {get_rel_path(summary_long_path)}")
         except Exception as e:
-            logger.error(f"Failed saving CU long summary to {_rel(summary_long_path)}: {e}")
+            logger.error(f"Failed saving CU long summary to {get_rel_path(summary_long_path)}: {e}")
 
     if summary_wide is None or summary_wide.empty:
-        logger.warning(f"No valid CU wide summaries for {_rel(out_dir)}")
+        logger.warning(f"No valid CU wide summaries for {get_rel_path(out_dir)}")
     else:
         try:
             summary_wide_path = out_dir / "cu_coding_by_sample.xlsx"
             summary_wide.to_excel(summary_wide_path, index=False)
-            logger.info(f"Saved CU wide summary file: {_rel(summary_wide_path)}")
+            logger.info(f"Saved CU wide summary file: {get_rel_path(summary_wide_path)}")
         except Exception as e:
-            logger.error(f"Failed saving CU wide summary to {_rel(summary_wide_path)}: {e}")
+            logger.error(f"Failed saving CU wide summary to {get_rel_path(summary_wide_path)}: {e}")
 
 
 # ---------------------------------------------------------------------
@@ -440,16 +440,16 @@ def analyze_cu_coding(
     if len(coding_files) > 1:
         logger.warning(
             "Multiple CU coding files detected for analysis. "
-            f"Using only the first returned file: {_rel(coding_files[0])}"
+            f"Using only the first returned file: {get_rel_path(coding_files[0])}"
         )
 
     cod = coding_files[0]
 
     try:
         cu_coding = pd.read_excel(cod)
-        logger.info(f"Processing CU coding file: {_rel(cod)}")
+        logger.info(f"Processing CU coding file: {get_rel_path(cod)}")
     except Exception as e:
-        logger.error(f"Failed reading {_rel(cod)}: {e}")
+        logger.error(f"Failed reading {get_rel_path(cod)}: {e}")
         return
 
     cu_coding = _drop_coder_admin_cols(cu_coding)
@@ -460,7 +460,7 @@ def analyze_cu_coding(
     )
 
     if not coder_pairs:
-        logger.warning(f"No valid SV/REL coder-paradigm pairs found in {_rel(cod)}")
+        logger.warning(f"No valid SV/REL coder-paradigm pairs found in {get_rel_path(cod)}")
         return
 
     summary_longs = []
@@ -484,7 +484,7 @@ def analyze_cu_coding(
 
         except Exception as e:
             label = f"{coder_label} / {paradigm_label}"
-            logger.error(f"Aggregation failed for {_rel(cod)} ({label}): {e}")
+            logger.error(f"Aggregation failed for {get_rel_path(cod)} ({label}): {e}")
 
     summary_long = pd.concat(summary_longs, ignore_index=True) if summary_longs else None
     summary_wide = _combine_wide_summaries(summary_wides)

@@ -1,7 +1,7 @@
 import random
 import pylangacq
 from tqdm import tqdm
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 
 
 def read_cha_files(input_dir, shuffle=False):
@@ -15,7 +15,7 @@ def read_cha_files(input_dir, shuffle=False):
         logger.info("Shuffling the list of .cha files.")
         random.shuffle(cha_files)
 
-    logger.info(f"Reading .cha files from directory: {_rel(input_dir)}")
+    logger.info(f"Reading .cha files from directory: {get_rel_path(input_dir)}")
     chats = {}
 
     for cha in tqdm(cha_files, desc="Reading .cha files..."):
@@ -23,7 +23,7 @@ def read_cha_files(input_dir, shuffle=False):
             chat_data = pylangacq.read_chat(str(cha))
             chats[cha.name] = chat_data
         except Exception as e:
-            logger.error(f"Failed to read {_rel(cha)}: {e}")
+            logger.error(f"Failed to read {get_rel_path(cha)}: {e}")
 
-    logger.info(f"Successfully read {len(chats)} .cha files from {_rel(input_dir)}.")
+    logger.info(f"Successfully read {len(chats)} .cha files from {get_rel_path(input_dir)}.")
     return chats

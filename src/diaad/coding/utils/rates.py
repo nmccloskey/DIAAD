@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 
 
@@ -107,7 +107,7 @@ def read_speaking_time_table(
     if len(matches) > 1:
         logger.warning(
             "Multiple speaking time files detected; "
-            f"using first in list: {_rel(matches[0])}"
+            f"using first in list: {get_rel_path(matches[0])}"
         )
 
     path = Path(matches[0])
@@ -115,7 +115,7 @@ def read_speaking_time_table(
     try:
         df = pd.read_excel(path)
     except Exception as e:
-        raise RuntimeError(f"Failed reading speaking time file {_rel(path)}: {e}") from e
+        raise RuntimeError(f"Failed reading speaking time file {get_rel_path(path)}: {e}") from e
 
     validate_columns(
         df,
@@ -149,7 +149,7 @@ def read_speaking_time_table(
 
     df["speaking_minutes"] = df["speaking_time"] / 60.0
 
-    logger.info(f"Loaded speaking times from {_rel(path)}")
+    logger.info(f"Loaded speaking times from {get_rel_path(path)}")
     return df
 
 

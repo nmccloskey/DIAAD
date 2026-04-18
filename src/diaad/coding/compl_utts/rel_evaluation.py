@@ -6,7 +6,7 @@ from pathlib import Path
 from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
 
@@ -404,10 +404,10 @@ def write_reliability_report(
                 f"Average percent agreement on CU: {round(np.nanmean(cu_rel_sum['perc_agmt_cu']), 3)}\n"
             )
 
-        logger.info(f"Successfully wrote CU reliability report to {_rel(report_path)}")
+        logger.info(f"Successfully wrote CU reliability report to {get_rel_path(report_path)}")
 
     except Exception as e:
-        logger.error(f"Failed to write reliability report to {_rel(report_path)}: {e}")
+        logger.error(f"Failed to write reliability report to {get_rel_path(report_path)}: {e}")
 
 
 # ---------------------------------------------------------------------
@@ -436,13 +436,13 @@ def _write_cu_reliability_outputs(
 
     utterance_path = output_path / f"cu_reliability_coding_by_utterance{paradigm_str}.xlsx"
     cu_rel_coding.to_excel(utterance_path, index=False)
-    logger.info(f"Wrote CU reliability utterance file to {_rel(utterance_path)}")
+    logger.info(f"Wrote CU reliability utterance file to {get_rel_path(utterance_path)}")
 
     cu_rel_sum, overall_stats = summarize_cu_reliability(cu_rel_coding)
 
     summary_path = output_path / f"cu_reliability_coding_by_sample{paradigm_str}.xlsx"
     cu_rel_sum.to_excel(summary_path, index=False)
-    logger.info(f"Wrote CU reliability summary file to {_rel(summary_path)}")
+    logger.info(f"Wrote CU reliability summary file to {get_rel_path(summary_path)}")
 
     report_path = output_path / f"cu_reliability_coding_report{paradigm_str}.txt"
     write_reliability_report(
@@ -509,12 +509,12 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
     if len(coding_files) > 1:
         logger.warning(
             "Multiple CU coding files detected. "
-            f"Processing only the first returned file: {_rel(coding_files[0])}"
+            f"Processing only the first returned file: {get_rel_path(coding_files[0])}"
         )
     if len(rel_files) > 1:
         logger.warning(
             "Multiple CU reliability coding files detected. "
-            f"Processing only the first returned file: {_rel(rel_files[0])}"
+            f"Processing only the first returned file: {get_rel_path(rel_files[0])}"
         )
 
     cod = coding_files[0]
@@ -523,9 +523,9 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
     try:
         cu_coding = pd.read_excel(cod)
         cu_rel = pd.read_excel(rel)
-        logger.info(f"Processing pair: {_rel(cod)} + {_rel(rel)}")
+        logger.info(f"Processing pair: {get_rel_path(cod)} + {get_rel_path(rel)}")
     except Exception as e:
-        logger.error(f"Failed reading {_rel(cod)} or {_rel(rel)}: {e}")
+        logger.error(f"Failed reading {get_rel_path(cod)} or {get_rel_path(rel)}: {e}")
         return
 
     paradigms_to_run = cu_paradigms if cu_paradigms else [None]
@@ -559,7 +559,7 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
 
             if len(right) != len(merged):
                 logger.warning(
-                    f"Length mismatch in {_rel(rel)} "
+                    f"Length mismatch in {get_rel_path(rel)} "
                     f"({paradigm or 'base'}, {comparison_mode})"
                 )
 
@@ -588,13 +588,13 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
 
         except KeyError as e:
             logger.info(
-                f"Skipping paradigm {paradigm or 'base'} for {_rel(rel)} "
+                f"Skipping paradigm {paradigm or 'base'} for {get_rel_path(rel)} "
                 f"because required columns were not found: {e}"
             )
             continue
         except Exception as e:
             logger.error(
-                f"Failed CU reliability for {paradigm or 'base'} on {_rel(rel)}: {e}"
+                f"Failed CU reliability for {paradigm or 'base'} on {get_rel_path(rel)}: {e}"
             )
             continue
     

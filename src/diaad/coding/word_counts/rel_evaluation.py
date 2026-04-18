@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.rel_eval_utils import percent_difference, calculate_icc_from_pingouin
 
@@ -27,16 +27,16 @@ def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if wc_merged.empty:
-        logger.warning(f"No merged rows found for {_rel(out_dir)}; skipping output.")
+        logger.warning(f"No merged rows found for {get_rel_path(out_dir)}; skipping output.")
         return
 
     # Excel results
     results_path = out_dir / "word_count_reliability_results.xlsx"
     try:
         wc_merged.to_excel(results_path, index=False)
-        logger.info(f"Wrote word-count reliability results: {_rel(results_path)}")
+        logger.info(f"Wrote word-count reliability results: {get_rel_path(results_path)}")
     except Exception as e:
-        logger.error(f"Failed writing reliability results {_rel(results_path)}: {e}")
+        logger.error(f"Failed writing reliability results {get_rel_path(results_path)}: {e}")
         return
 
     # ICC
@@ -69,9 +69,9 @@ def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
 
             f.write(f"ICC(2,1): {icc_value}\n")
 
-        logger.info(f"Successfully wrote reliability report to {_rel(report_path)}")
+        logger.info(f"Successfully wrote reliability report to {get_rel_path(report_path)}")
     except Exception as e:
-        logger.error(f"Failed writing reliability report {_rel(report_path)}: {e}")
+        logger.error(f"Failed writing reliability report {get_rel_path(report_path)}: {e}")
 
 
 def evaluate_word_count_reliability(input_dir, output_dir):
@@ -117,13 +117,13 @@ def evaluate_word_count_reliability(input_dir, output_dir):
     if len(coding_files) > 1:
         logger.warning(
             "Multiple word-count coding files detected. "
-            f"Using only the first returned file: {_rel(coding_files[0])}"
+            f"Using only the first returned file: {get_rel_path(coding_files[0])}"
         )
 
     if len(rel_files) > 1:
         logger.warning(
             "Multiple word-count reliability files detected. "
-            f"Using only the first returned file: {_rel(rel_files[0])}"
+            f"Using only the first returned file: {get_rel_path(rel_files[0])}"
         )
 
     cod = coding_files[0]
@@ -132,9 +132,9 @@ def evaluate_word_count_reliability(input_dir, output_dir):
     try:
         wc_df = pd.read_excel(cod)
         wc_rel_df = pd.read_excel(rel)
-        logger.info(f"Processing pair: {_rel(cod)} + {_rel(rel)}")
+        logger.info(f"Processing pair: {get_rel_path(cod)} + {get_rel_path(rel)}")
     except Exception as e:
-        logger.error(f"Failed reading {_rel(cod)} or {_rel(rel)}: {e}")
+        logger.error(f"Failed reading {get_rel_path(cod)} or {get_rel_path(rel)}: {e}")
         return
 
     try:
@@ -162,10 +162,10 @@ def evaluate_word_count_reliability(input_dir, output_dir):
         )
 
         if len(wc_rel_df) != len(wc_merged):
-            logger.warning(f"Row mismatch after merge on {_rel(rel)}")
+            logger.warning(f"Row mismatch after merge on {get_rel_path(rel)}")
 
     except Exception as e:
-        logger.error(f"Failed merging {_rel(cod)} and {_rel(rel)}: {e}")
+        logger.error(f"Failed merging {get_rel_path(cod)} and {get_rel_path(rel)}: {e}")
         return
 
     if wc_merged.empty:

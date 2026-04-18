@@ -6,7 +6,7 @@ from tqdm import tqdm
 import num2words as n2w
 from pathlib import Path
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from src.diaad.coding.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
@@ -124,7 +124,7 @@ def _find_input_file(input_dir, output_dir):
         if len(cu_files) > 1:
             logger.warning(
                 "Multiple CU coding files detected for word-count prep. "
-                f"Using only the first returned file: {_rel(cu_files[0])}"
+                f"Using only the first returned file: {get_rel_path(cu_files[0])}"
             )
         else:
             logger.info("Found CU coding file for word-count prep.")
@@ -139,7 +139,7 @@ def _find_input_file(input_dir, output_dir):
         if len(transcript_tables) > 1:
             logger.warning(
                 "Multiple transcript table files detected for word-count prep. "
-                f"Using only the first returned file: {_rel(transcript_tables[0])}"
+                f"Using only the first returned file: {get_rel_path(transcript_tables[0])}"
             )
         else:
             logger.info(
@@ -160,7 +160,7 @@ def _read_source_file(file: Path, source_type: str) -> pd.DataFrame:
         raise ValueError(f"Unknown source_type: {source_type}")
 
     df = _shuffle_by_sample(df)
-    logger.info(f"Read and shuffled {_rel(file)}")
+    logger.info(f"Read and shuffled {get_rel_path(file)}")
     return df
 
 
@@ -465,16 +465,16 @@ def _write_wc_outputs(
         fpath = word_count_dir / fname
         try:
             df.to_excel(fpath, index=False)
-            logger.info(f"Wrote {_rel(fpath)}")
+            logger.info(f"Wrote {get_rel_path(fpath)}")
         except Exception as e:
-            logger.error(f"Failed to write {_rel(fpath)}: {e}")
+            logger.error(f"Failed to write {get_rel_path(fpath)}: {e}")
 
     if codebook_df is not None and not codebook_df.empty:
         codebook_path = word_count_dir / "word_count_blind_codebook.xlsx"
         try:
             write_blind_codebook(codebook_df, codebook_path)
         except Exception as e:
-            logger.error(f"Failed to write blind codebook {_rel(codebook_path)}: {e}")
+            logger.error(f"Failed to write blind codebook {get_rel_path(codebook_path)}: {e}")
 
 
 # ------------------------------------------------------------------
@@ -569,5 +569,5 @@ def make_word_count_files(
         )
 
     except Exception as e:
-        logger.error(f"Failed processing {_rel(file)}: {e}")
+        logger.error(f"Failed processing {get_rel_path(file)}: {e}")
     

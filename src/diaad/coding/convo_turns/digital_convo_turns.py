@@ -5,7 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 from scipy.stats import entropy
 from collections import Counter, defaultdict
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 
 
 def extract_turn_counts(turn_string):
@@ -545,7 +545,7 @@ def analyze_digital_convo_turns(input_dir, output_dir):
     # Collect candidate .xlsx files then filter by regex
     name_re = re.compile(r'.*(Convo|Conversation)_?Turns.*\.xlsx$', re.IGNORECASE)
     ct_files = [f for f in Path(input_dir).rglob('*.xlsx') if name_re.search(f.name)]
-    logger.info(f"Found {len(ct_files)} files in {_rel(input_dir)}.")
+    logger.info(f"Found {len(ct_files)} files in {get_rel_path(input_dir)}.")
 
     for ct_file in tqdm(ct_files, desc="Analyzing conversation turns"):
         try:

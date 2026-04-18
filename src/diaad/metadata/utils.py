@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
@@ -93,7 +93,7 @@ def load_metadata_from_transcript_tables(
     if not combine and len(transcript_tables) > 1:
         logger.warning(
             "Multiple transcript tables detected for metadata resolution; "
-            f"using first in list: {_rel(transcript_tables[0])}"
+            f"using first in list: {get_rel_path(transcript_tables[0])}"
         )
         transcript_tables = [transcript_tables[0]]
 
@@ -106,7 +106,7 @@ def load_metadata_from_transcript_tables(
                 joined["file"] = path.name
             metadata_dfs.append(joined)
         except Exception as e:
-            logger.error(f"Failed loading transcript metadata from {_rel(path)}: {e}")
+            logger.error(f"Failed loading transcript metadata from {get_rel_path(path)}: {e}")
             raise
 
     if len(metadata_dfs) == 1:
@@ -120,6 +120,6 @@ def load_metadata_from_transcript_tables(
             "transcript table(s)"
         )
     else:
-        logger.info(f"Loaded transcript metadata from {_rel(transcript_tables[0])}")
+        logger.info(f"Loaded transcript metadata from {get_rel_path(transcript_tables[0])}")
 
     return metadata_df

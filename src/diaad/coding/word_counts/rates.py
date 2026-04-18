@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.rates import (
     read_speaking_time_table,
@@ -81,7 +81,7 @@ def read_word_count_sample_summary(
     if len(matches) > 1:
         logger.warning(
             "Multiple word-count sample summary files detected; "
-            f"using first in list: {_rel(matches[0])}"
+            f"using first in list: {get_rel_path(matches[0])}"
         )
 
     path = Path(matches[0])
@@ -90,7 +90,7 @@ def read_word_count_sample_summary(
         df = pd.read_excel(path)
     except Exception as e:
         raise RuntimeError(
-            f"Failed reading word-count sample summary {_rel(path)}: {e}"
+            f"Failed reading word-count sample summary {get_rel_path(path)}: {e}"
         ) from e
 
     validate_columns(
@@ -99,7 +99,7 @@ def read_word_count_sample_summary(
         df_name="Word-count sample summary",
     )
 
-    logger.info(f"Loaded word-count sample summary from {_rel(path)}")
+    logger.info(f"Loaded word-count sample summary from {get_rel_path(path)}")
     return df
 
 
@@ -138,10 +138,10 @@ def write_word_count_rates_output(
 
     try:
         df.to_excel(out_path, index=False)
-        logger.info(f"Saved word-count rates file: {_rel(out_path)}")
+        logger.info(f"Saved word-count rates file: {get_rel_path(out_path)}")
     except Exception as e:
         raise RuntimeError(
-            f"Failed writing word-count rates file {_rel(out_path)}: {e}"
+            f"Failed writing word-count rates file {get_rel_path(out_path)}: {e}"
         ) from e
 
     return out_path

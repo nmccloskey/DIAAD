@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 from tqdm import tqdm
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.sampling import calc_subset_size
 from diaad.transcripts.transcript_tables import extract_transcript_data
@@ -32,7 +32,7 @@ def _build_samples_df_from_chats(tiers, chats) -> pd.DataFrame:
             labels = [t.match(str(cha_file)) for t in tiers.values()]
             rows.append([cha_file] + labels)
         except Exception as e:
-            logger.error(f"Failed to parse tier labels for {_rel(cha_file)}: {e}")
+            logger.error(f"Failed to parse tier labels for {get_rel_path(cha_file)}: {e}")
 
     return pd.DataFrame(rows, columns=columns)
 
@@ -65,8 +65,8 @@ def _load_samples_df_from_transcript_tables(
     if len(transcript_tables) > 1:
         logger.warning(
             "Multiple transcript tables found; using the first match: %s. Other matches: %s",
-            _rel(transcript_tables[0]),
-            [_rel(p) for p in transcript_tables[1:]],
+            get_rel_path(transcript_tables[0]),
+            [get_rel_path(p) for p in transcript_tables[1:]],
         )
 
     transcript_table_path = transcript_tables[0]
@@ -78,16 +78,16 @@ def _load_samples_df_from_transcript_tables(
         )
     except Exception as e:
         logger.error(
-            f"Failed to load transcript table sample data from {_rel(transcript_table_path)}: {e}"
+            f"Failed to load transcript table sample data from {get_rel_path(transcript_table_path)}: {e}"
         )
         return None
 
     if samples_df is None or samples_df.empty:
-        logger.info(f"Transcript table {_rel(transcript_table_path)} contained no sample rows.")
+        logger.info(f"Transcript table {get_rel_path(transcript_table_path)} contained no sample rows.")
         return None
 
     logger.info(
-        f"Loaded {len(samples_df)} samples from transcript table {_rel(transcript_table_path)}."
+        f"Loaded {len(samples_df)} samples from transcript table {get_rel_path(transcript_table_path)}."
     )
     return samples_df.copy()
 
@@ -118,9 +118,9 @@ def _write_blank_reliability_chat_files(
                     if line.startswith("@"):
                         f.write(line + "\n")
 
-            logger.info(f"Wrote blank CHAT header: {_rel(filepath)}")
+            logger.info(f"Wrote blank CHAT header: {get_rel_path(filepath)}")
         except Exception as e:
-            logger.error(f"Failed to write blank CHAT for {_rel(cha_file)}: {e}")
+            logger.error(f"Failed to write blank CHAT for {get_rel_path(cha_file)}: {e}")
 
 
 def _write_reliability_selection_excel(
@@ -148,10 +148,10 @@ def _write_reliability_selection_excel(
                 sheet_name=ALL_TRANSCRIPTS_SHEET,
                 index=False,
             )
-        logger.info(f"Reliability Excel saved to: {_rel(filepath)}")
+        logger.info(f"Reliability Excel saved to: {get_rel_path(filepath)}")
         return filepath
     except Exception as e:
-        logger.error(f"Failed to write reliability Excel {_rel(filepath)}: {e}")
+        logger.error(f"Failed to write reliability Excel {get_rel_path(filepath)}: {e}")
         return None
 
 
@@ -263,7 +263,7 @@ def reselect_transcription_reliability_samples(input_dir, output_dir, frac):
 
     transc_sel_files = list(input_dir.rglob("*transcription_reliability_samples.xlsx"))
     if not transc_sel_files:
-        logger.warning(f"No reliability transcription files found in {_rel(input_dir)}")
+        logger.warning(f"No reliability transcription files found in {get_rel_path(input_dir)}")
         return
 
     for filepath in transc_sel_files:
@@ -271,14 +271,14 @@ def reselect_transcription_reliability_samples(input_dir, output_dir, frac):
             xls = pd.ExcelFile(filepath)
             required_sheets = {"all_transcripts", "reliability_selection"}
             if not required_sheets <= set(xls.sheet_names):
-                logger.warning(f"Skipping {_rel(filepath)}: missing sheets.")
+                logger.warning(f"Skipping {get_rel_path(filepath)}: missing sheets.")
                 continue
 
             df_all = pd.read_excel(filepath, sheet_name="all_transcripts")
             df_rel = pd.read_excel(filepath, sheet_name="reliability_selection")
 
             if "file" not in df_all.columns:
-                logger.warning(f"Skipping {_rel(filepath)}: 'file' column missing in all_transcripts.")
+                logger.warning(f"Skipping {get_rel_path(filepath)}: 'file' column missing in all_transcripts.")
                 continue
 
             if SELECTED_COL in df_all.columns:
@@ -286,7 +286,7 @@ def reselect_transcription_reliability_samples(input_dir, output_dir, frac):
             else:
                 if "file" not in df_rel.columns:
                     logger.warning(
-                        f"Skipping {_rel(filepath)}: no '{SELECTED_COL}' column in all_transcripts "
+                        f"Skipping {get_rel_path(filepath)}: no '{SELECTED_COL}' column in all_transcripts "
                         "and 'file' column missing in reliability_selection."
                     )
                     continue
@@ -295,7 +295,7 @@ def reselect_transcription_reliability_samples(input_dir, output_dir, frac):
             candidates = df_all[~df_all["file"].isin(used_files)].copy()
 
             if candidates.empty:
-                logger.info(f"No remaining candidates in {_rel(filepath)}, skipping.")
+                logger.info(f"No remaining candidates in {get_rel_path(filepath)}, skipping.")
                 continue
 
             n_target = calc_subset_size(frac=frac, samples=df_all)
@@ -303,7 +303,7 @@ def reselect_transcription_reliability_samples(input_dir, output_dir, frac):
 
             if n_samples < n_target:
                 logger.warning(
-                    f"Only {n_samples}/{n_target} candidates available for {_rel(filepath)} "
+                    f"Only {n_samples}/{n_target} candidates available for {get_rel_path(filepath)} "
                     f"(candidates exhausted; cannot meet frac={frac})."
                 )
 
@@ -319,7 +319,7 @@ def reselect_transcription_reliability_samples(input_dir, output_dir, frac):
                     sheet_name="reselected_reliability",
                 )
 
-            logger.info(f"Reselected {n_samples} files → {_rel(outpath)}")
+            logger.info(f"Reselected {n_samples} files → {get_rel_path(outpath)}")
 
         except Exception as e:
-            logger.error(f"Failed to reselect samples for {_rel(filepath)}: {e}")
+            logger.error(f"Failed to reselect samples for {get_rel_path(filepath)}: {e}")

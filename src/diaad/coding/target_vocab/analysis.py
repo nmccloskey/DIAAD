@@ -13,7 +13,7 @@ from diaad.coding.target_vocab.utils import (
     preload_target_vocab_norms,
     reformat,
 )
-from psair.core.logger import _rel, logger
+from psair.core.logger import get_rel_path, logger
 
 
 SUMMARY_COLUMNS = [
@@ -310,7 +310,7 @@ def run_target_vocab(
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
     target_vocab_dir = output_dir / "target_vocab"
     target_vocab_dir.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Target vocabulary coverage output directory: {_rel(target_vocab_dir)}")
+    logger.info(f"Target vocabulary coverage output directory: {get_rel_path(target_vocab_dir)}")
     resources = load_target_vocabulary_resources(resource_path)
 
     utt_df, present_narratives = prepare_target_vocab_inputs(
@@ -364,7 +364,7 @@ def run_target_vocab(
         with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
             summary_df.to_excel(writer, sheet_name="summary", index=False)
             detail_df.to_excel(writer, sheet_name="details", index=False)
-        logger.info(f"Target vocabulary coverage results written to {_rel(output_file)}")
+        logger.info(f"Target vocabulary coverage results written to {get_rel_path(output_file)}")
     except Exception as e:
         logger.error(f"Failed to write target vocabulary coverage results: {e}")
 

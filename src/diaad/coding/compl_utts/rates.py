@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.rates import (
     read_speaking_time_table,
@@ -80,7 +80,7 @@ def read_cu_sample_summary(
     if len(matches) > 1:
         logger.warning(
             "Multiple CU sample summary files detected; "
-            f"using first in list: {_rel(matches[0])}"
+            f"using first in list: {get_rel_path(matches[0])}"
         )
 
     path = Path(matches[0])
@@ -88,7 +88,7 @@ def read_cu_sample_summary(
     try:
         df = pd.read_excel(path)
     except Exception as e:
-        raise RuntimeError(f"Failed reading CU sample summary {_rel(path)}: {e}") from e
+        raise RuntimeError(f"Failed reading CU sample summary {get_rel_path(path)}: {e}") from e
 
     required_cols = [
         "sample_id",
@@ -103,7 +103,7 @@ def read_cu_sample_summary(
     ]
     validate_columns(df, required_cols, df_name="CU sample summary")
 
-    logger.info(f"Loaded CU sample summary from {_rel(path)}")
+    logger.info(f"Loaded CU sample summary from {get_rel_path(path)}")
     return df
 
 
@@ -142,9 +142,9 @@ def write_cu_rates_output(
 
     try:
         df.to_excel(out_path, index=False)
-        logger.info(f"Saved CU rates file: {_rel(out_path)}")
+        logger.info(f"Saved CU rates file: {get_rel_path(out_path)}")
     except Exception as e:
-        raise RuntimeError(f"Failed writing CU rates file {_rel(out_path)}: {e}") from e
+        raise RuntimeError(f"Failed writing CU rates file {get_rel_path(out_path)}: {e}") from e
 
     return out_path
 

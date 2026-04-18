@@ -11,7 +11,7 @@ from tqdm import tqdm
 from Levenshtein import distance
 from Bio.Align import PairwiseAligner
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 
 
 ALIGNMENTS_SUBDIR = "global_alignments"
@@ -270,10 +270,10 @@ def write_reliability_report(transc_rel_subdf, report_path):
         with open(report_path, "w", encoding="utf-8") as f:
             f.write(report_text)
 
-        logger.info("Successfully wrote transcription reliability report to %s", _rel(report_path))
+        logger.info("Successfully wrote transcription reliability report to %s", get_rel_path(report_path))
 
     except Exception as e:
-        logger.error("Failed to write transcription reliability report to %s: %s", _rel(report_path), e)
+        logger.error("Failed to write transcription reliability report to %s: %s", get_rel_path(report_path), e)
         raise
 
 
@@ -377,7 +377,7 @@ def _convert_cha_names(
         logger.info(
             "No '%s' subdirectories found under %s.",
             reliability_dirname,
-            _rel(input_dir),
+            get_rel_path(input_dir),
         )
         return {"renamed": [], "originals": []}
 
@@ -396,7 +396,7 @@ def _convert_cha_names(
                 if new_path.exists():
                     logger.warning(
                         "Renamed file already exists, skipping: %s",
-                        _rel(new_path),
+                        get_rel_path(new_path),
                     )
                     continue
 
@@ -412,7 +412,7 @@ def _convert_cha_names(
             except Exception as e:
                 logger.error(
                     "Failed to process reliability file %s: %s",
-                    _rel(cha),
+                    get_rel_path(cha),
                     e,
                 )
 
@@ -467,13 +467,13 @@ def _build_file_index(
                     "Duplicate %s tier labels detected for key %s: keeping %s, skipping %s",
                     label,
                     key,
-                    _rel(index[key]),
-                    _rel(path),
+                    get_rel_path(index[key]),
+                    get_rel_path(path),
                 )
                 continue
             index[key] = path
         except Exception as e:
-            logger.error(f"Failed to index {label} file {_rel(path)}: {e}")
+            logger.error(f"Failed to index {label} file {get_rel_path(path)}: {e}")
 
     logger.info("Indexed %d %s file(s).", len(index), label)
     return index
@@ -510,7 +510,7 @@ def _match_reliability_pairs(
         if org_path is None:
             logger.error(
                 "No matching original transcript found for reliability file %s with labels %s",
-                _rel(rel_path),
+                get_rel_path(rel_path),
                 key,
             )
             continue
@@ -550,9 +550,9 @@ def _save_alignment(
             nw["needleman_wunsch_norm"],
         )
         alignment_path.write_text(alignment_str, encoding="utf-8")
-        logger.info(f"Saved alignment file: {_rel(alignment_path)}")
+        logger.info(f"Saved alignment file: {get_rel_path(alignment_path)}")
     except Exception as e:
-        logger.error(f"Failed to write alignment file {_rel(alignment_path)}: {e}")
+        logger.error(f"Failed to write alignment file {get_rel_path(alignment_path)}: {e}")
 
 
 def _analyze_reliability_pairs(
@@ -634,8 +634,8 @@ def _analyze_reliability_pairs(
         except Exception as e:
             logger.error(
                 "Failed to analyze pair %s vs %s: %s",
-                _rel(org_cha),
-                _rel(rel_cha),
+                get_rel_path(org_cha),
+                get_rel_path(rel_cha),
                 e,
             )
 
@@ -661,15 +661,15 @@ def _save_reliability_outputs(
 
     try:
         transc_rel_df.to_excel(df_path, index=False)
-        logger.info(f"Saved reliability analysis DataFrame to: {_rel(df_path)}")
+        logger.info(f"Saved reliability analysis DataFrame to: {get_rel_path(df_path)}")
     except Exception as e:
-        logger.error(f"Failed to write DataFrame to {_rel(df_path)}: {e}")
+        logger.error(f"Failed to write DataFrame to {get_rel_path(df_path)}: {e}")
 
     try:
         write_reliability_report(transc_rel_df, report_path)
-        logger.info(f"Saved reliability report to: {_rel(report_path)}")
+        logger.info(f"Saved reliability report to: {get_rel_path(report_path)}")
     except Exception as e:
-        logger.error(f"Failed to write reliability report to {_rel(report_path)}: {e}")
+        logger.error(f"Failed to write reliability report to {get_rel_path(report_path)}: {e}")
 
     if test:
         results.append(transc_rel_df.copy())
@@ -704,7 +704,7 @@ def evaluate_transcription_reliability(
 
     transc_rel_dir = output_dir / "transcription_reliability_evaluation"
     transc_rel_dir.mkdir(parents=True, exist_ok=True)
-    logger.info(f"Created directory: {_rel(transc_rel_dir)}")
+    logger.info(f"Created directory: {get_rel_path(transc_rel_dir)}")
 
     converted = _convert_cha_names(
         input_dir,

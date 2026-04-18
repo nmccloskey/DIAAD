@@ -13,7 +13,7 @@ from diaad.coding.target_vocab.resources import (
     load_builtin_resources,
 )
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
-from psair.core.logger import _rel, logger
+from psair.core.logger import get_rel_path, logger
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
@@ -58,7 +58,7 @@ def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | Non
         p = unblind_matches[0]
         df = read_excel_safely(p)
         if df is not None:
-            logger.info(f"Using unblind utterance data: {_rel(p)}")
+            logger.info(f"Using unblind utterance data: {get_rel_path(p)}")
             return "unblind", df
 
     transcript_tables = find_matching_files(
@@ -345,7 +345,7 @@ def read_excel_safely(path):
     try:
         return pd.read_excel(path)
     except Exception as e:
-        logger.warning(f"Failed reading {_rel(path)}: {e}")
+        logger.warning(f"Failed reading {get_rel_path(path)}: {e}")
         return None
 
 

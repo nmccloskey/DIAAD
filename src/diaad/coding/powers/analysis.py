@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 
 
@@ -224,9 +224,9 @@ def analyze_powers_coding(input_dir, output_dir):
 
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Output directory: {_rel(out_dir)}")
+        logger.info(f"Output directory: {get_rel_path(out_dir)}")
     except Exception as e:
-        logger.error(f"Failed to create POWERS analysis directory {_rel(out_dir)}: {e}")
+        logger.error(f"Failed to create POWERS analysis directory {get_rel_path(out_dir)}: {e}")
         return
 
     pc_files = find_matching_files(
@@ -247,16 +247,16 @@ def analyze_powers_coding(input_dir, output_dir):
             utt_df = add_turn_labels(utt_df)
             sheets = compute_level_summaries(utt_df)
         except Exception as e:
-            logger.error(f"Failed to analyze {_rel(pc_file)}: {e}")
+            logger.error(f"Failed to analyze {get_rel_path(pc_file)}: {e}")
             continue
 
         out_file = out_dir / f"{pc_file.stem.replace('coding', 'analysis')}.xlsx"
 
         try:
             write_analysis_workbook(out_file, sheets)
-            logger.info(f"Wrote analysis workbook: {_rel(out_file)}")
+            logger.info(f"Wrote analysis workbook: {get_rel_path(out_file)}")
         except Exception as e:
-            logger.error(f"Failed to write {_rel(out_file)}: {e}")
+            logger.error(f"Failed to write {get_rel_path(out_file)}: {e}")
 
 
 def _read_powers_file(pc_file: Path) -> pd.DataFrame | None:
@@ -265,8 +265,8 @@ def _read_powers_file(pc_file: Path) -> pd.DataFrame | None:
     """
     try:
         df = pd.read_excel(pc_file)
-        logger.info(f"Processing file: {_rel(pc_file)}")
+        logger.info(f"Processing file: {get_rel_path(pc_file)}")
         return df
     except Exception as e:
-        logger.error(f"Failed to read file {_rel(pc_file)}: {e}")
+        logger.error(f"Failed to read file {get_rel_path(pc_file)}: {e}")
         return None

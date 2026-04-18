@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from src.diaad.coding.utils.sampling import calc_subset_size
 
 
@@ -119,7 +119,7 @@ def load_original_and_reliability(org_file, rel_mates, rel_label):
     try:
         df_org = pd.read_excel(org_file)
     except Exception as e:
-        logger.error(f"[{rel_label}] Failed reading {_rel(org_file)}: {e}")
+        logger.error(f"[{rel_label}] Failed reading {get_rel_path(org_file)}: {e}")
         return None, []
 
     if "sample_id" not in df_org.columns:
@@ -134,13 +134,13 @@ def load_original_and_reliability(org_file, rel_mates, rel_label):
         try:
             rdf = pd.read_excel(rf)
             if "sample_id" not in rdf.columns:
-                logger.warning(f"[{rel_label}] Skipping {_rel(rf)} because sample_id is missing.")
+                logger.warning(f"[{rel_label}] Skipping {get_rel_path(rf)} because sample_id is missing.")
                 continue
             rdf = rdf.copy()
             rdf["sample_id"] = normalize_sample_ids(rdf["sample_id"])
             rel_dfs.append(rdf)
         except Exception as e:
-            logger.warning(f"[{rel_label}] Failed reading {_rel(rf)}: {e}")
+            logger.warning(f"[{rel_label}] Failed reading {get_rel_path(rf)}: {e}")
 
     return df_org, rel_dfs
 
@@ -209,6 +209,6 @@ def write_reselected_reliability(df, org_file, out_dir, suffix, stem_token, rel_
 
     try:
         df.to_excel(out_path, index=False)
-        logger.info(f"[{rel_label}] Saved {_rel(out_path)}")
+        logger.info(f"[{rel_label}] Saved {get_rel_path(out_path)}")
     except Exception as e:
-        logger.error(f"[{rel_label}] Failed writing {_rel(out_path)}: {e}")
+        logger.error(f"[{rel_label}] Failed writing {get_rel_path(out_path)}: {e}")

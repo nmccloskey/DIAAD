@@ -7,7 +7,7 @@ from typing import Optional
 
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import assign_coders, resolve_stim_cols, segment
 from diaad.coding.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
@@ -177,7 +177,7 @@ def find_transcript_table(
     if len(transcript_tables) > 1:
         logger.warning(
             "Multiple transcript tables detected. "
-            f"Processing only the first returned file: {_rel(transcript_tables[0])}"
+            f"Processing only the first returned file: {get_rel_path(transcript_tables[0])}"
         )
 
     return transcript_tables[0]
@@ -287,7 +287,7 @@ def write_coding_template(
     else:
         raise ValueError("Template path must end in .xlsx or .csv")
 
-    logger.info(f"Wrote coding template: {_rel(path)}")
+    logger.info(f"Wrote coding template: {get_rel_path(path)}")
 
     if codebook_df is not None and not codebook_df.empty:
         if codebook_path is None:

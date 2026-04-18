@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 
 
 SAMPLE_BASE_COLS = ["sample_id", "file", "input_order", "shuffled_order"]
@@ -57,7 +57,7 @@ def _count_total_utterances(chats: Dict[str, object], file_list: List[str]) -> i
             utterances = getattr(chat_data, "utterances", lambda: [])()
             total += len(utterances)
         except Exception as e:
-            logger.warning(f"Could not count utterances in {_rel(chat_file)}: {e}")
+            logger.warning(f"Could not count utterances in {get_rel_path(chat_file)}: {e}")
     return total
 
 
@@ -120,10 +120,10 @@ def _write_transcript_tables(
         with pd.ExcelWriter(filename, engine="openpyxl") as writer:
             sample_df.to_excel(writer, sheet_name="samples", index=False)
             utt_df.to_excel(writer, sheet_name="utterances", index=False)
-        logger.info(f"Wrote transcript table: {_rel(filename)}")
+        logger.info(f"Wrote transcript table: {get_rel_path(filename)}")
         return str(filename)
     except Exception as e:
-        logger.error(f"Failed to write {_rel(filename)}: {e}")
+        logger.error(f"Failed to write {get_rel_path(filename)}: {e}")
         return None
 
 
@@ -227,7 +227,7 @@ def tabularize_transcripts(
                     ]
                 )
         except Exception as e:
-            logger.error(f"Error processing {_rel(chat_file)}: {e}")
+            logger.error(f"Error processing {get_rel_path(chat_file)}: {e}")
             continue
 
     sample_df = pd.DataFrame(sample_rows, columns=sample_cols)
@@ -272,7 +272,7 @@ def extract_transcript_data(
     """
     path = Path(transcript_table_path).expanduser().resolve()
     if not path.exists():
-        logger.error(f"Transcript table not found: {_rel(path)}")
+        logger.error(f"Transcript table not found: {get_rel_path(path)}")
         raise FileNotFoundError(f"Transcript table not found: {path}")
 
     if kind not in {"sample", "utterance", "joined"}:
@@ -295,22 +295,22 @@ def extract_transcript_data(
         if kind == "sample":
             if sample_df is None:
                 raise ValueError("Sample sheet not found in transcript table.")
-            logger.info(f"Loaded sample data from {_rel(path)}")
+            logger.info(f"Loaded sample data from {get_rel_path(path)}")
             return sample_df
 
         if kind == "utterance":
             if utt_df is None:
                 raise ValueError("Utterance sheet not found in transcript table.")
-            logger.info(f"Loaded utterance data from {_rel(path)}")
+            logger.info(f"Loaded utterance data from {get_rel_path(path)}")
             return utt_df
 
         if sample_df is None or utt_df is None:
             raise ValueError("Both sheets required for joined kind are missing.")
 
         joined = sample_df.merge(utt_df, on="sample_id", how="inner")
-        logger.info(f"Loaded joined transcript data from {_rel(path)}")
+        logger.info(f"Loaded joined transcript data from {get_rel_path(path)}")
         return joined
 
     except Exception as e:
-        logger.error(f"Failed to read {_rel(path)}: {e}")
+        logger.error(f"Failed to read {get_rel_path(path)}: {e}")
         raise

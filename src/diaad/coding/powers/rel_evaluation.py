@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.rel_eval_utils import (
     percent_difference,
@@ -46,7 +46,7 @@ def _get_first_match(files: list[Path], label: str) -> Path | None:
     if len(files) > 1:
         logger.warning(
             f"Multiple {label} files detected. "
-            f"Using only the first returned file: {_rel(files[0])}"
+            f"Using only the first returned file: {get_rel_path(files[0])}"
         )
 
     return files[0]
@@ -57,10 +57,10 @@ def _read_powers_pair(org_file: Path, rel_file: Path) -> tuple[pd.DataFrame | No
     try:
         org_df = pd.read_excel(org_file)
         rel_df = pd.read_excel(rel_file)
-        logger.info(f"Processing pair: {_rel(org_file)} + {_rel(rel_file)}")
+        logger.info(f"Processing pair: {get_rel_path(org_file)} + {get_rel_path(rel_file)}")
         return org_df, rel_df
     except Exception as e:
-        logger.error(f"Failed reading {_rel(org_file)} or {_rel(rel_file)}: {e}")
+        logger.error(f"Failed reading {get_rel_path(org_file)} or {get_rel_path(rel_file)}: {e}")
         return None, None
 
 
@@ -231,7 +231,7 @@ def _write_powers_rel_outputs(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if merged.empty:
-        logger.warning(f"No merged rows found for {_rel(out_dir)}; skipping output.")
+        logger.warning(f"No merged rows found for {get_rel_path(out_dir)}; skipping output.")
         return
 
     results_path = out_dir / "powers_reliability_results.xlsx"
@@ -242,9 +242,9 @@ def _write_powers_rel_outputs(
                 cont_summary.to_excel(writer, sheet_name="continuous_summary", index=False)
             if not cat_summary.empty:
                 cat_summary.to_excel(writer, sheet_name="categorical_summary", index=False)
-        logger.info(f"Wrote POWERS reliability results: {_rel(results_path)}")
+        logger.info(f"Wrote POWERS reliability results: {get_rel_path(results_path)}")
     except Exception as e:
-        logger.error(f"Failed writing reliability results {_rel(results_path)}: {e}")
+        logger.error(f"Failed writing reliability results {get_rel_path(results_path)}: {e}")
         return
 
     report_path = out_dir / "powers_reliability_report.txt"
@@ -283,9 +283,9 @@ def _write_powers_rel_outputs(
                         f"kappa={row['kappa']}\n"
                     )
 
-        logger.info(f"Successfully wrote reliability report to {_rel(report_path)}")
+        logger.info(f"Successfully wrote reliability report to {get_rel_path(report_path)}")
     except Exception as e:
-        logger.error(f"Failed writing reliability report {_rel(report_path)}: {e}")
+        logger.error(f"Failed writing reliability report {get_rel_path(report_path)}: {e}")
 
 
 def evaluate_powers_reliability(input_dir, output_dir):
@@ -321,7 +321,7 @@ def evaluate_powers_reliability(input_dir, output_dir):
     try:
         merged = _merge_powers_reliability(org_df, rel_df)
     except Exception as e:
-        logger.error(f"Failed merging {_rel(org_file)} and {_rel(rel_file)}: {e}")
+        logger.error(f"Failed merging {get_rel_path(org_file)} and {get_rel_path(rel_file)}: {e}")
         return
 
     if merged.empty:

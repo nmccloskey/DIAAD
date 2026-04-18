@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 
 
 def find_matching_files(
@@ -50,14 +50,14 @@ def find_matching_files(
         try:
             d = Path(d)
             if not d.exists():
-                logger.warning(f"Directory not found: {_rel(d)} (skipping).")
+                logger.warning(f"Directory not found: {get_rel_path(d)} (skipping).")
                 continue
 
             for f in d.rglob(f"*{search_base}*{search_ext}"):
                 if all(mt in f.name for mt in match_tiers):
                     all_matches.append(f)
         except Exception as e:
-            logger.error(f"Error searching in {_rel(d)}: {e}")
+            logger.error(f"Error searching in {get_rel_path(d)}: {e}")
 
     if not all_matches:
         logger.warning(f"No matches found for base '{search_base}' with tiers {match_tiers}.")
@@ -81,18 +81,18 @@ def find_matching_files(
             for fname, paths in duplicates.items():
                 logger.warning(f"Duplicate filename '{fname}' found in:")
                 for p in [seen[fname], *paths]:
-                    logger.warning(f"  - {_rel(p)}")
+                    logger.warning(f"  - {get_rel_path(p)}")
 
     else:
         unique_matches = all_matches
 
     if len(unique_matches) == 1:
-        logger.info(f"Matched file for '{search_base}': {_rel(unique_matches[0])}")
+        logger.info(f"Matched file for '{search_base}': {get_rel_path(unique_matches[0])}")
     else:
         logger.info(
             f"Multiple ({len(unique_matches)}) files matched '{search_base}' and {match_tiers}."
         )
         for f in unique_matches:
-            logger.debug(f"  - {_rel(f)}")
+            logger.debug(f"  - {get_rel_path(f)}")
 
     return unique_matches

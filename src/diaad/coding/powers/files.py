@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import segment
 from src.diaad.coding.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
@@ -80,7 +80,7 @@ def _get_transcript_table(input_dir, output_dir) -> Path | None:
     if len(transcript_tables) > 1:
         logger.warning(
             "Multiple transcript tables detected. "
-            f"Processing only the first returned file: {_rel(transcript_tables[0])}"
+            f"Processing only the first returned file: {get_rel_path(transcript_tables[0])}"
         )
 
     return transcript_tables[0]
@@ -93,7 +93,7 @@ def _load_utterance_table(transcript_table: Path) -> pd.DataFrame | None:
     try:
         return extract_transcript_data(transcript_table)
     except Exception as e:
-        logger.error(f"Failed to read transcript table {_rel(transcript_table)}: {e}")
+        logger.error(f"Failed to read transcript table {get_rel_path(transcript_table)}: {e}")
         return None
 
 
@@ -311,9 +311,9 @@ def _write_excel(df: pd.DataFrame, filename: Path, label: str) -> None:
     try:
         filename.parent.mkdir(parents=True, exist_ok=True)
         df.to_excel(filename, index=False, na_rep="")
-        logger.info(f"Successfully wrote {label} file: {_rel(filename)}")
+        logger.info(f"Successfully wrote {label} file: {get_rel_path(filename)}")
     except Exception as e:
-        logger.error(f"Failed to write {label} file {_rel(filename)}: {e}")
+        logger.error(f"Failed to write {label} file {get_rel_path(filename)}: {e}")
 
 
 def make_powers_coding_files(

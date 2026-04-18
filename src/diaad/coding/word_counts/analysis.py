@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.io.discovery import find_matching_files
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 
@@ -179,21 +179,21 @@ def _write_word_count_analysis_outputs(
     utterance_path = out_dir / "word_counting_by_utterance.xlsx"
     try:
         wc_utts.to_excel(utterance_path, index=False)
-        logger.info(f"Saved utterance-level word-count analysis: {_rel(utterance_path)}")
+        logger.info(f"Saved utterance-level word-count analysis: {get_rel_path(utterance_path)}")
     except Exception as e:
-        logger.error(f"Failed writing utterance-level file {_rel(utterance_path)}: {e}")
+        logger.error(f"Failed writing utterance-level file {get_rel_path(utterance_path)}: {e}")
         return
 
     if wc_summary is None or wc_summary.empty:
-        logger.warning(f"No valid word-count summaries for {_rel(out_dir)}")
+        logger.warning(f"No valid word-count summaries for {get_rel_path(out_dir)}")
         return
 
     summary_path = out_dir / "word_counting_by_sample.xlsx"
     try:
         wc_summary.to_excel(summary_path, index=False)
-        logger.info(f"Saved word-count summary file: {_rel(summary_path)}")
+        logger.info(f"Saved word-count summary file: {get_rel_path(summary_path)}")
     except Exception as e:
-        logger.error(f"Failed saving word-count summary to {_rel(summary_path)}: {e}")
+        logger.error(f"Failed saving word-count summary to {get_rel_path(summary_path)}: {e}")
 
 
 # ---------------------------------------------------------------------
@@ -256,16 +256,16 @@ def analyze_word_counts(
     if len(coding_files) > 1:
         logger.warning(
             "Multiple word-count coding files detected for analysis. "
-            f"Using only the first returned file: {_rel(coding_files[0])}"
+            f"Using only the first returned file: {get_rel_path(coding_files[0])}"
         )
 
     cod = Path(coding_files[0])
 
     try:
         wc_df = pd.read_excel(cod)
-        logger.info(f"Processing word-count coding file: {_rel(cod)}")
+        logger.info(f"Processing word-count coding file: {get_rel_path(cod)}")
     except Exception as e:
-        logger.error(f"Failed reading {_rel(cod)}: {e}")
+        logger.error(f"Failed reading {get_rel_path(cod)}: {e}")
         return
 
     required_cols = ["sample_id", word_count_field]
@@ -293,7 +293,7 @@ def analyze_word_counts(
             word_count_field=word_count_field,
         )
     except Exception as e:
-        logger.error(f"Word-count aggregation failed for {_rel(cod)}: {e}")
+        logger.error(f"Word-count aggregation failed for {get_rel_path(cod)}: {e}")
         return
 
     wc_df, wc_summary, _ = _maybe_unblind_word_count_outputs(

@@ -6,7 +6,7 @@ import random
 import pandas as pd
 from pathlib import Path
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from diaad.core.config import BlindingConfig
 from diaad.metadata.utils import (
     present_cols,
@@ -545,4 +545,4 @@ def write_blind_codebook(codebook_df: pd.DataFrame, path: str | Path) -> None:
     else:
         raise ValueError("Codebook path must end in .xlsx or .csv")
 
-    logger.info(f"Blind codebook written to {_rel(path)}")
+    logger.info(f"Blind codebook written to {get_rel_path(path)}")

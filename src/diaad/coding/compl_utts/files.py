@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Optional
 
-from psair.core.logger import logger, _rel
+from psair.core.logger import logger, get_rel_path
 from src.diaad.coding.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
@@ -418,7 +418,7 @@ def make_cu_coding_files(
     if len(transcript_tables) > 1:
         logger.warning(
             "Multiple transcript tables detected. "
-            f"Processing only the first returned file: {_rel(transcript_tables[0])}"
+            f"Processing only the first returned file: {get_rel_path(transcript_tables[0])}"
         )
 
     transcript_table = transcript_tables[0]
@@ -457,4 +457,4 @@ def make_cu_coding_files(
         )
 
     except Exception as e:
-        logger.error(f"Failed processing {_rel(transcript_table)}: {e}")
+        logger.error(f"Failed processing {get_rel_path(transcript_table)}: {e}")
