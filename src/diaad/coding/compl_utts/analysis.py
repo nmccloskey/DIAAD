@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 

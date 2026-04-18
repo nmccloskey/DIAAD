@@ -8,7 +8,7 @@ from pathlib import Path
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import segment
 from src.diaad.coding.utils.sampling import calc_subset_size
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.metadata.blinding import blind_file_identifiers
 from diaad.coding.powers.automation import run_automation

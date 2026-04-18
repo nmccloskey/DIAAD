@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from src.diaad.coding.utils.rates import (
     read_speaking_time_table,
     merge_speaking_time,

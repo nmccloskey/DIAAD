@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 

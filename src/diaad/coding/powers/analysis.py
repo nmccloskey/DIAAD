@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 
 
 TURN_AGG_COLS = [

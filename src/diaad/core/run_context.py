@@ -9,7 +9,7 @@ import random
 import numpy as np
 
 from diaad import __version__
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from psair.core.logger import logger
 
 from diaad.core.config import ConfigManager

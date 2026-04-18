@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from src.diaad.coding.utils.rel_eval_utils import (
     percent_difference,
     calculate_icc_from_pingouin,

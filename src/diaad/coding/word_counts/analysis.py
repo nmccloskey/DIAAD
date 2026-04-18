@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 
 

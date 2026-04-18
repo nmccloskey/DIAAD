@@ -10,7 +10,7 @@ import pandas as pd
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import assign_coders, resolve_stim_cols, segment
 from diaad.coding.utils.sampling import calc_subset_size
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.metadata.utils import validate_columns
 

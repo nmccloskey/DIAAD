@@ -14,7 +14,7 @@ from diaad.coding.target_vocab.resources import (
 )
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
 from psair.core.logger import get_rel_path, logger
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 

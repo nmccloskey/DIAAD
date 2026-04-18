@@ -7,7 +7,7 @@ from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
 from psair.core.logger import logger, get_rel_path
-from diaad.io.discovery import find_matching_files
+from psair.metadata.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
 
 
