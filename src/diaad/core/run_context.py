@@ -207,7 +207,7 @@ class RunContext:
         if self.chats is not None and not force:
             return self.chats
 
-        from diaad.io.cha_files import read_cha_files
+        from diaad.transcripts.cha_files import read_cha_files
 
         self.chats = read_cha_files(
             input_dir=self.input_dir,
