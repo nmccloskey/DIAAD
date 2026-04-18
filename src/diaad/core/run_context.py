@@ -183,7 +183,7 @@ class RunContext:
         """
         Build TierManager and tiers from configuration.
         """
-        from diaad.metadata.tiers import TierManager
+        from psair.metadata.tiers import TierManager
 
         self.tier_manager = TierManager(self.config.tiers_config)
         self.tiers = self.tier_manager.tiers
