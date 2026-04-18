@@ -1,11 +1,12 @@
 import re
-import spacy
 import contractions
 
 from tqdm import tqdm
 import pandas as pd
 
 from psair.core.logger import logger
+from psair.nlp import NLPModel
+
 from diaad.transcripts.transcription_reliability_evaluation import process_utterances
 
 
@@ -41,25 +42,9 @@ def expand_and_process_utterances(utt: str) -> str:
     modified_utt = expanded_utt.replace("-", "_")
     return process_utterances(modified_utt)
 
-# --- NLP model singleton (your version, trimmed to essentials here) ---
-class NLPmodel:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance._nlp_models = {}
-            cls._instance.load_nlp()
-        return cls._instance
-
-    def load_nlp(self, model_name="en_core_web_trf"):
-        if model_name not in self._nlp_models:
-            self._nlp_models[model_name] = spacy.load(model_name)
-
-    def get_nlp(self, model_name="en_core_web_trf"):
-        if model_name not in self._nlp_models:
-            self.load_nlp(model_name)
-        return self._nlp_models[model_name]
+# --- NLP model ---
+def get_powers_nlp(model_name: str = "en_core_web_sm"):
+    return NLPModel().get_nlp(model_name=model_name)
 
 # ---------- Rule helpers ----------
 def is_generic(token) -> bool:
@@ -185,7 +170,7 @@ def run_automation(df: pd.DataFrame) -> pd.DataFrame:
     returned unchanged.
     """
     try:
-        nlp = NLPmodel().get_nlp("en_core_web_trf")
+        nlp = get_powers_nlp()
     except Exception as e:
         logger.error(f"Failed to load NLP model; POWERS automation unavailable: {e}")
         return df
