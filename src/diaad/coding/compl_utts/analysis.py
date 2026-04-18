@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
 from diaad.metadata.unblinding import maybe_unblind_dataframe

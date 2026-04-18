@@ -13,7 +13,7 @@ from diaad.coding.target_vocab.utils import (
     preload_target_vocab_norms,
     reformat,
 )
-from diaad.core.logger import _rel, logger
+from psair.core.logger import _rel, logger
 
 
 SUMMARY_COLUMNS = [

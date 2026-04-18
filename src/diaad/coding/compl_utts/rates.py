@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.rates import (
     read_speaking_time_table,

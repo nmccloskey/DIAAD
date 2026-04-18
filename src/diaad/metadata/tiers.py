@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional
 
-from diaad.core.logger import logger
+from psair.core.logger import logger
 
 
 # -------------------------

@@ -6,7 +6,7 @@ from typing import Optional
 
 import pandas as pd
 
-from diaad.core.logger import logger
+from psair.core.logger import logger
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.templates.utils import (
     DEFAULT_STIMULUS_FIELD,

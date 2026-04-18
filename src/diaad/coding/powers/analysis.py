@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 
 

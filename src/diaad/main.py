@@ -9,7 +9,7 @@ from diaad.core.run_context import RunContext
 from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
 from diaad.cli.parser import build_arg_parser
 from diaad.cli.commands import parse_cli_commands
-from diaad.core.logger import (
+from psair.core.logger import (
     initialize_logger,
     logger,
     set_root,

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from src.diaad.coding.utils.rel_eval_utils import (
     percent_difference,

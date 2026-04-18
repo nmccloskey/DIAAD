@@ -6,7 +6,7 @@ from pathlib import Path
 from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.io.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
 

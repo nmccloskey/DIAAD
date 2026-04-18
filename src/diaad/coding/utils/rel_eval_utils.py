@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pingouin import intraclass_corr
 
-from diaad.core.logger import logger
+from psair.core.logger import logger
 
 
 def percent_difference(value1, value2):

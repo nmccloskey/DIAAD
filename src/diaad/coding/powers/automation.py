@@ -5,7 +5,7 @@ import contractions
 from tqdm import tqdm
 import pandas as pd
 
-from diaad.core.logger import logger
+from psair.core.logger import logger
 from diaad.transcripts.transcription_reliability_evaluation import process_utterances
 
 

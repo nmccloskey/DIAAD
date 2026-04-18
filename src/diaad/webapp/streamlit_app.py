@@ -12,7 +12,7 @@ import yaml
 from diaad import __version__
 from diaad.cli.commands import MODULE_COMMANDS
 from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
-from diaad.core.logger import initialize_logger, logger, set_root, terminate_logger
+from psair.core.logger import initialize_logger, logger, set_root, terminate_logger
 from diaad.core.run_context import RunContext
 from diaad.webapp.config_builder import build_config_ui
 

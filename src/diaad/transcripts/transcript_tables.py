@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 
 
 SAMPLE_BASE_COLS = ["sample_id", "file", "input_order", "shuffled_order"]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 
 
 def find_matching_files(

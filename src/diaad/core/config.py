@@ -6,7 +6,7 @@ from typing import Any, TypeAlias
 
 import yaml
 
-from diaad.core.logger import logger
+from psair.core.logger import logger
 
 
 # ------------------------------------------------------------------

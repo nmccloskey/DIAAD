@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.coding.utils import segment
 from src.diaad.coding.utils.sampling import calc_subset_size
 from diaad.io.discovery import find_matching_files

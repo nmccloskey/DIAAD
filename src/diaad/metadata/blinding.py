@@ -6,7 +6,7 @@ import random
 import pandas as pd
 from pathlib import Path
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 from diaad.core.config import BlindingConfig
 from diaad.metadata.utils import (
     present_cols,

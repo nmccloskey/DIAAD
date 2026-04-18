@@ -11,7 +11,7 @@ from tqdm import tqdm
 from Levenshtein import distance
 from Bio.Align import PairwiseAligner
 
-from diaad.core.logger import logger, _rel
+from psair.core.logger import logger, _rel
 
 
 ALIGNMENTS_SUBDIR = "global_alignments"

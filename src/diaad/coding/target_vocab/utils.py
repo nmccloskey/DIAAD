@@ -13,7 +13,7 @@ from diaad.coding.target_vocab.resources import (
     load_builtin_resources,
 )
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
-from diaad.core.logger import _rel, logger
+from psair.core.logger import _rel, logger
 from diaad.io.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
 

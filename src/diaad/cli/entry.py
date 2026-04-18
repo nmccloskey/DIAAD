@@ -1,5 +1,5 @@
 from diaad.main import main as main_core
-from diaad.core.logger import logger
+from psair.core.logger import logger
 from diaad.cli.parser import build_arg_parser
 
 
