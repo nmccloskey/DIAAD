@@ -32,7 +32,6 @@ SECTION_C_cols = [
 
 POWERS_cols = [
     # Meta
-    "id",
     "POWERS_comment",
     # Section A
     "speech_units",
