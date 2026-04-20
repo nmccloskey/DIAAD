@@ -1,0 +1,80 @@
+# DIAAD project settings
+# Most users only need to edit this file.
+
+# -------------------------------------------------------------------
+# Input and output
+# -------------------------------------------------------------------
+
+# Folder containing input transcripts or transcript tables.
+input_dir: diaad_data/input
+
+# Folder where DIAAD should write outputs.
+output_dir: diaad_data/output
+
+
+# -------------------------------------------------------------------
+# Sampling and reproducibility
+# -------------------------------------------------------------------
+
+# Random seed used for reproducible sampling and blinding.
+random_seed: 99
+
+# Fraction of samples to select for reliability workflows.
+reliability_fraction: 0.2
+
+# If true, shuffle sample order during selection / preparation steps.
+shuffle_samples: true
+
+
+# -------------------------------------------------------------------
+# Transcript processing
+# -------------------------------------------------------------------
+
+# If true, remove CHAT markup that should not remain in plain-language text.
+strip_clan: true
+
+# If true, prefer corrected forms when CHAT provides revisions.
+prefer_correction: true
+
+# If true, lowercase transcript text during processing.
+lowercase: true
+
+# Speakers to exclude from transcript-derived analyses.
+exclude_participants: [INV]
+
+
+# -------------------------------------------------------------------
+# Coding workflow
+# -------------------------------------------------------------------
+
+# Number of bins for sample-level coding template generation.
+num_bins: 4
+
+# Number of coders to assign in coding template workflows.
+num_coders: 3
+
+# Column containing the elicitation stimulus / narrative label.
+stimulus_field: narrative
+
+# If true, generate automated POWERS support where available.
+automate_powers: true
+
+
+# -------------------------------------------------------------------
+# Optional metadata parsing from folder names and file names
+# -------------------------------------------------------------------
+# Leave empty if you do not want DIAAD to extract metadata from paths.
+#
+# DIAAD will look for these patterns in the file's relative path
+# (folders under input_dir plus the file name).
+#
+# Example:
+#   pretx/par1.cha
+#
+# This allows metadata to be encoded in folders, file names, or both.
+
+metadata_fields:
+  site: [AC, BU, TU]
+  test: [Pre, Post, Maint]
+  study_id: "(AC|BU|TU)\\d+"
+  narrative: [CATGrandpa, BrokenWindow, RefusedUmbrella, CatRescue, BirthdayScene]

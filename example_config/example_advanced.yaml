@@ -1,0 +1,85 @@
+# DIAAD advanced settings
+# Most users can leave this file unchanged.
+
+# -------------------------------------------------------------------
+# Reliability file conventions
+# -------------------------------------------------------------------
+
+# Tag used to identify transcription reliability files.
+reliability_tag: "_reliability"
+
+# Name of the folder containing transcription reliability files.
+reliability_dirname: "reliability"
+
+
+# -------------------------------------------------------------------
+# CU coding
+# -------------------------------------------------------------------
+
+# Complete Utterance paradigms to include.
+# Set to [] to use no paradigm-specific expansion.
+cu_paradigms: [SAE, AAE]
+
+# Expected CU sample-level coding file name.
+cu_samples_file: cu_coding_by_sample_long.xlsx
+
+# Expected CU utterance-level coding file name.
+cu_utts_file: cu_coding_by_utterance.xlsx
+
+
+# -------------------------------------------------------------------
+# Word counting
+# -------------------------------------------------------------------
+
+# Expected word-count coding file name.
+word_count_file: word_counting.xlsx
+
+# Column containing utterance-level word counts.
+word_count_field: word_count
+
+# Expected word-count sample-level summary file name.
+wc_samples_file: word_counting_by_sample.xlsx
+
+
+# -------------------------------------------------------------------
+# Rate analysis
+# -------------------------------------------------------------------
+
+# File containing speaking-time values for rate calculations.
+speaking_time_file: speaking_times.xlsx
+
+# Column containing speaking-time values.
+speaking_time_field: speaking_time
+
+
+# -------------------------------------------------------------------
+# Target vocabulary coverage
+# -------------------------------------------------------------------
+
+# Leave blank to use built-in resources.
+# Set to a JSON file or directory to use custom resources.
+target_vocabulary_resource_path: ""
+
+
+# -------------------------------------------------------------------
+# Optional blinding settings
+# -------------------------------------------------------------------
+# Leave these as-is unless you need custom blinding behavior.
+
+# Source from which metadata may be recovered for blinding / unblinding.
+metadata_source: transcript_tables
+
+# Columns to blind in manual coding files.
+coding_blind_cols:
+  - sample_id
+
+# Columns to blind in analysis outputs.
+analysis_blind_cols:
+  - sample_id
+  - site
+  - test
+
+# Join keys used when recovering metadata.
+id_cols:
+  - sample_id
+  - utterance_id

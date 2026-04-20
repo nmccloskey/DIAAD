@@ -484,8 +484,6 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
       downstream summarization/reporting is schema-agnostic.
     - If `cu_paradigms` is empty, the base (non-suffixed) columns are used.
     - If `cu_paradigms` contains one or more paradigms, each is evaluated.
-    - Metadata field partition logic has been removed; this function evaluates the single
-      CU coding / reliability workbook pair currently in use.
     """
     cu_reliability_dir = Path(output_dir) / "cu_reliability"
     cu_reliability_dir.mkdir(parents=True, exist_ok=True)

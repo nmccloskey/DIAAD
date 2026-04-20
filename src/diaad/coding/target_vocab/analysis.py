@@ -256,7 +256,7 @@ def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         return {}
 
 
-def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_fields, tup, resources=None):
+def _compute_target_vocab_for_sample(sample_df, norm_lookup, resources=None):
     """
     Backward-compatible wrapper that returns a summary row and long detail rows.
     """
@@ -265,10 +265,7 @@ def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_fields, t
         if not extracted:
             return {}, []
 
-        row_prefix = {
-            "sample_id": extracted["sample_id"],
-            **(dict(zip(partition_fields, tup)) if partition_fields else {}),
-        }
+        row_prefix = {"sample_id": extracted["sample_id"]}
 
         summary, details = compute_target_vocabulary_coverage_for_text(
             text=extracted["text"],
@@ -289,9 +286,8 @@ def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_fields, t
         return {}, []
 
 
-def _ordered_summary_columns(df: pd.DataFrame, partition_fields: list[str]) -> list[str]:
-    preferred = [SUMMARY_COLUMNS[0]] + partition_fields + SUMMARY_COLUMNS[1:]
-    ordered = [c for c in preferred if c in df.columns]
+def _ordered_summary_columns(df: pd.DataFrame) -> list[str]:
+    ordered = [c for c in SUMMARY_COLUMNS if c in df.columns]
     return ordered + [c for c in df.columns if c not in ordered]
 
 
@@ -323,43 +319,32 @@ def run_target_vocab(
     if utt_df is None:
         return
 
-    partition_fields = [
-        field.name
-        for field in metadata_fields.values()
-        if getattr(field, "partition", False)
-    ]
     norm_lookup = preload_target_vocab_norms(present_narratives, resources=resources)
     summary_rows = []
     detail_rows = []
 
-    grouped = utt_df.groupby(by=partition_fields) if partition_fields else [((), utt_df)]
-
-    for tup, subdf in grouped:
-        tup = tup if isinstance(tup, tuple) else (tup,) if partition_fields else ()
-        for sample in tqdm(
-            sorted(subdf["sample_id"].dropna().unique()),
-            desc="Computing target vocabulary coverage",
-        ):
-            sample_df = subdf[subdf["sample_id"] == sample]
-            if sample_df.empty:
-                continue
-            summary_row, sample_details = _compute_target_vocab_for_sample(
-                sample_df,
-                norm_lookup,
-                partition_fields,
-                tup,
-                resources,
-            )
-            if summary_row:
-                summary_rows.append(summary_row)
-                detail_rows.extend(sample_details)
+    for sample in tqdm(
+        sorted(utt_df["sample_id"].dropna().unique()),
+        desc="Computing target vocabulary coverage",
+    ):
+        sample_df = utt_df[utt_df["sample_id"] == sample]
+        if sample_df.empty:
+            continue
+        summary_row, sample_details = _compute_target_vocab_for_sample(
+            sample_df,
+            norm_lookup,
+            resources,
+        )
+        if summary_row:
+            summary_rows.append(summary_row)
+            detail_rows.extend(sample_details)
 
     if not summary_rows:
         logger.warning("No target vocabulary coverage rows produced; no output written.")
         return
 
     summary_df = pd.DataFrame(summary_rows)
-    summary_df = summary_df[_ordered_summary_columns(summary_df, partition_fields)]
+    summary_df = summary_df[_ordered_summary_columns(summary_df)]
 
     detail_df = pd.DataFrame(detail_rows, columns=DETAIL_COLUMNS)
 
