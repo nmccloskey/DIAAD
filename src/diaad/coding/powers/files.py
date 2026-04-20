@@ -61,6 +61,13 @@ TT_DROP_COLS = [
     "position_sub",
 ]
 
+SECTION_E_cols = [
+    "type_of_day",
+    "amount_of_enjoyment",
+    "degree_of_difficulty",
+    "other_notes",
+]
+
 
 # ---------------------------------------------------------------------
 # POWERS file generation helpers
@@ -309,9 +316,34 @@ def _write_powers_exports(
     pc_filename = Path(powers_dir, *metadata_values, "powers_coding.xlsx")
     rel_filename = Path(powers_dir, *metadata_values, "powers_reliability_coding.xlsx")
 
-    _write_excel(pc_export, pc_filename, "POWERS coding")
+    _write_primary_powers_workbook(pc_export, pc_filename)
     if rel_export is not None:
         _write_excel(rel_export, rel_filename, "POWERS reliability coding")
+
+
+def _build_section_e_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Build the sample-level Section E sheet for primary POWERS coding.
+    """
+    section_e = df[["sample_id"]].drop_duplicates().copy()
+    for col in SECTION_E_cols:
+        section_e[col] = ""
+    return section_e
+
+
+def _write_primary_powers_workbook(df: pd.DataFrame, filename: Path) -> None:
+    """
+    Write primary POWERS coding workbook with utterance and Section E sheets.
+    """
+    try:
+        filename.parent.mkdir(parents=True, exist_ok=True)
+        section_e = _build_section_e_dataframe(df)
+        with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+            df.to_excel(writer, sheet_name="utterance_coding", index=False, na_rep="")
+            section_e.to_excel(writer, sheet_name="section_e", index=False, na_rep="")
+        logger.info(f"Successfully wrote POWERS coding file: {get_rel_path(filename)}")
+    except Exception as e:
+        logger.error(f"Failed to write POWERS coding file {get_rel_path(filename)}: {e}")
 
 
 def _write_excel(df: pd.DataFrame, filename: Path, label: str) -> None:
