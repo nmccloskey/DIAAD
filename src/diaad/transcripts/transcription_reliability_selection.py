@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
-from src.diaad.coding.utils.sampling import calc_subset_size
+from diaad.coding.utils.sampling import calc_subset_size
 from diaad.transcripts.transcript_tables import (
     extract_transcript_data,
     _metadata_field_labels,

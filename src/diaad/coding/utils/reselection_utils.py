@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from src.diaad.coding.utils.sampling import calc_subset_size
+from diaad.coding.utils.sampling import calc_subset_size
 
 
 def metadata_value_one(metadata_field, path: str, parts: list[str]):

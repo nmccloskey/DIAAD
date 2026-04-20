@@ -4,7 +4,7 @@ from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
-from src.diaad.coding.utils.rel_eval_utils import percent_difference, calculate_icc_from_pingouin
+from diaad.coding.utils.rel_eval_utils import percent_difference, calculate_icc_from_pingouin
 
 
 def agreement(row):
