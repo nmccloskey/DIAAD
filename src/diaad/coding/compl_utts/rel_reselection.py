@@ -58,7 +58,7 @@ def _build_cu_reliability_frame(df_org, rel_template, re_ids):
     return sub.loc[:, final_cols]
 
 
-def reselect_cu_rel(tiers, input_dir, output_dir, frac=0.2, random_seed=None):
+def reselect_cu_rel(metadata_fields, input_dir, output_dir, frac=0.2, random_seed=None):
     """
     Reselect CU reliability samples, excluding any `sample_id` already present
     in prior CU reliability files.
@@ -71,7 +71,7 @@ def reselect_cu_rel(tiers, input_dir, output_dir, frac=0.2, random_seed=None):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     pairs = discover_reliability_pairs(
-        tiers=tiers,
+        metadata_fields=metadata_fields,
         input_dir=input_dir,
         coding_glob="*cu_coding.xlsx",
         rel_glob="*cu_reliability_coding.xlsx",

@@ -10,6 +10,7 @@ import numpy as np
 
 from diaad import __version__
 from psair.metadata.discovery import find_matching_files
+from psair.metadata.metadata_fields import MetadataManager
 from psair.core.logger import logger
 
 from diaad.core.config import ConfigManager
@@ -22,7 +23,7 @@ class RunContext:
 
     RunContext serves as the boundary object between user configuration
     and executable program modules. It owns normalized configuration,
-    resolved runtime paths, tier state, and optional cached inputs such
+    resolved runtime paths, metadata field state, and optional cached inputs such
     as loaded CHAT files.
 
     It is intended to be initialized once in main.py and then passed to
@@ -37,8 +38,8 @@ class RunContext:
     # Core managers / config-derived state
     # ------------------------------------------------------------------
     config: ConfigManager = field(init=False)
-    tier_manager: Any = field(default=None, init=False)
-    tiers: dict[str, Any] = field(default_factory=dict, init=False)
+    metadata_manager: MetadataManager = field(init=False)
+    metadata_fields: dict[str, Any] = field(default_factory=dict, init=False)
 
     # ------------------------------------------------------------------
     # Resolved runtime paths
@@ -61,7 +62,7 @@ class RunContext:
         self.config = ConfigManager(self.config_dir)
         self._resolve_directories()
         self._seed_rngs()
-        self._build_tier_state()
+        self._build_metadata_field_state()
 
     # ------------------------------------------------------------------
     # Basic metadata / convenience properties
@@ -159,16 +160,20 @@ class RunContext:
         np.random.seed(self.random_seed)
         logger.info("Random seed set to %s", self.random_seed)
 
-    def _build_tier_state(self) -> None:
+    def _build_metadata_field_state(self) -> None:
         """
-        Build TierManager and tiers from configuration.
+        Build MetadataManager and metadata fields from configuration.
         """
-        from psair.metadata.tiers import TierManager
+        metadata_config = {
+            **self.config.metadata_fields_config,
+            "input_dir": self.input_dir,
+        }
+        self.metadata_manager = MetadataManager(metadata_config)
+        self.metadata_fields = self.metadata_manager.metadata_fields
 
-        self.tier_manager = TierManager(self.config.tiers_config)
-        self.tiers = self.tier_manager.tiers
-
-        logger.info(f"Successfully parsed {len(self.tiers)} tiers for DIAAD.")
+        logger.info(
+            f"Successfully parsed {len(self.metadata_fields)} metadata fields for DIAAD."
+        )
 
     # ------------------------------------------------------------------
     # Mutable runtime state
@@ -223,7 +228,7 @@ class RunContext:
         from diaad.transcripts.transcript_tables import tabularize_transcripts
 
         tabularize_transcripts(
-            tiers=self.tiers,
+            metadata_fields=self.metadata_fields,
             chats=chats,
             output_dir=self.out_dir,
             shuffle=self.shuffle_samples,
@@ -253,20 +258,20 @@ class RunContext:
     def kwargs_io(self) -> dict[str, Any]:
         """
         Return the standard input/output directory payload for modules
-        that do not require tiers.
+        that do not require metadata fields.
         """
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
         }
 
-    def kwargs_tiered_io(self) -> dict[str, Any]:
+    def kwargs_metadata_field_io(self) -> dict[str, Any]:
         """
-        Return the standard tiers + input/output payload for modules
-        that operate on tier-aware transcript tables.
+        Return the standard metadata field + input/output payload for modules
+        that operate on metadata-aware transcript tables.
         """
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
         }
@@ -279,7 +284,7 @@ class RunContext:
         if self.chats is None:
             raise RuntimeError("CHAT files have not been loaded for this run.")
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "chats": self.chats,
             "output_dir": self.out_dir,
             "shuffle": self.shuffle_samples,
@@ -291,7 +296,7 @@ class RunContext:
         if self.chats is None:
             raise RuntimeError("CHAT files have not been loaded for this run.")
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "chats": self.chats,
             "frac": self.reliability_fraction,
             "output_dir": self.out_dir,
@@ -309,7 +314,7 @@ class RunContext:
     def kwargs_evaluate_transcription_reliability(self) -> dict[str, Any]:
         """Return kwargs for transcription reliability evaluation."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
@@ -326,7 +331,7 @@ class RunContext:
     def kwargs_make_cu_coding_files(self) -> dict[str, Any]:
         """Return kwargs for CU coding file creation."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "frac": self.reliability_fraction,
             "num_coders": self.num_coders,
             "input_dir": self.input_dir,
@@ -348,7 +353,7 @@ class RunContext:
     def kwargs_reselect_cu_rel(self) -> dict[str, Any]:
         """Return kwargs for CU reliability reselection."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
@@ -396,7 +401,7 @@ class RunContext:
     def kwargs_reselect_wc_rel(self) -> dict[str, Any]:
         """Return kwargs for word-count reliability reselection."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
@@ -431,7 +436,7 @@ class RunContext:
     def kwargs_target_vocab(self) -> dict[str, Any]:
         """Return kwargs for target vocabulary coverage analysis."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
@@ -480,7 +485,7 @@ class RunContext:
     def kwargs_make_powers_coding_files(self) -> dict[str, Any]:
         """Return kwargs for POWERS coding file creation."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "frac": self.reliability_fraction,
             "num_coders": self.num_coders,
             "input_dir": self.input_dir,
@@ -497,7 +502,7 @@ class RunContext:
     def kwargs_reselect_powers_reliability(self) -> dict[str, Any]:
         """Return kwargs for POWERS reliability reselection."""
         return {
-            "tiers": self.tiers,
+            "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,

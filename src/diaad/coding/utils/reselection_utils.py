@@ -7,32 +7,50 @@ from psair.core.logger import logger, get_rel_path
 from src.diaad.coding.utils.sampling import calc_subset_size
 
 
-def label_one(tier_obj, fname: str):
-    """Safely get one tier label for a filename."""
+def metadata_value_one(metadata_field, path: str, parts: list[str]):
+    """Safely get one metadata value for a path."""
     try:
-        if hasattr(tier_obj, "match"):
-            return tier_obj.match(fname)
+        if hasattr(metadata_field, "match_path_parts"):
+            return metadata_field.match_path_parts(parts, source=path)
+        if hasattr(metadata_field, "match"):
+            return metadata_field.match(path)
     except Exception:
         pass
     return None
 
 
-def labels_for(tiers, path: Path):
-    """
-    Return a tuple of tier labels for matching original/reliability files.
+def _path_parts_for_metadata(path: Path, input_dir: Path | None = None) -> list[str]:
+    path = Path(path)
+    scoped_path = path
 
-    If tiers are unavailable, fall back to the stem so files can still pair.
+    if input_dir is not None:
+        try:
+            scoped_path = path.resolve().relative_to(Path(input_dir).resolve())
+        except ValueError:
+            scoped_path = Path(path.name) if path.is_absolute() else path
+
+    return [part for part in scoped_path.parts if part not in ("", ".")] or [path.name]
+
+
+def metadata_values_for(metadata_fields, path: Path, input_dir: Path | None = None):
     """
-    if not tiers:
+    Return a tuple of metadata values for matching original/reliability files.
+
+    If metadata fields are unavailable, fall back to the stem so files can still pair.
+    """
+    if not metadata_fields:
         return (path.stem,)
 
-    labels = []
-    for t in tiers.values():
+    parts = _path_parts_for_metadata(path, input_dir=input_dir)
+    source = str(Path(*parts)) if parts else str(path)
+
+    values = []
+    for metadata_field in metadata_fields.values():
         try:
-            labels.append(label_one(t, path.name))
+            values.append(metadata_value_one(metadata_field, source, parts))
         except Exception:
-            labels.append(None)
-    return tuple(labels)
+            values.append(None)
+    return tuple(values)
 
 
 def normalize_sample_ids(series):
@@ -87,19 +105,22 @@ def ordered_union(cols1, cols2):
     return out
 
 
-def discover_reliability_pairs(tiers, input_dir, coding_glob, rel_glob, rel_label):
+def discover_reliability_pairs(metadata_fields, input_dir, coding_glob, rel_glob, rel_label):
     """
-    Return dict of {original_file: [reliability_files]} matched by tier labels.
+    Return dict of {original_file: [reliability_files]} matched by metadata values.
     """
     input_dir = Path(input_dir)
     coding_files = list(input_dir.rglob(coding_glob))
     rel_files = list(input_dir.rglob(rel_glob))
-    rel_labels = {p: labels_for(tiers, p) for p in rel_files}
+    rel_values = {
+        p: metadata_values_for(metadata_fields, p, input_dir=input_dir)
+        for p in rel_files
+    }
 
     matches = {}
     for org in coding_files:
-        org_labels = labels_for(tiers, org)
-        matched = [p for p, labs in rel_labels.items() if labs == org_labels]
+        org_values = metadata_values_for(metadata_fields, org, input_dir=input_dir)
+        matched = [p for p, values in rel_values.items() if values == org_values]
         if not matched:
             logger.warning(f"[{rel_label}] No reliability files found for {org.name}")
         matches[org] = matched

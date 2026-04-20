@@ -10,7 +10,11 @@ from tqdm import tqdm
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
 from src.diaad.coding.utils.sampling import calc_subset_size
-from diaad.transcripts.transcript_tables import extract_transcript_data
+from diaad.transcripts.transcript_tables import (
+    extract_transcript_data,
+    _metadata_field_labels,
+    _sample_file_components,
+)
 
 
 RELIABILITY_SELECTION_SUBDIR = "transcription_reliability_selection"
@@ -20,19 +24,22 @@ ALL_TRANSCRIPTS_SHEET = "all_transcripts"
 SELECTED_COL = "selected_for_reliability"
 
 
-def _build_samples_df_from_chats(tiers, chats) -> pd.DataFrame:
+def _build_samples_df_from_chats(metadata_fields, chats) -> pd.DataFrame:
     """
     Build a sample-level dataframe from CHAT files.
     """
-    columns = ["file"] + list(tiers.keys())
+    columns = ["file", "file_ext", "file_dir"] + list(metadata_fields.keys())
     rows: list[list[Any]] = []
 
     for cha_file in sorted(chats):
         try:
-            labels = [t.match(str(cha_file)) for t in tiers.values()]
-            rows.append([cha_file] + labels)
+            labels = _metadata_field_labels(metadata_fields, cha_file)
+            file_stem, file_ext, file_dir = _sample_file_components(cha_file)
+            rows.append([file_stem, file_ext, file_dir] + labels)
         except Exception as e:
-            logger.error(f"Failed to parse tier labels for {get_rel_path(cha_file)}: {e}")
+            logger.error(
+                f"Failed to parse metadata fields for {get_rel_path(cha_file)}: {e}"
+            )
 
     return pd.DataFrame(rows, columns=columns)
 
@@ -103,11 +110,14 @@ def _write_blank_reliability_chat_files(
     transc_rel_dir = output_dir / RELIABILITY_SELECTION_SUBDIR
     transc_rel_dir.mkdir(parents=True, exist_ok=True)
 
-    for cha_file in tqdm(
-        subset_df["file"].tolist(),
+    for _, sample in tqdm(
+        subset_df.iterrows(),
+        total=len(subset_df),
         desc="Writing blank reliability CHAT files",
     ):
+        cha_file = "<unresolved>"
         try:
+            cha_file = _sample_row_chat_key(sample, chats)
             chat_data = chats[cha_file]
             strs = next(chat_data.to_strs())
             strs = ["@Begin"] + strs.split("\n") + ["@End"]
@@ -121,6 +131,38 @@ def _write_blank_reliability_chat_files(
             logger.info(f"Wrote blank CHAT header: {get_rel_path(filepath)}")
         except Exception as e:
             logger.error(f"Failed to write blank CHAT for {get_rel_path(cha_file)}: {e}")
+
+
+def _sample_row_chat_key(sample: pd.Series, chats) -> str:
+    """
+    Resolve a transcript-table sample row back to the matching CHAT dict key.
+    """
+    raw_file = sample.get("file", "")
+    raw_ext = sample.get("file_ext", ".cha")
+    file_stem = "" if pd.isna(raw_file) else str(raw_file).strip()
+    file_ext = (
+        ".cha"
+        if pd.isna(raw_ext) or not str(raw_ext).strip()
+        else str(raw_ext).strip()
+    )
+    file_dir = sample.get("file_dir", "")
+    file_dir = "" if pd.isna(file_dir) else str(file_dir).strip()
+    filename = f"{file_stem}{file_ext}"
+
+    candidates = []
+    if file_dir:
+        candidates.append(Path(file_dir, filename).as_posix())
+    candidates.append(filename)
+    candidates.extend(
+        key for key in chats
+        if Path(key).stem == file_stem and Path(key).suffix == file_ext
+    )
+
+    for candidate in candidates:
+        if candidate in chats:
+            return candidate
+
+    raise KeyError(f"No CHAT data found for sample row file={filename!r}")
 
 
 def _write_reliability_selection_excel(
@@ -156,7 +198,7 @@ def _write_reliability_selection_excel(
 
 
 def select_transcription_reliability_samples(
-    tiers,
+    metadata_fields,
     chats,
     frac,
     output_dir,
@@ -198,7 +240,7 @@ def select_transcription_reliability_samples(
             return None
 
         logger.info("Falling back to CHAT files for reliability sample selection.")
-        samples_df = _build_samples_df_from_chats(tiers, chats)
+        samples_df = _build_samples_df_from_chats(metadata_fields, chats)
 
     if samples_df.empty:
         logger.error("No samples available for transcription reliability selection.")

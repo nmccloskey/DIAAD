@@ -71,7 +71,7 @@ def _choose_first_match(
 def _find_blind_codebook_path(
     *,
     blind_codebook=None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
     search_base: str = "blind_codebook",
     search_ext: str = ".xlsx",
@@ -93,7 +93,7 @@ def _find_blind_codebook_path(
         )
 
     matches = find_matching_files(
-        match_tiers=match_tiers,
+        match_metadata_fields=match_metadata_fields,
         directories=directories,
         search_base=search_base,
         search_ext=search_ext,
@@ -108,7 +108,7 @@ def _find_blind_codebook_path(
 def _load_blind_codebook(
     *,
     blind_codebook=None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
     search_base: str = "blind_codebook",
     search_ext: str = ".xlsx",
@@ -123,7 +123,7 @@ def _load_blind_codebook(
 
     codebook_path = _find_blind_codebook_path(
         blind_codebook=blind_codebook,
-        match_tiers=match_tiers,
+        match_metadata_fields=match_metadata_fields,
         directories=directories,
         search_base=search_base,
         search_ext=search_ext,
@@ -141,7 +141,7 @@ def _load_blind_codebook(
 def _load_metadata_df(
     *,
     metadata_df=None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
 ) -> pd.DataFrame | None:
     """
@@ -150,7 +150,7 @@ def _load_metadata_df(
     if metadata_df is None:
         return load_metadata_from_transcript_tables(
             transcript_tables=None,
-            match_tiers=match_tiers,
+            match_metadata_fields=match_metadata_fields,
             directories=directories,
             combine=False,
         )
@@ -161,7 +161,7 @@ def _load_metadata_df(
 
     return load_metadata_from_transcript_tables(
         transcript_tables=metadata_df,
-        match_tiers=match_tiers,
+        match_metadata_fields=match_metadata_fields,
         directories=directories,
         combine=False,
     )
@@ -354,7 +354,7 @@ def maybe_unblind_dataframe(
     *,
     blind_codebook=None,
     target_cols: list[str] | None = None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
     strict: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame | None]:
@@ -366,7 +366,7 @@ def maybe_unblind_dataframe(
     """
     codebook_df = _load_blind_codebook(
         blind_codebook=blind_codebook,
-        match_tiers=match_tiers,
+        match_metadata_fields=match_metadata_fields,
         directories=directories,
         required=False,
     )
@@ -394,7 +394,7 @@ def resolve_unblinding_resources(
     *,
     blind_codebook=None,
     metadata_df=None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
     require_codebook: bool = False,
     require_metadata: bool = False,
@@ -409,7 +409,7 @@ def resolve_unblinding_resources(
     """
     codebook_df = _load_blind_codebook(
         blind_codebook=blind_codebook,
-        match_tiers=match_tiers,
+        match_metadata_fields=match_metadata_fields,
         directories=directories,
         required=require_codebook,
     )
@@ -418,7 +418,7 @@ def resolve_unblinding_resources(
     try:
         resolved_metadata_df = _load_metadata_df(
             metadata_df=metadata_df,
-            match_tiers=match_tiers,
+            match_metadata_fields=match_metadata_fields,
             directories=directories,
         )
     except FileNotFoundError:

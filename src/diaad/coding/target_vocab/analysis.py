@@ -256,7 +256,7 @@ def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         return {}
 
 
-def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_tiers, tup, resources=None):
+def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_fields, tup, resources=None):
     """
     Backward-compatible wrapper that returns a summary row and long detail rows.
     """
@@ -267,7 +267,7 @@ def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_tiers, tu
 
         row_prefix = {
             "sample_id": extracted["sample_id"],
-            **(dict(zip(partition_tiers, tup)) if partition_tiers else {}),
+            **(dict(zip(partition_fields, tup)) if partition_fields else {}),
         }
 
         summary, details = compute_target_vocabulary_coverage_for_text(
@@ -289,14 +289,14 @@ def _compute_target_vocab_for_sample(sample_df, norm_lookup, partition_tiers, tu
         return {}, []
 
 
-def _ordered_summary_columns(df: pd.DataFrame, partition_tiers: list[str]) -> list[str]:
-    preferred = [SUMMARY_COLUMNS[0]] + partition_tiers + SUMMARY_COLUMNS[1:]
+def _ordered_summary_columns(df: pd.DataFrame, partition_fields: list[str]) -> list[str]:
+    preferred = [SUMMARY_COLUMNS[0]] + partition_fields + SUMMARY_COLUMNS[1:]
     ordered = [c for c in preferred if c in df.columns]
     return ordered + [c for c in df.columns if c not in ordered]
 
 
 def run_target_vocab(
-    tiers,
+    metadata_fields,
     input_dir,
     output_dir,
     exclude_participants=None,
@@ -323,15 +323,19 @@ def run_target_vocab(
     if utt_df is None:
         return
 
-    partition_tiers = [t.name for t in tiers.values() if getattr(t, "partition", False)]
+    partition_fields = [
+        field.name
+        for field in metadata_fields.values()
+        if getattr(field, "partition", False)
+    ]
     norm_lookup = preload_target_vocab_norms(present_narratives, resources=resources)
     summary_rows = []
     detail_rows = []
 
-    grouped = utt_df.groupby(by=partition_tiers) if partition_tiers else [((), utt_df)]
+    grouped = utt_df.groupby(by=partition_fields) if partition_fields else [((), utt_df)]
 
     for tup, subdf in grouped:
-        tup = tup if isinstance(tup, tuple) else (tup,) if partition_tiers else ()
+        tup = tup if isinstance(tup, tuple) else (tup,) if partition_fields else ()
         for sample in tqdm(
             sorted(subdf["sample_id"].dropna().unique()),
             desc="Computing target vocabulary coverage",
@@ -342,7 +346,7 @@ def run_target_vocab(
             summary_row, sample_details = _compute_target_vocab_for_sample(
                 sample_df,
                 norm_lookup,
-                partition_tiers,
+                partition_fields,
                 tup,
                 resources,
             )
@@ -355,7 +359,7 @@ def run_target_vocab(
         return
 
     summary_df = pd.DataFrame(summary_rows)
-    summary_df = summary_df[_ordered_summary_columns(summary_df, partition_tiers)]
+    summary_df = summary_df[_ordered_summary_columns(summary_df, partition_fields)]
 
     detail_df = pd.DataFrame(detail_rows, columns=DETAIL_COLUMNS)
 

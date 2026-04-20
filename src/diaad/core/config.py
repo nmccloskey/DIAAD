@@ -13,7 +13,7 @@ from psair.core.logger import logger
 # Section dataclasses
 # ------------------------------------------------------------------
 
-TierSpec: TypeAlias = str | list[str]
+MetadataFieldSpec: TypeAlias = str | list[str]
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ class ProjectConfig:
     stimulus_field: str = ""
     automate_powers: bool = True
 
-    tiers: dict[str, TierSpec] | None = None
+    metadata_fields: dict[str, MetadataFieldSpec] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -45,7 +45,11 @@ class ProjectConfig:
             "exclude_participants",
             list(self.exclude_participants or []),
         )
-        object.__setattr__(self, "tiers", dict(self.tiers or {}))
+        object.__setattr__(
+            self,
+            "metadata_fields",
+            dict(self.metadata_fields or {}),
+        )
 
 
 @dataclass(frozen=True)
@@ -240,13 +244,13 @@ class ConfigManager:
         return self.advanced.speaking_time_field
 
     @property
-    def tiers_config(self) -> dict[str, Any]:
+    def metadata_fields_config(self) -> dict[str, Any]:
         """
-        Return the normalized tier configuration in a shape compatible
-        with TierManager.
+        Return normalized metadata field definitions in the shape expected
+        by MetadataManager.
         """
         return {
-            "tiers": self.project.tiers,
+            "tiers": self.project.metadata_fields,
         }
 
     @property
@@ -304,7 +308,7 @@ class ConfigManager:
                 "num_coders": self.project.num_coders,
                 "stimulus_field": self.project.stimulus_field,
                 "automate_powers": self.project.automate_powers,
-                "metadata_fields": self.project.tiers,
+                "metadata_fields": self.project.metadata_fields,
             },
             "advanced": {
                 "reliability_tag": self.advanced.reliability_tag,
@@ -380,7 +384,7 @@ class ConfigManager:
             num_coders=self._as_int(data.get("num_coders"), default=0),
             stimulus_field=self._as_str(data.get("stimulus_field"), default=""),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),
-            tiers=self._parse_tiers(data),
+            metadata_fields=self._parse_metadata_fields(data),
         )
 
         if not 0 < project.reliability_fraction <= 1:
@@ -448,39 +452,42 @@ class ConfigManager:
             id_cols=self._as_optional_str_list(data.get("id_cols")),
         )
 
-    def _parse_tiers(self, data: dict[str, Any]) -> dict[str, TierSpec]:
-        tiers = data.get("metadata_fields", data.get("tiers", {}))
+    def _parse_metadata_fields(
+        self,
+        data: dict[str, Any],
+    ) -> dict[str, MetadataFieldSpec]:
+        fields = data.get("metadata_fields", data.get("tiers", {}))
 
-        if tiers is None:
+        if fields is None:
             return {}
-        if not isinstance(tiers, dict):
+        if not isinstance(fields, dict):
             raise TypeError("project.yaml: 'metadata_fields' must be a dictionary.")
 
-        normalized_tiers: dict[str, TierSpec] = {}
+        normalized_fields: dict[str, MetadataFieldSpec] = {}
 
-        for tier_name, tier_spec in tiers.items():
-            tier_name = str(tier_name)
+        for field_name, field_spec in fields.items():
+            field_name = str(field_name)
 
-            if isinstance(tier_spec, str):
-                if not tier_spec.strip():
+            if isinstance(field_spec, str):
+                if not field_spec.strip():
                     raise ValueError(
-                        f"Metadata field '{tier_name}' regex string must be non-empty."
+                        f"Metadata field '{field_name}' regex string must be non-empty."
                     )
-                normalized_tiers[tier_name] = tier_spec
+                normalized_fields[field_name] = field_spec
 
-            elif isinstance(tier_spec, list):
-                if not all(isinstance(v, str) for v in tier_spec):
+            elif isinstance(field_spec, list):
+                if not all(isinstance(v, str) for v in field_spec):
                     raise TypeError(
-                        f"Metadata field '{tier_name}' values must be a list of strings."
+                        f"Metadata field '{field_name}' values must be a list of strings."
                     )
-                normalized_tiers[tier_name] = list(tier_spec)
+                normalized_fields[field_name] = list(field_spec)
 
             else:
                 raise TypeError(
-                    f"Metadata field '{tier_name}' must be either a regex string or a list[str]."
+                    f"Metadata field '{field_name}' must be either a regex string or a list[str]."
                 )
 
-        return normalized_tiers
+        return normalized_fields
 
     # ------------------------------------------------------------------
     # Normalization helpers

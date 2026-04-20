@@ -354,7 +354,7 @@ def blind_analysis_dataframe(
     config: AdvancedConfig,
     *,
     metadata_df: pd.DataFrame | str | Path | list[str | Path] | None = None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
     existing_codebook: pd.DataFrame | None = None,
     seed: int = 99,
@@ -391,7 +391,7 @@ def blind_analysis_dataframe(
                 )
             working_metadata = load_metadata_from_transcript_tables(
                 transcript_tables=None,
-                match_tiers=match_tiers,
+                match_metadata_fields=match_metadata_fields,
                 directories=directories,
                 combine=True
             )
@@ -402,7 +402,7 @@ def blind_analysis_dataframe(
                 )
             working_metadata = load_metadata_from_transcript_tables(
                 transcript_tables=working_metadata,
-                match_tiers=match_tiers,
+                match_metadata_fields=match_metadata_fields,
                 directories=directories,
                 combine=True
             )

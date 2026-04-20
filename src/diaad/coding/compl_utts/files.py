@@ -188,7 +188,7 @@ def _prepare_three_coder_reliability_subset(
 
 def _prepare_cu_base_dataframe(
     uttdf: pd.DataFrame,
-    tiers,
+    metadata_fields,
     stimulus_field,
 ) -> pd.DataFrame:
     """
@@ -202,7 +202,14 @@ def _prepare_cu_base_dataframe(
 
     drop_cols = [
         col
-        for col in ["file", "speaking_time"] + [t for t in tiers if t.lower() not in stim_cols]
+        for col in (
+            ["file", "file_ext", "file_dir", "speaking_time"]
+            + [
+                field_name
+                for field_name in metadata_fields
+                if field_name.lower() not in stim_cols
+            ]
+        )
         if col in shuffled_utt_df.columns
     ]
 
@@ -351,7 +358,7 @@ def _write_cu_outputs(
 
 
 def make_cu_coding_files(
-    tiers,
+    metadata_fields,
     frac,
     num_coders,
     input_dir,
@@ -428,7 +435,7 @@ def make_cu_coding_files(
 
         cu_df = _prepare_cu_base_dataframe(
             uttdf=uttdf,
-            tiers=tiers,
+            metadata_fields=metadata_fields,
             stimulus_field=stimulus_field,
         )
 

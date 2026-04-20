@@ -53,6 +53,8 @@ COMM_cols = [
 
 TT_DROP_COLS = [
     "file",
+    "file_ext",
+    "file_dir",
     "input_order",
     "shuffled_order",
     "position",
@@ -97,24 +99,33 @@ def _load_utterance_table(transcript_table: Path) -> pd.DataFrame | None:
         return None
 
 
-def _match_tier_labels(tiers, filename: str) -> list[str]:
+def _match_metadata_field_values(metadata_fields, source_path: str) -> list[str]:
     """
-    Extract tier labels from a filename using tier matchers.
+    Extract metadata values from a path using metadata field matchers.
     """
-    labels = [tier.match(filename, return_none=True) for tier in tiers.values()]
-    return [label for label in labels if label is not None]
+    path = Path(source_path)
+    parts = [part for part in path.parts if part not in ("", ".")]
+    values = []
+    for field in metadata_fields.values():
+        if hasattr(field, "match_path_parts"):
+            value = field.match_path_parts(parts, return_none=True, source=str(path))
+        else:
+            value = field.match(str(path), return_none=True)
+        if value is not None:
+            values.append(value)
+    return values
 
 
 def _prepare_powers_dataframe(
     uttdf: pd.DataFrame,
-    tiers,
+    metadata_fields,
     exclude_participants,
 ) -> pd.DataFrame:
     """
     Shuffle by sample, drop non-POWERS transcript columns, and initialize fields.
     """
     shuffled = _shuffle_by_sample(uttdf)
-    drop_cols = _get_powers_drop_cols(shuffled, tiers)
+    drop_cols = _get_powers_drop_cols(shuffled, metadata_fields)
     df = shuffled.drop(columns=drop_cols).copy()
 
     logger.info(f"Transcript columns: {list(shuffled.columns)}")
@@ -141,16 +152,16 @@ def _shuffle_by_sample(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(subdfs, ignore_index=True)
 
 
-def _get_powers_drop_cols(df: pd.DataFrame, tiers) -> list[str]:
+def _get_powers_drop_cols(df: pd.DataFrame, metadata_fields) -> list[str]:
     """
     Identify transcript-table columns to drop before POWERS export.
     """
-    non_comm_tier_cols = [
-        tier.name for tier in tiers.values()
-        if tier.name.lower() not in COMM_cols
+    non_comm_metadata_cols = [
+        field.name for field in metadata_fields.values()
+        if field.name.lower() not in COMM_cols
     ]
     return [
-        col for col in TT_DROP_COLS + non_comm_tier_cols
+        col for col in TT_DROP_COLS + non_comm_metadata_cols
         if col in df.columns
     ]
 
@@ -266,17 +277,16 @@ def _apply_export_blinding(
         return pc_df, rel_df
 
     try:
-        pc_export = blind_file_identifiers(
+        pc_export, codebook_df = blind_file_identifiers(
             pc_df,
-            blinding_config=blinding_config,
-            transcript_tables=[transcript_table],
+            config=blinding_config,
         )
         rel_export = None
         if rel_df is not None:
-            rel_export = blind_file_identifiers(
+            rel_export, _ = blind_file_identifiers(
                 rel_df,
-                blinding_config=blinding_config,
-                transcript_tables=[transcript_table],
+                config=blinding_config,
+                existing_codebook=codebook_df,
             )
 
         logger.info("Applied file blinding to POWERS exports.")
@@ -291,13 +301,13 @@ def _write_powers_exports(
     pc_export: pd.DataFrame,
     rel_export: pd.DataFrame | None,
     powers_dir: Path,
-    labels: list[str],
+    metadata_values: list[str],
 ) -> None:
     """
     Write POWERS coding and reliability workbooks to disk.
     """
-    pc_filename = Path(powers_dir, *labels, "powers_coding.xlsx")
-    rel_filename = Path(powers_dir, *labels, "powers_reliability_coding.xlsx")
+    pc_filename = Path(powers_dir, *metadata_values, "powers_coding.xlsx")
+    rel_filename = Path(powers_dir, *metadata_values, "powers_reliability_coding.xlsx")
 
     _write_excel(pc_export, pc_filename, "POWERS coding")
     if rel_export is not None:
@@ -317,7 +327,7 @@ def _write_excel(df: pd.DataFrame, filename: Path, label: str) -> None:
 
 
 def make_powers_coding_files(
-    tiers,
+    metadata_fields,
     frac,
     num_coders,
     input_dir,
@@ -348,8 +358,8 @@ def make_powers_coding_files(
     if uttdf is None:
         return
 
-    labels = _match_tier_labels(tiers, transcript_table.name)
-    pc_df = _prepare_powers_dataframe(uttdf, tiers, exclude_participants)
+    metadata_values = _match_metadata_field_values(metadata_fields, str(transcript_table))
+    pc_df = _prepare_powers_dataframe(uttdf, metadata_fields, exclude_participants)
 
     if automate_powers:
         pc_df = run_automation(pc_df)
@@ -376,5 +386,5 @@ def make_powers_coding_files(
         pc_export=pc_export,
         rel_export=rel_export,
         powers_dir=powers_dir,
-        labels=labels,
+        metadata_values=metadata_values,
     )

@@ -50,7 +50,7 @@ def _build_wc_reliability_frame(df_org, rel_template, re_ids):
     return sub.loc[:, final_cols]
 
 
-def reselect_wc_rel(tiers, input_dir, output_dir, frac=0.2, random_seed=None):
+def reselect_wc_rel(metadata_fields, input_dir, output_dir, frac=0.2, random_seed=None):
     """
     Reselect word-count reliability samples, excluding any `sample_id` already
     present in prior word-count reliability files.
@@ -63,7 +63,7 @@ def reselect_wc_rel(tiers, input_dir, output_dir, frac=0.2, random_seed=None):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     pairs = discover_reliability_pairs(
-        tiers=tiers,
+        metadata_fields=metadata_fields,
         input_dir=input_dir,
         coding_glob="*word_counting.xlsx",
         rel_glob="*word_count_reliability.xlsx",

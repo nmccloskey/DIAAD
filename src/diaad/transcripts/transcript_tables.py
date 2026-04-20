@@ -10,7 +10,15 @@ from tqdm import tqdm
 from psair.core.logger import logger, get_rel_path
 
 
-SAMPLE_BASE_COLS = ["sample_id", "file", "input_order", "shuffled_order"]
+SAMPLE_BASE_COLS = [
+    "sample_id",
+    "file",
+    "file_ext",
+    "file_dir",
+    "input_order",
+    "shuffled_order"
+]
+
 UTT_COLS = [
     "sample_id",
     "utterance_id",
@@ -42,6 +50,34 @@ def zero_pad(num: int, lower_bound: int = 3) -> int:
         Padding width ensuring consistent formatting.
     """
     return max(lower_bound, len(str(max(num, 1))))
+
+
+def _metadata_field_labels(
+    metadata_fields: Dict[str, object],
+    source_path: str | Path,
+) -> list[object]:
+    """
+    Extract metadata field values from a transcript path.
+    """
+    path = Path(source_path)
+    parts = [part for part in path.parts if part not in ("", ".")]
+
+    labels = []
+    for field in metadata_fields.values():
+        if hasattr(field, "match_path_parts"):
+            labels.append(field.match_path_parts(parts, source=str(path)))
+        else:
+            labels.append(field.match(str(path)))
+    return labels
+
+
+def _sample_file_components(source_path: str | Path) -> tuple[str, str, str]:
+    """
+    Return file stem, extension, and directory for sample-level output rows.
+    """
+    path = Path(source_path)
+    file_dir = "" if str(path.parent) == "." else path.parent.as_posix()
+    return path.stem, path.suffix, file_dir
 
 
 def _count_total_utterances(chats: Dict[str, object], file_list: List[str]) -> int:
@@ -128,7 +164,7 @@ def _write_transcript_tables(
 
 
 def tabularize_transcripts(
-    tiers: Dict[str, object],
+    metadata_fields: Dict[str, object],
     chats: Dict[str, object],
     output_dir: Path,
     *,
@@ -140,10 +176,10 @@ def tabularize_transcripts(
 
     Parameters
     ----------
-    tiers : dict
-        Tier objects used to extract filename metadata.
+    metadata_fields : dict
+        MetadataField objects used to extract transcript metadata.
     chats : dict
-        CHAT file readers indexed by filename.
+        CHAT file readers indexed by input-relative transcript path.
     output_dir : Path
         Directory to create a 'transcript_tables' subfolder within.
     shuffle : bool, default=False
@@ -166,8 +202,8 @@ def tabularize_transcripts(
         logger.warning("No CHAT files provided; no transcript tables created.")
         return []
 
-    tier_names = list(tiers.keys())
-    sample_cols = SAMPLE_BASE_COLS + tier_names
+    metadata_field_names = list(metadata_fields.keys())
+    sample_cols = SAMPLE_BASE_COLS + metadata_field_names
 
     file_list_sorted = sorted(chats.keys())
     rng = np.random.default_rng(random_seed) if shuffle else None
@@ -194,12 +230,20 @@ def tabularize_transcripts(
         start=1,
     ):
         try:
-            labels_all = [t.match(chat_file) for t in tiers.values()]
+            labels_all = _metadata_field_labels(metadata_fields, chat_file)
             sample_id = file_to_sample_id[chat_file]
             shuffled_order = file_to_shuffled_order.get(chat_file, np.nan)
+            file_stem, file_ext, file_dir = _sample_file_components(chat_file)
 
             sample_rows.append(
-                [sample_id, chat_file, input_idx, shuffled_order] + labels_all
+                [
+                    sample_id,
+                    file_stem,
+                    file_ext,
+                    file_dir,
+                    input_idx,
+                    shuffled_order,
+                ] + labels_all
             )
 
             chat_data = chats[chat_file]
@@ -207,9 +251,9 @@ def tabularize_transcripts(
 
             for j, line in enumerate(utterances, start=1):
                 speaker = getattr(line, "participant", None)
-                tiers_map = getattr(line, "tiers", {}) or {}
-                utterance_text = tiers_map.get(speaker, "")
-                comment = tiers_map.get("%com", None)
+                utterance_annotations = getattr(line, "tiers", {}) or {}
+                utterance_text = utterance_annotations.get(speaker, "")
+                comment = utterance_annotations.get("%com", None)
 
                 utt_id = f"U{j:0{utt_pad}d}"
                 position = j
@@ -268,7 +312,7 @@ def extract_transcript_data(
     FileNotFoundError
         If the file does not exist.
     ValueError
-        If the `type` argument is invalid.
+        If the `kind` argument is invalid.
     """
     path = Path(transcript_table_path).expanduser().resolve()
     if not path.exists():

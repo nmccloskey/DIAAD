@@ -85,7 +85,7 @@ def _build_powers_reliability_frame(df_org, rel_template, re_ids, automate_power
 
 
 def reselect_powers_rel(
-    tiers,
+    metadata_fields,
     input_dir,
     output_dir,
     frac=0.2,
@@ -104,7 +104,7 @@ def reselect_powers_rel(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     pairs = discover_reliability_pairs(
-        tiers=tiers,
+        metadata_fields=metadata_fields,
         input_dir=input_dir,
         coding_glob="*powers_coding.xlsx",
         rel_glob="*powers_reliability_coding.xlsx",

@@ -43,7 +43,7 @@ def validate_columns(
 
 def load_metadata_from_transcript_tables(
     transcript_tables=None,
-    match_tiers=None,
+    match_metadata_fields=None,
     directories=None,
     *,
     combine: bool = True,
@@ -57,8 +57,8 @@ def load_metadata_from_transcript_tables(
     transcript_tables : Path | str | list[Path | str] | None
         Explicit transcript table path(s). If None, matching files are discovered
         with ``find_matching_files(...)`` using ``search_base='transcript_tables'``.
-    match_tiers : list[str] | None
-        Tier labels passed to ``find_matching_files`` when ``transcript_tables`` is None.
+    match_metadata_fields : list[str] | None
+        Metadata values passed to ``find_matching_files`` when ``transcript_tables`` is None.
     directories : Path | str | list[Path | str] | None
         Directories passed to ``find_matching_files`` when ``transcript_tables`` is None.
     combine : bool, default True
@@ -79,7 +79,7 @@ def load_metadata_from_transcript_tables(
     """
     if transcript_tables is None:
         transcript_tables = find_matching_files(
-            match_tiers=match_tiers,
+            match_metadata_fields=match_metadata_fields,
             directories=directories,
             search_base="transcript_tables",
             search_ext=".xlsx",
@@ -101,7 +101,7 @@ def load_metadata_from_transcript_tables(
 
     for path in transcript_tables:
         try:
-            joined = extract_transcript_data(path, type="joined")
+            joined = extract_transcript_data(path, kind="joined")
             if include_source_file:
                 joined["file"] = path.name
             metadata_dfs.append(joined)

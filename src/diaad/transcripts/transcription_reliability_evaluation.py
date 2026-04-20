@@ -112,9 +112,9 @@ def extract_cha_text(
             for line in source.utterances():
                 if line.participant in exclude_participants:
                     continue
-                utt = line.tiers.get(line.participant, "")
-                utt = re.sub(r"\s+(?=[.!?])", "", utt)
-                parts.append(utt)
+                utterance = line.tiers.get(line.participant, "")
+                utterance = re.sub(r"\s+(?=[.!?])", "", utterance)
+                parts.append(utterance)
             return " ".join(parts).strip()
 
         elif isinstance(source, str):
@@ -424,47 +424,85 @@ def _convert_cha_names(
     return {"renamed": renamed, "originals": originals}
 
 
-def _labels_for(path: Path, tiers) -> tuple:
-    """Return ordered tier matches for a file path."""
-    return tuple(t.match(path.name) for t in tiers.values())
+def _path_parts_for_metadata(path: Path, input_dir: Path | None = None) -> list[str]:
+    """
+    Return path parts scoped to the configured input directory when possible.
+    """
+    path = Path(path)
+    scoped_path = path
+
+    if input_dir is not None:
+        try:
+            scoped_path = path.resolve().relative_to(Path(input_dir).resolve())
+        except ValueError:
+            scoped_path = Path(path.name) if path.is_absolute() else path
+
+    return [part for part in scoped_path.parts if part not in ("", ".")] or [path.name]
+
+
+def _metadata_values_for(
+    path: Path,
+    metadata_fields,
+    *,
+    input_dir: Path | None = None,
+) -> tuple:
+    """Return ordered metadata field matches for a file path."""
+    if not metadata_fields:
+        return (path.stem,)
+
+    parts = _path_parts_for_metadata(path, input_dir=input_dir)
+    source = str(Path(*parts)) if parts else str(path)
+
+    values = []
+    for field in metadata_fields.values():
+        if hasattr(field, "match_path_parts"):
+            values.append(field.match_path_parts(parts, source=source))
+        else:
+            values.append(field.match(source))
+    return tuple(values)
 
 
 def _build_file_index(
     files: list[Path],
-    tiers,
+    metadata_fields,
     *,
     label: str,
+    input_dir: Path | None = None,
 ) -> dict[tuple, Path]:
     """
-    Build a tier-label index for files, logging duplicate-key collisions.
+    Build a metadata-value index for files, logging duplicate-key collisions.
 
     Parameters
     ----------
     files : list[Path]
         Files to index.
-    tiers : dict
-        Tier objects used to extract filename metadata.
+    metadata_fields : dict
+        MetadataField objects used to extract transcript metadata.
     label : str
         Human-readable file class label for logging, e.g. 'original' or 'reliability'.
 
     Returns
     -------
     dict[tuple, Path]
-        Mapping from tier-label tuples to file paths.
+        Mapping from metadata-value tuples to file paths.
 
     Notes
     -----
-    If duplicate label tuples are detected, the first file is retained and later
+    If duplicate metadata-value tuples are detected, the first file is retained and later
     files with the same key are skipped.
     """
     index: dict[tuple, Path] = {}
 
     for path in files:
         try:
-            key = _labels_for(path, tiers)
+            key = _metadata_values_for(
+                path,
+                metadata_fields,
+                input_dir=input_dir,
+            )
             if key in index:
                 logger.error(
-                    "Duplicate %s tier labels detected for key %s: keeping %s, skipping %s",
+                    "Duplicate %s metadata values detected for key %s: keeping %s, skipping %s",
                     label,
                     key,
                     get_rel_path(index[key]),
@@ -484,7 +522,7 @@ def _match_reliability_pairs(
     rel_index: dict[tuple, Path],
 ) -> list[tuple[tuple, Path, Path]]:
     """
-    Match reliability files to original files by tier-label tuple.
+    Match reliability files to original files by metadata-value tuple.
 
     Parameters
     ----------
@@ -496,7 +534,7 @@ def _match_reliability_pairs(
     Returns
     -------
     list[tuple[tuple, Path, Path]]
-        Tuples of (tier_labels, original_file, reliability_file).
+        Tuples of (metadata_values, original_file, reliability_file).
 
     Notes
     -----
@@ -509,7 +547,7 @@ def _match_reliability_pairs(
         org_path = org_index.get(key)
         if org_path is None:
             logger.error(
-                "No matching original transcript found for reliability file %s with labels %s",
+                "No matching original transcript found for reliability file %s with metadata values %s",
                 get_rel_path(rel_path),
                 key,
             )
@@ -532,13 +570,13 @@ def _match_reliability_pairs(
 
 
 def _save_alignment(
-    rel_labels: tuple,
+    metadata_values: tuple,
     transc_rel_dir: Path,
     nw: dict,
 ) -> None:
     """Save a global alignment text file for manual inspection."""
     alignment_filename = (
-        f"{'_'.join(str(x) for x in rel_labels)}_transcription_reliability_alignment.txt"
+        f"{'_'.join(str(x) for x in metadata_values)}_transcription_reliability_alignment.txt"
     )
     alignment_path = transc_rel_dir / ALIGNMENTS_SUBDIR / alignment_filename
 
@@ -557,12 +595,13 @@ def _save_alignment(
 
 def _analyze_reliability_pairs(
     matched_pairs: list[tuple[tuple, Path, Path]],
-    tiers,
+    metadata_fields,
     transc_rel_dir: Path,
     exclude_participants: list[str],
     strip_clan: bool,
     prefer_correction: bool,
     lowercase: bool,
+    input_dir: Path | None = None,
 ) -> list[dict]:
     """
     Compute transcription reliability metrics for already-matched transcript pairs.
@@ -570,9 +609,9 @@ def _analyze_reliability_pairs(
     Parameters
     ----------
     matched_pairs : list[tuple[tuple, Path, Path]]
-        Tuples of (tier_labels, original_file, reliability_file).
-    tiers : dict
-        Tier objects used to populate metadata columns.
+        Tuples of (metadata_values, original_file, reliability_file).
+    metadata_fields : dict
+        MetadataField objects used to populate metadata columns.
     transc_rel_dir : Path
         Output directory for reliability evaluation artifacts.
     exclude_participants : list[str]
@@ -591,7 +630,9 @@ def _analyze_reliability_pairs(
     """
     records: list[dict] = []
 
-    for rel_labels, org_cha, rel_cha in tqdm(
+    field_names = [field.name for field in metadata_fields.values()]
+
+    for metadata_values, org_cha, rel_cha in tqdm(
         matched_pairs,
         desc="Analyzing reliability transcripts",
     ):
@@ -618,10 +659,15 @@ def _analyze_reliability_pairs(
             lev = _levenshtein_metrics(org_text, rel_text)
             nw = _needleman_wunsch_global(org_text, rel_text)
 
-            _save_alignment(rel_labels, transc_rel_dir, nw)
+            _save_alignment(metadata_values, transc_rel_dir, nw)
+            metadata_values = _metadata_values_for(
+                rel_cha,
+                metadata_fields,
+                input_dir=input_dir,
+            )
 
             record = {
-                **{t.name: t.match(rel_cha.name) for t in tiers.values()},
+                **dict(zip(field_names, metadata_values)),
                 "original_file": org_cha.name,
                 "reliability_file": rel_cha.name,
                 **simple,
@@ -678,7 +724,7 @@ def _save_reliability_outputs(
 
 
 def evaluate_transcription_reliability(
-    tiers,
+    metadata_fields,
     input_dir,
     output_dir,
     exclude_participants=None,
@@ -696,7 +742,7 @@ def evaluate_transcription_reliability(
       1. by filename tag (e.g., '_reliability')
       2. by residing in a designated reliability directory (e.g., 'reliability'),
          in which case renamed copies are created with the reliability tag appended
-         so they can be matched to originals by tier labels.
+         so they can be matched to originals by metadata fields.
     """
     exclude_participants = exclude_participants or []
     input_dir = Path(input_dir)
@@ -730,8 +776,18 @@ def evaluate_transcription_reliability(
         len(rel_chats),
     )
 
-    org_index = _build_file_index(org_chats, tiers, label="original")
-    rel_index = _build_file_index(rel_chats, tiers, label="reliability")
+    org_index = _build_file_index(
+        org_chats,
+        metadata_fields,
+        label="original",
+        input_dir=input_dir,
+    )
+    rel_index = _build_file_index(
+        rel_chats,
+        metadata_fields,
+        label="reliability",
+        input_dir=input_dir,
+    )
 
     matched_pairs = _match_reliability_pairs(org_index, rel_index)
 
@@ -741,12 +797,13 @@ def evaluate_transcription_reliability(
 
     records = _analyze_reliability_pairs(
         matched_pairs=matched_pairs,
-        tiers=tiers,
+        metadata_fields=metadata_fields,
         transc_rel_dir=transc_rel_dir,
         exclude_participants=exclude_participants,
         strip_clan=strip_clan,
         prefer_correction=prefer_correction,
         lowercase=lowercase,
+        input_dir=input_dir,
     )
 
     if not records:
