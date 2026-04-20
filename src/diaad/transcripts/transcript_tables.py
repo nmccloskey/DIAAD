@@ -28,7 +28,7 @@ UTT_COLS = [
     "utterance",
     "comment",
 ]
-SPEAKING_TIME_COL = "speaking_time"
+
 TRANSCRIPT_SUBDIR = "transcript_tables"
 TRANSCRIPT_FILENAME = "transcript_tables.xlsx"
 
@@ -275,7 +275,6 @@ def tabularize_transcripts(
             continue
 
     sample_df = pd.DataFrame(sample_rows, columns=sample_cols)
-    sample_df[SPEAKING_TIME_COL] = np.nan
     utt_df = pd.DataFrame(utt_rows, columns=UTT_COLS)
 
     written_file = _write_transcript_tables(sample_df, utt_df, output_dir)
