@@ -26,10 +26,8 @@ except Exception:
 CONFIG_FILENAMES = {
     "project.yaml": "project",
     "project.yml": "project",
-    "tiers.yaml": "tiers",
-    "tiers.yml": "tiers",
-    "blinding.yaml": "blinding",
-    "blinding.yml": "blinding",
+    "advanced.yaml": "advanced",
+    "advanced.yml": "advanced",
 }
 
 DISPATCHED_COMMANDS = {
@@ -88,7 +86,7 @@ def _read_uploaded_configs(files) -> tuple[dict[str, dict] | None, list[str]]:
         part = CONFIG_FILENAMES.get(filename)
         if part is None:
             errors.append(
-                f"Ignoring {uploaded.name}: expected project.yaml, tiers.yaml, or blinding.yaml."
+                f"Ignoring {uploaded.name}: expected project.yaml or advanced.yaml."
             )
             continue
 
@@ -104,7 +102,7 @@ def _read_uploaded_configs(files) -> tuple[dict[str, dict] | None, list[str]]:
 
         configs[part] = data
 
-    missing = [name for name in ("project", "tiers", "blinding") if name not in configs]
+    missing = [name for name in ("project", "advanced") if name not in configs]
     if missing:
         errors.append(
             "Missing config file(s): "
@@ -128,8 +126,7 @@ def _web_project_config(project_config: dict) -> dict:
 
 def _write_config_dir(config_dir: Path, configs: dict[str, dict]) -> None:
     _write_yaml(config_dir / "project.yaml", _web_project_config(configs["project"]))
-    _write_yaml(config_dir / "tiers.yaml", configs["tiers"])
-    _write_yaml(config_dir / "blinding.yaml", configs["blinding"])
+    _write_yaml(config_dir / "advanced.yaml", configs["advanced"])
 
 
 def _save_uploaded_inputs(input_dir: Path, uploaded_files) -> None:
@@ -220,7 +217,7 @@ def render_app() -> None:
 
     st.header("Part 1: Configuration")
     uploaded_config_files = st.file_uploader(
-        "Upload project.yaml, tiers.yaml, and blinding.yaml",
+        "Upload project.yaml and advanced.yaml",
         type=["yaml", "yml"],
         accept_multiple_files=True,
     )
@@ -228,19 +225,20 @@ def render_app() -> None:
     configs = None
     config_errors: list[str] = []
     if uploaded_config_files:
+        st.session_state.confirmed_config = False
+        st.session_state.built_configs = None
         configs, config_errors = _read_uploaded_configs(uploaded_config_files)
         for error in config_errors:
             st.warning(error)
         if configs:
-            st.session_state.confirmed_config = False
             st.success("Config files uploaded.")
     else:
-        with st.expander("No config files uploaded? Build them here", expanded=False):
-            built_configs, valid = build_config_ui()
-            if st.button("Use this built config", disabled=not valid):
-                st.session_state.built_configs = built_configs
-                st.session_state.confirmed_config = True
-                st.success("Built config confirmed.")
+        st.caption("No config files uploaded? Build them here.")
+        built_configs, valid = build_config_ui()
+        if st.button("Use this built config", disabled=not valid):
+            st.session_state.built_configs = built_configs
+            st.session_state.confirmed_config = True
+            st.success("Built config confirmed.")
         if st.session_state.confirmed_config:
             configs = st.session_state.built_configs
 
@@ -260,7 +258,7 @@ def render_app() -> None:
 
     if st.button("Run selected commands"):
         if configs is None:
-            st.warning("Please upload or build a complete three-file config first.")
+            st.warning("Please upload or build a complete two-file config first.")
             st.stop()
         if not uploaded_inputs:
             st.warning("Please upload at least one input file.")

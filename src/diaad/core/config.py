@@ -304,7 +304,7 @@ class ConfigManager:
                 "num_coders": self.project.num_coders,
                 "stimulus_field": self.project.stimulus_field,
                 "automate_powers": self.project.automate_powers,
-                "tiers": self.project.tiers,
+                "metadata_fields": self.project.tiers,
             },
             "advanced": {
                 "reliability_tag": self.advanced.reliability_tag,
@@ -449,12 +449,12 @@ class ConfigManager:
         )
 
     def _parse_tiers(self, data: dict[str, Any]) -> dict[str, TierSpec]:
-        tiers = data.get("tiers", {})
+        tiers = data.get("metadata_fields", data.get("tiers", {}))
 
         if tiers is None:
             return {}
         if not isinstance(tiers, dict):
-            raise TypeError("project.yaml: 'tiers' must be a dictionary.")
+            raise TypeError("project.yaml: 'metadata_fields' must be a dictionary.")
 
         normalized_tiers: dict[str, TierSpec] = {}
 
@@ -463,19 +463,21 @@ class ConfigManager:
 
             if isinstance(tier_spec, str):
                 if not tier_spec.strip():
-                    raise ValueError(f"Tier '{tier_name}' regex string must be non-empty.")
+                    raise ValueError(
+                        f"Metadata field '{tier_name}' regex string must be non-empty."
+                    )
                 normalized_tiers[tier_name] = tier_spec
 
             elif isinstance(tier_spec, list):
                 if not all(isinstance(v, str) for v in tier_spec):
                     raise TypeError(
-                        f"Tier '{tier_name}' values must be a list of strings."
+                        f"Metadata field '{tier_name}' values must be a list of strings."
                     )
                 normalized_tiers[tier_name] = list(tier_spec)
 
             else:
                 raise TypeError(
-                    f"Tier '{tier_name}' must be either a regex string or a list[str]."
+                    f"Metadata field '{tier_name}' must be either a regex string or a list[str]."
                 )
 
         return normalized_tiers
