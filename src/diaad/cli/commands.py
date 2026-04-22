@@ -5,12 +5,19 @@ from __future__ import annotations
 # -------------------------------------------------------------
 
 MODULE_COMMANDS = {
+
     "transcripts": [
         "transcripts select",
         "transcripts evaluate",
         "transcripts reselect",
         "transcripts tabularize",
     ],
+
+    "templates": [
+        "templates utterances",
+        "templates samples",
+    ],
+
     "cus": [
         "cus make",
         "cus evaluate",
@@ -18,6 +25,7 @@ MODULE_COMMANDS = {
         "cus analyze",
         "cus rates",
     ],
+
     "words": [
         "words make",
         "words evaluate",
@@ -25,22 +33,22 @@ MODULE_COMMANDS = {
         "words analyze",
         "words rates",
     ],
-    "vocab": [
-        "vocab analyze",
-    ],
-    "turns": [
-        "turns analyze",
-    ],
-    "templates": [
-        "templates utterances",
-        "templates samples",
-    ],
+
     "powers": [
         "powers make",
         "powers analyze",
         "powers evaluate",
         "powers reselect",
     ],
+
+    "vocab": [
+        "vocab analyze",
+    ],
+
+    "turns": [
+        "turns analyze",
+    ],
+
 }
 
 VALID_COMMANDS = {
