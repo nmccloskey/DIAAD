@@ -8,8 +8,10 @@ from diaad.core.run_wrappers import (
     run_analyze_digital_convo_turns,
     run_analyze_powers_coding,
     run_calculate_powers_rates,
+    run_calculate_target_vocab_rates,
     run_evaluate_digital_convo_turns,
     run_make_digital_convo_turn_files,
+    run_check_target_vocab_resources,
     run_make_target_vocab_file,
     run_target_vocab,
     run_evaluate_cu_reliability,
@@ -121,7 +123,9 @@ def build_dispatch(ctx) -> CommandDispatch:
         # Target Vocabulary Coverage
         # --------------------------------------------------------------
         "vocab file": lambda: run_make_target_vocab_file(ctx),
+        "vocab check": lambda: run_check_target_vocab_resources(ctx),
         "vocab analyze": lambda: run_target_vocab(ctx),
+        "vocab rates": lambda: run_calculate_target_vocab_rates(ctx),
 
         # --------------------------------------------------------------
         # Digital Conversation Turns

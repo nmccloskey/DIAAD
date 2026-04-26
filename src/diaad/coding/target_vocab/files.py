@@ -6,7 +6,12 @@ from typing import Any
 
 from psair.core.logger import get_rel_path, logger
 
-from diaad.coding.target_vocab.resources import load_builtin_resources
+from diaad.coding.target_vocab.resources import (
+    get_builtin_resource_ids,
+    load_builtin_resources,
+    load_resources_from_path,
+    load_target_vocabulary_resources,
+)
 
 
 TARGET_VOCAB_TEMPLATE_FILENAME = "target_vocabulary_resource_template.json"
@@ -66,3 +71,41 @@ def make_target_vocab_file(
 
     logger.info("Wrote target vocabulary template: %s", get_rel_path(output_path))
     return output_path
+
+
+def check_target_vocab_resources(
+    *,
+    resource_path: str | Path | None = None,
+) -> dict[str, dict[str, Any]]:
+    """
+    Validate and summarize the active target vocabulary resource set.
+    """
+    if resource_path is None or str(resource_path).strip() == "":
+        resources = load_builtin_resources()
+        logger.info(
+            "No custom target vocabulary resource path configured; validated %d bundled resources.",
+            len(resources),
+        )
+        logger.info("Bundled target vocabulary ids: %s", sorted(resources))
+        return resources
+
+    custom_resources = load_resources_from_path(resource_path)
+    merged_resources = load_target_vocabulary_resources(resource_path)
+    builtin_ids = get_builtin_resource_ids()
+    override_ids = sorted(set(custom_resources) & builtin_ids)
+    custom_only_ids = sorted(set(custom_resources) - builtin_ids)
+
+    logger.info("Validated %d custom target vocabulary resource(s).", len(custom_resources))
+    logger.info("Custom target vocabulary ids: %s", sorted(custom_resources))
+    if override_ids:
+        logger.warning(
+            "Custom target vocabulary resources override bundled defaults for ids: %s",
+            override_ids,
+        )
+    if custom_only_ids:
+        logger.info(
+            "Custom target vocabulary resources add non-bundled ids: %s",
+            custom_only_ids,
+        )
+    logger.info("Active target vocabulary ids after merge: %s", sorted(merged_resources))
+    return merged_resources

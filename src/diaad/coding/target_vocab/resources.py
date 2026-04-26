@@ -236,12 +236,31 @@ def load_target_vocabulary_resources(
     """
     Load target vocabulary resources.
 
-    Without a path, bundled resources are used. With a path, that JSON file or
-    directory becomes the active resource set for the run.
+    Without a path, bundled resources are used. With a path, bundled resources
+    remain available and custom resources are merged in. If a custom resource
+    reuses a bundled id, the custom definition overrides the bundled one.
     """
     if resource_path is None or str(resource_path).strip() == "":
         return load_builtin_resources()
-    return _load_custom_resources_cached(str(Path(resource_path).expanduser()))
+
+    builtins = dict(load_builtin_resources())
+    custom_resources = _load_custom_resources_cached(str(Path(resource_path).expanduser()))
+    overlapping_ids = sorted(set(builtins) & set(custom_resources))
+
+    if overlapping_ids:
+        logger_msg = (
+            "Custom target vocabulary resources override bundled defaults for ids: "
+            f"{overlapping_ids}"
+        )
+        try:
+            from psair.core.logger import logger
+
+            logger.info(logger_msg)
+        except Exception:
+            pass
+
+    builtins.update(custom_resources)
+    return builtins
 
 
 def get_resource(

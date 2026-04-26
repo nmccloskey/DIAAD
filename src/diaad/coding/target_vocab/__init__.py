@@ -7,6 +7,8 @@ _TARGET_VOCAB_EXPORTS = {
     "SUMMARY_COLUMNS",
     "base_columns",
     "build_target_vocab_template",
+    "calculate_target_vocab_rates",
+    "check_target_vocab_resources",
     "compute_target_vocab_for_text",
     "compute_target_vocabulary_coverage_for_text",
     "extract_target_vocab_inputs_from_sample_df",
@@ -39,9 +41,12 @@ __all__ = sorted(_TARGET_VOCAB_EXPORTS | _RESOURCE_EXPORTS | _UTIL_EXPORTS)
 
 def __getattr__(name):
     if name in _TARGET_VOCAB_EXPORTS:
-        if name in {"build_target_vocab_template", "make_target_vocab_file"}:
+        if name in {"build_target_vocab_template", "make_target_vocab_file", "check_target_vocab_resources"}:
             files = import_module("diaad.coding.target_vocab.files")
             return getattr(files, name)
+        if name in {"calculate_target_vocab_rates"}:
+            rates = import_module("diaad.coding.target_vocab.rates")
+            return getattr(rates, name)
         target_vocab = import_module("diaad.coding.target_vocab.analysis")
         return getattr(target_vocab, name)
     if name in _RESOURCE_EXPORTS:

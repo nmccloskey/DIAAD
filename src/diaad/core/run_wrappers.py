@@ -132,11 +132,25 @@ def run_target_vocab(ctx):
 
     return run_target_vocab(**ctx.kwargs_target_vocab())
 
+def run_check_target_vocab_resources(ctx):
+    """Validate and summarize target vocabulary resources."""
+    from diaad.coding.target_vocab.files import check_target_vocab_resources
+
+    return check_target_vocab_resources(**ctx.kwargs_target_vocab_check())
+
+
 def run_make_target_vocab_file(ctx):
     """Create a blank target vocabulary resource template."""
     from diaad.coding.target_vocab.files import make_target_vocab_file
 
     return make_target_vocab_file(**ctx.kwargs_target_vocab_file())
+
+
+def run_calculate_target_vocab_rates(ctx):
+    """Calculate target vocabulary per-minute rates from analysis output."""
+    from diaad.coding.target_vocab.rates import calculate_target_vocab_rates
+
+    return calculate_target_vocab_rates(**ctx.kwargs_target_vocab_rates())
 
 
 # ------------------------------------------------------------------

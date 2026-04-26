@@ -373,7 +373,9 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 | Command         | Description                                                         | Input                    | Output                                                     | Function                 |
 | --------------- | ------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------- | ------------------------ |
 | `vocab file`    | Generate a blank target vocabulary resource JSON template           | None                     | Blank JSON template for custom target vocabulary resources | `make_target_vocab_file` |
+| `vocab check`   | Validate and summarize active target vocabulary resource files      | Built-in and/or custom JSON resources | Logger summary of validated ids and overrides        | `check_target_vocab_resources` |
 | `vocab analyze` | Run target vocabulary coverage analysis with built-in/CoreLex-style tasks | CU and WC summary tables | Summary and long-format detail tables with percentile data | `run_target_vocab`       |
+| `vocab rates`   | Compute target vocabulary per-minute rates from analysis output     | Target vocabulary summary workbook | Target vocabulary rates workbook                      | `calculate_target_vocab_rates` |
 
 ---
 
@@ -410,6 +412,12 @@ diaad vocab analyze
 
 # Generate a blank target vocabulary resource template
 diaad vocab file
+
+# Validate active target vocabulary resources
+diaad vocab check
+
+# Compute target vocabulary rates from analysis output
+diaad vocab rates
 
 # Generate digital conversation turn coding templates
 diaad turns files
@@ -468,6 +476,8 @@ This encoded tabularization:
 - minimizes potential bias during manual coding
 
 If not provided when running commands like `cus files`, `powers files`, `templates samples`, `templates times`, `turns files`, or `vocab analyze`, these tables are automatically generated from `.cha` inputs.
+
+For target vocabulary resources, DIAAD always includes the bundled built-ins. If `target_vocabulary_resource_path` points to custom JSON resource files, custom ids are merged in, and any custom id that matches a built-in id overrides the bundled default.
 
 ### Transcription Reliability Input (command `transcripts evaluate`)
 

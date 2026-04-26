@@ -45,7 +45,9 @@ MODULE_COMMANDS = {
 
     "vocab": [
         "vocab file",
+        "vocab check",
         "vocab analyze",
+        "vocab rates",
     ],
 
     "turns": [

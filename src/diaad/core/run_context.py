@@ -444,8 +444,18 @@ class RunContext:
             "resource_path": self.config.advanced.target_vocabulary_resource_path,
         }
 
+    def kwargs_target_vocab_check(self) -> dict[str, Any]:
+        """Return kwargs for target vocabulary resource validation."""
+        return {
+            "resource_path": self.config.advanced.target_vocabulary_resource_path,
+        }
+
     def kwargs_target_vocab_file(self) -> dict[str, Any]:
         """Return kwargs for target vocabulary template generation."""
+        return self.kwargs_io()
+
+    def kwargs_target_vocab_rates(self) -> dict[str, Any]:
+        """Return kwargs for target vocabulary rate calculation."""
         return self.kwargs_io()
 
     # ------------------------------------------------------------------
