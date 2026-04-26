@@ -14,7 +14,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
             "  diaad transcripts reselect\n"
             "  diaad transcripts tabularize\n"
             "  diaad cus analyze\n"
-            "  diaad transcripts tabularize, cus make, words make\n"
+            "  diaad transcripts tabularize, cus files, words files\n"
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -25,7 +25,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help=(
             "Command to run. For multiple commands, separate them with commas.\n"
             'Examples: "transcripts tabularize" or '
-            '"transcripts tabularize, cus make"'
+            '"transcripts tabularize, cus files"'
         ),
     )
 

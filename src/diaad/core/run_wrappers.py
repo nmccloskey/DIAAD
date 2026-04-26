@@ -132,10 +132,23 @@ def run_target_vocab(ctx):
 
     return run_target_vocab(**ctx.kwargs_target_vocab())
 
+def run_make_target_vocab_file(ctx):
+    """Create a blank target vocabulary resource template."""
+    from diaad.coding.target_vocab.files import make_target_vocab_file
+
+    return make_target_vocab_file(**ctx.kwargs_target_vocab_file())
+
 
 # ------------------------------------------------------------------
 # Digital Conversation Turns
 # ------------------------------------------------------------------
+
+def run_make_digital_convo_turn_files(ctx):
+    """Create digital conversation turn coding templates."""
+    from diaad.coding.convo_turns.files import make_digital_convo_turn_files
+
+    return make_digital_convo_turn_files(**ctx.kwargs_make_digital_convo_turn_files())
+
 
 def run_analyze_digital_convo_turns(ctx):
     """Analyze digital conversation turns."""

@@ -444,9 +444,25 @@ class RunContext:
             "resource_path": self.config.advanced.target_vocabulary_resource_path,
         }
 
+    def kwargs_target_vocab_file(self) -> dict[str, Any]:
+        """Return kwargs for target vocabulary template generation."""
+        return self.kwargs_io()
+
     # ------------------------------------------------------------------
     # Digital Conversation Turns
     # ------------------------------------------------------------------
+    def kwargs_make_digital_convo_turn_files(self) -> dict[str, Any]:
+        """Return kwargs for digital conversation turn template generation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "num_bins": self.num_bins,
+            "num_coders": self.num_coders,
+            "blinding_config": self.config.blinding,
+            "seed": self.random_seed,
+        }
+
     def kwargs_digital_convo_turns(self) -> dict[str, Any]:
         """Return kwargs for digital conversation turn analysis."""
         return self.kwargs_io()

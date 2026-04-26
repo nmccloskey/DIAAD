@@ -16,10 +16,11 @@ MODULE_COMMANDS = {
     "templates": [
         "templates utterances",
         "templates samples",
+        "templates times",
     ],
 
     "cus": [
-        "cus make",
+        "cus files",
         "cus evaluate",
         "cus reselect",
         "cus analyze",
@@ -27,7 +28,7 @@ MODULE_COMMANDS = {
     ],
 
     "words": [
-        "words make",
+        "words files",
         "words evaluate",
         "words reselect",
         "words analyze",
@@ -35,17 +36,19 @@ MODULE_COMMANDS = {
     ],
 
     "powers": [
-        "powers make",
+        "powers files",
         "powers analyze",
         "powers evaluate",
         "powers reselect",
     ],
 
     "vocab": [
+        "vocab file",
         "vocab analyze",
     ],
 
     "turns": [
+        "turns files",
         "turns analyze",
     ],
 

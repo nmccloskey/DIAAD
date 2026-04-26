@@ -7,6 +7,8 @@ from diaad.core.run_wrappers import (
     run_analyze_word_counts,
     run_analyze_digital_convo_turns,
     run_analyze_powers_coding,
+    run_make_digital_convo_turn_files,
+    run_make_target_vocab_file,
     run_target_vocab,
     run_evaluate_cu_reliability,
     run_evaluate_powers_reliability,
@@ -41,11 +43,12 @@ CHAT_REQUIRED_COMMANDS = {
 }
 
 TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
-    "cus make",
+    "cus files",
     "vocab analyze",
-    "powers make",
+    "powers files",
     "templates utterances",
     "templates samples",
+    "turns files",
 }
 
 def commands_require_chats(commands: Iterable[str]) -> bool:
@@ -94,7 +97,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         # --------------------------------------------------------------
         # Complete Utterance coding
         # --------------------------------------------------------------
-        "cus make": lambda: run_make_cu_coding_files(ctx),
+        "cus files": lambda: run_make_cu_coding_files(ctx),
         "cus reselect": lambda: run_reselect_cu_rel(ctx),
         "cus evaluate": lambda: run_evaluate_cu_reliability(ctx),
         "cus analyze": lambda: run_analyze_cu_coding(ctx),
@@ -103,7 +106,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         # --------------------------------------------------------------
         # Manual word counting
         # --------------------------------------------------------------
-        "words make": lambda: run_make_word_count_files(ctx),
+        "words files": lambda: run_make_word_count_files(ctx),
         "words reselect": lambda: run_reselect_wc_rel(ctx),
         "words evaluate": lambda: run_evaluate_word_count_reliability(ctx),
         "words analyze": lambda: run_analyze_word_counts(ctx),
@@ -112,11 +115,13 @@ def build_dispatch(ctx) -> CommandDispatch:
         # --------------------------------------------------------------
         # Target Vocabulary Coverage
         # --------------------------------------------------------------
+        "vocab file": lambda: run_make_target_vocab_file(ctx),
         "vocab analyze": lambda: run_target_vocab(ctx),
 
         # --------------------------------------------------------------
         # Digital Conversation Turns
         # --------------------------------------------------------------
+        "turns files": lambda: run_make_digital_convo_turn_files(ctx),
         "turns analyze": lambda: run_analyze_digital_convo_turns(ctx),
 
         # --------------------------------------------------------------
@@ -128,7 +133,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         # --------------------------------------------------------------
         # POWERS coding workflow
         # --------------------------------------------------------------
-        "powers make": lambda: run_make_powers_coding_files(ctx),
+        "powers files": lambda: run_make_powers_coding_files(ctx),
         "powers analyze": lambda: run_analyze_powers_coding(ctx),
         "powers evaluate": lambda: run_evaluate_powers_reliability(ctx),
         "powers reselect": lambda: run_reselect_powers_reliability_coding(ctx),

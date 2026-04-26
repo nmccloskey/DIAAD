@@ -436,6 +436,10 @@ def _analyze_convo_turns_file(df):
             'speaker_ratios': DataFrame
         }
     """
+    df = df.copy()
+    if 'group' not in df.columns and 'sample_id' in df.columns:
+        df = df.rename(columns={'sample_id': 'group'})
+
     required_cols = ['group', 'turns']
     for col in required_cols:
         if col not in df.columns:

@@ -299,13 +299,13 @@ diaad transcripts reselect
 diaad transcripts tabularize
 
 # Generate CU coding and reliability spreadsheets
-diaad cus make
+diaad cus files
 
 # Run multiple steps in sequence
-diaad transcripts tabularize, cus make, words make
+diaad transcripts tabularize, cus files, words files
 
-# Use a custom configuration file
-diaad cus summarize --config other_config.yaml
+# Use a custom configuration directory
+diaad cus files --config other_config
 ```
 
 ---
@@ -331,19 +331,15 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 
 | Command         | Description                                     | Input                            | Output                                         | Function                     |
 | --------------- | ----------------------------------------------- | -------------------------------- | ---------------------------------------------- | ---------------------------- |
-| `cus make`      | Generate CU coding and reliability spreadsheets | Utterance tables                 | CU coding + reliability spreadsheets           | `make_cu_coding_files`       |
+| `cus files`     | Generate CU coding and reliability spreadsheets | Utterance tables                 | CU coding + reliability spreadsheets           | `make_cu_coding_files`       |
 | `cus evaluate`  | Evaluate CU coding reliability                  | Completed CU coding spreadsheets | Reliability summaries + reports                | `evaluate_cu_reliability`    |
 | `cus reselect`  | Reselect CU reliability samples                 | Completed CU coding spreadsheets | New reliability subset(s)                      | `reselect_cu_wc_reliability` |
 | `cus analyze`   | Analyze completed CU coding                     | Completed CU coding spreadsheets | Sample- and utterance-level CU analyses        | `analyze_cu_coding`          |
-| `cus summarize` | Summarize CU coding and word counts             | CU and WC coding results         | Blind + unblind summaries and utterance tables | `summarize_cus`              |
-
----
-
 ### Word Count Module
 
 | Command          | Description                                             | Input                             | Output                                    | Function                          |
 | ---------------- | ------------------------------------------------------- | --------------------------------- | ----------------------------------------- | --------------------------------- |
-| `words make`     | Generate word-count coding and reliability spreadsheets | CU coding tables                  | Word count + reliability spreadsheets     | `make_word_count_files`           |
+| `words files`    | Generate word-count coding and reliability spreadsheets | CU coding tables                  | Word count + reliability spreadsheets     | `make_word_count_files`           |
 | `words evaluate` | Evaluate word-count reliability                         | Completed word-count spreadsheets | Reliability summaries + agreement reports | `evaluate_word_count_reliability` |
 | `words reselect` | Reselect word-count reliability samples                 | Completed word-count spreadsheets | New reliability subset(s)                 | `reselect_cu_wc_reliability`      |
 
@@ -351,9 +347,19 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 
 ### Target Vocabulary Coverage
 
-| Command           | Description                                                        | Input                    | Output                                                     | Function      |
-| ----------------- | ------------------------------------------------------------------ | ------------------------ | ---------------------------------------------------------- | ------------- |
-| `corelex analyze` | Run target vocabulary coverage analysis with built-in CoreLex tasks | CU and WC summary tables | Summary and long-format detail tables with percentile data | `run_corelex` |
+| Command         | Description                                                         | Input                    | Output                                                     | Function                 |
+| --------------- | ------------------------------------------------------------------- | ------------------------ | ---------------------------------------------------------- | ------------------------ |
+| `vocab file`    | Generate a blank target vocabulary resource JSON template           | None                     | Blank JSON template for custom target vocabulary resources | `make_target_vocab_file` |
+| `vocab analyze` | Run target vocabulary coverage analysis with built-in/CoreLex-style tasks | CU and WC summary tables | Summary and long-format detail tables with percentile data | `run_target_vocab`       |
+
+---
+
+### Digital Conversation Turns
+
+| Command         | Description                                          | Input            | Output                                      | Function                        |
+| --------------- | ---------------------------------------------------- | ---------------- | ------------------------------------------- | ------------------------------- |
+| `turns files`   | Generate digital conversation turn coding templates  | Transcript tables | Primary and reliability turn-coding files   | `make_digital_convo_turn_files` |
+| `turns analyze` | Analyze completed digital conversation turn files    | Turn coding files | Speaker, group, session, and transition summaries | `analyze_digital_convo_turns`   |
 
 ---
 
@@ -366,7 +372,7 @@ A typical workflow might look like:
 diaad transcripts tabularize
 
 # Create CU coding spreadsheets
-diaad cus make
+diaad cus files
 
 # After coding is complete, evaluate reliability
 diaad cus evaluate
@@ -374,17 +380,20 @@ diaad cus evaluate
 # Analyze completed CU coding
 diaad cus analyze
 
-# Generate final summaries
-diaad cus summarize
-
 # Run target vocabulary coverage analysis
-diaad corelex analyze
+diaad vocab analyze
+
+# Generate a blank target vocabulary resource template
+diaad vocab file
+
+# Generate digital conversation turn coding templates
+diaad turns files
 ```
 
 Commands can also be chained:
 
 ```bash
-diaad transcripts tabularize, cus make
+diaad transcripts tabularize, cus files
 ```
 
 ---
@@ -427,7 +436,7 @@ This encoded tabularization:
 - promotes transparency and consistency in text processing
 - minimizes potential bias during manual coding
 
-If not provided when running either `cus make` or `corelex analyze`, these tables are automatically generated from `.cha` inputs.
+If not provided when running either `cus files`, `vocab analyze`, or `turns files`, these tables are automatically generated from `.cha` inputs.
 
 ### Transcription Reliability Input (command `transcripts evaluate`)
 
