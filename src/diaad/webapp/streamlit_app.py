@@ -157,11 +157,21 @@ def _command_options() -> list[str]:
 def _render_manual() -> None:
     if render_manual_ui is None:
         return
+    
     repo_root = Path(__file__).resolve().parents[3]
+
     render_manual_ui(
         repo_root=repo_root,
         manual_rel_dir="docs/manual",
         expander_label="Show / Hide DIAAD Manual Menu",
+        ui_key="diaad_manual",
+    )
+
+    render_manual_ui(
+        repo_root=repo_root,
+        manual_rel_dir="src/diaad/examples/assets/rendered_docs/example_io",
+        expander_label="Show / Hide DIAAD Example Input/Output Menu",
+        ui_key="diaad_examples",
     )
 
 
