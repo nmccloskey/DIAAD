@@ -1,0 +1,126 @@
+from __future__ import annotations
+
+from datetime import datetime
+from types import SimpleNamespace
+
+import pytest
+
+import diaad.core.run_context as run_context_module
+
+
+class FakeMetadataManager:
+    def __init__(self, config):
+        self.config = config
+        self.metadata_fields = {"group": "parsed"}
+
+
+class FakeConfigManager:
+    def __init__(self, config_dir):
+        self.config_dir = config_dir
+        self.input_dir = "input"
+        self.output_dir = "output"
+        self.random_seed = 13
+        self.reliability_fraction = 0.25
+        self.shuffle_samples = True
+        self.num_coders = 2
+        self.num_bins = 4
+        self.cu_paradigms = ["sv"]
+        self.stimulus_field = "narrative"
+        self.exclude_participants = ["INV"]
+        self.strip_clan = True
+        self.prefer_correction = False
+        self.lowercase = True
+        self.automate_powers = True
+        self.metadata_fields_config = {"tiers": {"group": "regex"}}
+        self.advanced = SimpleNamespace(
+            reliability_tag="_rel",
+            reliability_dirname="reliability",
+            cu_samples_file="cu_samples.xlsx",
+            speaking_time_file="speaking_times.xlsx",
+            speaking_time_field="speaking_time",
+            word_count_file="word_counts.xlsx",
+            word_count_field="word_count",
+            wc_samples_file="wc_samples.xlsx",
+            target_vocabulary_resource_path="",
+        )
+        self.blinding = self.advanced
+
+    def to_dict(self):
+        return {"project": {"input_dir": self.input_dir}, "advanced": {}}
+
+
+def test_run_context_resolves_paths_and_builds_metadata(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    assert ctx.input_dir == tmp_path / "input"
+    assert ctx.base_output_dir == tmp_path / "output"
+    assert ctx.out_dir.exists()
+    assert ctx.metadata_fields == {"group": "parsed"}
+    assert ctx.timestamp == "260425_1230"
+
+
+def test_run_context_ensure_transcript_tables_generates_when_missing(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+    monkeypatch.setattr(run_context_module, "find_matching_files", lambda **kwargs: [])
+
+    calls = {}
+
+    def fake_tabularize_transcripts(**kwargs):
+        calls.update(kwargs)
+
+    import diaad.transcripts.transcript_tables as transcript_tables
+
+    monkeypatch.setattr(transcript_tables, "tabularize_transcripts", fake_tabularize_transcripts)
+    chats = {"file.cha": object()}
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+    monkeypatch.setattr(ctx, "load_chats", lambda force=False: chats)
+
+    ctx.ensure_transcript_tables()
+
+    assert calls["metadata_fields"] == {"group": "parsed"}
+    assert calls["chats"] is chats
+    assert calls["shuffle"] is True
+    assert calls["random_seed"] == 13
+
+
+def test_run_context_kwargs_tabularize_requires_chats(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    with pytest.raises(RuntimeError, match="CHAT files have not been loaded"):
+        ctx.kwargs_tabularize_transcripts()
+
+
+def test_run_context_termination_kwargs(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+    payload = ctx.termination_kwargs()
+
+    assert payload["input_dir"] == tmp_path / "input"
+    assert payload["output_dir"] == ctx.out_dir
+    assert payload["program_name"] == "DIAAD"
