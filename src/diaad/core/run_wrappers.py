@@ -182,6 +182,12 @@ def run_make_utterance_templates(ctx):
 
     return make_utterance_template_files(**ctx.kwargs_make_utterance_templates())
 
+def run_make_speaking_time_templates(ctx):
+    """Create speaking-time templates keyed by sample_id."""
+    from diaad.coding.templates.times import make_speaking_time_template_files
+
+    return make_speaking_time_template_files(**ctx.kwargs_make_speaking_time_templates())
+
 
 def run_make_sample_templates(ctx):
     """Create sample coding templates and reliability subsets."""
@@ -206,6 +212,12 @@ def run_analyze_powers_coding(ctx):
     from diaad.coding.powers.analysis import analyze_powers_coding
 
     return analyze_powers_coding(**ctx.kwargs_analyze_powers_coding())
+
+def run_calculate_powers_rates(ctx):
+    """Calculate POWERS per-minute rates from speaking times."""
+    from diaad.coding.powers.rates import calculate_powers_rates
+
+    return calculate_powers_rates(**ctx.kwargs_powers_rates())
 
 
 def run_evaluate_powers_reliability(ctx):

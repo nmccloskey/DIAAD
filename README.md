@@ -335,6 +335,17 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 | `cus evaluate`  | Evaluate CU coding reliability                  | Completed CU coding spreadsheets | Reliability summaries + reports                | `evaluate_cu_reliability`    |
 | `cus reselect`  | Reselect CU reliability samples                 | Completed CU coding spreadsheets | New reliability subset(s)                      | `reselect_cu_wc_reliability` |
 | `cus analyze`   | Analyze completed CU coding                     | Completed CU coding spreadsheets | Sample- and utterance-level CU analyses        | `analyze_cu_coding`          |
+
+---
+
+### Templates Module
+
+| Command               | Description                                      | Input             | Output                                | Function                           |
+| --------------------- | ------------------------------------------------ | ----------------- | ------------------------------------- | ---------------------------------- |
+| `templates utterances` | Generate blank utterance-level coding templates | Transcript tables | Utterance coding template workbooks   | `make_utterance_template_files`    |
+| `templates samples`   | Generate blank sample/bin coding templates       | Transcript tables | Sample coding template workbooks      | `make_sample_template_files`       |
+| `templates times`     | Generate a blank speaking-time template          | Transcript tables | `sample_id` + `speaking_time` workbook | `make_speaking_time_template_files` |
+
 ### Word Count Module
 
 | Command          | Description                                             | Input                             | Output                                    | Function                          |
@@ -342,6 +353,18 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 | `words files`    | Generate word-count coding and reliability spreadsheets | CU coding tables                  | Word count + reliability spreadsheets     | `make_word_count_files`           |
 | `words evaluate` | Evaluate word-count reliability                         | Completed word-count spreadsheets | Reliability summaries + agreement reports | `evaluate_word_count_reliability` |
 | `words reselect` | Reselect word-count reliability samples                 | Completed word-count spreadsheets | New reliability subset(s)                 | `reselect_cu_wc_reliability`      |
+
+---
+
+### POWERS Module
+
+| Command           | Description                                           | Input                              | Output                                    | Function                      |
+| ----------------- | ----------------------------------------------------- | ---------------------------------- | ----------------------------------------- | ----------------------------- |
+| `powers files`    | Generate POWERS coding and reliability spreadsheets   | Transcript tables                  | POWERS coding and reliability workbooks   | `make_powers_coding_files`    |
+| `powers analyze`  | Analyze completed POWERS coding                       | POWERS coding spreadsheets         | Utterance/turn/speaker/dialog summaries   | `analyze_powers_coding`       |
+| `powers rates`    | Compute POWERS per-minute rates from speaking times   | POWERS analysis + speaking times   | POWERS rates workbook                     | `calculate_powers_rates`      |
+| `powers evaluate` | Evaluate POWERS reliability                           | POWERS coding and reliability files | Reliability summaries + report            | `evaluate_powers_reliability` |
+| `powers reselect` | Reselect POWERS reliability samples                   | Completed POWERS coding spreadsheets | New reliability subset(s)               | `reselect_powers_rel`         |
 
 ---
 
@@ -390,6 +413,12 @@ diaad vocab file
 
 # Generate digital conversation turn coding templates
 diaad turns files
+
+# Generate a blank speaking-time template
+diaad templates times
+
+# Compute POWERS rates per minute
+diaad powers rates
 ```
 
 Commands can also be chained:
@@ -438,7 +467,7 @@ This encoded tabularization:
 - promotes transparency and consistency in text processing
 - minimizes potential bias during manual coding
 
-If not provided when running either `cus files`, `vocab analyze`, or `turns files`, these tables are automatically generated from `.cha` inputs.
+If not provided when running commands like `cus files`, `powers files`, `templates samples`, `templates times`, `turns files`, or `vocab analyze`, these tables are automatically generated from `.cha` inputs.
 
 ### Transcription Reliability Input (command `transcripts evaluate`)
 

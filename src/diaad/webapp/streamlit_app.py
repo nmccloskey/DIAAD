@@ -53,8 +53,10 @@ DISPATCHED_COMMANDS = {
     "turns analyze",
     "templates utterances",
     "templates samples",
+    "templates times",
     "powers files",
     "powers analyze",
+    "powers rates",
     "powers evaluate",
     "powers reselect",
 }

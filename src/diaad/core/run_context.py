@@ -509,6 +509,13 @@ class RunContext:
             "seed": self.random_seed,
         }
 
+    def kwargs_make_speaking_time_templates(self) -> dict[str, Any]:
+        """Return kwargs for speaking-time template generation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+        }
+
     # ------------------------------------------------------------------
     # POWERS coding workflow
     # ------------------------------------------------------------------
@@ -528,6 +535,15 @@ class RunContext:
     def kwargs_analyze_powers_coding(self) -> dict[str, Any]:
         """Return kwargs for POWERS analysis."""
         return self.kwargs_io()
+
+    def kwargs_powers_rates(self) -> dict[str, Any]:
+        """Return shared kwargs for POWERS rate calculation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "speaking_time_file": self.config.advanced.speaking_time_file,
+            "speaking_time_field": self.config.advanced.speaking_time_field,
+        }
 
     def kwargs_reselect_powers_reliability(self) -> dict[str, Any]:
         """Return kwargs for POWERS reliability reselection."""

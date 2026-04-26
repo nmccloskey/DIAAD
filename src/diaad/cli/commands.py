@@ -38,6 +38,7 @@ MODULE_COMMANDS = {
     "powers": [
         "powers files",
         "powers analyze",
+        "powers rates",
         "powers evaluate",
         "powers reselect",
     ],

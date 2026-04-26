@@ -7,6 +7,7 @@ from diaad.core.run_wrappers import (
     run_analyze_word_counts,
     run_analyze_digital_convo_turns,
     run_analyze_powers_coding,
+    run_calculate_powers_rates,
     run_evaluate_digital_convo_turns,
     run_make_digital_convo_turn_files,
     run_make_target_vocab_file,
@@ -17,6 +18,7 @@ from diaad.core.run_wrappers import (
     run_evaluate_word_count_reliability,
     run_make_cu_coding_files,
     run_make_sample_templates,
+    run_make_speaking_time_templates,
     run_make_utterance_templates,
     run_make_powers_coding_files,
     run_make_word_count_files,
@@ -50,6 +52,7 @@ TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "powers files",
     "templates utterances",
     "templates samples",
+    "templates times",
     "turns files",
 }
 
@@ -133,12 +136,14 @@ def build_dispatch(ctx) -> CommandDispatch:
         # --------------------------------------------------------------
         "templates utterances": lambda: run_make_utterance_templates(ctx),
         "templates samples": lambda: run_make_sample_templates(ctx),
+        "templates times": lambda: run_make_speaking_time_templates(ctx),
 
         # --------------------------------------------------------------
         # POWERS coding workflow
         # --------------------------------------------------------------
         "powers files": lambda: run_make_powers_coding_files(ctx),
         "powers analyze": lambda: run_analyze_powers_coding(ctx),
+        "powers rates": lambda: run_calculate_powers_rates(ctx),
         "powers evaluate": lambda: run_evaluate_powers_reliability(ctx),
         "powers reselect": lambda: run_reselect_powers_reliability_coding(ctx),
     }
