@@ -8,6 +8,8 @@ import pandas as pd
 import yaml
 
 from diaad.examples.generate import (
+    CU_OUTPUT_DIRS,
+    CUS_MODULE_DIR,
     EXPECTED_WORKBOOK,
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATES_MODULE_DIR,
@@ -143,6 +145,42 @@ def _project_tree(command: str = "all") -> str:
         else:
             outputs = """        coding_templates/
           speaking_times.xlsx"""
+    elif command == "cus_files":
+        input_files = """      transcript_tables/
+        transcript_tables.xlsx"""
+        outputs = """        cu_coding/
+          cu_coding.xlsx
+          cu_reliability_coding.xlsx
+          cu_blind_codebook.xlsx"""
+    elif command == "cus_evaluate":
+        input_files = """      cu_coding/
+        cu_coding.xlsx
+        cu_reliability_coding.xlsx"""
+        outputs = """        cu_reliability/
+          cu_reliability_coding_by_utterance.xlsx
+          cu_reliability_coding_by_sample.xlsx
+          cu_reliability_coding_report.txt"""
+    elif command == "cus_reselect":
+        input_files = """      cu_coding/
+        cu_coding.xlsx
+        cu_reliability_coding.xlsx"""
+        outputs = """        reselected_cu_coding_reliability/
+          reselected_cu_reliability_coding.xlsx"""
+    elif command == "cus_analyze":
+        input_files = """      cu_coding/
+        cu_coding.xlsx
+        cu_blind_codebook.xlsx"""
+        outputs = """        cu_coding_analysis/
+          cu_coding_by_utterance.xlsx
+          cu_coding_by_sample_long.xlsx
+          cu_coding_by_sample.xlsx"""
+    elif command == "cus_rates":
+        input_files = """      cu_coding_analysis/
+        cu_coding_by_sample_long.xlsx
+      speaking_times/
+        speaking_times.xlsx"""
+        outputs = """        cu_coding_analysis/
+          cu_coding_rates.xlsx"""
     else:
         input_files = """      chat/
         P1_picnic_pre.cha
@@ -162,7 +200,8 @@ def _project_tree(command: str = "all") -> str:
 
 
 def _example_files_tree() -> str:
-    return """example_files/
+    return (
+        """example_files/
   synthetic_project/
     README.md
     config/
@@ -178,6 +217,14 @@ def _example_files_tree() -> str:
           P2_picnic_pre.cha
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
+      cu_coding/
+        cu_coding.xlsx
+        cu_reliability_coding.xlsx
+        cu_blind_codebook.xlsx
+      cu_coding_analysis/
+        cu_coding_by_sample_long.xlsx
+      speaking_times/
+        speaking_times.xlsx
     expected_outputs/
       transcripts_module/
         transcripts_tabularize/
@@ -201,6 +248,25 @@ def _example_files_tree() -> str:
           sample_template_codebook.xlsx
         templates_times/
           speaking_times.xlsx"""
+        + """
+      cus_module/
+        cus_files/
+          cu_coding.xlsx
+          cu_reliability_coding.xlsx
+          cu_blind_codebook.xlsx
+        cus_evaluate/
+          cu_reliability_coding_by_utterance.xlsx
+          cu_reliability_coding_by_sample.xlsx
+          cu_reliability_coding_report.txt
+        cus_reselect/
+          reselected_cu_reliability_coding.xlsx
+        cus_analyze/
+          cu_coding_by_utterance.xlsx
+          cu_coding_by_sample_long.xlsx
+          cu_coding_by_sample.xlsx
+        cus_rates/
+          cu_coding_rates.xlsx"""
+    )
 
 
 def _overview_doc() -> str:
@@ -619,6 +685,241 @@ The `speaking_time` column is intentionally blank. It is a template for project-
 """
 
 
+def _cu_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return _project_config_snippet(
+        specs,
+        [
+            "input_dir",
+            "output_dir",
+            "reliability_fraction",
+            "num_coders",
+            "stimulus_field",
+            "exclude_participants",
+        ],
+    )
+
+
+def _cu_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return _preview_yaml(
+        specs["advanced_config"],
+        ["cu_paradigms", "metadata_source", "coding_blind_cols", "id_cols"],
+    )
+
+
+def _cu_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["files"]
+
+    return f"""# CU Coding File Example
+
+This example demonstrates how `diaad cus files` creates complete-utterance coding and reliability workbooks from transcript tables.
+
+## Command
+
+{_fenced("diaad cus files --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("cus_files"))}
+
+## Basic Config
+
+{_fenced(_cu_config_snippet(specs), "yaml")}
+
+## Advanced Config
+
+{_fenced(_cu_advanced_snippet(specs), "yaml")}
+
+## Input Snippet
+
+The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
+
+## Output Preview
+
+`expected_outputs/cus_module/cus_files/cu_coding.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_coding.xlsx"))}
+
+`expected_outputs/cus_module/cus_files/cu_reliability_coding.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_reliability_coding.xlsx"))}
+
+`expected_outputs/cus_module/cus_files/cu_blind_codebook.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_blind_codebook.xlsx"))}
+
+## Notes
+
+The generated local example fills the blank CU fields with synthetic coding values so downstream CU examples can be demonstrated. Real `cus files` output starts as coding material for human review.
+"""
+
+
+def _cu_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    del specs
+    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["evaluate"]
+    report = output_dir / "cu_reliability_coding_report.txt"
+    report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:10])
+
+    return f"""# CU Reliability Evaluation Example
+
+This example demonstrates how `diaad cus evaluate` compares primary CU coding with a synthetic reliability workbook.
+
+## Command
+
+{_fenced("diaad cus evaluate --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("cus_evaluate"))}
+
+## Basic Config
+
+{_fenced("input_dir: diaad_data/input\noutput_dir: diaad_data/output", "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/cu_coding/cu_coding.xlsx` and `diaad_data/input/cu_coding/cu_reliability_coding.xlsx`.
+
+## Output Preview
+
+`expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_by_utterance.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_utterance.xlsx"))}
+
+`expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_by_sample.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_sample.xlsx"))}
+
+`expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_report.txt`
+
+{_fenced(report_excerpt, "text")}
+
+## Notes
+
+The reliability coding values are synthetic and intentionally small. They are meant to show file shape and summary fields, not benchmark agreement.
+"""
+
+
+def _cu_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["reselect"]
+
+    return f"""# CU Reliability Reselection Example
+
+This example demonstrates how `diaad cus reselect` selects replacement CU reliability rows after an earlier reliability workbook has already been used.
+
+## Command
+
+{_fenced("diaad cus reselect --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("cus_reselect"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields"]), "yaml")}
+
+## Input Snippet
+
+The command reads prior CU coding and reliability workbooks from `diaad_data/input/cu_coding/`.
+
+## Output Preview
+
+`expected_outputs/cus_module/cus_reselect/reselected_cu_reliability_coding.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "reselected_cu_reliability_coding.xlsx"))}
+
+## Notes
+
+The synthetic example has only three samples, so the reselected workbook is intentionally tiny.
+"""
+
+
+def _cu_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["analyze"]
+
+    return f"""# CU Coding Analysis Example
+
+This example demonstrates how `diaad cus analyze` summarizes filled complete-utterance coding by utterance and by sample.
+
+## Command
+
+{_fenced("diaad cus analyze --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("cus_analyze"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_preview_yaml(specs["advanced_config"], ["metadata_source", "coding_blind_cols", "id_cols"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codebook is included so analysis outputs can recover sample identifiers.
+
+## Output Preview
+
+`expected_outputs/cus_module/cus_analyze/cu_coding_by_utterance.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_coding_by_utterance.xlsx"))}
+
+`expected_outputs/cus_module/cus_analyze/cu_coding_by_sample_long.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample_long.xlsx"))}
+
+`expected_outputs/cus_module/cus_analyze/cu_coding_by_sample.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample.xlsx"))}
+
+## Notes
+
+The preview uses synthetic filled coding values generated from the packaged example specs.
+"""
+
+
+def _cu_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["rates"]
+
+    return f"""# CU Rate Calculation Example
+
+This example demonstrates how `diaad cus rates` combines CU sample summaries with speaking times to calculate rates per minute.
+
+## Command
+
+{_fenced("diaad cus rates --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("cus_rates"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_preview_yaml(specs["advanced_config"], ["cu_samples_file", "speaking_time_file", "speaking_time_field"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/cu_coding_analysis/cu_coding_by_sample_long.xlsx` and `diaad_data/input/speaking_times/speaking_times.xlsx`.
+
+## Output Preview
+
+`expected_outputs/cus_module/cus_rates/cu_coding_rates.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_coding_rates.xlsx"))}
+
+## Notes
+
+Speaking times are synthetic seconds added to the generated speaking-time template for this example.
+"""
+
+
 def render_example_docs() -> list[Path]:
     """Create or update packaged example I/O markdown assets."""
     specs = _read_specs()
@@ -631,6 +932,11 @@ def render_example_docs() -> list[Path]:
         utterance_templates_doc = _utterance_templates_doc(project_dir, specs)
         sample_templates_doc = _sample_templates_doc(project_dir, specs)
         time_templates_doc = _time_templates_doc(project_dir, specs)
+        cu_files_doc = _cu_files_doc(project_dir, specs)
+        cu_evaluate_doc = _cu_evaluate_doc(project_dir, specs)
+        cu_reselect_doc = _cu_reselect_doc(project_dir, specs)
+        cu_analyze_doc = _cu_analyze_doc(project_dir, specs)
+        cu_rates_doc = _cu_rates_doc(project_dir, specs)
 
     return [
         _write_doc("01_overview.md", text=_overview_doc()),
@@ -641,4 +947,9 @@ def render_example_docs() -> list[Path]:
         _write_doc("templates", "utterances.md", text=utterance_templates_doc),
         _write_doc("templates", "samples.md", text=sample_templates_doc),
         _write_doc("templates", "times.md", text=time_templates_doc),
+        _write_doc("cus", "files.md", text=cu_files_doc),
+        _write_doc("cus", "evaluate.md", text=cu_evaluate_doc),
+        _write_doc("cus", "reselect.md", text=cu_reselect_doc),
+        _write_doc("cus", "analyze.md", text=cu_analyze_doc),
+        _write_doc("cus", "rates.md", text=cu_rates_doc),
     ]

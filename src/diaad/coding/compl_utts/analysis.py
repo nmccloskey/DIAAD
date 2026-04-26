@@ -107,7 +107,7 @@ def _detect_coder_paradigm_pairs(columns, cu_paradigms=None):
                 }
             )
 
-    if cu_paradigms is not None:
+    if cu_paradigms:
         allowed = set(cu_paradigms)
         pairs = [p for p in pairs if p["paradigm"] in allowed]
 

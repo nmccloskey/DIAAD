@@ -81,6 +81,41 @@ def test_generate_synthetic_project(tmp_path):
         / "templates_times"
         / "speaking_times.xlsx"
     )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "cus_module"
+        / "cus_files"
+        / "cu_coding.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "cus_module"
+        / "cus_evaluate"
+        / "cu_reliability_coding_by_sample.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "cus_module"
+        / "cus_reselect"
+        / "reselected_cu_reliability_coding.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "cus_module"
+        / "cus_analyze"
+        / "cu_coding_by_sample_long.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "cus_module"
+        / "cus_rates"
+        / "cu_coding_rates.xlsx"
+    )
 
 
 def test_render_example_docs():
@@ -94,6 +129,10 @@ def test_render_example_docs():
     assert any(path.name == "utterances.md" for path in paths)
     assert any(path.name == "samples.md" for path in paths)
     assert any(path.name == "times.md" for path in paths)
+    assert any(path.name == "files.md" and path.parent.name == "cus" for path in paths)
+    assert any(path.name == "analyze.md" and path.parent.name == "cus" for path in paths)
+    assert any(path.name == "rates.md" and path.parent.name == "cus" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
     assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
+    assert (get_example_io_docs_path() / "cus" / "files.md").exists()
     assert any(path.name == "tabularize.md" for path in iter_example_io_markdown_files())

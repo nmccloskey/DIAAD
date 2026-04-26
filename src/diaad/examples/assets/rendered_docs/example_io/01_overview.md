@@ -31,6 +31,14 @@ example_files/
           P2_picnic_pre.cha
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
+      cu_coding/
+        cu_coding.xlsx
+        cu_reliability_coding.xlsx
+        cu_blind_codebook.xlsx
+      cu_coding_analysis/
+        cu_coding_by_sample_long.xlsx
+      speaking_times/
+        speaking_times.xlsx
     expected_outputs/
       transcripts_module/
         transcripts_tabularize/
@@ -54,4 +62,21 @@ example_files/
           sample_template_codebook.xlsx
         templates_times/
           speaking_times.xlsx
+      cus_module/
+        cus_files/
+          cu_coding.xlsx
+          cu_reliability_coding.xlsx
+          cu_blind_codebook.xlsx
+        cus_evaluate/
+          cu_reliability_coding_by_utterance.xlsx
+          cu_reliability_coding_by_sample.xlsx
+          cu_reliability_coding_report.txt
+        cus_reselect/
+          reselected_cu_reliability_coding.xlsx
+        cus_analyze/
+          cu_coding_by_utterance.xlsx
+          cu_coding_by_sample_long.xlsx
+          cu_coding_by_sample.xlsx
+        cus_rates/
+          cu_coding_rates.xlsx
 ```

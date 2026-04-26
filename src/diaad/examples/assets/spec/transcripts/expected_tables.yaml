@@ -49,3 +49,29 @@ templates_times:
   directory: expected_outputs/templates_module/templates_times
   files:
     - speaking_times.xlsx
+cus_files:
+  directory: expected_outputs/cus_module/cus_files
+  files:
+    - cu_coding.xlsx
+    - cu_reliability_coding.xlsx
+    - cu_blind_codebook.xlsx
+cus_evaluate:
+  directory: expected_outputs/cus_module/cus_evaluate
+  files:
+    - cu_reliability_coding_by_utterance.xlsx
+    - cu_reliability_coding_by_sample.xlsx
+    - cu_reliability_coding_report.txt
+cus_reselect:
+  directory: expected_outputs/cus_module/cus_reselect
+  files:
+    - reselected_cu_reliability_coding.xlsx
+cus_analyze:
+  directory: expected_outputs/cus_module/cus_analyze
+  files:
+    - cu_coding_by_utterance.xlsx
+    - cu_coding_by_sample_long.xlsx
+    - cu_coding_by_sample.xlsx
+cus_rates:
+  directory: expected_outputs/cus_module/cus_rates
+  files:
+    - cu_coding_rates.xlsx

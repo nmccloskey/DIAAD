@@ -8,9 +8,15 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import random
 import yaml
 
+from diaad.coding.compl_utts.analysis import analyze_cu_coding
+from diaad.coding.compl_utts.files import make_cu_coding_files
+from diaad.coding.compl_utts.rates import calculate_cu_rates
+from diaad.coding.compl_utts.rel_evaluation import evaluate_cu_reliability
+from diaad.coding.compl_utts.rel_reselection import reselect_cu_rel
 from diaad.coding.templates.samples import make_sample_template_files
 from diaad.coding.templates.times import make_speaking_time_template_files
 from diaad.coding.templates.utterances import make_utterance_template_files
@@ -32,6 +38,7 @@ SPEC_ROOT = ("assets", "spec")
 EXPECTED_WORKBOOK = "transcript_table.xlsx"
 TRANSCRIPTS_MODULE_DIR = "transcripts_module"
 TEMPLATES_MODULE_DIR = "templates_module"
+CUS_MODULE_DIR = "cus_module"
 SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
@@ -40,6 +47,13 @@ TEMPLATE_OUTPUT_DIRS = {
     "utterances": "templates_utterances",
     "samples": "templates_samples",
     "times": "templates_times",
+}
+CU_OUTPUT_DIRS = {
+    "files": "cus_files",
+    "evaluate": "cus_evaluate",
+    "reselect": "cus_reselect",
+    "analyze": "cus_analyze",
+    "rates": "cus_rates",
 }
 
 
@@ -183,6 +197,7 @@ Key files:
 - `input/chat/reliability/*.cha`: synthetic reliability transcriptions.
 - `expected_outputs/transcripts_module/`: outputs for transcript commands.
 - `expected_outputs/templates_module/`: outputs for template commands.
+- `expected_outputs/cus_module/`: outputs for complete-utterance coding commands.
 """
     _write_text(project_dir / "README.md", text, force=force)
 
@@ -294,6 +309,11 @@ def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
         SELECT_OUTPUT_DIR,
         EVALUATE_OUTPUT_DIR,
         RESELECT_OUTPUT_DIR,
+        "cus_files",
+        "cus_evaluate",
+        "cus_reselect",
+        "cus_analyze",
+        "cus_rates",
     ):
         shutil.rmtree(project_dir / "expected_outputs" / dirname, ignore_errors=True)
 
@@ -523,6 +543,217 @@ def _write_expected_time_templates(
     return expected_dir
 
 
+def _prepare_cu_input(tmpdir: Path, transcript_table: Path) -> Path:
+    input_dir = tmpdir / "input"
+    table_dir = input_dir / "transcript_tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    return input_dir
+
+
+def _cu_blinding_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig:
+    return AdvancedConfig(**specs["advanced_config"])
+
+
+def _fill_cu_workbook(path: Path, *, reliability: bool = False) -> None:
+    df = pd.read_excel(path)
+    sv_col = "sv"
+    rel_col = "rel"
+    if sv_col not in df.columns or rel_col not in df.columns:
+        return
+
+    df[sv_col] = df[sv_col].astype(object)
+    df[rel_col] = df[rel_col].astype(object)
+    if "speaker" in df.columns:
+        codeable = df["speaker"].astype(str).str.upper() != "INV"
+    else:
+        codeable = df[sv_col].astype(str).str.upper() != "NA"
+    df.loc[~codeable, [sv_col, rel_col]] = "NA"
+    codeable_positions = list(df.index[codeable])
+    for position, idx in enumerate(codeable_positions):
+        sv_value = 1 if position % 3 != 1 else 0
+        rel_value = 1 if position % 4 in {0, 1} else 0
+        if reliability and position % 5 == 0:
+            rel_value = 1 - rel_value
+        df.at[idx, sv_col] = sv_value
+        df.at[idx, rel_col] = rel_value
+
+    df.to_excel(path, index=False)
+
+
+def _write_expected_cu_files(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["files"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_cu_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        random.seed(specs["project_config"].get("random_seed", 99))
+        make_cu_coding_files(
+            metadata_fields=metadata_fields,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            num_coders=specs["project_config"].get("num_coders", 0),
+            input_dir=input_dir,
+            output_dir=output_dir,
+            cu_paradigms=specs["advanced_config"].get("cu_paradigms", []),
+            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            stimulus_field=specs["project_config"].get("stimulus_field", ""),
+            blinding_config=_cu_blinding_config(specs),
+        )
+        source = output_dir / "cu_coding"
+        _replace_tree(source, expected_dir, force=force)
+
+    cu_file = expected_dir / "cu_coding.xlsx"
+    rel_file = expected_dir / "cu_reliability_coding.xlsx"
+    _fill_cu_workbook(cu_file)
+    if rel_file.exists():
+        _fill_cu_workbook(rel_file, reliability=True)
+
+    input_cu_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
+    if input_cu_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {input_cu_dir}")
+    _replace_tree(expected_dir, input_cu_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_cu_evaluation(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["evaluate"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
+    with _scratch_dir(project_dir) as tmpdir:
+        evaluate_cu_reliability(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            cu_paradigms=specs["advanced_config"].get("cu_paradigms", []),
+        )
+        _replace_tree(tmpdir / "cu_reliability", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_cu_reselection(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["reselect"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+    with _scratch_dir(project_dir) as tmpdir:
+        reselect_cu_rel(
+            metadata_fields=metadata_fields,
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            random_seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(tmpdir / "reselected_cu_coding_reliability", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_cu_analysis(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["analyze"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
+    with _scratch_dir(project_dir) as tmpdir:
+        analyze_cu_coding(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            cu_paradigms=specs["advanced_config"].get("cu_paradigms") or None,
+            blinding_config=_cu_blinding_config(specs),
+        )
+        _replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
+
+    analysis_input_dir = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "cu_coding_analysis"
+    )
+    if analysis_input_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
+    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_cu_rates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["rates"]
+    )
+    source_time = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["times"]
+        / "speaking_times.xlsx"
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    time_input_dir = input_dir / "speaking_times"
+    time_input_dir.mkdir(parents=True, exist_ok=True)
+    time_input = time_input_dir / "speaking_times.xlsx"
+    if time_input.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {time_input}")
+    shutil.copyfile(source_time, time_input)
+
+    times_df = pd.read_excel(time_input)
+    if "speaking_time" in times_df.columns:
+        times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
+    times_df.to_excel(time_input, index=False)
+
+    with _scratch_dir(project_dir) as tmpdir:
+        calculate_cu_rates(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            cu_samples_file=specs["advanced_config"].get(
+                "cu_samples_file",
+                "cu_coding_by_sample_long.xlsx",
+            ),
+            speaking_time_file=specs["advanced_config"].get(
+                "speaking_time_file",
+                "speaking_times.xlsx",
+            ),
+            speaking_time_field=specs["advanced_config"].get(
+                "speaking_time_field",
+                "speaking_time",
+            ),
+        )
+        _replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
+    return expected_dir
+
+
 def generate_example_files(destination: str | Path, *, force: bool = False) -> Path:
     """
     Materialize the synthetic DIAAD example project.
@@ -551,4 +782,9 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_utterance_templates(project_dir, specs, force=force)
     _write_expected_sample_templates(project_dir, specs, force=force)
     _write_expected_time_templates(project_dir, specs, force=force)
+    _write_expected_cu_files(project_dir, specs, force=force)
+    _write_expected_cu_evaluation(project_dir, specs, force=force)
+    _write_expected_cu_reselection(project_dir, specs, force=force)
+    _write_expected_cu_analysis(project_dir, specs, force=force)
+    _write_expected_cu_rates(project_dir, specs, force=force)
     return project_dir
