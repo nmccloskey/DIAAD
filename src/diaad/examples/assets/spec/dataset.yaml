@@ -1,0 +1,14 @@
+name: DIAAD Synthetic Transcript Example
+description: >
+  A tiny fully synthetic dataset for demonstrating diaad transcripts tabularize.
+synthetic: true
+modules:
+  - transcripts tabularize
+participants:
+  - participant_id: P1
+  - participant_id: P2
+stimuli:
+  - picnic
+timepoints:
+  - pre
+  - post

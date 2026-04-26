@@ -36,6 +36,26 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Path to the configuration directory (default: config)",
     )
 
+    parser.add_argument(
+        "--files",
+        dest="example_files",
+        type=str,
+        default=None,
+        help="For 'diaad examples': directory where runnable example files are written.",
+    )
+
+    parser.add_argument(
+        "--render-docs",
+        action="store_true",
+        help="For 'diaad examples': regenerate packaged example I/O markdown.",
+    )
+
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="For 'diaad examples': overwrite existing generated example files.",
+    )
+
     help_lines = ["\nAvailable Commands:\n"]
     for module, commands in MODULE_COMMANDS.items():
         help_lines.append(f"  {module}:")

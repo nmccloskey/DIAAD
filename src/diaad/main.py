@@ -17,11 +17,52 @@ from psair.core.logger import (
 )
 
 
+def _is_examples_command(args) -> bool:
+    return " ".join(args.command).strip().lower() == "examples"
+
+
+def _has_examples_options(args) -> bool:
+    return bool(
+        getattr(args, "example_files", None)
+        or getattr(args, "render_docs", False)
+        or getattr(args, "force", False)
+    )
+
+
+def _run_examples_command(args) -> None:
+    if not getattr(args, "example_files", None) and not getattr(args, "render_docs", False):
+        raise ValueError(
+            "diaad examples requires --files <directory>, --render-docs, or both."
+        )
+
+    if getattr(args, "example_files", None):
+        from diaad.examples.generate import generate_example_files
+
+        project_dir = generate_example_files(
+            args.example_files,
+            force=getattr(args, "force", False),
+        )
+        print(f"Generated DIAAD example files: {project_dir}")
+
+    if getattr(args, "render_docs", False):
+        from diaad.examples.render_docs import render_example_docs
+
+        paths = render_example_docs()
+        for path in paths:
+            print(f"Rendered DIAAD example doc: {path}")
+
+
 def main(args) -> None:
     """Parse CLI arguments and execute the requested DIAAD commands."""
     ctx = None
 
     try:
+        if _is_examples_command(args):
+            _run_examples_command(args)
+            return
+        if _has_examples_options(args):
+            raise ValueError("--files, --render-docs, and --force are only valid with 'diaad examples'.")
+
         start_time = datetime.now()
         project_root = Path.cwd().resolve()
         set_root(project_root)

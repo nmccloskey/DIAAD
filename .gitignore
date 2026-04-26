@@ -25,6 +25,8 @@ diaad_data/input/
 # Temporary files
 *.xlsx
 *.cha
+tmp*/
+.diaad_examples_tmp_*/
 
 google_creds.json
 
@@ -44,6 +46,7 @@ advanced.yaml
 .cache/
 .mypy_cache/
 .pytest_cache/
+pytest-cache-files-*/
 .tox/
 .coverage
 htmlcov/
@@ -54,3 +57,6 @@ htmlcov/
 *.swp
 .devcontainer/
 .devcontainer.json
+
+# Example files
+example_files/

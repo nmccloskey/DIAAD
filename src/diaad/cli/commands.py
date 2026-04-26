@@ -6,6 +6,10 @@ from __future__ import annotations
 
 MODULE_COMMANDS = {
 
+    "examples": [
+        "examples",
+    ],
+
     "transcripts": [
         "transcripts select",
         "transcripts evaluate",

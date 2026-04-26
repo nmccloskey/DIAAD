@@ -43,7 +43,7 @@ def read_cha_files(input_dir, shuffle=False):
 
     for cha in tqdm(cha_files, desc="Reading .cha files..."):
         try:
-            chat_data = pylangacq.read_chat(str(cha))
+            chat_data = pylangacq.Reader.from_files([str(cha)], parallel=False)
             chats[truncate_path_to_input_dir(cha, input_dir)] = chat_data
         except Exception as e:
             logger.error(f"Failed to read {get_rel_path(cha)}: {e}")

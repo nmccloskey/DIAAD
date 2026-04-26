@@ -22,9 +22,17 @@ def test_read_cha_files_uses_input_relative_keys(monkeypatch, tmp_path):
     file_path.parent.mkdir(parents=True)
     file_path.write_text("", encoding="utf-8")
 
-    monkeypatch.setattr(cha_files.pylangacq, "read_chat", lambda path: {"path": path})
+    def fake_from_files(paths, *, parallel=True):
+        return {"path": paths[0], "parallel": parallel}
+
+    monkeypatch.setattr(
+        cha_files.pylangacq.Reader,
+        "from_files",
+        staticmethod(fake_from_files),
+    )
     monkeypatch.setattr(cha_files, "tqdm", lambda items, **kwargs: items)
 
     chats = cha_files.read_cha_files(input_dir)
 
     assert chats["input/sample.cha"]["path"] == str(file_path)
+    assert chats["input/sample.cha"]["parallel"] is False

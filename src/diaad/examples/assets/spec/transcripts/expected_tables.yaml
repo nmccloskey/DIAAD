@@ -1,0 +1,19 @@
+transcripts_tabularize:
+  workbook: expected_outputs/transcripts_tabularize/transcript_table.xlsx
+  sheets:
+    - samples
+    - utterances
+  expected_samples:
+    - file: P1_picnic_post
+      participant_id: P1
+      stimulus: picnic
+      timepoint: post
+    - file: P1_picnic_pre
+      participant_id: P1
+      stimulus: picnic
+      timepoint: pre
+    - file: P2_picnic_pre
+      participant_id: P2
+      stimulus: picnic
+      timepoint: pre
+  expected_utterance_count: 21
