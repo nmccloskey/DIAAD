@@ -11,6 +11,10 @@ import numpy as np
 import random
 import yaml
 
+from diaad.coding.templates.samples import make_sample_template_files
+from diaad.coding.templates.times import make_speaking_time_template_files
+from diaad.coding.templates.utterances import make_utterance_template_files
+from diaad.core.config import AdvancedConfig
 from diaad.transcripts.cha_files import read_cha_files
 from diaad.transcripts.transcript_tables import tabularize_transcripts
 from diaad.transcripts.transcription_reliability_evaluation import (
@@ -26,9 +30,17 @@ from psair.metadata.metadata_fields import MetadataManager
 SPEC_PACKAGE = "diaad.examples"
 SPEC_ROOT = ("assets", "spec")
 EXPECTED_WORKBOOK = "transcript_table.xlsx"
+TRANSCRIPTS_MODULE_DIR = "transcripts_module"
+TEMPLATES_MODULE_DIR = "templates_module"
 SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
+TABULARIZE_OUTPUT_DIR = "transcripts_tabularize"
+TEMPLATE_OUTPUT_DIRS = {
+    "utterances": "templates_utterances",
+    "samples": "templates_samples",
+    "times": "templates_times",
+}
 
 
 @contextmanager
@@ -169,11 +181,8 @@ Key files:
 - `config/advanced.yaml`: advanced DIAAD settings for this example.
 - `input/chat/*.cha`: synthetic CHAT inputs.
 - `input/chat/reliability/*.cha`: synthetic reliability transcriptions.
-- `expected_outputs/transcripts_tabularize/transcript_table.xlsx`: workbook
-  generated from the synthetic CHAT files.
-- `expected_outputs/transcripts_select/`: reliability selection outputs.
-- `expected_outputs/transcripts_evaluate/`: reliability evaluation outputs.
-- `expected_outputs/transcripts_reselect/`: reliability reselection outputs.
+- `expected_outputs/transcripts_module/`: outputs for transcript commands.
+- `expected_outputs/templates_module/`: outputs for template commands.
 """
     _write_text(project_dir / "README.md", text, force=force)
 
@@ -211,7 +220,12 @@ def _metadata_fields(project_dir: Path, project_config: dict[str, Any]) -> dict[
 
 
 def _write_expected_transcript_table(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> Path:
-    expected_dir = project_dir / "expected_outputs" / "transcripts_tabularize"
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+    )
     target = expected_dir / EXPECTED_WORKBOOK
     if target.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing file: {target}")
@@ -241,17 +255,56 @@ def _write_expected_transcript_table(project_dir: Path, specs: dict[str, dict[st
 
 
 def _replace_tree(source: Path, target: Path, *, force: bool) -> None:
+    source = Path(source)
+    target = Path(target)
+
     if target.exists():
         if not force:
             raise FileExistsError(f"Refusing to overwrite existing directory: {target}")
-        shutil.copytree(source, target, dirs_exist_ok=True)
+        _copy_tree_contents(source, target)
         return
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(source, target)
+    _copy_tree_contents(source, target)
+
+
+def _long_path(path: Path) -> Path:
+    path = Path(path)
+    if not path.is_absolute():
+        path = path.resolve()
+    if not (path.drive and not str(path).startswith("\\\\?\\")):
+        return path
+    return Path(f"\\\\?\\{path}")
+
+
+def _copy_tree_contents(source: Path, target: Path) -> None:
+    for file_path in source.rglob("*"):
+        if not file_path.is_file():
+            continue
+        relative = file_path.relative_to(source)
+        target_path = target / relative
+        _long_path(target_path.parent).mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(_long_path(file_path), _long_path(target_path))
+
+
+def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
+    if not force:
+        return
+
+    for dirname in (
+        TABULARIZE_OUTPUT_DIR,
+        SELECT_OUTPUT_DIR,
+        EVALUATE_OUTPUT_DIR,
+        RESELECT_OUTPUT_DIR,
+    ):
+        shutil.rmtree(project_dir / "expected_outputs" / dirname, ignore_errors=True)
 
 
 def _write_expected_selection(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> Path:
-    expected_dir = project_dir / "expected_outputs" / SELECT_OUTPUT_DIR
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / SELECT_OUTPUT_DIR
+    )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input")
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
     chats = {
@@ -292,7 +345,12 @@ def _write_expected_selection(project_dir: Path, specs: dict[str, dict[str, Any]
 
 
 def _write_expected_evaluation(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> Path:
-    expected_dir = project_dir / "expected_outputs" / EVALUATE_OUTPUT_DIR
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / EVALUATE_OUTPUT_DIR
+    )
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
 
     with _scratch_dir(project_dir) as tmpdir:
@@ -317,7 +375,12 @@ def _write_expected_evaluation(project_dir: Path, specs: dict[str, dict[str, Any
 
 
 def _write_expected_reselection(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> Path:
-    expected_dir = project_dir / "expected_outputs" / RESELECT_OUTPUT_DIR
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / RESELECT_OUTPUT_DIR
+    )
 
     np.random.seed(specs["project_config"].get("random_seed", 99))
     with _scratch_dir(project_dir) as tmpdir:
@@ -332,6 +395,130 @@ def _write_expected_reselection(project_dir: Path, specs: dict[str, dict[str, An
         )
         source = tmpdir / "reselected_transcription_reliability"
         _replace_tree(source, expected_dir / "reselected_transcription_reliability", force=force)
+
+    return expected_dir
+
+
+def _prepare_template_input(tmpdir: Path, transcript_table: Path) -> Path:
+    input_dir = tmpdir / "input"
+    table_dir = input_dir / "transcript_tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    return input_dir
+
+
+def _template_blinding_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig:
+    return AdvancedConfig(**specs["advanced_config"])
+
+
+def _write_expected_utterance_templates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["utterances"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        random.seed(specs["project_config"].get("random_seed", 99))
+        make_utterance_template_files(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            num_coders=specs["project_config"].get("num_coders", 0),
+            stimulus_field=specs["project_config"].get("stimulus_field", ""),
+            blinding_config=_template_blinding_config(specs),
+            seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_sample_templates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["samples"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        random.seed(specs["project_config"].get("random_seed", 99))
+        make_sample_template_files(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            num_bins=specs["project_config"].get("num_bins", 2),
+            num_coders=specs["project_config"].get("num_coders", 0),
+            stimulus_field=specs["project_config"].get("stimulus_field", ""),
+            blinding_config=_template_blinding_config(specs),
+            seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_time_templates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["times"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        make_speaking_time_template_files(
+            input_dir=input_dir,
+            output_dir=output_dir,
+        )
+        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
     return expected_dir
 
@@ -356,8 +543,12 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     specs = _read_specs()
     project_dir.mkdir(parents=True, exist_ok=True)
     _materialize_inputs(project_dir, specs, force=force)
+    _cleanup_obsolete_expected_dirs(project_dir, force=force)
     _write_expected_transcript_table(project_dir, specs, force=force)
     _write_expected_selection(project_dir, specs, force=force)
     _write_expected_evaluation(project_dir, specs, force=force)
     _write_expected_reselection(project_dir, specs, force=force)
+    _write_expected_utterance_templates(project_dir, specs, force=force)
+    _write_expected_sample_templates(project_dir, specs, force=force)
+    _write_expected_time_templates(project_dir, specs, force=force)
     return project_dir

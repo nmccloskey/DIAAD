@@ -1,5 +1,5 @@
 transcripts_tabularize:
-  workbook: expected_outputs/transcripts_tabularize/transcript_table.xlsx
+  workbook: expected_outputs/transcripts_module/transcripts_tabularize/transcript_table.xlsx
   sheets:
     - samples
     - utterances
@@ -18,18 +18,34 @@ transcripts_tabularize:
       timepoint: pre
   expected_utterance_count: 21
 transcripts_select:
-  workbook: expected_outputs/transcripts_select/transcription_reliability_samples.xlsx
+  workbook: expected_outputs/transcripts_module/transcripts_select/transcription_reliability_samples.xlsx
   sheets:
     - reliability_selection
     - all_transcripts
   expected_selected_count: 2
 transcripts_evaluate:
-  workbook: expected_outputs/transcripts_evaluate/transcription_reliability_evaluation.xlsx
-  report: expected_outputs/transcripts_evaluate/transcription_reliability_report.txt
-  alignment_dir: expected_outputs/transcripts_evaluate/global_alignments
+  workbook: expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_evaluation.xlsx
+  report: expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_report.txt
+  alignment_dir: expected_outputs/transcripts_module/transcripts_evaluate/global_alignments
   expected_pair_count: 2
 transcripts_reselect:
-  workbook: expected_outputs/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx
+  workbook: expected_outputs/transcripts_module/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx
   sheets:
     - reselected_reliability
   expected_selected_count: 1
+templates_utterances:
+  directory: expected_outputs/templates_module/templates_utterances
+  files:
+    - utterance_coding_template.xlsx
+    - utterance_reliability_template.xlsx
+    - utterance_template_codebook.xlsx
+templates_samples:
+  directory: expected_outputs/templates_module/templates_samples
+  files:
+    - sample_coding_template.xlsx
+    - sample_reliability_template.xlsx
+    - sample_template_codebook.xlsx
+templates_times:
+  directory: expected_outputs/templates_module/templates_times
+  files:
+    - speaking_times.xlsx

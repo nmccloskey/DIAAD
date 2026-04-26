@@ -28,9 +28,10 @@ example_files/
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
     expected_outputs/
-      transcripts_reselect/
-        reselected_transcription_reliability/
-          reselected_transcription_reliability_samples.xlsx
+      transcripts_module/
+        transcripts_reselect/
+          reselected_transcription_reliability/
+            reselected_transcription_reliability_samples.xlsx
 ```
 
 ## Basic Config
@@ -49,7 +50,7 @@ The reselection command reads the prior selection workbook:
 
 ## Output Preview
 
-`expected_outputs/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
+`expected_outputs/transcripts_module/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
 
 ### Sheet: reselected_reliability
 

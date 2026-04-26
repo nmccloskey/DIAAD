@@ -7,7 +7,14 @@ from typing import Any
 import pandas as pd
 import yaml
 
-from diaad.examples.generate import EXPECTED_WORKBOOK, _scratch_dir, generate_example_files
+from diaad.examples.generate import (
+    EXPECTED_WORKBOOK,
+    TEMPLATE_OUTPUT_DIRS,
+    TEMPLATES_MODULE_DIR,
+    TRANSCRIPTS_MODULE_DIR,
+    _scratch_dir,
+    generate_example_files,
+)
 
 
 DOC_PACKAGE = "diaad.examples"
@@ -60,33 +67,61 @@ def _markdown_table(df: pd.DataFrame, *, max_rows: int = 8) -> str:
 
 def _tree(command: str = "all") -> str:
     if command == "tabularize":
-        expected = """      transcripts_tabularize/
-        transcript_table.xlsx"""
+        expected = """      transcripts_module/
+        transcripts_tabularize/
+          transcript_table.xlsx"""
     elif command == "select":
-        expected = """      transcripts_select/
-        P1_picnic_pre_reliability.cha
-        P2_picnic_pre_reliability.cha
-        transcription_reliability_samples.xlsx"""
+        expected = """      transcripts_module/
+        transcripts_select/
+          P1_picnic_pre_reliability.cha
+          P2_picnic_pre_reliability.cha
+          transcription_reliability_samples.xlsx"""
     elif command == "evaluate":
-        expected = """      transcripts_evaluate/
-        transcription_reliability_evaluation.xlsx
-        transcription_reliability_report.txt
-        global_alignments/"""
+        expected = """      transcripts_module/
+        transcripts_evaluate/
+          transcription_reliability_evaluation.xlsx
+          transcription_reliability_report.txt
+          global_alignments/"""
     elif command == "reselect":
-        expected = """      transcripts_reselect/
-        reselected_transcription_reliability/
-          reselected_transcription_reliability_samples.xlsx"""
+        expected = """      transcripts_module/
+        transcripts_reselect/
+          reselected_transcription_reliability/
+            reselected_transcription_reliability_samples.xlsx"""
+    elif command == "templates_utterances":
+        expected = """      templates_module/
+        templates_utterances/
+          utterance_coding_template.xlsx
+          utterance_reliability_template.xlsx
+          utterance_template_codebook.xlsx"""
+    elif command == "templates_samples":
+        expected = """      templates_module/
+        templates_samples/
+          sample_coding_template.xlsx
+          sample_reliability_template.xlsx
+          sample_template_codebook.xlsx"""
+    elif command == "templates_times":
+        expected = """      templates_module/
+        templates_times/
+          speaking_times.xlsx"""
     else:
-        expected = """      transcripts_tabularize/
-        transcript_table.xlsx
-      transcripts_select/
-        transcription_reliability_samples.xlsx
-      transcripts_evaluate/
-        transcription_reliability_evaluation.xlsx
-        transcription_reliability_report.txt
-      transcripts_reselect/
-        reselected_transcription_reliability/
-          reselected_transcription_reliability_samples.xlsx"""
+        expected = """      transcripts_module/
+        transcripts_tabularize/
+          transcript_table.xlsx
+        transcripts_select/
+          transcription_reliability_samples.xlsx
+        transcripts_evaluate/
+          transcription_reliability_evaluation.xlsx
+          transcription_reliability_report.txt
+        transcripts_reselect/
+          reselected_transcription_reliability/
+            reselected_transcription_reliability_samples.xlsx
+      templates_module/
+        templates_utterances/
+          utterance_coding_template.xlsx
+        templates_samples/
+          sample_coding_template.xlsx
+        templates_times/
+          speaking_times.xlsx"""
 
     return """example_files/
   synthetic_project/
@@ -142,9 +177,20 @@ def _workbook_sheet_tables(path: Path, sheet_names: list[str]) -> str:
     return "\n\n".join(sections)
 
 
+def _all_workbook_sheet_tables(path: Path) -> str:
+    with pd.ExcelFile(path, engine="openpyxl") as xls:
+        return _workbook_sheet_tables(path, xls.sheet_names)
+
+
 def _tabularize_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     chat = specs["chat_files"]["chat_files"][0]
-    workbook = project_dir / "expected_outputs" / "transcripts_tabularize" / EXPECTED_WORKBOOK
+    workbook = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / "transcripts_tabularize"
+        / EXPECTED_WORKBOOK
+    )
 
     project_snippet = _preview_yaml(
         specs["project_config"],
@@ -184,7 +230,7 @@ This example demonstrates how `diaad transcripts tabularize` converts tiny synth
 
 ## Output Preview
 
-`expected_outputs/transcripts_tabularize/transcript_table.xlsx`
+`expected_outputs/transcripts_module/transcripts_tabularize/transcript_table.xlsx`
 
 {_workbook_sheet_tables(workbook, ["samples", "utterances"])}
 
@@ -198,6 +244,7 @@ def _select_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     workbook = (
         project_dir
         / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
         / "transcripts_select"
         / "transcription_reliability_samples.xlsx"
     )
@@ -231,7 +278,7 @@ The command uses the synthetic CHAT files in `input/chat/`.
 
 ## Output Preview
 
-`expected_outputs/transcripts_select/transcription_reliability_samples.xlsx`
+`expected_outputs/transcripts_module/transcripts_select/transcription_reliability_samples.xlsx`
 
 {_workbook_sheet_tables(workbook, ["reliability_selection", "all_transcripts"])}
 
@@ -245,12 +292,14 @@ def _evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     workbook = (
         project_dir
         / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
         / "transcripts_evaluate"
         / "transcription_reliability_evaluation.xlsx"
     )
     report = (
         project_dir
         / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
         / "transcripts_evaluate"
         / "transcription_reliability_report.txt"
     )
@@ -284,11 +333,11 @@ This example demonstrates how `diaad transcripts evaluate` compares original CHA
 
 ## Output Preview
 
-`expected_outputs/transcripts_evaluate/transcription_reliability_evaluation.xlsx`
+`expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_evaluation.xlsx`
 
 {_markdown_table(pd.read_excel(workbook))}
 
-`expected_outputs/transcripts_evaluate/transcription_reliability_report.txt`
+`expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_report.txt`
 
 {_fenced(report_excerpt, "text")}
 
@@ -302,6 +351,7 @@ def _reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     workbook = (
         project_dir
         / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
         / "transcripts_reselect"
         / "reselected_transcription_reliability"
         / "reselected_transcription_reliability_samples.xlsx"
@@ -331,13 +381,162 @@ The reselection command reads the prior selection workbook:
 
 ## Output Preview
 
-`expected_outputs/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
+`expected_outputs/transcripts_module/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
 
 {_workbook_sheet_tables(workbook, ["reselected_reliability"])}
 
 ## Notes
 
 The synthetic project has three samples. Because two are already selected in the first reliability pass, only one unused candidate remains for reselection.
+"""
+
+
+def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return _preview_yaml(
+        specs["project_config"],
+        [
+            "input_dir",
+            "output_dir",
+            "reliability_fraction",
+            "num_bins",
+            "num_coders",
+            "stimulus_field",
+        ],
+    )
+
+
+def _utterance_templates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    template_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["utterances"]
+    )
+    primary = template_dir / "utterance_coding_template.xlsx"
+    reliability = template_dir / "utterance_reliability_template.xlsx"
+    codebook = template_dir / "utterance_template_codebook.xlsx"
+
+    return f"""# Utterance Template Example
+
+This example demonstrates how `diaad templates utterances` creates blank utterance-level coding workbooks from transcript tables.
+
+## Command
+
+{_fenced("diaad templates utterances --config config", "bash")}
+
+## Project Files
+
+{_fenced(_tree("templates_utterances"))}
+
+## Basic Config
+
+{_fenced(_template_config_snippet(specs), "yaml")}
+
+## Input Snippet
+
+The command uses transcript tables created from the synthetic CHAT files. The preview below is from the generated utterance coding template.
+
+## Output Preview
+
+`expected_outputs/templates_module/templates_utterances/utterance_coding_template.xlsx`
+
+{_all_workbook_sheet_tables(primary)}
+
+`expected_outputs/templates_module/templates_utterances/utterance_reliability_template.xlsx`
+
+{_all_workbook_sheet_tables(reliability)}
+
+`expected_outputs/templates_module/templates_utterances/utterance_template_codebook.xlsx`
+
+{_all_workbook_sheet_tables(codebook)}
+
+## Notes
+
+The primary and reliability workbooks are synthetic blank coding materials. The codebook maps blinded sample identifiers back to internal sample IDs.
+"""
+
+
+def _sample_templates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    template_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["samples"]
+    )
+    primary = template_dir / "sample_coding_template.xlsx"
+    reliability = template_dir / "sample_reliability_template.xlsx"
+    codebook = template_dir / "sample_template_codebook.xlsx"
+
+    return f"""# Sample Template Example
+
+This example demonstrates how `diaad templates samples` creates blank sample-level coding workbooks with bins, coder assignment, and reliability rows.
+
+## Command
+
+{_fenced("diaad templates samples --config config", "bash")}
+
+## Project Files
+
+{_fenced(_tree("templates_samples"))}
+
+## Basic Config
+
+{_fenced(_template_config_snippet(specs), "yaml")}
+
+## Output Preview
+
+`expected_outputs/templates_module/templates_samples/sample_coding_template.xlsx`
+
+{_all_workbook_sheet_tables(primary)}
+
+`expected_outputs/templates_module/templates_samples/sample_reliability_template.xlsx`
+
+{_all_workbook_sheet_tables(reliability)}
+
+`expected_outputs/templates_module/templates_samples/sample_template_codebook.xlsx`
+
+{_all_workbook_sheet_tables(codebook)}
+
+## Notes
+
+The example uses two bins and two coders so the assignment and reliability-subset behavior is visible in a tiny workbook.
+"""
+
+
+def _time_templates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    workbook = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["times"]
+        / "speaking_times.xlsx"
+    )
+
+    return f"""# Speaking-Time Template Example
+
+This example demonstrates how `diaad templates times` creates a blank sample-level speaking-time workbook.
+
+## Command
+
+{_fenced("diaad templates times --config config", "bash")}
+
+## Project Files
+
+{_fenced(_tree("templates_times"))}
+
+## Basic Config
+
+{_fenced(_preview_yaml(specs["project_config"], ["input_dir", "output_dir"]), "yaml")}
+
+## Output Preview
+
+`expected_outputs/templates_module/templates_times/speaking_times.xlsx`
+
+{_all_workbook_sheet_tables(workbook)}
+
+## Notes
+
+The `speaking_time` column is intentionally blank. It is a template for project-specific duration values used later by rate calculations.
 """
 
 
@@ -350,6 +549,9 @@ def render_example_docs() -> list[Path]:
         select_doc = _select_doc(project_dir, specs)
         evaluate_doc = _evaluate_doc(project_dir, specs)
         reselect_doc = _reselect_doc(project_dir, specs)
+        utterance_templates_doc = _utterance_templates_doc(project_dir, specs)
+        sample_templates_doc = _sample_templates_doc(project_dir, specs)
+        time_templates_doc = _time_templates_doc(project_dir, specs)
 
     return [
         _write_doc("01_overview.md", text=_overview_doc()),
@@ -357,4 +559,7 @@ def render_example_docs() -> list[Path]:
         _write_doc("transcripts", "select.md", text=select_doc),
         _write_doc("transcripts", "evaluate.md", text=evaluate_doc),
         _write_doc("transcripts", "reselect.md", text=reselect_doc),
+        _write_doc("templates", "utterances.md", text=utterance_templates_doc),
+        _write_doc("templates", "samples.md", text=sample_templates_doc),
+        _write_doc("templates", "times.md", text=time_templates_doc),
     ]

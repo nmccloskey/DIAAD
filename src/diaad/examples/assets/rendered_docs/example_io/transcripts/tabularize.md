@@ -28,8 +28,9 @@ example_files/
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
     expected_outputs/
-      transcripts_tabularize/
-        transcript_table.xlsx
+      transcripts_module/
+        transcripts_tabularize/
+          transcript_table.xlsx
 ```
 
 ## Basic Config
@@ -80,7 +81,7 @@ id_cols:
 
 ## Output Preview
 
-`expected_outputs/transcripts_tabularize/transcript_table.xlsx`
+`expected_outputs/transcripts_module/transcripts_tabularize/transcript_table.xlsx`
 
 ### Sheet: samples
 

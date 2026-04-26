@@ -28,10 +28,11 @@ example_files/
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
     expected_outputs/
-      transcripts_select/
-        P1_picnic_pre_reliability.cha
-        P2_picnic_pre_reliability.cha
-        transcription_reliability_samples.xlsx
+      transcripts_module/
+        transcripts_select/
+          P1_picnic_pre_reliability.cha
+          P2_picnic_pre_reliability.cha
+          transcription_reliability_samples.xlsx
 ```
 
 ## Basic Config
@@ -70,7 +71,7 @@ The command uses the synthetic CHAT files in `input/chat/`.
 
 ## Output Preview
 
-`expected_outputs/transcripts_select/transcription_reliability_samples.xlsx`
+`expected_outputs/transcripts_module/transcripts_select/transcription_reliability_samples.xlsx`
 
 ### Sheet: reliability_selection
 

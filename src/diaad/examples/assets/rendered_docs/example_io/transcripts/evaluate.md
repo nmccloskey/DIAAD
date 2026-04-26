@@ -28,10 +28,11 @@ example_files/
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
     expected_outputs/
-      transcripts_evaluate/
-        transcription_reliability_evaluation.xlsx
-        transcription_reliability_report.txt
-        global_alignments/
+      transcripts_module/
+        transcripts_evaluate/
+          transcription_reliability_evaluation.xlsx
+          transcription_reliability_report.txt
+          global_alignments/
 ```
 
 ## Advanced Config
@@ -62,14 +63,14 @@ reliability_dirname: reliability
 
 ## Output Preview
 
-`expected_outputs/transcripts_evaluate/transcription_reliability_evaluation.xlsx`
+`expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_evaluation.xlsx`
 
 | participant_id | stimulus | timepoint | original_file | reliability_file | org_num_tokens | rel_num_tokens | perc_diff_num_tokens | org_num_chars | rel_num_chars | perc_diff_num_chars | levenshtein_distance | levenshtein_similarity | needleman_wunsch_score | needleman_wunsch_norm |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | P1 | picnic | pre | P1_picnic_pre.cha | P1_picnic_pre_reliability.cha | 24 | 23 | 4.25531914893617 | 136 | 136 | 0.0 | 9 | 0.9338235294117647 | 125 | 0.9191176470588235 |
 | P2 | picnic | pre | P2_picnic_pre.cha | P2_picnic_pre_reliability.cha | 22 | 22 | 0.0 | 111 | 114 | 2.666666666666667 | 6 | 0.9473684210526316 | 105 | 0.9210526315789473 |
 
-`expected_outputs/transcripts_evaluate/transcription_reliability_report.txt`
+`expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_report.txt`
 
 ```text
 Transcription Reliability Report

@@ -3,8 +3,12 @@ from __future__ import annotations
 import pandas as pd
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
-from diaad.examples.generate import generate_example_files
+from diaad.examples.generate import _long_path, generate_example_files
 from diaad.examples.render_docs import render_example_docs
+
+
+def _exists(path):
+    return _long_path(path).exists()
 
 
 def test_generate_synthetic_project(tmp_path):
@@ -25,33 +29,58 @@ def test_generate_synthetic_project(tmp_path):
     workbook = (
         project_dir
         / "expected_outputs"
+        / "transcripts_module"
         / "transcripts_tabularize"
         / "transcript_table.xlsx"
     )
-    assert workbook.exists()
+    assert _exists(workbook)
 
-    with pd.ExcelFile(workbook, engine="openpyxl") as xls:
+    with pd.ExcelFile(_long_path(workbook), engine="openpyxl") as xls:
         assert {"samples", "utterances"} <= set(xls.sheet_names)
 
-    assert (
+    assert _exists(
         project_dir
         / "expected_outputs"
+        / "transcripts_module"
         / "transcripts_select"
         / "transcription_reliability_samples.xlsx"
-    ).exists()
-    assert (
+    )
+    assert _exists(
         project_dir
         / "expected_outputs"
+        / "transcripts_module"
         / "transcripts_evaluate"
         / "transcription_reliability_evaluation.xlsx"
-    ).exists()
-    assert (
+    )
+    assert _exists(
         project_dir
         / "expected_outputs"
+        / "transcripts_module"
         / "transcripts_reselect"
         / "reselected_transcription_reliability"
         / "reselected_transcription_reliability_samples.xlsx"
-    ).exists()
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_utterances"
+        / "utterance_coding_template.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_samples"
+        / "sample_coding_template.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_times"
+        / "speaking_times.xlsx"
+    )
 
 
 def test_render_example_docs():
@@ -62,5 +91,9 @@ def test_render_example_docs():
     assert any(path.name == "select.md" for path in paths)
     assert any(path.name == "evaluate.md" for path in paths)
     assert any(path.name == "reselect.md" for path in paths)
+    assert any(path.name == "utterances.md" for path in paths)
+    assert any(path.name == "samples.md" for path in paths)
+    assert any(path.name == "times.md" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
+    assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
     assert any(path.name == "tabularize.md" for path in iter_example_io_markdown_files())
