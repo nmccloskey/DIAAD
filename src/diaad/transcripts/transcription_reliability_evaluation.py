@@ -637,8 +637,8 @@ def _analyze_reliability_pairs(
         desc="Analyzing reliability transcripts",
     ):
         try:
-            org_chat_data = pylangacq.read_chat(str(org_cha))
-            rel_chat_data = pylangacq.read_chat(str(rel_cha))
+            org_chat_data = pylangacq.Reader.from_files([str(org_cha)], parallel=False)
+            rel_chat_data = pylangacq.Reader.from_files([str(rel_cha)], parallel=False)
 
             org_text = process_utterances(
                 org_chat_data,

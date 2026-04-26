@@ -16,13 +16,17 @@ example_files/
     README.md
     config/
       project.yaml
-      advanced_project.yaml
       advanced.yaml
     input/
       chat/
         P1_picnic_pre.cha
         P2_picnic_pre.cha
         P1_picnic_post.cha
+        reliability/
+          P1_picnic_pre.cha
+          P2_picnic_pre.cha
+      transcription_reliability_selection/
+        transcription_reliability_samples.xlsx
     expected_outputs/
       transcripts_tabularize/
         transcript_table.xlsx

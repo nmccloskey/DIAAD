@@ -17,3 +17,19 @@ transcripts_tabularize:
       stimulus: picnic
       timepoint: pre
   expected_utterance_count: 21
+transcripts_select:
+  workbook: expected_outputs/transcripts_select/transcription_reliability_samples.xlsx
+  sheets:
+    - reliability_selection
+    - all_transcripts
+  expected_selected_count: 2
+transcripts_evaluate:
+  workbook: expected_outputs/transcripts_evaluate/transcription_reliability_evaluation.xlsx
+  report: expected_outputs/transcripts_evaluate/transcription_reliability_report.txt
+  alignment_dir: expected_outputs/transcripts_evaluate/global_alignments
+  expected_pair_count: 2
+transcripts_reselect:
+  workbook: expected_outputs/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx
+  sheets:
+    - reselected_reliability
+  expected_selected_count: 1

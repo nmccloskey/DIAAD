@@ -197,6 +197,7 @@ class RunContext:
         self.chats = read_cha_files(
             input_dir=self.input_dir,
             shuffle=self.shuffle_samples,
+            exclude_dirnames=[self.config.reliability_dirname],
         )
         return self.chats
 

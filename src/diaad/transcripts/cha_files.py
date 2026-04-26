@@ -26,13 +26,18 @@ def truncate_path_to_input_dir(path: str | Path, input_dir: str | Path) -> str:
     return Path(input_dir.name, rel_path).as_posix()
 
 
-def read_cha_files(input_dir, shuffle=False):
+def read_cha_files(input_dir, shuffle=False, exclude_dirnames=None):
     """
     Read CHAT (.cha) files from the given input directory and return
     a dict of {input-relative path: pylangacq.Reader} objects.
     """
     input_dir = Path(input_dir).expanduser().resolve()
-    cha_files = list(input_dir.rglob("*.cha"))
+    exclude_dirnames = set(exclude_dirnames or [])
+    cha_files = [
+        path
+        for path in input_dir.rglob("*.cha")
+        if not exclude_dirnames.intersection(path.relative_to(input_dir).parts[:-1])
+    ]
 
     if shuffle:
         logger.info("Shuffling the list of .cha files.")

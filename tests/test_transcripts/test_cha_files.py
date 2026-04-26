@@ -36,3 +36,24 @@ def test_read_cha_files_uses_input_relative_keys(monkeypatch, tmp_path):
 
     assert chats["input/sample.cha"]["path"] == str(file_path)
     assert chats["input/sample.cha"]["parallel"] is False
+
+
+def test_read_cha_files_can_skip_excluded_directories(monkeypatch, tmp_path):
+    input_dir = tmp_path / "input"
+    original = input_dir / "sample.cha"
+    reliability = input_dir / "reliability" / "sample.cha"
+    original.parent.mkdir(parents=True)
+    reliability.parent.mkdir(parents=True)
+    original.write_text("", encoding="utf-8")
+    reliability.write_text("", encoding="utf-8")
+
+    monkeypatch.setattr(
+        cha_files.pylangacq.Reader,
+        "from_files",
+        staticmethod(lambda paths, *, parallel=True: {"path": paths[0]}),
+    )
+    monkeypatch.setattr(cha_files, "tqdm", lambda items, **kwargs: items)
+
+    chats = cha_files.read_cha_files(input_dir, exclude_dirnames=["reliability"])
+
+    assert list(chats) == ["input/sample.cha"]

@@ -1,0 +1,43 @@
+reliability_chat_files:
+  - filename: P1_picnic_pre.cha
+    original_filename: P1_picnic_pre.cha
+    participant_id: P1
+    stimulus: picnic
+    timepoint: pre
+    content: |
+      @Begin
+      @Languages:	eng
+      @Participants:	PAR Participant, INV Investigator
+      @ID:	eng|synthetic|PAR|||||Participant|||
+      @ID:	eng|synthetic|INV|||||Investigator|||
+      @Date:	01-JAN-2026
+      @Comment:	Fully synthetic DIAAD reliability example.
+      *INV:	Tell me what is happening in the picnic picture.
+      *PAR:	The family is sitting on the blanket.
+      *PAR:	They have sandwiches, apples, and juice.
+      *INV:	What is the child doing?
+      *PAR:	She is pouring juice.
+      *PAR:	It looks sunny.
+      *PAR:	Everyone seems happy.
+      @End
+  - filename: P2_picnic_pre.cha
+    original_filename: P2_picnic_pre.cha
+    participant_id: P2
+    stimulus: picnic
+    timepoint: pre
+    content: |
+      @Begin
+      @Languages:	eng
+      @Participants:	PAR Participant, INV Investigator
+      @ID:	eng|synthetic|PAR|||||Participant|||
+      @ID:	eng|synthetic|INV|||||Investigator|||
+      @Date:	01-JAN-2026
+      @Comment:	Fully synthetic DIAAD reliability example.
+      *INV:	What do you notice first?
+      *PAR:	A picnic.
+      *PAR:	The father is opening the basket.
+      *PAR:	The dog wants food.
+      *INV:	What might happen next?
+      *PAR:	They will eat lunch.
+      *PAR:	Maybe the dog gets a cracker.
+      @End
