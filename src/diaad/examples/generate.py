@@ -17,6 +17,11 @@ from diaad.coding.compl_utts.files import make_cu_coding_files
 from diaad.coding.compl_utts.rates import calculate_cu_rates
 from diaad.coding.compl_utts.rel_evaluation import evaluate_cu_reliability
 from diaad.coding.compl_utts.rel_reselection import reselect_cu_rel
+from diaad.coding.powers.analysis import analyze_powers_coding
+from diaad.coding.powers.files import make_powers_coding_files
+from diaad.coding.powers.rates import calculate_powers_rates
+from diaad.coding.powers.rel_evaluation import evaluate_powers_reliability
+from diaad.coding.powers.rel_reselection import reselect_powers_rel
 from diaad.coding.templates.samples import make_sample_template_files
 from diaad.coding.templates.times import make_speaking_time_template_files
 from diaad.coding.templates.utterances import make_utterance_template_files
@@ -45,6 +50,7 @@ TRANSCRIPTS_MODULE_DIR = "transcripts_module"
 TEMPLATES_MODULE_DIR = "templates_module"
 CUS_MODULE_DIR = "cus_module"
 WORDS_MODULE_DIR = "words_module"
+POWERS_MODULE_DIR = "powers_module"
 SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
@@ -67,6 +73,13 @@ WORD_OUTPUT_DIRS = {
     "reselect": "words_reselect",
     "analyze": "words_analyze",
     "rates": "words_rates",
+}
+POWERS_OUTPUT_DIRS = {
+    "files": "powers_files",
+    "evaluate": "powers_evaluate",
+    "reselect": "powers_reselect",
+    "analyze": "powers_analyze",
+    "rates": "powers_rates",
 }
 
 
@@ -212,6 +225,7 @@ Key files:
 - `expected_outputs/templates_module/`: outputs for template commands.
 - `expected_outputs/cus_module/`: outputs for complete-utterance coding commands.
 - `expected_outputs/words_module/`: outputs for word-count commands.
+- `expected_outputs/powers_module/`: outputs for POWERS commands.
 """
     _write_text(project_dir / "README.md", text, force=force)
 
@@ -333,6 +347,11 @@ def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
         "words_reselect",
         "words_analyze",
         "words_rates",
+        "powers_files",
+        "powers_evaluate",
+        "powers_reselect",
+        "powers_analyze",
+        "powers_rates",
     ):
         shutil.rmtree(project_dir / "expected_outputs" / dirname, ignore_errors=True)
 
@@ -971,6 +990,261 @@ def _write_expected_word_rates(
     return expected_dir
 
 
+def _prepare_powers_input(tmpdir: Path, transcript_table: Path) -> Path:
+    input_dir = tmpdir / "input"
+    table_dir = input_dir / "transcript_tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    return input_dir
+
+
+def _powers_blinding_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig:
+    return AdvancedConfig(**specs["advanced_config"])
+
+
+def _fill_powers_utterance_values(df: pd.DataFrame, *, reliability: bool = False) -> pd.DataFrame:
+    df = df.copy()
+    for col in [
+        "POWERS_comment",
+        "turn_type",
+        "comments",
+        "collab_repair",
+    ]:
+        if col in df.columns:
+            df[col] = df[col].astype("object")
+    turn_types = ["T", "T", "ST", "MT", "T", "NV"]
+    repair_values = ["", "", "repair_1", "", "", ""]
+
+    for pos, idx in enumerate(df.index):
+        speaker = str(df.at[idx, "speaker"]) if "speaker" in df.columns else ""
+        utterance = str(df.at[idx, "utterance"]) if "utterance" in df.columns else ""
+        words = [token for token in utterance.replace(".", "").replace("?", "").split() if token]
+        base_count = max(1, len(words))
+        if speaker == "INV":
+            base_count = max(1, base_count - 1)
+
+        df.at[idx, "speech_units"] = 1 + (pos % 2)
+        df.at[idx, "turn_type"] = turn_types[pos % len(turn_types)]
+        df.at[idx, "content_words"] = base_count
+        df.at[idx, "num_nouns"] = max(0, min(3, base_count // 2))
+        df.at[idx, "circumlocutions"] = 1 + (pos % 3)
+        df.at[idx, "sem_paras"] = 1 + (pos % 4)
+        df.at[idx, "phon_errs"] = 1 + (pos % 2)
+        df.at[idx, "neologisms"] = 1 + (pos % 5)
+        df.at[idx, "comments"] = ""
+        df.at[idx, "lg_pauses"] = 1 + (pos % 3)
+        df.at[idx, "filled_pauses"] = 1 + (pos % 2)
+        df.at[idx, "collab_repair"] = repair_values[pos % len(repair_values)]
+
+        if reliability:
+            if pos % 5 == 0:
+                df.at[idx, "content_words"] = max(0, int(df.at[idx, "content_words"]) - 1)
+            if pos % 6 == 0:
+                df.at[idx, "turn_type"] = "T"
+            if pos % 8 == 0:
+                df.at[idx, "filled_pauses"] = int(df.at[idx, "filled_pauses"]) + 1
+
+    return df
+
+
+def _fill_powers_section_e_values(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    for col in ["type_of_day", "other_notes"]:
+        if col in df.columns:
+            df[col] = df[col].astype("object")
+    days = ["weekday", "weekday", "weekend"]
+    enjoyment = [4, 3, 4]
+    difficulty = [2, 2, 1]
+    for pos, idx in enumerate(df.index):
+        df.at[idx, "type_of_day"] = days[pos % len(days)]
+        df.at[idx, "amount_of_enjoyment"] = enjoyment[pos % len(enjoyment)]
+        df.at[idx, "degree_of_difficulty"] = difficulty[pos % len(difficulty)]
+        df.at[idx, "other_notes"] = ""
+    return df
+
+
+def _fill_powers_coding_workbook(path: Path) -> None:
+    utterances = pd.read_excel(path, sheet_name="utterance_coding")
+    section_e = pd.read_excel(path, sheet_name="section_e")
+    utterances = _fill_powers_utterance_values(utterances)
+    section_e = _fill_powers_section_e_values(section_e)
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        utterances.to_excel(writer, sheet_name="utterance_coding", index=False)
+        section_e.to_excel(writer, sheet_name="section_e", index=False)
+
+
+def _fill_powers_reliability_workbook(path: Path) -> None:
+    df = pd.read_excel(path)
+    df = _fill_powers_utterance_values(df, reliability=True)
+    df.to_excel(path, index=False)
+
+
+def _write_expected_powers_files(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["files"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_powers_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        random.seed(specs["project_config"].get("random_seed", 99))
+        make_powers_coding_files(
+            metadata_fields=_metadata_fields(project_dir, specs["project_config"]),
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            num_coders=specs["project_config"].get("num_coders", 0),
+            input_dir=input_dir,
+            output_dir=output_dir,
+            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            automate_powers=specs["project_config"].get("automate_powers", False),
+            blinding_config=None,
+        )
+        _replace_tree(output_dir / "powers_coding", expected_dir, force=force)
+
+    coding_file = next(expected_dir.rglob("powers_coding.xlsx"), None)
+    reliability_file = next(expected_dir.rglob("powers_reliability_coding.xlsx"), None)
+    if coding_file is not None:
+        _fill_powers_coding_workbook(coding_file)
+    if reliability_file is not None:
+        _fill_powers_reliability_workbook(reliability_file)
+
+    input_powers_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
+    if input_powers_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {input_powers_dir}")
+    _replace_tree(expected_dir, input_powers_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_powers_evaluation(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["evaluate"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
+    with _scratch_dir(project_dir) as tmpdir:
+        evaluate_powers_reliability(input_dir=input_dir, output_dir=tmpdir)
+        _replace_tree(tmpdir / "powers_reliability", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_powers_reselection(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["reselect"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+    with _scratch_dir(project_dir) as tmpdir:
+        reselect_powers_rel(
+            metadata_fields=metadata_fields,
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            random_seed=specs["project_config"].get("random_seed", 99),
+            automate_powers=specs["project_config"].get("automate_powers", False),
+        )
+        _replace_tree(tmpdir / "reselected_powers_reliability", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_powers_analysis(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["analyze"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
+    with _scratch_dir(project_dir) as tmpdir:
+        analyze_powers_coding(input_dir=input_dir, output_dir=tmpdir)
+        _replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
+
+    analysis_input_dir = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "powers_coding_analysis"
+    )
+    if analysis_input_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
+    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_powers_rates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["rates"]
+    )
+    source_time = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "speaking_times"
+        / "speaking_times.xlsx"
+    )
+    if not source_time.exists():
+        source_time = (
+            project_dir
+            / "expected_outputs"
+            / TEMPLATES_MODULE_DIR
+            / TEMPLATE_OUTPUT_DIRS["times"]
+            / "speaking_times.xlsx"
+        )
+
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    time_input_dir = input_dir / "speaking_times"
+    time_input_dir.mkdir(parents=True, exist_ok=True)
+    time_input = time_input_dir / "speaking_times.xlsx"
+    if not time_input.exists() or force:
+        if source_time.resolve() != time_input.resolve():
+            shutil.copyfile(source_time, time_input)
+        times_df = pd.read_excel(time_input)
+        if "speaking_time" in times_df.columns:
+            times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
+        times_df.to_excel(time_input, index=False)
+
+    with _scratch_dir(project_dir) as tmpdir:
+        calculate_powers_rates(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            speaking_time_file=specs["advanced_config"].get(
+                "speaking_time_file",
+                "speaking_times.xlsx",
+            ),
+            speaking_time_field=specs["advanced_config"].get(
+                "speaking_time_field",
+                "speaking_time",
+            ),
+        )
+        _replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
+    return expected_dir
+
+
 def generate_example_files(destination: str | Path, *, force: bool = False) -> Path:
     """
     Materialize the synthetic DIAAD example project.
@@ -1009,4 +1283,9 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_word_reselection(project_dir, specs, force=force)
     _write_expected_word_analysis(project_dir, specs, force=force)
     _write_expected_word_rates(project_dir, specs, force=force)
+    _write_expected_powers_files(project_dir, specs, force=force)
+    _write_expected_powers_evaluation(project_dir, specs, force=force)
+    _write_expected_powers_reselection(project_dir, specs, force=force)
+    _write_expected_powers_analysis(project_dir, specs, force=force)
+    _write_expected_powers_rates(project_dir, specs, force=force)
     return project_dir

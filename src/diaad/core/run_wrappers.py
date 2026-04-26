@@ -243,6 +243,6 @@ def run_evaluate_powers_reliability(ctx):
 
 def run_reselect_powers_reliability_coding(ctx):
     """Reselect POWERS reliability coding files."""
-    from diaad.coding.powers.files import reselect_powers_rel
+    from diaad.coding.powers.rel_reselection import reselect_powers_rel
 
     return reselect_powers_rel(**ctx.kwargs_reselect_powers_reliability())

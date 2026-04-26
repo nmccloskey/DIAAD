@@ -151,6 +151,41 @@ def test_generate_synthetic_project(tmp_path):
         / "words_rates"
         / "word_counting_rates.xlsx"
     )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "powers_module"
+        / "powers_files"
+        / "powers_coding.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "powers_module"
+        / "powers_evaluate"
+        / "powers_reliability_results.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "powers_module"
+        / "powers_reselect"
+        / "reselected_powers_reliability_coding.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "powers_module"
+        / "powers_analyze"
+        / "powers_analysis.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "powers_module"
+        / "powers_rates"
+        / "powers_coding_rates.xlsx"
+    )
 
 
 def test_render_example_docs():
@@ -170,8 +205,12 @@ def test_render_example_docs():
     assert any(path.name == "files.md" and path.parent.name == "words" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "words" for path in paths)
     assert any(path.name == "rates.md" and path.parent.name == "words" for path in paths)
+    assert any(path.name == "files.md" and path.parent.name == "powers" for path in paths)
+    assert any(path.name == "analyze.md" and path.parent.name == "powers" for path in paths)
+    assert any(path.name == "rates.md" and path.parent.name == "powers" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
     assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
     assert (get_example_io_docs_path() / "cus" / "files.md").exists()
     assert (get_example_io_docs_path() / "words" / "files.md").exists()
+    assert (get_example_io_docs_path() / "powers" / "files.md").exists()
     assert any(path.name == "tabularize.md" for path in iter_example_io_markdown_files())

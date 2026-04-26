@@ -99,3 +99,25 @@ words_rates:
   directory: expected_outputs/words_module/words_rates
   files:
     - word_counting_rates.xlsx
+powers_files:
+  directory: expected_outputs/powers_module/powers_files
+  files:
+    - powers_coding.xlsx
+    - powers_reliability_coding.xlsx
+powers_evaluate:
+  directory: expected_outputs/powers_module/powers_evaluate
+  files:
+    - powers_reliability_results.xlsx
+    - powers_reliability_report.txt
+powers_reselect:
+  directory: expected_outputs/powers_module/powers_reselect
+  files:
+    - reselected_powers_reliability_coding.xlsx
+powers_analyze:
+  directory: expected_outputs/powers_module/powers_analyze
+  files:
+    - powers_analysis.xlsx
+powers_rates:
+  directory: expected_outputs/powers_module/powers_rates
+  files:
+    - powers_coding_rates.xlsx

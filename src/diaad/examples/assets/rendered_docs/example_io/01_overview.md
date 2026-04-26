@@ -43,6 +43,11 @@ example_files/
         word_count_blind_codebook.xlsx
       word_count_analysis/
         word_counting_by_sample.xlsx
+      powers_coding/
+        powers_coding.xlsx
+        powers_reliability_coding.xlsx
+      powers_coding_analysis/
+        powers_analysis.xlsx
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
@@ -100,4 +105,17 @@ example_files/
           word_counting_by_sample.xlsx
         words_rates/
           word_counting_rates.xlsx
+      powers_module/
+        powers_files/
+          powers_coding.xlsx
+          powers_reliability_coding.xlsx
+        powers_evaluate/
+          powers_reliability_results.xlsx
+          powers_reliability_report.txt
+        powers_reselect/
+          reselected_powers_reliability_coding.xlsx
+        powers_analyze/
+          powers_analysis.xlsx
+        powers_rates/
+          powers_coding_rates.xlsx
 ```

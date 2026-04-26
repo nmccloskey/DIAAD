@@ -11,6 +11,8 @@ from diaad.examples.generate import (
     CU_OUTPUT_DIRS,
     CUS_MODULE_DIR,
     EXPECTED_WORKBOOK,
+    POWERS_MODULE_DIR,
+    POWERS_OUTPUT_DIRS,
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATES_MODULE_DIR,
     TRANSCRIPTS_MODULE_DIR,
@@ -217,6 +219,37 @@ def _project_tree(command: str = "all") -> str:
         speaking_times.xlsx"""
         outputs = """        word_count_analysis/
           word_counting_rates.xlsx"""
+    elif command == "powers_files":
+        input_files = """      transcript_tables/
+        transcript_tables.xlsx"""
+        outputs = """        powers_coding/
+          powers_coding.xlsx
+          powers_reliability_coding.xlsx"""
+    elif command == "powers_evaluate":
+        input_files = """      powers_coding/
+        powers_coding.xlsx
+        powers_reliability_coding.xlsx"""
+        outputs = """        powers_reliability/
+          powers_reliability_results.xlsx
+          powers_reliability_report.txt"""
+    elif command == "powers_reselect":
+        input_files = """      powers_coding/
+        powers_coding.xlsx
+        powers_reliability_coding.xlsx"""
+        outputs = """        reselected_powers_reliability/
+          reselected_powers_reliability_coding.xlsx"""
+    elif command == "powers_analyze":
+        input_files = """      powers_coding/
+        powers_coding.xlsx"""
+        outputs = """        powers_coding_analysis/
+          powers_analysis.xlsx"""
+    elif command == "powers_rates":
+        input_files = """      powers_coding_analysis/
+        powers_analysis.xlsx
+      speaking_times/
+        speaking_times.xlsx"""
+        outputs = """        powers_coding_analysis/
+          powers_coding_rates.xlsx"""
     else:
         input_files = """      chat/
         P1_picnic_pre.cha
@@ -265,6 +298,11 @@ def _example_files_tree() -> str:
         word_count_blind_codebook.xlsx
       word_count_analysis/
         word_counting_by_sample.xlsx
+      powers_coding/
+        powers_coding.xlsx
+        powers_reliability_coding.xlsx
+      powers_coding_analysis/
+        powers_analysis.xlsx
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
@@ -324,6 +362,20 @@ def _example_files_tree() -> str:
           word_counting_by_sample.xlsx
         words_rates/
           word_counting_rates.xlsx"""
+        + """
+      powers_module/
+        powers_files/
+          powers_coding.xlsx
+          powers_reliability_coding.xlsx
+        powers_evaluate/
+          powers_reliability_results.xlsx
+          powers_reliability_report.txt
+        powers_reselect/
+          reselected_powers_reliability_coding.xlsx
+        powers_analyze/
+          powers_analysis.xlsx
+        powers_rates/
+          powers_coding_rates.xlsx"""
     )
 
 
@@ -1215,6 +1267,210 @@ Speaking times are synthetic seconds added to the generated speaking-time templa
 """
 
 
+def _powers_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return _project_config_snippet(
+        specs,
+        [
+            "input_dir",
+            "output_dir",
+            "reliability_fraction",
+            "num_coders",
+            "stimulus_field",
+            "exclude_participants",
+            "automate_powers",
+        ],
+    )
+
+
+def _powers_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["files"]
+
+    return f"""# POWERS Coding File Example
+
+This example demonstrates how `diaad powers files` creates POWERS coding and reliability workbooks from transcript tables.
+
+## Command
+
+{_fenced("diaad powers files --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("powers_files"))}
+
+## Basic Config
+
+{_fenced(_powers_config_snippet(specs), "yaml")}
+
+## Input Snippet
+
+The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
+
+## Output Preview
+
+`expected_outputs/powers_module/powers_files/powers_coding.xlsx`
+
+{_all_workbook_sheet_tables(output_dir / "powers_coding.xlsx")}
+
+`expected_outputs/powers_module/powers_files/powers_reliability_coding.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "powers_reliability_coding.xlsx"))}
+
+## Notes
+
+The generated local example fills synthetic POWERS values into the blank coding workbooks so downstream POWERS examples can be demonstrated. Real `powers files` output starts as coding material for human review. Automation is disabled in the synthetic config to keep the example deterministic and dependency-light.
+"""
+
+
+def _powers_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["evaluate"]
+    report = output_dir / "powers_reliability_report.txt"
+    report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:12])
+
+    return f"""# POWERS Reliability Evaluation Example
+
+This example demonstrates how `diaad powers evaluate` compares primary POWERS coding with a synthetic reliability workbook.
+
+## Command
+
+{_fenced("diaad powers evaluate --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("powers_evaluate"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/powers_coding/powers_coding.xlsx` and `diaad_data/input/powers_coding/powers_reliability_coding.xlsx`.
+
+## Output Preview
+
+`expected_outputs/powers_module/powers_evaluate/powers_reliability_results.xlsx`
+
+{_all_workbook_sheet_tables(output_dir / "powers_reliability_results.xlsx")}
+
+`expected_outputs/powers_module/powers_evaluate/powers_reliability_report.txt`
+
+{_fenced(report_excerpt, "text")}
+
+## Notes
+
+Reliability POWERS values are synthetic, with small deterministic differences from the primary coding.
+"""
+
+
+def _powers_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["reselect"]
+
+    return f"""# POWERS Reliability Reselection Example
+
+This example demonstrates how `diaad powers reselect` selects replacement POWERS reliability rows after an earlier reliability workbook has already been used.
+
+## Command
+
+{_fenced("diaad powers reselect --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("powers_reselect"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields", "automate_powers"]), "yaml")}
+
+## Input Snippet
+
+The command reads prior POWERS coding and reliability workbooks from `diaad_data/input/powers_coding/`.
+
+## Output Preview
+
+`expected_outputs/powers_module/powers_reselect/reselected_powers_reliability_coding.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "reselected_powers_reliability_coding.xlsx"))}
+
+## Notes
+
+The synthetic example has only three samples, so the reselected workbook is intentionally tiny.
+"""
+
+
+def _powers_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["analyze"]
+
+    return f"""# POWERS Coding Analysis Example
+
+This example demonstrates how `diaad powers analyze` summarizes filled POWERS coding by utterance, turn, speaker, and dialog.
+
+## Command
+
+{_fenced("diaad powers analyze --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("powers_analyze"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/powers_coding/powers_coding.xlsx`.
+
+## Output Preview
+
+`expected_outputs/powers_module/powers_analyze/powers_analysis.xlsx`
+
+{_all_workbook_sheet_tables(output_dir / "powers_analysis.xlsx")}
+
+## Notes
+
+The preview uses synthetic filled POWERS values generated from the packaged example specs.
+"""
+
+
+def _powers_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["rates"]
+
+    return f"""# POWERS Rate Calculation Example
+
+This example demonstrates how `diaad powers rates` combines POWERS dialog summaries with speaking times to calculate rates per minute.
+
+## Command
+
+{_fenced("diaad powers rates --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("powers_rates"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_preview_yaml(specs["advanced_config"], ["speaking_time_file", "speaking_time_field"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/powers_coding_analysis/powers_analysis.xlsx` and `diaad_data/input/speaking_times/speaking_times.xlsx`.
+
+## Output Preview
+
+`expected_outputs/powers_module/powers_rates/powers_coding_rates.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "powers_coding_rates.xlsx"))}
+
+## Notes
+
+Speaking times are synthetic seconds added to the generated speaking-time template for this example.
+"""
+
+
 def render_example_docs() -> list[Path]:
     """Create or update packaged example I/O markdown assets."""
     specs = _read_specs()
@@ -1237,6 +1493,11 @@ def render_example_docs() -> list[Path]:
         word_reselect_doc = _word_reselect_doc(project_dir, specs)
         word_analyze_doc = _word_analyze_doc(project_dir, specs)
         word_rates_doc = _word_rates_doc(project_dir, specs)
+        powers_files_doc = _powers_files_doc(project_dir, specs)
+        powers_evaluate_doc = _powers_evaluate_doc(project_dir, specs)
+        powers_reselect_doc = _powers_reselect_doc(project_dir, specs)
+        powers_analyze_doc = _powers_analyze_doc(project_dir, specs)
+        powers_rates_doc = _powers_rates_doc(project_dir, specs)
 
     return [
         _write_doc("01_overview.md", text=_overview_doc()),
@@ -1257,4 +1518,9 @@ def render_example_docs() -> list[Path]:
         _write_doc("words", "reselect.md", text=word_reselect_doc),
         _write_doc("words", "analyze.md", text=word_analyze_doc),
         _write_doc("words", "rates.md", text=word_rates_doc),
+        _write_doc("powers", "files.md", text=powers_files_doc),
+        _write_doc("powers", "evaluate.md", text=powers_evaluate_doc),
+        _write_doc("powers", "reselect.md", text=powers_reselect_doc),
+        _write_doc("powers", "analyze.md", text=powers_analyze_doc),
+        _write_doc("powers", "rates.md", text=powers_rates_doc),
     ]
