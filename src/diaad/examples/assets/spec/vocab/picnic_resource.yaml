@@ -1,0 +1,37 @@
+id: picnic
+display_name: Synthetic Picnic
+language: en
+task_type: picture_description
+base_forms:
+  - apple
+  - basket
+  - blanket
+  - child
+  - day
+  - dog
+  - drink
+  - family
+  - food
+  - girl
+  - happy
+  - juice
+  - lunch
+  - park
+  - picnic
+  - pour
+  - sandwich
+  - sunny
+variant_map:
+  apple:
+    - apples
+  child:
+    - children
+  drink:
+    - drinks
+  sandwich:
+    - sandwiches
+  pour:
+    - pouring
+    - pours
+    - poured
+norms: {}

@@ -121,3 +121,22 @@ powers_rates:
   directory: expected_outputs/powers_module/powers_rates
   files:
     - powers_coding_rates.xlsx
+vocab_file:
+  directory: expected_outputs/vocab_module/vocab_file
+  files:
+    - target_vocabulary_resource_template.json
+vocab_check:
+  directory: expected_outputs/vocab_module/vocab_check
+  files:
+    - target_vocab_resource_check.txt
+vocab_analyze:
+  directory: expected_outputs/vocab_module/vocab_analyze
+  files:
+    - target_vocab_data_260101_0000.xlsx
+  sheets:
+    - summary
+    - details
+vocab_rates:
+  directory: expected_outputs/vocab_module/vocab_rates
+  files:
+    - target_vocab_rates.xlsx

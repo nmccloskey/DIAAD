@@ -48,6 +48,12 @@ example_files/
         powers_reliability_coding.xlsx
       powers_coding_analysis/
         powers_analysis.xlsx
+      target_vocab/
+        resources/
+          picnic_target_vocab.json
+        unblind_utterance_data.xlsx
+      target_vocab_analysis/
+        target_vocab_data_260101_0000.xlsx
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
@@ -118,4 +124,13 @@ example_files/
           powers_analysis.xlsx
         powers_rates/
           powers_coding_rates.xlsx
+      vocab_module/
+        vocab_file/
+          target_vocabulary_resource_template.json
+        vocab_check/
+          target_vocab_resource_check.txt
+        vocab_analyze/
+          target_vocab_data_260101_0000.xlsx
+        vocab_rates/
+          target_vocab_rates.xlsx
 ```

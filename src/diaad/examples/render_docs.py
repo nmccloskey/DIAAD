@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,8 @@ from diaad.examples.generate import (
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATES_MODULE_DIR,
     TRANSCRIPTS_MODULE_DIR,
+    VOCAB_MODULE_DIR,
+    VOCAB_OUTPUT_DIRS,
     WORD_OUTPUT_DIRS,
     WORDS_MODULE_DIR,
     _scratch_dir,
@@ -52,6 +55,10 @@ def _write_doc(*parts: str, text: str) -> Path:
 
 def _fenced(text: str, language: str = "") -> str:
     return f"```{language}\n{text.rstrip()}\n```"
+
+
+def _preview_json(data: dict[str, Any]) -> str:
+    return json.dumps(data, indent=2)
 
 
 def _preview_yaml(data: dict[str, Any], keys: list[str]) -> str:
@@ -93,9 +100,14 @@ def _logs_tree(indent: str = "        ") -> str:
 
 
 def _output_tree(contents: str) -> str:
+    contents = contents.rstrip()
+    if contents:
+        return f"""    output/
+      {RUN_DIR}/
+{contents}
+{_logs_tree()}"""
     return f"""    output/
       {RUN_DIR}/
-{contents.rstrip()}
 {_logs_tree()}"""
 
 
@@ -250,6 +262,28 @@ def _project_tree(command: str = "all") -> str:
         speaking_times.xlsx"""
         outputs = """        powers_coding_analysis/
           powers_coding_rates.xlsx"""
+    elif command == "vocab_file":
+        input_files = """      target_vocab/
+        resources/"""
+        outputs = """        target_vocab/
+          target_vocabulary_resource_template.json"""
+    elif command == "vocab_check":
+        input_files = """      target_vocab/
+        resources/
+          picnic_target_vocab.json"""
+        outputs = ""
+    elif command == "vocab_analyze":
+        input_files = """      target_vocab/
+        unblind_utterance_data.xlsx
+        resources/
+          picnic_target_vocab.json"""
+        outputs = """        target_vocab/
+          target_vocab_data_YYMMDD_HHMM.xlsx"""
+    elif command == "vocab_rates":
+        input_files = """      target_vocab_analysis/
+        target_vocab_data_YYMMDD_HHMM.xlsx"""
+        outputs = """        target_vocab/
+          target_vocab_rates.xlsx"""
     else:
         input_files = """      chat/
         P1_picnic_pre.cha
@@ -303,6 +337,12 @@ def _example_files_tree() -> str:
         powers_reliability_coding.xlsx
       powers_coding_analysis/
         powers_analysis.xlsx
+      target_vocab/
+        resources/
+          picnic_target_vocab.json
+        unblind_utterance_data.xlsx
+      target_vocab_analysis/
+        target_vocab_data_260101_0000.xlsx
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
@@ -376,6 +416,16 @@ def _example_files_tree() -> str:
           powers_analysis.xlsx
         powers_rates/
           powers_coding_rates.xlsx"""
+        + """
+      vocab_module/
+        vocab_file/
+          target_vocabulary_resource_template.json
+        vocab_check/
+          target_vocab_resource_check.txt
+        vocab_analyze/
+          target_vocab_data_260101_0000.xlsx
+        vocab_rates/
+          target_vocab_rates.xlsx"""
     )
 
 
@@ -410,6 +460,7 @@ def _read_specs() -> dict[str, dict[str, Any]]:
             "transcripts",
             "reliability_chat_files.yaml",
         ),
+        "vocab_resource": _read_yaml_asset(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
     }
 
 
@@ -1471,6 +1522,200 @@ Speaking times are synthetic seconds added to the generated speaking-time templa
 """
 
 
+def _vocab_resource_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    resource = specs["vocab_resource"]
+    subset = {
+        "id": resource.get("id"),
+        "display_name": resource.get("display_name"),
+        "base_forms": resource.get("base_forms", [])[:8],
+        "variant_map": {
+            key: value
+            for key, value in list(resource.get("variant_map", {}).items())[:3]
+        },
+    }
+    return _preview_json(subset)
+
+
+def _vocab_note() -> str:
+    return (
+        "DIAAD includes five built-in narrative resources: `BrokenWindow`, "
+        "`CatRescue`, `Cinderella`, `RefusedUmbrella`, and `Sandwich`. Those "
+        "built-ins require no user JSON. This synthetic picnic example uses a "
+        "small custom JSON resource so the vocabulary targets match the synthetic "
+        "transcripts."
+    )
+
+
+def _vocab_advanced_snippet() -> str:
+    return yaml.safe_dump(
+        {
+            "target_vocabulary_resource_path": (
+                "diaad_data/input/target_vocab/resources/picnic_target_vocab.json"
+            )
+        },
+        sort_keys=False,
+        allow_unicode=False,
+    ).rstrip()
+
+
+def _vocab_file_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["file"]
+    template_text = (output_dir / "target_vocabulary_resource_template.json").read_text(
+        encoding="utf-8"
+    )
+
+    return f"""# Target Vocabulary Resource Template Example
+
+This example demonstrates how `diaad vocab file` creates a blank JSON template for a custom target-vocabulary resource.
+
+## Command
+
+{_fenced("diaad vocab file --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("vocab_file"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Output Preview
+
+`expected_outputs/vocab_module/vocab_file/target_vocabulary_resource_template.json`
+
+{_fenced(template_text[:1200], "json")}
+
+## Notes
+
+{_vocab_note()} Use `diaad vocab file` when a project needs to start authoring a custom resource.
+"""
+
+
+def _vocab_check_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["check"]
+    report = (output_dir / "target_vocab_resource_check.txt").read_text(encoding="utf-8")
+
+    return f"""# Target Vocabulary Resource Check Example
+
+This example demonstrates how `diaad vocab check` validates the active built-in and custom target-vocabulary resources.
+
+## Command
+
+{_fenced("diaad vocab check --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("vocab_check"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_vocab_advanced_snippet(), "yaml")}
+
+## Input Snippet
+
+`diaad_data/input/target_vocab/resources/picnic_target_vocab.json`
+
+{_fenced(_vocab_resource_snippet(specs), "json")}
+
+## Output Preview
+
+`expected_outputs/vocab_module/vocab_check/target_vocab_resource_check.txt`
+
+{_fenced(report, "text")}
+
+## Notes
+
+{_vocab_note()} The command reports validation details through the DIAAD run log; the generated text file shown here is a compact documentation preview of the same resource set.
+"""
+
+
+def _vocab_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["analyze"]
+    workbook = output_dir / "target_vocab_data_260101_0000.xlsx"
+    input_path = project_dir / "input" / "target_vocab" / "unblind_utterance_data.xlsx"
+
+    return f"""# Target Vocabulary Analysis Example
+
+This example demonstrates how `diaad vocab analyze` calculates target-vocabulary coverage for synthetic picnic samples.
+
+## Command
+
+{_fenced("diaad vocab analyze --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("vocab_analyze"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_field", "exclude_participants"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_vocab_advanced_snippet(), "yaml")}
+
+## Input Snippet
+
+`diaad_data/input/target_vocab/resources/picnic_target_vocab.json`
+
+{_fenced(_vocab_resource_snippet(specs), "json")}
+
+`diaad_data/input/target_vocab/unblind_utterance_data.xlsx`
+
+{_markdown_table(pd.read_excel(input_path))}
+
+## Output Preview
+
+`expected_outputs/vocab_module/vocab_analyze/target_vocab_data_260101_0000.xlsx`
+
+{_workbook_sheet_tables(workbook, ["summary", "details"])}
+
+## Notes
+
+{_vocab_note()} The custom picnic resource intentionally has no norm tables, so percentile columns are blank while coverage counts and rates are still calculated.
+"""
+
+
+def _vocab_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["rates"]
+
+    return f"""# Target Vocabulary Rate Calculation Example
+
+This example demonstrates how `diaad vocab rates` converts target-vocabulary analysis counts into per-minute rates.
+
+## Command
+
+{_fenced("diaad vocab rates --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("vocab_rates"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/target_vocab_analysis/target_vocab_data_YYMMDD_HHMM.xlsx`.
+
+## Output Preview
+
+`expected_outputs/vocab_module/vocab_rates/target_vocab_rates.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "target_vocab_rates.xlsx"))}
+
+## Notes
+
+{_vocab_note()} Rates are based on the `speaking_time` values stored in the target-vocabulary analysis summary sheet.
+"""
+
+
 def render_example_docs() -> list[Path]:
     """Create or update packaged example I/O markdown assets."""
     specs = _read_specs()
@@ -1498,6 +1743,10 @@ def render_example_docs() -> list[Path]:
         powers_reselect_doc = _powers_reselect_doc(project_dir, specs)
         powers_analyze_doc = _powers_analyze_doc(project_dir, specs)
         powers_rates_doc = _powers_rates_doc(project_dir, specs)
+        vocab_file_doc = _vocab_file_doc(project_dir, specs)
+        vocab_check_doc = _vocab_check_doc(project_dir, specs)
+        vocab_analyze_doc = _vocab_analyze_doc(project_dir, specs)
+        vocab_rates_doc = _vocab_rates_doc(project_dir, specs)
 
     return [
         _write_doc("01_overview.md", text=_overview_doc()),
@@ -1523,4 +1772,8 @@ def render_example_docs() -> list[Path]:
         _write_doc("powers", "reselect.md", text=powers_reselect_doc),
         _write_doc("powers", "analyze.md", text=powers_analyze_doc),
         _write_doc("powers", "rates.md", text=powers_rates_doc),
+        _write_doc("vocab", "file.md", text=vocab_file_doc),
+        _write_doc("vocab", "check.md", text=vocab_check_doc),
+        _write_doc("vocab", "analyze.md", text=vocab_analyze_doc),
+        _write_doc("vocab", "rates.md", text=vocab_rates_doc),
     ]

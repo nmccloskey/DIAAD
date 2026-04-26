@@ -10,7 +10,7 @@ from diaad.coding.utils import segment
 from diaad.coding.utils.sampling import calc_subset_size
 from psair.metadata.discovery import find_matching_files
 from diaad.transcripts.transcript_tables import extract_transcript_data
-from diaad.metadata.blinding import blind_file_identifiers
+from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.coding.powers.automation import run_automation
 
 
@@ -275,12 +275,13 @@ def _apply_export_blinding(
     rel_df: pd.DataFrame | None,
     transcript_table: Path,
     blinding_config=None,
-) -> tuple[pd.DataFrame, pd.DataFrame | None]:
+) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None]:
     """
     Blind POWERS exports at write time when configured.
     """
+    codebook_df = None
     if blinding_config is None or not blinding_config.should_blind("coding"):
-        return pc_df, rel_df
+        return pc_df, rel_df, codebook_df
 
     try:
         pc_export, codebook_df = blind_file_identifiers(
@@ -296,7 +297,7 @@ def _apply_export_blinding(
             )
 
         logger.info("Applied file blinding to POWERS exports.")
-        return pc_export, rel_export
+        return pc_export, rel_export, codebook_df
 
     except Exception as e:
         logger.error(f"Failed to apply file blinding to POWERS exports: {e}")
@@ -306,6 +307,7 @@ def _apply_export_blinding(
 def _write_powers_exports(
     pc_export: pd.DataFrame,
     rel_export: pd.DataFrame | None,
+    codebook_df: pd.DataFrame | None,
     powers_dir: Path,
     metadata_values: list[str],
 ) -> None:
@@ -318,6 +320,11 @@ def _write_powers_exports(
     _write_primary_powers_workbook(pc_export, pc_filename)
     if rel_export is not None:
         _write_excel(rel_export, rel_filename, "POWERS reliability coding")
+    if codebook_df is not None and not codebook_df.empty:
+        write_blind_codebook(
+            codebook_df,
+            Path(powers_dir, *metadata_values, "powers_blind_codebook.xlsx"),
+        )
 
 
 def _build_section_e_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -406,7 +413,7 @@ def make_powers_coding_files(
         segments=segments,
     )
 
-    pc_export, rel_export = _apply_export_blinding(
+    pc_export, rel_export, codebook_df = _apply_export_blinding(
         pc_df=pc_df,
         rel_df=rel_df,
         transcript_table=transcript_table,
@@ -416,6 +423,7 @@ def make_powers_coding_files(
     _write_powers_exports(
         pc_export=pc_export,
         rel_export=rel_export,
+        codebook_df=codebook_df,
         powers_dir=powers_dir,
         metadata_values=metadata_values,
     )

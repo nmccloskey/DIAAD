@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import uuid
 from contextlib import contextmanager
@@ -22,6 +23,12 @@ from diaad.coding.powers.files import make_powers_coding_files
 from diaad.coding.powers.rates import calculate_powers_rates
 from diaad.coding.powers.rel_evaluation import evaluate_powers_reliability
 from diaad.coding.powers.rel_reselection import reselect_powers_rel
+from diaad.coding.target_vocab.analysis import run_target_vocab
+from diaad.coding.target_vocab.files import (
+    check_target_vocab_resources,
+    make_target_vocab_file,
+)
+from diaad.coding.target_vocab.rates import calculate_target_vocab_rates
 from diaad.coding.templates.samples import make_sample_template_files
 from diaad.coding.templates.times import make_speaking_time_template_files
 from diaad.coding.templates.utterances import make_utterance_template_files
@@ -51,6 +58,7 @@ TEMPLATES_MODULE_DIR = "templates_module"
 CUS_MODULE_DIR = "cus_module"
 WORDS_MODULE_DIR = "words_module"
 POWERS_MODULE_DIR = "powers_module"
+VOCAB_MODULE_DIR = "vocab_module"
 SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
@@ -80,6 +88,12 @@ POWERS_OUTPUT_DIRS = {
     "reselect": "powers_reselect",
     "analyze": "powers_analyze",
     "rates": "powers_rates",
+}
+VOCAB_OUTPUT_DIRS = {
+    "file": "vocab_file",
+    "check": "vocab_check",
+    "analyze": "vocab_analyze",
+    "rates": "vocab_rates",
 }
 
 
@@ -117,6 +131,11 @@ def _write_text(path: Path, text: str, *, force: bool) -> None:
 
 def _write_yaml(path: Path, data: dict[str, Any], *, force: bool) -> None:
     text = yaml.safe_dump(data, sort_keys=False, allow_unicode=False)
+    _write_text(path, text, force=force)
+
+
+def _write_json(path: Path, data: dict[str, Any], *, force: bool) -> None:
+    text = json.dumps(data, indent=2) + "\n"
     _write_text(path, text, force=force)
 
 
@@ -192,6 +211,7 @@ def _read_specs() -> dict[str, dict[str, Any]]:
         "dataset": _read_yaml_asset(*SPEC_ROOT, "dataset.yaml"),
         "project_config": _read_yaml_asset(*SPEC_ROOT, "configs", "project.yaml"),
         "advanced_config": _read_yaml_asset(*SPEC_ROOT, "configs", "advanced.yaml"),
+        "vocab_resource": _read_yaml_asset(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
         "chat_files": _read_yaml_asset(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
         "reliability_chat_files": _read_yaml_asset(
             *SPEC_ROOT,
@@ -226,6 +246,7 @@ Key files:
 - `expected_outputs/cus_module/`: outputs for complete-utterance coding commands.
 - `expected_outputs/words_module/`: outputs for word-count commands.
 - `expected_outputs/powers_module/`: outputs for POWERS commands.
+- `expected_outputs/vocab_module/`: outputs for target-vocabulary commands.
 """
     _write_text(project_dir / "README.md", text, force=force)
 
@@ -352,6 +373,10 @@ def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
         "powers_reselect",
         "powers_analyze",
         "powers_rates",
+        "vocab_file",
+        "vocab_check",
+        "vocab_analyze",
+        "vocab_rates",
     ):
         shutil.rmtree(project_dir / "expected_outputs" / dirname, ignore_errors=True)
 
@@ -1245,6 +1270,211 @@ def _write_expected_powers_rates(
     return expected_dir
 
 
+def _vocab_resource_path(project_dir: Path, specs: dict[str, dict[str, Any]]) -> Path:
+    configured = specs["advanced_config"].get(
+        "target_vocabulary_resource_path",
+        "input/target_vocab/resources/picnic_target_vocab.json",
+    )
+    path = Path(configured)
+    if path.is_absolute():
+        return path
+    return project_dir / path
+
+
+def _write_vocab_resource(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> Path:
+    resource_path = _vocab_resource_path(project_dir, specs)
+    if not resource_path.exists() or force:
+        _write_json(resource_path, specs["vocab_resource"], force=force)
+    return resource_path
+
+
+def _write_vocab_unblind_input(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    workbook = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+    utt_df = pd.read_excel(workbook, sheet_name="utterances")
+    samples_df = pd.read_excel(workbook, sheet_name="samples")
+    sample_metadata_cols = [
+        col
+        for col in ["sample_id", "participant_id", "stimulus", "timepoint"]
+        if col in samples_df.columns
+    ]
+    if sample_metadata_cols and set(sample_metadata_cols) != {"sample_id"}:
+        utt_df = utt_df.merge(
+            samples_df[sample_metadata_cols].drop_duplicates(),
+            on="sample_id",
+            how="left",
+        )
+    exclude = set(specs["project_config"].get("exclude_participants", []))
+    if "speaker" in utt_df.columns and exclude:
+        utt_df = utt_df[~utt_df["speaker"].isin(exclude)].copy()
+
+    speaking_times = {
+        sample_id: value
+        for sample_id, value in zip(
+            sorted(utt_df["sample_id"].dropna().unique()),
+            [95, 88, 102],
+        )
+    }
+    utt_df["speaking_time"] = utt_df["sample_id"].map(speaking_times)
+    utt_df["word_count"] = (
+        utt_df["utterance"]
+        .fillna("")
+        .astype(str)
+        .str.replace(r"[^\w\s']", " ", regex=True)
+        .str.split()
+        .str.len()
+    )
+
+    keep_cols = [
+        col
+        for col in [
+            "sample_id",
+            "stimulus",
+            "timepoint",
+            "utterance_id",
+            "speaker",
+            "utterance",
+            "speaking_time",
+            "word_count",
+        ]
+        if col in utt_df.columns
+    ]
+    out_path = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "target_vocab"
+        / "unblind_utterance_data.xlsx"
+    )
+    if out_path.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {out_path}")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    utt_df[keep_cols].to_excel(out_path, index=False)
+    return out_path
+
+
+def _write_expected_vocab_file(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    del specs
+    expected_dir = (
+        project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["file"]
+    )
+    with _scratch_dir(project_dir) as tmpdir:
+        make_target_vocab_file(input_dir=tmpdir / "input", output_dir=tmpdir)
+        _replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_vocab_check(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["check"]
+    )
+    expected_dir.mkdir(parents=True, exist_ok=True)
+    if any(expected_dir.iterdir()) and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {expected_dir}")
+
+    resource_path = _write_vocab_resource(project_dir, specs, force=force)
+    resources = check_target_vocab_resources(resource_path=resource_path)
+    custom_id = specs["vocab_resource"]["id"]
+    try:
+        resource_display_path = resource_path.relative_to(project_dir).as_posix()
+    except ValueError:
+        resource_display_path = resource_path.as_posix()
+    lines = [
+        "Target vocabulary resource check",
+        "",
+        f"Custom resource path: {resource_display_path}",
+        f"Custom resource id: {custom_id}",
+        f"Active resource count: {len(resources)}",
+        "Active resource ids:",
+        *[f"- {resource_id}" for resource_id in sorted(resources)],
+        "",
+        "Built-in narrative resources remain available when a custom JSON path is configured.",
+    ]
+    _write_text(
+        expected_dir / "target_vocab_resource_check.txt",
+        "\n".join(lines) + "\n",
+        force=force,
+    )
+    return expected_dir
+
+
+def _stable_target_vocab_analysis_name(path: Path) -> Path:
+    return path.with_name("target_vocab_data_260101_0000.xlsx")
+
+
+def _write_expected_vocab_analysis(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["analyze"]
+    )
+    resource_path = _write_vocab_resource(project_dir, specs, force=force)
+    _write_vocab_unblind_input(project_dir, specs, force=force)
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+
+    with _scratch_dir(project_dir) as tmpdir:
+        run_target_vocab(
+            metadata_fields=metadata_fields,
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            stimulus_field=specs["project_config"].get("stimulus_field", "stimulus"),
+            resource_path=resource_path,
+        )
+        output_dir = tmpdir / "target_vocab"
+        generated = sorted(output_dir.glob("target_vocab_data_*.xlsx"))
+        if not generated:
+            raise FileNotFoundError("Target vocabulary analysis did not produce a workbook.")
+        stable = _stable_target_vocab_analysis_name(generated[0])
+        generated[0].replace(stable)
+        _replace_tree(output_dir, expected_dir, force=force)
+
+    analysis_input_dir = input_dir / "target_vocab_analysis"
+    if analysis_input_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
+    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_vocab_rates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["rates"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    with _scratch_dir(project_dir) as tmpdir:
+        calculate_target_vocab_rates(input_dir=input_dir, output_dir=tmpdir)
+        _replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
+    return expected_dir
+
+
 def generate_example_files(destination: str | Path, *, force: bool = False) -> Path:
     """
     Materialize the synthetic DIAAD example project.
@@ -1288,4 +1518,8 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_powers_reselection(project_dir, specs, force=force)
     _write_expected_powers_analysis(project_dir, specs, force=force)
     _write_expected_powers_rates(project_dir, specs, force=force)
+    _write_expected_vocab_file(project_dir, specs, force=force)
+    _write_expected_vocab_check(project_dir, specs, force=force)
+    _write_expected_vocab_analysis(project_dir, specs, force=force)
+    _write_expected_vocab_rates(project_dir, specs, force=force)
     return project_dir
