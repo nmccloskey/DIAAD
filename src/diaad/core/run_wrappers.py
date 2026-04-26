@@ -152,7 +152,7 @@ def run_make_digital_convo_turn_files(ctx):
 
 def run_analyze_digital_convo_turns(ctx):
     """Analyze digital conversation turns."""
-    from diaad.coding.convo_turns.digital_convo_turns import (
+    from diaad.coding.convo_turns.analysis import (
         analyze_digital_convo_turns,
     )
 
