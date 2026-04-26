@@ -449,6 +449,7 @@ class RunContext:
         """Return kwargs for target vocabulary resource validation."""
         return {
             "resource_path": self.config.advanced.target_vocabulary_resource_path,
+            "output_dir": self.out_dir,
         }
 
     def kwargs_target_vocab_file(self) -> dict[str, Any]:

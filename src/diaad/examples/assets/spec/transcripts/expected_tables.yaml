@@ -140,3 +140,26 @@ vocab_rates:
   directory: expected_outputs/vocab_module/vocab_rates
   files:
     - target_vocab_rates.xlsx
+turns_files:
+  directory: expected_outputs/turns_module/turns_files
+  files:
+    - conversation_turns_template.xlsx
+    - conversation_turns_reliability_template.xlsx
+    - conversation_turns_template_codebook.xlsx
+turns_evaluate:
+  directory: expected_outputs/turns_module/turns_evaluate
+  files:
+    - conversation_turns_reliability_results.xlsx
+    - conversation_turns_reliability_report.txt
+  sheets:
+    - counts
+    - sequences
+    - samples
+turns_reselect:
+  directory: expected_outputs/turns_module/turns_reselect
+  files:
+    - reselected_conversation_turns_reliability_template.xlsx
+turns_analyze:
+  directory: expected_outputs/turns_module/turns_analyze
+  files:
+    - conversation_turns_template_analysis.xlsx

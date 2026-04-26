@@ -1,0 +1,42 @@
+primary_rows:
+  - sample_id: S001
+    session: visit_1
+    bin: bin_1
+    turns: "0.1..23.0.12"
+  - sample_id: S001
+    session: visit_1
+    bin: bin_2
+    turns: "1.0..32.10."
+  - sample_id: S001
+    session: visit_2
+    bin: bin_1
+    turns: "0.12.3..01"
+  - sample_id: S001
+    session: visit_2
+    bin: bin_2
+    turns: "2.30.1..20"
+  - sample_id: S002
+    session: visit_1
+    bin: bin_1
+    turns: "0.13..20.1"
+  - sample_id: S002
+    session: visit_1
+    bin: bin_2
+    turns: "3.0..12.30"
+reliability_rows:
+  - sample_id: S001
+    session: visit_1
+    bin: bin_1
+    turns: "0.1..23.01"
+  - sample_id: S001
+    session: visit_1
+    bin: bin_2
+    turns: "1.0..32.10."
+  - sample_id: S001
+    session: visit_2
+    bin: bin_1
+    turns: "0.12.3..01"
+  - sample_id: S001
+    session: visit_2
+    bin: bin_2
+    turns: "2.30.1..2"

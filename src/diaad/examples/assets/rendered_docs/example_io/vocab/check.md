@@ -22,6 +22,8 @@ your_project/
           picnic_target_vocab.json
     output/
       diaad_YYMMDD_HHMM/
+        target_vocab/
+          target_vocab_resource_check.txt
         logs/
           diaad_YYMMDD_HHMM.log
           diaad_YYMMDD_HHMM_metadata.json

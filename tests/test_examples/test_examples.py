@@ -230,6 +230,49 @@ def test_generate_synthetic_project(tmp_path):
         / "vocab_rates"
         / "target_vocab_rates.xlsx"
     )
+    assert _exists(
+        project_dir
+        / "input"
+        / "conversation_turns"
+        / "conversation_turns_template.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "input"
+        / "conversation_turns"
+        / "conversation_turns_reliability_template.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "turns_module"
+        / "turns_files"
+        / "conversation_turns_template.xlsx"
+    )
+    turns_reliability = (
+        project_dir
+        / "expected_outputs"
+        / "turns_module"
+        / "turns_evaluate"
+        / "conversation_turns_reliability_results.xlsx"
+    )
+    assert _exists(turns_reliability)
+    with pd.ExcelFile(_long_path(turns_reliability), engine="openpyxl") as xls:
+        assert {"counts", "sequences", "samples"} <= set(xls.sheet_names)
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "turns_module"
+        / "turns_reselect"
+        / "reselected_conversation_turns_reliability_template.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "turns_module"
+        / "turns_analyze"
+        / "conversation_turns_template_analysis.xlsx"
+    )
 
 
 def test_render_example_docs():
@@ -256,10 +299,15 @@ def test_render_example_docs():
     assert any(path.name == "check.md" and path.parent.name == "vocab" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "vocab" for path in paths)
     assert any(path.name == "rates.md" and path.parent.name == "vocab" for path in paths)
+    assert any(path.name == "files.md" and path.parent.name == "turns" for path in paths)
+    assert any(path.name == "evaluate.md" and path.parent.name == "turns" for path in paths)
+    assert any(path.name == "reselect.md" and path.parent.name == "turns" for path in paths)
+    assert any(path.name == "analyze.md" and path.parent.name == "turns" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
     assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
     assert (get_example_io_docs_path() / "cus" / "files.md").exists()
     assert (get_example_io_docs_path() / "words" / "files.md").exists()
     assert (get_example_io_docs_path() / "powers" / "files.md").exists()
     assert (get_example_io_docs_path() / "vocab" / "analyze.md").exists()
+    assert (get_example_io_docs_path() / "turns" / "analyze.md").exists()
     assert any(path.name == "tabularize.md" for path in iter_example_io_markdown_files())

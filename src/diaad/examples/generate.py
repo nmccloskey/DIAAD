@@ -23,6 +23,10 @@ from diaad.coding.powers.files import make_powers_coding_files
 from diaad.coding.powers.rates import calculate_powers_rates
 from diaad.coding.powers.rel_evaluation import evaluate_powers_reliability
 from diaad.coding.powers.rel_reselection import reselect_powers_rel
+from diaad.coding.convo_turns.analysis import analyze_digital_convo_turns
+from diaad.coding.convo_turns.files import make_digital_convo_turn_files
+from diaad.coding.convo_turns.rel_evaluation import evaluate_digital_convo_turns_reliability
+from diaad.coding.convo_turns.rel_reselection import reselect_digital_convo_turns_rel
 from diaad.coding.target_vocab.analysis import run_target_vocab
 from diaad.coding.target_vocab.files import (
     check_target_vocab_resources,
@@ -59,6 +63,7 @@ CUS_MODULE_DIR = "cus_module"
 WORDS_MODULE_DIR = "words_module"
 POWERS_MODULE_DIR = "powers_module"
 VOCAB_MODULE_DIR = "vocab_module"
+TURNS_MODULE_DIR = "turns_module"
 SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
@@ -94,6 +99,12 @@ VOCAB_OUTPUT_DIRS = {
     "check": "vocab_check",
     "analyze": "vocab_analyze",
     "rates": "vocab_rates",
+}
+TURNS_OUTPUT_DIRS = {
+    "files": "turns_files",
+    "evaluate": "turns_evaluate",
+    "reselect": "turns_reselect",
+    "analyze": "turns_analyze",
 }
 
 
@@ -212,6 +223,7 @@ def _read_specs() -> dict[str, dict[str, Any]]:
         "project_config": _read_yaml_asset(*SPEC_ROOT, "configs", "project.yaml"),
         "advanced_config": _read_yaml_asset(*SPEC_ROOT, "configs", "advanced.yaml"),
         "vocab_resource": _read_yaml_asset(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
+        "turns_sessions": _read_yaml_asset(*SPEC_ROOT, "turns", "sessions.yaml"),
         "chat_files": _read_yaml_asset(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
         "reliability_chat_files": _read_yaml_asset(
             *SPEC_ROOT,
@@ -247,6 +259,7 @@ Key files:
 - `expected_outputs/words_module/`: outputs for word-count commands.
 - `expected_outputs/powers_module/`: outputs for POWERS commands.
 - `expected_outputs/vocab_module/`: outputs for target-vocabulary commands.
+- `expected_outputs/turns_module/`: outputs for digital conversation-turn commands.
 """
     _write_text(project_dir / "README.md", text, force=force)
 
@@ -377,6 +390,10 @@ def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
         "vocab_check",
         "vocab_analyze",
         "vocab_rates",
+        "turns_files",
+        "turns_evaluate",
+        "turns_reselect",
+        "turns_analyze",
     ):
         shutil.rmtree(project_dir / "expected_outputs" / dirname, ignore_errors=True)
 
@@ -1387,33 +1404,12 @@ def _write_expected_vocab_check(
     expected_dir = (
         project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["check"]
     )
-    expected_dir.mkdir(parents=True, exist_ok=True)
-    if any(expected_dir.iterdir()) and not force:
-        raise FileExistsError(f"Refusing to overwrite existing directory: {expected_dir}")
-
     resource_path = _write_vocab_resource(project_dir, specs, force=force)
-    resources = check_target_vocab_resources(resource_path=resource_path)
-    custom_id = specs["vocab_resource"]["id"]
-    try:
-        resource_display_path = resource_path.relative_to(project_dir).as_posix()
-    except ValueError:
-        resource_display_path = resource_path.as_posix()
-    lines = [
-        "Target vocabulary resource check",
-        "",
-        f"Custom resource path: {resource_display_path}",
-        f"Custom resource id: {custom_id}",
-        f"Active resource count: {len(resources)}",
-        "Active resource ids:",
-        *[f"- {resource_id}" for resource_id in sorted(resources)],
-        "",
-        "Built-in narrative resources remain available when a custom JSON path is configured.",
-    ]
-    _write_text(
-        expected_dir / "target_vocab_resource_check.txt",
-        "\n".join(lines) + "\n",
-        force=force,
-    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        check_target_vocab_resources(resource_path=resource_path, output_dir=tmpdir)
+        _replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
+
     return expected_dir
 
 
@@ -1475,6 +1471,153 @@ def _write_expected_vocab_rates(
     return expected_dir
 
 
+def _turns_input_dir(project_dir: Path, specs: dict[str, dict[str, Any]]) -> Path:
+    return (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "conversation_turns"
+    )
+
+
+def _turns_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    df = pd.DataFrame(rows, columns=["sample_id", "session", "bin", "turns"])
+    if df.empty:
+        raise ValueError("Turns example rows must not be empty.")
+    required = {"sample_id", "session", "bin", "turns"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Turns example rows are missing required columns: {sorted(missing)}")
+    return df
+
+
+def _write_turns_coding_inputs(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    turns_dir = _turns_input_dir(project_dir, specs)
+    turns_dir.mkdir(parents=True, exist_ok=True)
+    primary_path = turns_dir / "conversation_turns_template.xlsx"
+    reliability_path = turns_dir / "conversation_turns_reliability_template.xlsx"
+
+    if not force and (primary_path.exists() or reliability_path.exists()):
+        raise FileExistsError(f"Refusing to overwrite existing turns input files in: {turns_dir}")
+
+    primary_df = _turns_dataframe(specs["turns_sessions"].get("primary_rows", []))
+    reliability_df = _turns_dataframe(specs["turns_sessions"].get("reliability_rows", []))
+    primary_df.to_excel(primary_path, index=False)
+    reliability_df.to_excel(reliability_path, index=False)
+    return turns_dir
+
+
+def _write_expected_turn_files(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["files"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        random.seed(specs["project_config"].get("random_seed", 99))
+        make_digital_convo_turn_files(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            num_bins=specs["project_config"].get("num_bins", 2),
+            num_coders=specs["project_config"].get("num_coders", 0),
+            blinding_config=_template_blinding_config(specs),
+            seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_turn_evaluation(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["evaluate"]
+    )
+    input_dir = _write_turns_coding_inputs(project_dir, specs, force=force)
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+
+    with _scratch_dir(project_dir) as tmpdir:
+        evaluate_digital_convo_turns_reliability(
+            metadata_fields=metadata_fields,
+            input_dir=input_dir,
+            output_dir=tmpdir,
+        )
+        _replace_tree(tmpdir / "turns_reliability", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_turn_reselection(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["reselect"]
+    )
+    input_dir = _turns_input_dir(project_dir, specs)
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+
+    with _scratch_dir(project_dir) as tmpdir:
+        reselect_digital_convo_turns_rel(
+            metadata_fields=metadata_fields,
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            random_seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(tmpdir / "reselected_turns_reliability", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_turn_analysis(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["analyze"]
+    )
+    primary_path = _turns_input_dir(project_dir, specs) / "conversation_turns_template.xlsx"
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = tmpdir / "input" / "conversation_turns"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(primary_path, input_dir / primary_path.name)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        analyze_digital_convo_turns(input_dir=input_dir, output_dir=output_dir)
+        _replace_tree(output_dir, expected_dir, force=force)
+
+    return expected_dir
+
+
 def generate_example_files(destination: str | Path, *, force: bool = False) -> Path:
     """
     Materialize the synthetic DIAAD example project.
@@ -1522,4 +1665,8 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_vocab_check(project_dir, specs, force=force)
     _write_expected_vocab_analysis(project_dir, specs, force=force)
     _write_expected_vocab_rates(project_dir, specs, force=force)
+    _write_expected_turn_files(project_dir, specs, force=force)
+    _write_expected_turn_evaluation(project_dir, specs, force=force)
+    _write_expected_turn_reselection(project_dir, specs, force=force)
+    _write_expected_turn_analysis(project_dir, specs, force=force)
     return project_dir

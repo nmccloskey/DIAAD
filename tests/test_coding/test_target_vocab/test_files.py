@@ -30,3 +30,18 @@ def test_make_target_vocab_file_writes_json(monkeypatch, tmp_path):
 
     assert path.exists()
     assert json.loads(path.read_text(encoding="utf-8"))["id"] == ""
+
+
+def test_check_target_vocab_resources_writes_report(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        files,
+        "load_builtin_resources",
+        lambda: {"StoryA": sample_target_vocab_resource("StoryA")},
+    )
+
+    resources = files.check_target_vocab_resources(output_dir=tmp_path)
+
+    report = tmp_path / "target_vocab" / "target_vocab_resource_check.txt"
+    assert resources.keys() == {"StoryA"}
+    assert report.exists()
+    assert "Active resource ids:" in report.read_text(encoding="utf-8")

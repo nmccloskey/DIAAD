@@ -15,6 +15,7 @@ from diaad.coding.target_vocab.resources import (
 
 
 TARGET_VOCAB_TEMPLATE_FILENAME = "target_vocabulary_resource_template.json"
+TARGET_VOCAB_CHECK_REPORT_FILENAME = "target_vocab_resource_check.txt"
 
 
 def _blank_norm_template() -> dict[str, Any]:
@@ -73,9 +74,66 @@ def make_target_vocab_file(
     return output_path
 
 
+def _format_resource_check_report(
+    *,
+    resource_path: str | Path | None,
+    resources: dict[str, dict[str, Any]],
+    custom_resources: dict[str, dict[str, Any]] | None = None,
+) -> str:
+    """Build the plain-text resource validation report."""
+    custom_resources = custom_resources or {}
+    lines = ["Target vocabulary resource check", ""]
+
+    if resource_path is None or str(resource_path).strip() == "":
+        lines.extend(
+            [
+                "Custom resource path: none",
+                "Custom resource id: none",
+            ]
+        )
+    else:
+        resource_display = Path(resource_path)
+        if "input" in resource_display.parts:
+            resource_display = Path(*resource_display.parts[resource_display.parts.index("input") :])
+        lines.append(f"Custom resource path: {resource_display.as_posix()}")
+        if len(custom_resources) == 1:
+            custom_id = next(iter(custom_resources))
+            lines.append(f"Custom resource id: {custom_id}")
+        else:
+            lines.append(f"Custom resource count: {len(custom_resources)}")
+            if custom_resources:
+                lines.append("Custom resource ids:")
+                lines.extend(f"- {resource_id}" for resource_id in sorted(custom_resources))
+
+    lines.extend(
+        [
+            f"Active resource count: {len(resources)}",
+            "Active resource ids:",
+            *[f"- {resource_id}" for resource_id in sorted(resources)],
+            "",
+            "Built-in narrative resources remain available when a custom JSON path is configured.",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def _write_resource_check_report(
+    *,
+    output_dir: str | Path,
+    report_text: str,
+) -> Path:
+    target_vocab_dir = Path(output_dir) / "target_vocab"
+    target_vocab_dir.mkdir(parents=True, exist_ok=True)
+    report_path = target_vocab_dir / TARGET_VOCAB_CHECK_REPORT_FILENAME
+    report_path.write_text(report_text, encoding="utf-8", newline="\n")
+    logger.info("Wrote target vocabulary resource check report: %s", get_rel_path(report_path))
+    return report_path
+
+
 def check_target_vocab_resources(
     *,
     resource_path: str | Path | None = None,
+    output_dir: str | Path | None = None,
 ) -> dict[str, dict[str, Any]]:
     """
     Validate and summarize the active target vocabulary resource set.
@@ -87,6 +145,14 @@ def check_target_vocab_resources(
             len(resources),
         )
         logger.info("Bundled target vocabulary ids: %s", sorted(resources))
+        if output_dir is not None:
+            _write_resource_check_report(
+                output_dir=output_dir,
+                report_text=_format_resource_check_report(
+                    resource_path=resource_path,
+                    resources=resources,
+                ),
+            )
         return resources
 
     custom_resources = load_resources_from_path(resource_path)
@@ -108,4 +174,13 @@ def check_target_vocab_resources(
             custom_only_ids,
         )
     logger.info("Active target vocabulary ids after merge: %s", sorted(merged_resources))
+    if output_dir is not None:
+        _write_resource_check_report(
+            output_dir=output_dir,
+            report_text=_format_resource_check_report(
+                resource_path=resource_path,
+                resources=merged_resources,
+                custom_resources=custom_resources,
+            ),
+        )
     return merged_resources
