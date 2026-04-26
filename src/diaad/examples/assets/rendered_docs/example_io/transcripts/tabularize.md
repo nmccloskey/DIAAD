@@ -11,33 +11,30 @@ diaad transcripts tabularize --config config
 ## Project Files
 
 ```
-example_files/
-  synthetic_project/
-    README.md
-    config/
-      project.yaml
-      advanced.yaml
+your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
     input/
       chat/
         P1_picnic_pre.cha
         P2_picnic_pre.cha
         P1_picnic_post.cha
-        reliability/
-          P1_picnic_pre.cha
-          P2_picnic_pre.cha
-      transcription_reliability_selection/
-        transcription_reliability_samples.xlsx
-    expected_outputs/
-      transcripts_module/
-        transcripts_tabularize/
-          transcript_table.xlsx
+    output/
+      diaad_YYMMDD_HHMM/
+        transcript_tables/
+          transcript_tables.xlsx
+        logs/
+          diaad_YYMMDD_HHMM.log
+          diaad_YYMMDD_HHMM_metadata.json
 ```
 
 ## Basic Config
 
 ```yaml
-input_dir: input
-output_dir: output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 random_seed: 99
 shuffle_samples: false
 metadata_fields:
@@ -49,20 +46,9 @@ metadata_fields:
   - post
 ```
 
-## Advanced Config
-
-```yaml
-reliability_tag: _reliability
-reliability_dirname: reliability
-metadata_source: transcript_tables
-id_cols:
-- sample_id
-- utterance_id
-```
-
 ## Input Snippet
 
-`input/chat/P1_picnic_pre.cha`
+`diaad_data/input/chat/P1_picnic_pre.cha`
 
 ```text
 @Begin

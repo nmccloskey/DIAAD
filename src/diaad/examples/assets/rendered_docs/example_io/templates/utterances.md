@@ -11,44 +11,50 @@ diaad templates utterances --config config
 ## Project Files
 
 ```
-example_files/
-  synthetic_project/
-    README.md
-    config/
-      project.yaml
-      advanced.yaml
+your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
     input/
-      chat/
-        P1_picnic_pre.cha
-        P2_picnic_pre.cha
-        P1_picnic_post.cha
-        reliability/
-          P1_picnic_pre.cha
-          P2_picnic_pre.cha
-      transcription_reliability_selection/
-        transcription_reliability_samples.xlsx
-    expected_outputs/
-      templates_module/
-        templates_utterances/
+      transcript_tables/
+        transcript_tables.xlsx
+    output/
+      diaad_YYMMDD_HHMM/
+        coding_templates/
           utterance_coding_template.xlsx
           utterance_reliability_template.xlsx
           utterance_template_codebook.xlsx
+        logs/
+          diaad_YYMMDD_HHMM.log
+          diaad_YYMMDD_HHMM_metadata.json
 ```
 
 ## Basic Config
 
 ```yaml
-input_dir: input
-output_dir: output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 reliability_fraction: 0.34
 num_bins: 2
 num_coders: 2
 stimulus_field: stimulus
 ```
 
+## Advanced Config
+
+```yaml
+metadata_source: transcript_tables
+coding_blind_cols:
+- sample_id
+id_cols:
+- sample_id
+- utterance_id
+```
+
 ## Input Snippet
 
-The command uses transcript tables created from the synthetic CHAT files. The preview below is from the generated utterance coding template.
+The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. The preview below is from the generated utterance coding template.
 
 ## Output Preview
 

@@ -11,34 +11,28 @@ diaad transcripts reselect --config config
 ## Project Files
 
 ```
-example_files/
-  synthetic_project/
-    README.md
-    config/
-      project.yaml
-      advanced.yaml
+your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
     input/
-      chat/
-        P1_picnic_pre.cha
-        P2_picnic_pre.cha
-        P1_picnic_post.cha
-        reliability/
-          P1_picnic_pre.cha
-          P2_picnic_pre.cha
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
-    expected_outputs/
-      transcripts_module/
-        transcripts_reselect/
-          reselected_transcription_reliability/
-            reselected_transcription_reliability_samples.xlsx
+    output/
+      diaad_YYMMDD_HHMM/
+        reselected_transcription_reliability/
+          reselected_transcription_reliability_samples.xlsx
+        logs/
+          diaad_YYMMDD_HHMM.log
+          diaad_YYMMDD_HHMM_metadata.json
 ```
 
 ## Basic Config
 
 ```yaml
-input_dir: input
-output_dir: output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 reliability_fraction: 0.34
 ```
 
@@ -46,7 +40,7 @@ reliability_fraction: 0.34
 
 The reselection command reads the prior selection workbook:
 
-`input/transcription_reliability_selection/transcription_reliability_samples.xlsx`
+`diaad_data/input/transcription_reliability_selection/transcription_reliability_samples.xlsx`
 
 ## Output Preview
 

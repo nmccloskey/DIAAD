@@ -151,7 +151,7 @@ class RunContext:
         self.input_dir = self._resolve_project_path(self.config.input_dir)
         self.base_output_dir = self._resolve_project_path(self.config.output_dir)
 
-        self.out_dir = (self.base_output_dir / f"diaad_output_{self.timestamp}").resolve()
+        self.out_dir = (self.base_output_dir / f"diaad_{self.timestamp}").resolve()
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
     def _seed_rngs(self) -> None:

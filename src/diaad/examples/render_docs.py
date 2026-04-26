@@ -53,6 +53,18 @@ def _preview_yaml(data: dict[str, Any], keys: list[str]) -> str:
     return yaml.safe_dump(subset, sort_keys=False, allow_unicode=False).rstrip()
 
 
+def _project_config_snippet(
+    specs: dict[str, dict[str, Any]],
+    keys: list[str],
+) -> str:
+    data = specs["project_config"].copy()
+    if "input_dir" in keys:
+        data["input_dir"] = "diaad_data/input"
+    if "output_dir" in keys:
+        data["output_dir"] = "diaad_data/output"
+    return _preview_yaml(data, keys)
+
+
 def _markdown_table(df: pd.DataFrame, *, max_rows: int = 8) -> str:
     preview = df.head(max_rows).fillna("")
     headers = [str(col) for col in preview.columns]
@@ -65,64 +77,91 @@ def _markdown_table(df: pd.DataFrame, *, max_rows: int = 8) -> str:
     return "\n".join(lines)
 
 
-def _tree(command: str = "all") -> str:
+RUN_DIR = "diaad_YYMMDD_HHMM"
+
+
+def _logs_tree(indent: str = "        ") -> str:
+    return f"""{indent}logs/
+{indent}  diaad_YYMMDD_HHMM.log
+{indent}  diaad_YYMMDD_HHMM_metadata.json"""
+
+
+def _output_tree(contents: str) -> str:
+    return f"""    output/
+      {RUN_DIR}/
+{contents.rstrip()}
+{_logs_tree()}"""
+
+
+def _project_tree(command: str = "all") -> str:
     if command == "tabularize":
-        expected = """      transcripts_module/
-        transcripts_tabularize/
-          transcript_table.xlsx"""
+        input_files = """      chat/
+        P1_picnic_pre.cha
+        P2_picnic_pre.cha
+        P1_picnic_post.cha"""
+        outputs = """        transcript_tables/
+          transcript_tables.xlsx"""
     elif command == "select":
-        expected = """      transcripts_module/
-        transcripts_select/
+        input_files = """      chat/
+        P1_picnic_pre.cha
+        P2_picnic_pre.cha
+        P1_picnic_post.cha"""
+        outputs = """        transcription_reliability_selection/
           P1_picnic_pre_reliability.cha
           P2_picnic_pre_reliability.cha
           transcription_reliability_samples.xlsx"""
     elif command == "evaluate":
-        expected = """      transcripts_module/
-        transcripts_evaluate/
+        input_files = """      chat/
+        P1_picnic_pre.cha
+        P2_picnic_pre.cha
+        P1_picnic_post.cha
+        reliability/
+          P1_picnic_pre.cha
+          P2_picnic_pre.cha"""
+        outputs = """        transcription_reliability_evaluation/
           transcription_reliability_evaluation.xlsx
           transcription_reliability_report.txt
           global_alignments/"""
     elif command == "reselect":
-        expected = """      transcripts_module/
-        transcripts_reselect/
-          reselected_transcription_reliability/
-            reselected_transcription_reliability_samples.xlsx"""
-    elif command == "templates_utterances":
-        expected = """      templates_module/
-        templates_utterances/
+        input_files = """      transcription_reliability_selection/
+        transcription_reliability_samples.xlsx"""
+        outputs = """        reselected_transcription_reliability/
+          reselected_transcription_reliability_samples.xlsx"""
+    elif command in {"templates_utterances", "templates_samples", "templates_times"}:
+        input_files = """      transcript_tables/
+        transcript_tables.xlsx"""
+        if command == "templates_utterances":
+            outputs = """        coding_templates/
           utterance_coding_template.xlsx
           utterance_reliability_template.xlsx
           utterance_template_codebook.xlsx"""
-    elif command == "templates_samples":
-        expected = """      templates_module/
-        templates_samples/
+        elif command == "templates_samples":
+            outputs = """        coding_templates/
           sample_coding_template.xlsx
           sample_reliability_template.xlsx
           sample_template_codebook.xlsx"""
-    elif command == "templates_times":
-        expected = """      templates_module/
-        templates_times/
+        else:
+            outputs = """        coding_templates/
           speaking_times.xlsx"""
     else:
-        expected = """      transcripts_module/
-        transcripts_tabularize/
-          transcript_table.xlsx
-        transcripts_select/
-          transcription_reliability_samples.xlsx
-        transcripts_evaluate/
-          transcription_reliability_evaluation.xlsx
-          transcription_reliability_report.txt
-        transcripts_reselect/
-          reselected_transcription_reliability/
-            reselected_transcription_reliability_samples.xlsx
-      templates_module/
-        templates_utterances/
-          utterance_coding_template.xlsx
-        templates_samples/
-          sample_coding_template.xlsx
-        templates_times/
-          speaking_times.xlsx"""
+        input_files = """      chat/
+        P1_picnic_pre.cha
+        P2_picnic_pre.cha
+        P1_picnic_post.cha"""
+        outputs = """        transcript_tables/
+          transcript_tables.xlsx"""
 
+    return f"""your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
+    input/
+{input_files}
+{_output_tree(outputs)}"""
+
+
+def _example_files_tree() -> str:
     return """example_files/
   synthetic_project/
     README.md
@@ -140,19 +179,48 @@ def _tree(command: str = "all") -> str:
       transcription_reliability_selection/
         transcription_reliability_samples.xlsx
     expected_outputs/
-""" + expected
+      transcripts_module/
+        transcripts_tabularize/
+          transcript_table.xlsx
+        transcripts_select/
+          transcription_reliability_samples.xlsx
+        transcripts_evaluate/
+          transcription_reliability_evaluation.xlsx
+          transcription_reliability_report.txt
+        transcripts_reselect/
+          reselected_transcription_reliability/
+            reselected_transcription_reliability_samples.xlsx
+      templates_module/
+        templates_utterances/
+          utterance_coding_template.xlsx
+          utterance_reliability_template.xlsx
+          utterance_template_codebook.xlsx
+        templates_samples/
+          sample_coding_template.xlsx
+          sample_reliability_template.xlsx
+          sample_template_codebook.xlsx
+        templates_times/
+          speaking_times.xlsx"""
 
 
 def _overview_doc() -> str:
-    return """# DIAAD Example I/O Manual
+    return f"""# DIAAD Example I/O Manual
 
 The example I/O manual shows small, runnable DIAAD workflows alongside their inputs and outputs.
 
 Runnable files are generated locally under `example_files/`, so the repository and installed package do not carry generated workbooks or CHAT copies. The manual-style markdown is packaged with DIAAD under `diaad.examples.assets.rendered_docs.example_io` for use by the webapp, manual renderer, or other documentation tools.
 
+Command pages show minimal user project structures: the config files a user needs, the required inputs for that one command, and the output files created in a timestamped DIAAD run directory. The local generated example project is a fuller teaching fixture because it contains inputs and expected outputs for several commands at once.
+
+Generated example projects may include a `README.md` for navigation, but a README is not required in a user's DIAAD project.
+
 Synthetic data are defined in packaged YAML specs. Some markdown pages are authored directly, and others include tables, directory trees, and snippets rendered from those specs or from generated example files.
 
 All example data are synthetic. They are not human-subjects data, participant records, clinical documentation, or de-identified real transcripts.
+
+## Generated Example Files
+
+{_fenced(_example_files_tree())}
 """
 
 
@@ -192,13 +260,9 @@ def _tabularize_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
         / EXPECTED_WORKBOOK
     )
 
-    project_snippet = _preview_yaml(
-        specs["project_config"],
+    project_snippet = _project_config_snippet(
+        specs,
         ["input_dir", "output_dir", "random_seed", "shuffle_samples", "metadata_fields"],
-    )
-    advanced_snippet = _preview_yaml(
-        specs["advanced_config"],
-        ["reliability_tag", "reliability_dirname", "metadata_source", "id_cols"],
     )
     chat_excerpt = "\n".join(chat["content"].splitlines()[:12])
 
@@ -212,19 +276,15 @@ This example demonstrates how `diaad transcripts tabularize` converts tiny synth
 
 ## Project Files
 
-{_fenced(_tree("tabularize"))}
+{_fenced(_project_tree("tabularize"))}
 
 ## Basic Config
 
 {_fenced(project_snippet, "yaml")}
 
-## Advanced Config
-
-{_fenced(advanced_snippet, "yaml")}
-
 ## Input Snippet
 
-`input/chat/{chat["filename"]}`
+`diaad_data/input/chat/{chat["filename"]}`
 
 {_fenced(chat_excerpt, "text")}
 
@@ -248,8 +308,8 @@ def _select_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
         / "transcripts_select"
         / "transcription_reliability_samples.xlsx"
     )
-    project_snippet = _preview_yaml(
-        specs["project_config"],
+    project_snippet = _project_config_snippet(
+        specs,
         ["input_dir", "output_dir", "random_seed", "reliability_fraction", "metadata_fields"],
     )
     chat_excerpt = "\n".join(specs["chat_files"]["chat_files"][1]["content"].splitlines()[:11])
@@ -264,7 +324,7 @@ This example demonstrates how `diaad transcripts select` selects synthetic CHAT 
 
 ## Project Files
 
-{_fenced(_tree("select"))}
+{_fenced(_project_tree("select"))}
 
 ## Basic Config
 
@@ -272,7 +332,7 @@ This example demonstrates how `diaad transcripts select` selects synthetic CHAT 
 
 ## Input Snippet
 
-The command uses the synthetic CHAT files in `input/chat/`.
+The command uses the synthetic CHAT files in `diaad_data/input/chat/`.
 
 {_fenced(chat_excerpt, "text")}
 
@@ -319,7 +379,11 @@ This example demonstrates how `diaad transcripts evaluate` compares original CHA
 
 ## Project Files
 
-{_fenced(_tree("evaluate"))}
+{_fenced(_project_tree("evaluate"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
 
 ## Advanced Config
 
@@ -327,7 +391,7 @@ This example demonstrates how `diaad transcripts evaluate` compares original CHA
 
 ## Input Snippet
 
-`input/chat/reliability/{reliability_chat["filename"]}`
+`diaad_data/input/chat/reliability/{reliability_chat["filename"]}`
 
 {_fenced(chat_excerpt, "text")}
 
@@ -367,17 +431,17 @@ This example demonstrates how `diaad transcripts reselect` chooses replacement r
 
 ## Project Files
 
-{_fenced(_tree("reselect"))}
+{_fenced(_project_tree("reselect"))}
 
 ## Basic Config
 
-{_fenced(_preview_yaml(specs["project_config"], ["input_dir", "output_dir", "reliability_fraction"]), "yaml")}
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction"]), "yaml")}
 
 ## Input Snippet
 
 The reselection command reads the prior selection workbook:
 
-`input/transcription_reliability_selection/transcription_reliability_samples.xlsx`
+`diaad_data/input/transcription_reliability_selection/transcription_reliability_samples.xlsx`
 
 ## Output Preview
 
@@ -392,8 +456,8 @@ The synthetic project has three samples. Because two are already selected in the
 
 
 def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
-    return _preview_yaml(
-        specs["project_config"],
+    return _project_config_snippet(
+        specs,
         [
             "input_dir",
             "output_dir",
@@ -402,6 +466,13 @@ def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "num_coders",
             "stimulus_field",
         ],
+    )
+
+
+def _template_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return _preview_yaml(
+        specs["advanced_config"],
+        ["metadata_source", "coding_blind_cols", "id_cols"],
     )
 
 
@@ -426,15 +497,19 @@ This example demonstrates how `diaad templates utterances` creates blank utteran
 
 ## Project Files
 
-{_fenced(_tree("templates_utterances"))}
+{_fenced(_project_tree("templates_utterances"))}
 
 ## Basic Config
 
 {_fenced(_template_config_snippet(specs), "yaml")}
 
+## Advanced Config
+
+{_fenced(_template_advanced_snippet(specs), "yaml")}
+
 ## Input Snippet
 
-The command uses transcript tables created from the synthetic CHAT files. The preview below is from the generated utterance coding template.
+The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. The preview below is from the generated utterance coding template.
 
 ## Output Preview
 
@@ -477,11 +552,15 @@ This example demonstrates how `diaad templates samples` creates blank sample-lev
 
 ## Project Files
 
-{_fenced(_tree("templates_samples"))}
+{_fenced(_project_tree("templates_samples"))}
 
 ## Basic Config
 
 {_fenced(_template_config_snippet(specs), "yaml")}
+
+## Advanced Config
+
+{_fenced(_template_advanced_snippet(specs), "yaml")}
 
 ## Output Preview
 
@@ -522,11 +601,11 @@ This example demonstrates how `diaad templates times` creates a blank sample-lev
 
 ## Project Files
 
-{_fenced(_tree("templates_times"))}
+{_fenced(_project_tree("templates_times"))}
 
 ## Basic Config
 
-{_fenced(_preview_yaml(specs["project_config"], ["input_dir", "output_dir"]), "yaml")}
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Output Preview
 

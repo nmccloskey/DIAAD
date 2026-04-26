@@ -11,33 +11,28 @@ diaad templates times --config config
 ## Project Files
 
 ```
-example_files/
-  synthetic_project/
-    README.md
-    config/
-      project.yaml
-      advanced.yaml
+your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
     input/
-      chat/
-        P1_picnic_pre.cha
-        P2_picnic_pre.cha
-        P1_picnic_post.cha
-        reliability/
-          P1_picnic_pre.cha
-          P2_picnic_pre.cha
-      transcription_reliability_selection/
-        transcription_reliability_samples.xlsx
-    expected_outputs/
-      templates_module/
-        templates_times/
+      transcript_tables/
+        transcript_tables.xlsx
+    output/
+      diaad_YYMMDD_HHMM/
+        coding_templates/
           speaking_times.xlsx
+        logs/
+          diaad_YYMMDD_HHMM.log
+          diaad_YYMMDD_HHMM_metadata.json
 ```
 
 ## Basic Config
 
 ```yaml
-input_dir: input
-output_dir: output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 ```
 
 ## Output Preview

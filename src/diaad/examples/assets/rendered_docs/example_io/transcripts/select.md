@@ -11,35 +11,32 @@ diaad transcripts select --config config
 ## Project Files
 
 ```
-example_files/
-  synthetic_project/
-    README.md
-    config/
-      project.yaml
-      advanced.yaml
+your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
     input/
       chat/
         P1_picnic_pre.cha
         P2_picnic_pre.cha
         P1_picnic_post.cha
-        reliability/
-          P1_picnic_pre.cha
-          P2_picnic_pre.cha
-      transcription_reliability_selection/
-        transcription_reliability_samples.xlsx
-    expected_outputs/
-      transcripts_module/
-        transcripts_select/
+    output/
+      diaad_YYMMDD_HHMM/
+        transcription_reliability_selection/
           P1_picnic_pre_reliability.cha
           P2_picnic_pre_reliability.cha
           transcription_reliability_samples.xlsx
+        logs/
+          diaad_YYMMDD_HHMM.log
+          diaad_YYMMDD_HHMM_metadata.json
 ```
 
 ## Basic Config
 
 ```yaml
-input_dir: input
-output_dir: output
+input_dir: diaad_data/input
+output_dir: diaad_data/output
 random_seed: 99
 reliability_fraction: 0.34
 metadata_fields:
@@ -53,7 +50,7 @@ metadata_fields:
 
 ## Input Snippet
 
-The command uses the synthetic CHAT files in `input/chat/`.
+The command uses the synthetic CHAT files in `diaad_data/input/chat/`.
 
 ```text
 @Begin

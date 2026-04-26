@@ -11,12 +11,11 @@ diaad transcripts evaluate --config config
 ## Project Files
 
 ```
-example_files/
-  synthetic_project/
-    README.md
-    config/
-      project.yaml
-      advanced.yaml
+your_project/
+  config/
+    project.yaml
+    advanced.yaml
+  diaad_data/
     input/
       chat/
         P1_picnic_pre.cha
@@ -25,14 +24,29 @@ example_files/
         reliability/
           P1_picnic_pre.cha
           P2_picnic_pre.cha
-      transcription_reliability_selection/
-        transcription_reliability_samples.xlsx
-    expected_outputs/
-      transcripts_module/
-        transcripts_evaluate/
+    output/
+      diaad_YYMMDD_HHMM/
+        transcription_reliability_evaluation/
           transcription_reliability_evaluation.xlsx
           transcription_reliability_report.txt
           global_alignments/
+        logs/
+          diaad_YYMMDD_HHMM.log
+          diaad_YYMMDD_HHMM_metadata.json
+```
+
+## Basic Config
+
+```yaml
+input_dir: diaad_data/input
+output_dir: diaad_data/output
+metadata_fields:
+  participant_id: P\d+
+  stimulus:
+  - picnic
+  timepoint:
+  - pre
+  - post
 ```
 
 ## Advanced Config
@@ -44,7 +58,7 @@ reliability_dirname: reliability
 
 ## Input Snippet
 
-`input/chat/reliability/P1_picnic_pre.cha`
+`diaad_data/input/chat/reliability/P1_picnic_pre.cha`
 
 ```text
 @Begin
