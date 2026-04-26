@@ -10,6 +10,11 @@ MODULE_COMMANDS = {
         "examples",
     ],
 
+    "blinding": [
+        "blinding encode",
+        "blinding decode",
+    ],
+
     "transcripts": [
         "transcripts select",
         "transcripts evaluate",
