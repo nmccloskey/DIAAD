@@ -37,6 +37,12 @@ example_files/
         cu_blind_codebook.xlsx
       cu_coding_analysis/
         cu_coding_by_sample_long.xlsx
+      word_counts/
+        word_counting.xlsx
+        word_count_reliability.xlsx
+        word_count_blind_codebook.xlsx
+      word_count_analysis/
+        word_counting_by_sample.xlsx
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
@@ -79,4 +85,19 @@ example_files/
           cu_coding_by_sample.xlsx
         cus_rates/
           cu_coding_rates.xlsx
+      words_module/
+        words_files/
+          word_counting.xlsx
+          word_count_reliability.xlsx
+          word_count_blind_codebook.xlsx
+        words_evaluate/
+          word_count_reliability_results.xlsx
+          word_count_reliability_report.txt
+        words_reselect/
+          reselected_word_count_reliability.xlsx
+        words_analyze/
+          word_counting_by_utterance.xlsx
+          word_counting_by_sample.xlsx
+        words_rates/
+          word_counting_rates.xlsx
 ```

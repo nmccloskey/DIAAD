@@ -75,3 +75,27 @@ cus_rates:
   directory: expected_outputs/cus_module/cus_rates
   files:
     - cu_coding_rates.xlsx
+words_files:
+  directory: expected_outputs/words_module/words_files
+  files:
+    - word_counting.xlsx
+    - word_count_reliability.xlsx
+    - word_count_blind_codebook.xlsx
+words_evaluate:
+  directory: expected_outputs/words_module/words_evaluate
+  files:
+    - word_count_reliability_results.xlsx
+    - word_count_reliability_report.txt
+words_reselect:
+  directory: expected_outputs/words_module/words_reselect
+  files:
+    - reselected_word_count_reliability.xlsx
+words_analyze:
+  directory: expected_outputs/words_module/words_analyze
+  files:
+    - word_counting_by_utterance.xlsx
+    - word_counting_by_sample.xlsx
+words_rates:
+  directory: expected_outputs/words_module/words_rates
+  files:
+    - word_counting_rates.xlsx

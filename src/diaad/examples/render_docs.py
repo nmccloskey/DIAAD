@@ -14,6 +14,8 @@ from diaad.examples.generate import (
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATES_MODULE_DIR,
     TRANSCRIPTS_MODULE_DIR,
+    WORD_OUTPUT_DIRS,
+    WORDS_MODULE_DIR,
     _scratch_dir,
     generate_example_files,
 )
@@ -181,6 +183,40 @@ def _project_tree(command: str = "all") -> str:
         speaking_times.xlsx"""
         outputs = """        cu_coding_analysis/
           cu_coding_rates.xlsx"""
+    elif command == "words_files":
+        input_files = """      transcript_tables/
+        transcript_tables.xlsx"""
+        outputs = """        word_counts/
+          word_counting.xlsx
+          word_count_reliability.xlsx
+          word_count_blind_codebook.xlsx"""
+    elif command == "words_evaluate":
+        input_files = """      word_counts/
+        word_counting.xlsx
+        word_count_reliability.xlsx"""
+        outputs = """        word_count_reliability/
+          word_count_reliability_results.xlsx
+          word_count_reliability_report.txt"""
+    elif command == "words_reselect":
+        input_files = """      word_counts/
+        word_counting.xlsx
+        word_count_reliability.xlsx"""
+        outputs = """        reselected_word_count_reliability/
+          reselected_word_count_reliability.xlsx"""
+    elif command == "words_analyze":
+        input_files = """      word_counts/
+        word_counting.xlsx
+        word_count_blind_codebook.xlsx"""
+        outputs = """        word_count_analysis/
+          word_counting_by_utterance.xlsx
+          word_counting_by_sample.xlsx"""
+    elif command == "words_rates":
+        input_files = """      word_count_analysis/
+        word_counting_by_sample.xlsx
+      speaking_times/
+        speaking_times.xlsx"""
+        outputs = """        word_count_analysis/
+          word_counting_rates.xlsx"""
     else:
         input_files = """      chat/
         P1_picnic_pre.cha
@@ -223,6 +259,12 @@ def _example_files_tree() -> str:
         cu_blind_codebook.xlsx
       cu_coding_analysis/
         cu_coding_by_sample_long.xlsx
+      word_counts/
+        word_counting.xlsx
+        word_count_reliability.xlsx
+        word_count_blind_codebook.xlsx
+      word_count_analysis/
+        word_counting_by_sample.xlsx
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
@@ -266,6 +308,22 @@ def _example_files_tree() -> str:
           cu_coding_by_sample.xlsx
         cus_rates/
           cu_coding_rates.xlsx"""
+        + """
+      words_module/
+        words_files/
+          word_counting.xlsx
+          word_count_reliability.xlsx
+          word_count_blind_codebook.xlsx
+        words_evaluate/
+          word_count_reliability_results.xlsx
+          word_count_reliability_report.txt
+        words_reselect/
+          reselected_word_count_reliability.xlsx
+        words_analyze/
+          word_counting_by_utterance.xlsx
+          word_counting_by_sample.xlsx
+        words_rates/
+          word_counting_rates.xlsx"""
     )
 
 
@@ -920,6 +978,243 @@ Speaking times are synthetic seconds added to the generated speaking-time templa
 """
 
 
+def _word_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return _project_config_snippet(
+        specs,
+        [
+            "input_dir",
+            "output_dir",
+            "reliability_fraction",
+            "num_coders",
+            "stimulus_field",
+            "exclude_participants",
+        ],
+    )
+
+
+def _word_advanced_snippet(specs: dict[str, dict[str, Any]], keys: list[str] | None = None) -> str:
+    return _preview_yaml(
+        specs["advanced_config"],
+        keys
+        or [
+            "word_count_file",
+            "word_count_field",
+            "metadata_source",
+            "coding_blind_cols",
+            "id_cols",
+        ],
+    )
+
+
+def _word_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["files"]
+
+    return f"""# Word Count File Example
+
+This example demonstrates how `diaad words files` creates word-count coding and reliability workbooks from transcript tables.
+
+## Command
+
+{_fenced("diaad words files --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("words_files"))}
+
+## Basic Config
+
+{_fenced(_word_config_snippet(specs), "yaml")}
+
+## Advanced Config
+
+{_fenced(_word_advanced_snippet(specs), "yaml")}
+
+## Input Snippet
+
+The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
+
+## Output Preview
+
+`expected_outputs/words_module/words_files/word_counting.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_counting.xlsx"))}
+
+`expected_outputs/words_module/words_files/word_count_reliability.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_count_reliability.xlsx"))}
+
+`expected_outputs/words_module/words_files/word_count_blind_codebook.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_count_blind_codebook.xlsx"))}
+
+## Notes
+
+The generated local example fills synthetic word counts into the blank coding workbooks so downstream word-count examples can be demonstrated. Real `words files` output starts as coding material for human review.
+"""
+
+
+def _word_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["evaluate"]
+    report = output_dir / "word_count_reliability_report.txt"
+    report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:10])
+
+    return f"""# Word Count Reliability Evaluation Example
+
+This example demonstrates how `diaad words evaluate` compares primary word counts with a synthetic reliability workbook.
+
+## Command
+
+{_fenced("diaad words evaluate --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("words_evaluate"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_word_advanced_snippet(specs, ["word_count_file", "word_count_field"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/word_counts/word_counting.xlsx` and `diaad_data/input/word_counts/word_count_reliability.xlsx`.
+
+## Output Preview
+
+`expected_outputs/words_module/words_evaluate/word_count_reliability_results.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_count_reliability_results.xlsx"))}
+
+`expected_outputs/words_module/words_evaluate/word_count_reliability_report.txt`
+
+{_fenced(report_excerpt, "text")}
+
+## Notes
+
+Reliability word counts are synthetic, with small deterministic differences from the primary counts.
+"""
+
+
+def _word_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["reselect"]
+
+    return f"""# Word Count Reliability Reselection Example
+
+This example demonstrates how `diaad words reselect` selects replacement word-count reliability rows after an earlier reliability workbook has already been used.
+
+## Command
+
+{_fenced("diaad words reselect --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("words_reselect"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields"]), "yaml")}
+
+## Input Snippet
+
+The command reads prior word-count coding and reliability workbooks from `diaad_data/input/word_counts/`.
+
+## Output Preview
+
+`expected_outputs/words_module/words_reselect/reselected_word_count_reliability.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "reselected_word_count_reliability.xlsx"))}
+
+## Notes
+
+The synthetic example has only three samples, so the reselected workbook is intentionally tiny.
+"""
+
+
+def _word_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["analyze"]
+
+    return f"""# Word Count Analysis Example
+
+This example demonstrates how `diaad words analyze` summarizes filled word-count coding by utterance and by sample.
+
+## Command
+
+{_fenced("diaad words analyze --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("words_analyze"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_word_advanced_snippet(specs, ["word_count_file", "word_count_field", "metadata_source", "coding_blind_cols", "id_cols"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind codebook is included so analysis outputs can recover sample identifiers.
+
+## Output Preview
+
+`expected_outputs/words_module/words_analyze/word_counting_by_utterance.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_counting_by_utterance.xlsx"))}
+
+`expected_outputs/words_module/words_analyze/word_counting_by_sample.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_counting_by_sample.xlsx"))}
+
+## Notes
+
+The preview uses synthetic filled word counts generated from the packaged example specs.
+"""
+
+
+def _word_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["rates"]
+
+    return f"""# Word Count Rate Calculation Example
+
+This example demonstrates how `diaad words rates` combines word-count sample summaries with speaking times to calculate rates per minute.
+
+## Command
+
+{_fenced("diaad words rates --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("words_rates"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_word_advanced_snippet(specs, ["wc_samples_file", "speaking_time_file", "speaking_time_field"]), "yaml")}
+
+## Input Snippet
+
+The command reads `diaad_data/input/word_count_analysis/word_counting_by_sample.xlsx` and `diaad_data/input/speaking_times/speaking_times.xlsx`.
+
+## Output Preview
+
+`expected_outputs/words_module/words_rates/word_counting_rates.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "word_counting_rates.xlsx"))}
+
+## Notes
+
+Speaking times are synthetic seconds added to the generated speaking-time template for this example.
+"""
+
+
 def render_example_docs() -> list[Path]:
     """Create or update packaged example I/O markdown assets."""
     specs = _read_specs()
@@ -937,6 +1232,11 @@ def render_example_docs() -> list[Path]:
         cu_reselect_doc = _cu_reselect_doc(project_dir, specs)
         cu_analyze_doc = _cu_analyze_doc(project_dir, specs)
         cu_rates_doc = _cu_rates_doc(project_dir, specs)
+        word_files_doc = _word_files_doc(project_dir, specs)
+        word_evaluate_doc = _word_evaluate_doc(project_dir, specs)
+        word_reselect_doc = _word_reselect_doc(project_dir, specs)
+        word_analyze_doc = _word_analyze_doc(project_dir, specs)
+        word_rates_doc = _word_rates_doc(project_dir, specs)
 
     return [
         _write_doc("01_overview.md", text=_overview_doc()),
@@ -952,4 +1252,9 @@ def render_example_docs() -> list[Path]:
         _write_doc("cus", "reselect.md", text=cu_reselect_doc),
         _write_doc("cus", "analyze.md", text=cu_analyze_doc),
         _write_doc("cus", "rates.md", text=cu_rates_doc),
+        _write_doc("words", "files.md", text=word_files_doc),
+        _write_doc("words", "evaluate.md", text=word_evaluate_doc),
+        _write_doc("words", "reselect.md", text=word_reselect_doc),
+        _write_doc("words", "analyze.md", text=word_analyze_doc),
+        _write_doc("words", "rates.md", text=word_rates_doc),
     ]

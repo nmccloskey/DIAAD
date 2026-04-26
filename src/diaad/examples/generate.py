@@ -20,6 +20,11 @@ from diaad.coding.compl_utts.rel_reselection import reselect_cu_rel
 from diaad.coding.templates.samples import make_sample_template_files
 from diaad.coding.templates.times import make_speaking_time_template_files
 from diaad.coding.templates.utterances import make_utterance_template_files
+from diaad.coding.word_counts.analysis import analyze_word_counts
+from diaad.coding.word_counts.files import make_word_count_files
+from diaad.coding.word_counts.rates import calculate_word_count_rates
+from diaad.coding.word_counts.rel_evaluation import evaluate_word_count_reliability
+from diaad.coding.word_counts.rel_reselection import reselect_wc_rel
 from diaad.core.config import AdvancedConfig
 from diaad.transcripts.cha_files import read_cha_files
 from diaad.transcripts.transcript_tables import tabularize_transcripts
@@ -39,6 +44,7 @@ EXPECTED_WORKBOOK = "transcript_table.xlsx"
 TRANSCRIPTS_MODULE_DIR = "transcripts_module"
 TEMPLATES_MODULE_DIR = "templates_module"
 CUS_MODULE_DIR = "cus_module"
+WORDS_MODULE_DIR = "words_module"
 SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
@@ -54,6 +60,13 @@ CU_OUTPUT_DIRS = {
     "reselect": "cus_reselect",
     "analyze": "cus_analyze",
     "rates": "cus_rates",
+}
+WORD_OUTPUT_DIRS = {
+    "files": "words_files",
+    "evaluate": "words_evaluate",
+    "reselect": "words_reselect",
+    "analyze": "words_analyze",
+    "rates": "words_rates",
 }
 
 
@@ -198,6 +211,7 @@ Key files:
 - `expected_outputs/transcripts_module/`: outputs for transcript commands.
 - `expected_outputs/templates_module/`: outputs for template commands.
 - `expected_outputs/cus_module/`: outputs for complete-utterance coding commands.
+- `expected_outputs/words_module/`: outputs for word-count commands.
 """
     _write_text(project_dir / "README.md", text, force=force)
 
@@ -314,6 +328,11 @@ def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
         "cus_reselect",
         "cus_analyze",
         "cus_rates",
+        "words_files",
+        "words_evaluate",
+        "words_reselect",
+        "words_analyze",
+        "words_rates",
     ):
         shutil.rmtree(project_dir / "expected_outputs" / dirname, ignore_errors=True)
 
@@ -724,14 +743,13 @@ def _write_expected_cu_rates(
     time_input_dir = input_dir / "speaking_times"
     time_input_dir.mkdir(parents=True, exist_ok=True)
     time_input = time_input_dir / "speaking_times.xlsx"
-    if time_input.exists() and not force:
-        raise FileExistsError(f"Refusing to overwrite existing file: {time_input}")
-    shutil.copyfile(source_time, time_input)
-
-    times_df = pd.read_excel(time_input)
-    if "speaking_time" in times_df.columns:
-        times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
-    times_df.to_excel(time_input, index=False)
+    if not time_input.exists() or force:
+        if source_time.resolve() != time_input.resolve():
+            shutil.copyfile(source_time, time_input)
+        times_df = pd.read_excel(time_input)
+        if "speaking_time" in times_df.columns:
+            times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
+        times_df.to_excel(time_input, index=False)
 
     with _scratch_dir(project_dir) as tmpdir:
         calculate_cu_rates(
@@ -751,6 +769,205 @@ def _write_expected_cu_rates(
             ),
         )
         _replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
+    return expected_dir
+
+
+def _prepare_word_input(tmpdir: Path, transcript_table: Path) -> Path:
+    input_dir = tmpdir / "input"
+    table_dir = input_dir / "transcript_tables"
+    table_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    return input_dir
+
+
+def _word_blinding_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig:
+    return AdvancedConfig(**specs["advanced_config"])
+
+
+def _vary_word_reliability(path: Path) -> None:
+    df = pd.read_excel(path)
+    if "word_count" not in df.columns:
+        return
+
+    numeric = pd.to_numeric(df["word_count"], errors="coerce")
+    codeable_indices = list(df.index[numeric.notna()])
+    for position, idx in enumerate(codeable_indices):
+        value = int(numeric.loc[idx])
+        if position % 4 == 0:
+            value = max(0, value - 1)
+        elif position % 5 == 0:
+            value = value + 1
+        df.at[idx, "word_count"] = value
+    df.to_excel(path, index=False)
+
+
+def _write_expected_word_files(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["files"]
+    )
+    transcript_table = (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / EXPECTED_WORKBOOK
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = _prepare_word_input(tmpdir, transcript_table)
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        random.seed(specs["project_config"].get("random_seed", 99))
+        make_word_count_files(
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            num_coders=specs["project_config"].get("num_coders", 0),
+            input_dir=input_dir,
+            output_dir=output_dir,
+            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            blinding_config=_word_blinding_config(specs),
+        )
+        _replace_tree(output_dir / "word_counts", expected_dir, force=force)
+
+    rel_file = expected_dir / "word_count_reliability.xlsx"
+    if rel_file.exists():
+        _vary_word_reliability(rel_file)
+
+    input_word_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
+    if input_word_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {input_word_dir}")
+    _replace_tree(expected_dir, input_word_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_word_evaluation(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["evaluate"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
+    with _scratch_dir(project_dir) as tmpdir:
+        evaluate_word_count_reliability(input_dir=input_dir, output_dir=tmpdir)
+        _replace_tree(tmpdir / "word_count_reliability", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_word_reselection(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["reselect"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
+    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
+    with _scratch_dir(project_dir) as tmpdir:
+        reselect_wc_rel(
+            metadata_fields=metadata_fields,
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            random_seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(tmpdir / "reselected_word_count_reliability", expected_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_word_analysis(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["analyze"]
+    )
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
+    with _scratch_dir(project_dir) as tmpdir:
+        analyze_word_counts(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            word_count_file=specs["advanced_config"].get("word_count_file", "word_counting.xlsx"),
+            word_count_field=specs["advanced_config"].get("word_count_field", "word_count"),
+            blinding_config=_word_blinding_config(specs),
+        )
+        _replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
+
+    analysis_input_dir = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "word_count_analysis"
+    )
+    if analysis_input_dir.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
+    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    return expected_dir
+
+
+def _write_expected_word_rates(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["rates"]
+    )
+    source_time = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "speaking_times"
+        / "speaking_times.xlsx"
+    )
+    if not source_time.exists():
+        source_time = (
+            project_dir
+            / "expected_outputs"
+            / TEMPLATES_MODULE_DIR
+            / TEMPLATE_OUTPUT_DIRS["times"]
+            / "speaking_times.xlsx"
+        )
+
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    time_input_dir = input_dir / "speaking_times"
+    time_input_dir.mkdir(parents=True, exist_ok=True)
+    time_input = time_input_dir / "speaking_times.xlsx"
+    if not time_input.exists() or force:
+        if source_time.resolve() != time_input.resolve():
+            shutil.copyfile(source_time, time_input)
+        times_df = pd.read_excel(time_input)
+        if "speaking_time" in times_df.columns:
+            times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
+        times_df.to_excel(time_input, index=False)
+
+    with _scratch_dir(project_dir) as tmpdir:
+        calculate_word_count_rates(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            wc_samples_file=specs["advanced_config"].get(
+                "wc_samples_file",
+                "word_counting_by_sample.xlsx",
+            ),
+            speaking_time_file=specs["advanced_config"].get(
+                "speaking_time_file",
+                "speaking_times.xlsx",
+            ),
+            speaking_time_field=specs["advanced_config"].get(
+                "speaking_time_field",
+                "speaking_time",
+            ),
+        )
+        _replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
     return expected_dir
 
 
@@ -787,4 +1004,9 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_cu_reselection(project_dir, specs, force=force)
     _write_expected_cu_analysis(project_dir, specs, force=force)
     _write_expected_cu_rates(project_dir, specs, force=force)
+    _write_expected_word_files(project_dir, specs, force=force)
+    _write_expected_word_evaluation(project_dir, specs, force=force)
+    _write_expected_word_reselection(project_dir, specs, force=force)
+    _write_expected_word_analysis(project_dir, specs, force=force)
+    _write_expected_word_rates(project_dir, specs, force=force)
     return project_dir

@@ -40,7 +40,12 @@ def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
         return
 
     # ICC
-    icc_value = calculate_icc_from_pingouin(wc_merged)
+    icc_value = calculate_icc_from_pingouin(
+        wc_merged,
+        target_col="utterance_id",
+        col_org="word_count_org",
+        col_rel="word_count_rel",
+    )
     logger.info(f"Calculated ICC(2,1) for {rel_name}: {icc_value}")
 
     # Agreement summary
