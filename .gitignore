@@ -52,3 +52,4 @@ htmlcov/
 .vscode/
 .idea/
 *.swp
+.devcontainer/
