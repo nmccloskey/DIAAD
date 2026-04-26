@@ -48,6 +48,8 @@ DISPATCHED_COMMANDS = {
     "vocab file",
     "vocab analyze",
     "turns files",
+    "turns evaluate",
+    "turns reselect",
     "turns analyze",
     "templates utterances",
     "templates samples",

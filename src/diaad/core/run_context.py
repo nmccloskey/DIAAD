@@ -463,6 +463,20 @@ class RunContext:
             "seed": self.random_seed,
         }
 
+    def kwargs_digital_convo_turns_reliability(self) -> dict[str, Any]:
+        """Return kwargs for digital conversation turn reliability evaluation."""
+        return self.kwargs_metadata_field_io()
+
+    def kwargs_reselect_digital_convo_turns(self) -> dict[str, Any]:
+        """Return kwargs for digital conversation turn reliability reselection."""
+        return {
+            "metadata_fields": self.metadata_fields,
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "random_seed": self.random_seed,
+        }
+
     def kwargs_digital_convo_turns(self) -> dict[str, Any]:
         """Return kwargs for digital conversation turn analysis."""
         return self.kwargs_io()

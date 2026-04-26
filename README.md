@@ -359,6 +359,8 @@ DIAAD commands are grouped by **module**. Each command corresponds to a specific
 | Command         | Description                                          | Input            | Output                                      | Function                        |
 | --------------- | ---------------------------------------------------- | ---------------- | ------------------------------------------- | ------------------------------- |
 | `turns files`   | Generate digital conversation turn coding templates  | Transcript tables | Primary and reliability turn-coding files   | `make_digital_convo_turn_files` |
+| `turns evaluate` | Evaluate turns reliability with count ICC and sequence similarity | Turn coding and reliability files | Long-format reliability workbook, report, and alignments | `evaluate_digital_convo_turns_reliability` |
+| `turns reselect` | Reselect turns reliability samples for fresh coding | Existing turn coding and reliability files | New reliability template subset | `reselect_digital_convo_turns_rel` |
 | `turns analyze` | Analyze completed digital conversation turn files    | Turn coding files | Speaker, group, session, and transition summaries | `analyze_digital_convo_turns`   |
 
 ---

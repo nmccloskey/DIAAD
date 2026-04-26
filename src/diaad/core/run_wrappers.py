@@ -149,6 +149,19 @@ def run_make_digital_convo_turn_files(ctx):
 
     return make_digital_convo_turn_files(**ctx.kwargs_make_digital_convo_turn_files())
 
+def run_evaluate_digital_convo_turns(ctx):
+    """Evaluate digital conversation turn reliability."""
+    from diaad.coding.convo_turns.rel_evaluation import evaluate_digital_convo_turns_reliability
+
+    return evaluate_digital_convo_turns_reliability(**ctx.kwargs_digital_convo_turns_reliability())
+
+
+def run_reselect_digital_convo_turns(ctx):
+    """Reselect digital conversation turn reliability samples."""
+    from diaad.coding.convo_turns.rel_reselection import reselect_digital_convo_turns_rel
+
+    return reselect_digital_convo_turns_rel(**ctx.kwargs_reselect_digital_convo_turns())
+
 
 def run_analyze_digital_convo_turns(ctx):
     """Analyze digital conversation turns."""
