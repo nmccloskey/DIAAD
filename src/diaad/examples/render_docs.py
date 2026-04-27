@@ -9,6 +9,8 @@ import pandas as pd
 import yaml
 
 from diaad.examples.generate import (
+    BLINDING_MODULE_DIR,
+    BLINDING_OUTPUT_DIRS,
     CU_OUTPUT_DIRS,
     CUS_MODULE_DIR,
     EXPECTED_WORKBOOK,
@@ -121,6 +123,19 @@ def _project_tree(command: str = "all") -> str:
         P1_picnic_post.cha"""
         outputs = """        transcript_tables/
           transcript_tables.xlsx"""
+    elif command == "blinding_encode":
+        input_files = """      powers_coding/
+        powers_coding.xlsx"""
+        outputs = """        blinding/
+          powers_coding_blinded.xlsx
+          powers_coding_blinding_diagnostics.xlsx
+          blind_codebook.xlsx"""
+    elif command == "blinding_decode":
+        input_files = """      cu_coding/
+        cu_coding.xlsx
+        cu_blind_codebook.xlsx"""
+        outputs = """        blinding/
+          cu_coding_decoded.xlsx"""
     elif command == "select":
         input_files = """      chat/
         P1_picnic_pre.cha
@@ -377,6 +392,13 @@ def _example_files_tree() -> str:
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
+      blinding_module/
+        blinding_encode/
+          powers_coding_blinded.xlsx
+          powers_coding_blinding_diagnostics.xlsx
+          blind_codebook.xlsx
+        blinding_decode/
+          cu_coding_decoded.xlsx
       transcripts_module/
         transcripts_tabularize/
           transcript_table.xlsx
@@ -520,6 +542,116 @@ def _workbook_sheet_tables(path: Path, sheet_names: list[str]) -> str:
 def _all_workbook_sheet_tables(path: Path) -> str:
     with pd.ExcelFile(path, engine="openpyxl") as xls:
         return _workbook_sheet_tables(path, xls.sheet_names)
+
+
+def _blinding_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    data = specs["advanced_config"].copy()
+    data["auto_blind"] = True
+    data["blind_cols"] = ["sample_id"]
+    return _preview_yaml(data, ["auto_blind", "blind_cols", "id_cols"])
+
+
+def _blinding_encode_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = (
+        project_dir
+        / "expected_outputs"
+        / BLINDING_MODULE_DIR
+        / BLINDING_OUTPUT_DIRS["encode"]
+    )
+    input_path = project_dir / "input" / "powers_coding" / "powers_coding.xlsx"
+
+    return f"""# Blinding Encode Example
+
+This example demonstrates how `diaad blinding encode` blinds `sample_id` in a standalone workbook and writes a reusable codebook.
+
+## Command
+
+{_fenced("diaad blinding encode --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("blinding_encode"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "random_seed"]), "yaml")}
+
+## Advanced Config
+
+{_fenced(_blinding_advanced_snippet(specs), "yaml")}
+
+## Input Snippet
+
+`diaad_data/input/powers_coding/powers_coding.xlsx`
+
+{_markdown_table(pd.read_excel(input_path))}
+
+## Output Preview
+
+`expected_outputs/blinding_module/blinding_encode/powers_coding_blinded.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "powers_coding_blinded.xlsx"))}
+
+`expected_outputs/blinding_module/blinding_encode/blind_codebook.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "blind_codebook.xlsx"))}
+
+`expected_outputs/blinding_module/blinding_encode/powers_coding_blinding_diagnostics.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "powers_coding_blinding_diagnostics.xlsx"))}
+
+## Notes
+
+The input is the synthetic POWERS coding workbook from the generated example project. The command discovers the first non-codebook `.xlsx` in the input folder and generates a new blind codebook because no codebook is supplied.
+"""
+
+
+def _blinding_decode_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    output_dir = (
+        project_dir
+        / "expected_outputs"
+        / BLINDING_MODULE_DIR
+        / BLINDING_OUTPUT_DIRS["decode"]
+    )
+    input_path = project_dir / "input" / "cu_coding" / "cu_coding.xlsx"
+    codebook_path = project_dir / "input" / "cu_coding" / "cu_blind_codebook.xlsx"
+
+    return f"""# Blinding Decode Example
+
+This example demonstrates how `diaad blinding decode` restores blinded identifiers in a standalone workbook using a blind codebook.
+
+## Command
+
+{_fenced("diaad blinding decode --config config", "bash")}
+
+## Project Files
+
+{_fenced(_project_tree("blinding_decode"))}
+
+## Basic Config
+
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+
+## Input Snippet
+
+`diaad_data/input/cu_coding/cu_coding.xlsx`
+
+{_markdown_table(pd.read_excel(input_path))}
+
+`diaad_data/input/cu_coding/cu_blind_codebook.xlsx`
+
+{_markdown_table(pd.read_excel(codebook_path))}
+
+## Output Preview
+
+`expected_outputs/blinding_module/blinding_decode/cu_coding_decoded.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "cu_coding_decoded.xlsx"))}
+
+## Notes
+
+The input is the synthetic CU coding workbook and codebook created by the CU examples. The decode command discovers the codebook, restores `sample_id`, and removes the suffixed blinded identifier column.
+"""
 
 
 def _tabularize_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
@@ -1935,6 +2067,8 @@ def render_example_docs() -> list[Path]:
     specs = _read_specs()
     with _scratch_dir(Path.cwd()) as tmpdir:
         project_dir = generate_example_files(tmpdir / "synthetic_project", force=True)
+        blinding_encode_doc = _blinding_encode_doc(project_dir, specs)
+        blinding_decode_doc = _blinding_decode_doc(project_dir, specs)
         tabularize_doc = _tabularize_doc(project_dir, specs)
         select_doc = _select_doc(project_dir, specs)
         evaluate_doc = _evaluate_doc(project_dir, specs)
@@ -1968,6 +2102,8 @@ def render_example_docs() -> list[Path]:
 
     return [
         _write_doc("01_overview.md", text=_overview_doc()),
+        _write_doc("blinding", "encode.md", text=blinding_encode_doc),
+        _write_doc("blinding", "decode.md", text=blinding_decode_doc),
         _write_doc("transcripts", "tabularize.md", text=tabularize_doc),
         _write_doc("transcripts", "select.md", text=select_doc),
         _write_doc("transcripts", "evaluate.md", text=evaluate_doc),

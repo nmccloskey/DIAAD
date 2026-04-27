@@ -63,6 +63,27 @@ def test_generate_synthetic_project(tmp_path):
     assert _exists(
         project_dir
         / "expected_outputs"
+        / "blinding_module"
+        / "blinding_encode"
+        / "powers_coding_blinded.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "blinding_module"
+        / "blinding_encode"
+        / "blind_codebook.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "blinding_module"
+        / "blinding_decode"
+        / "cu_coding_decoded.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
         / "templates_module"
         / "templates_utterances"
         / "utterance_coding_template.xlsx"
@@ -283,6 +304,8 @@ def test_render_example_docs():
     assert any(path.name == "select.md" for path in paths)
     assert any(path.name == "evaluate.md" for path in paths)
     assert any(path.name == "reselect.md" for path in paths)
+    assert any(path.name == "encode.md" and path.parent.name == "blinding" for path in paths)
+    assert any(path.name == "decode.md" and path.parent.name == "blinding" for path in paths)
     assert any(path.name == "utterances.md" for path in paths)
     assert any(path.name == "samples.md" for path in paths)
     assert any(path.name == "times.md" for path in paths)
@@ -304,6 +327,7 @@ def test_render_example_docs():
     assert any(path.name == "reselect.md" and path.parent.name == "turns" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "turns" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
+    assert (get_example_io_docs_path() / "blinding" / "encode.md").exists()
     assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
     assert (get_example_io_docs_path() / "cus" / "files.md").exists()
     assert (get_example_io_docs_path() / "words" / "files.md").exists()

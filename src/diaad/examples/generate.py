@@ -13,6 +13,8 @@ import pandas as pd
 import random
 import yaml
 
+from diaad.blinding.decode import decode_blinding
+from diaad.blinding.encode import encode_blinding
 from diaad.coding.compl_utts.analysis import analyze_cu_coding
 from diaad.coding.compl_utts.files import make_cu_coding_files
 from diaad.coding.compl_utts.rates import calculate_cu_rates
@@ -44,6 +46,7 @@ from diaad.coding.word_counts.rel_reselection import reselect_wc_rel
 from diaad.core.config import AdvancedConfig
 from diaad.transcripts.cha_files import read_cha_files
 from diaad.transcripts.transcript_tables import tabularize_transcripts
+from diaad.metadata.unblinding import unblind_dataframe
 from diaad.transcripts.transcription_reliability_evaluation import (
     evaluate_transcription_reliability,
 )
@@ -58,6 +61,7 @@ SPEC_PACKAGE = "diaad.examples"
 SPEC_ROOT = ("assets", "spec")
 EXPECTED_WORKBOOK = "transcript_table.xlsx"
 TRANSCRIPTS_MODULE_DIR = "transcripts_module"
+BLINDING_MODULE_DIR = "blinding_module"
 TEMPLATES_MODULE_DIR = "templates_module"
 CUS_MODULE_DIR = "cus_module"
 WORDS_MODULE_DIR = "words_module"
@@ -68,6 +72,10 @@ SELECT_OUTPUT_DIR = "transcripts_select"
 EVALUATE_OUTPUT_DIR = "transcripts_evaluate"
 RESELECT_OUTPUT_DIR = "transcripts_reselect"
 TABULARIZE_OUTPUT_DIR = "transcripts_tabularize"
+BLINDING_OUTPUT_DIRS = {
+    "encode": "blinding_encode",
+    "decode": "blinding_decode",
+}
 TEMPLATE_OUTPUT_DIRS = {
     "utterances": "templates_utterances",
     "samples": "templates_samples",
@@ -253,6 +261,7 @@ Key files:
 - `config/advanced.yaml`: advanced DIAAD settings for this example.
 - `input/chat/*.cha`: synthetic CHAT inputs.
 - `input/chat/reliability/*.cha`: synthetic reliability transcriptions.
+- `expected_outputs/blinding_module/`: outputs for standalone blinding commands.
 - `expected_outputs/transcripts_module/`: outputs for transcript commands.
 - `expected_outputs/templates_module/`: outputs for template commands.
 - `expected_outputs/cus_module/`: outputs for complete-utterance coding commands.
@@ -371,6 +380,8 @@ def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
         SELECT_OUTPUT_DIR,
         EVALUATE_OUTPUT_DIR,
         RESELECT_OUTPUT_DIR,
+        "blinding_encode",
+        "blinding_decode",
         "cus_files",
         "cus_evaluate",
         "cus_reselect",
@@ -623,6 +634,82 @@ def _write_expected_time_templates(
     return expected_dir
 
 
+def _blinding_command_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig:
+    return AdvancedConfig(
+        auto_blind=True,
+        blind_cols=["sample_id"],
+        coding_blind_cols=["sample_id"],
+        analysis_blind_cols=["sample_id"],
+        metadata_source=specs["advanced_config"].get("metadata_source", "transcript_tables"),
+        id_cols=specs["advanced_config"].get("id_cols", ["sample_id"]),
+    )
+
+
+def _write_expected_blinding_encode(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / BLINDING_MODULE_DIR
+        / BLINDING_OUTPUT_DIRS["encode"]
+    )
+    source = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / "powers_coding"
+        / "powers_coding.xlsx"
+    )
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = tmpdir / "input" / "powers_coding"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, input_dir / source.name)
+        encode_blinding(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            blinding_config=_blinding_command_config(specs),
+            seed=specs["project_config"].get("random_seed", 99),
+        )
+        _replace_tree(tmpdir / "blinding", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_blinding_decode(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> Path:
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / BLINDING_MODULE_DIR
+        / BLINDING_OUTPUT_DIRS["decode"]
+    )
+    input_root = project_dir / specs["project_config"].get("input_dir", "input")
+    source = input_root / "cu_coding" / "cu_coding.xlsx"
+    codebook = input_root / "cu_coding" / "cu_blind_codebook.xlsx"
+
+    with _scratch_dir(project_dir) as tmpdir:
+        input_dir = tmpdir / "input" / "cu_coding"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, input_dir / source.name)
+        shutil.copyfile(codebook, input_dir / codebook.name)
+        decode_blinding(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            blinding_config=_blinding_command_config(specs),
+        )
+        _replace_tree(tmpdir / "blinding", expected_dir, force=force)
+
+    return expected_dir
+
+
 def _prepare_cu_input(tmpdir: Path, transcript_table: Path) -> Path:
     input_dir = tmpdir / "input"
     table_dir = input_dir / "transcript_tables"
@@ -801,6 +888,18 @@ def _write_expected_cu_rates(
         / "speaking_times.xlsx"
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    cu_summary_input = (
+        input_dir
+        / "cu_coding_analysis"
+        / specs["advanced_config"].get("cu_samples_file", "cu_coding_by_sample_long.xlsx")
+    )
+    cu_analysis_codebook = input_dir / "cu_coding_analysis" / "cu_analysis_blind_codebook.xlsx"
+    if cu_summary_input.exists() and cu_analysis_codebook.exists():
+        cu_summary_df = pd.read_excel(cu_summary_input)
+        if "sample_id" not in cu_summary_df.columns and "sample_id_blinded" in cu_summary_df.columns:
+            codebook_df = pd.read_excel(cu_analysis_codebook)
+            unblind_dataframe(cu_summary_df, codebook_df).to_excel(cu_summary_input, index=False)
+
     time_input_dir = input_dir / "speaking_times"
     time_input_dir.mkdir(parents=True, exist_ok=True)
     time_input = time_input_dir / "speaking_times.xlsx"
@@ -1000,6 +1099,20 @@ def _write_expected_word_rates(
         )
 
     input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    wc_summary_input = (
+        input_dir
+        / "word_count_analysis"
+        / specs["advanced_config"].get("wc_samples_file", "word_counting_by_sample.xlsx")
+    )
+    wc_analysis_codebook = (
+        input_dir / "word_count_analysis" / "word_count_analysis_blind_codebook.xlsx"
+    )
+    if wc_summary_input.exists() and wc_analysis_codebook.exists():
+        wc_summary_df = pd.read_excel(wc_summary_input)
+        if "sample_id" not in wc_summary_df.columns and "sample_id_blinded" in wc_summary_df.columns:
+            codebook_df = pd.read_excel(wc_analysis_codebook)
+            unblind_dataframe(wc_summary_df, codebook_df).to_excel(wc_summary_input, index=False)
+
     time_input_dir = input_dir / "speaking_times"
     time_input_dir.mkdir(parents=True, exist_ok=True)
     time_input = time_input_dir / "speaking_times.xlsx"
@@ -1661,6 +1774,8 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_powers_reselection(project_dir, specs, force=force)
     _write_expected_powers_analysis(project_dir, specs, force=force)
     _write_expected_powers_rates(project_dir, specs, force=force)
+    _write_expected_blinding_encode(project_dir, specs, force=force)
+    _write_expected_blinding_decode(project_dir, specs, force=force)
     _write_expected_vocab_file(project_dir, specs, force=force)
     _write_expected_vocab_check(project_dir, specs, force=force)
     _write_expected_vocab_analysis(project_dir, specs, force=force)

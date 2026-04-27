@@ -18,6 +18,15 @@ if TYPE_CHECKING:
     from diaad.core.config import AdvancedConfig
 
 
+def _has_codebook_discovery_context(
+    *,
+    match_metadata_fields=None,
+    directories=None,
+    codebook_filename: str = "",
+) -> bool:
+    return bool(match_metadata_fields or directories or str(codebook_filename or "").strip())
+
+
 def _choose_join_keys(
     df: pd.DataFrame,
     metadata_df: pd.DataFrame,
@@ -366,6 +375,7 @@ def blind_analysis_dataframe(
     match_metadata_fields=None,
     directories=None,
     existing_codebook: pd.DataFrame | None = None,
+    discover_existing_codebook: bool = True,
     seed: int = 99,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -426,7 +436,15 @@ def blind_analysis_dataframe(
     if not resolved_cols:
         raise ValueError("No requested analysis blind columns could be resolved.")
 
-    if existing_codebook is None:
+    if (
+        existing_codebook is None
+        and discover_existing_codebook
+        and _has_codebook_discovery_context(
+            match_metadata_fields=match_metadata_fields,
+            directories=directories,
+            codebook_filename=config.codebook_filename,
+        )
+    ):
         existing_codebook = _load_blind_codebook(
             match_metadata_fields=match_metadata_fields,
             directories=directories,
@@ -521,7 +539,11 @@ def blind_file_identifiers(
         )
         return df.copy(), pd.DataFrame()
 
-    if existing_codebook is None:
+    if existing_codebook is None and _has_codebook_discovery_context(
+        match_metadata_fields=match_metadata_fields,
+        directories=directories,
+        codebook_filename=config.codebook_filename,
+    ):
         existing_codebook = _load_blind_codebook(
             match_metadata_fields=match_metadata_fields,
             directories=directories,

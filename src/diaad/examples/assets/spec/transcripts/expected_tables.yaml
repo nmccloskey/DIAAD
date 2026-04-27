@@ -33,6 +33,16 @@ transcripts_reselect:
   sheets:
     - reselected_reliability
   expected_selected_count: 1
+blinding_encode:
+  directory: expected_outputs/blinding_module/blinding_encode
+  files:
+    - powers_coding_blinded.xlsx
+    - powers_coding_blinding_diagnostics.xlsx
+    - blind_codebook.xlsx
+blinding_decode:
+  directory: expected_outputs/blinding_module/blinding_decode
+  files:
+    - cu_coding_decoded.xlsx
 templates_utterances:
   directory: expected_outputs/templates_module/templates_utterances
   files:

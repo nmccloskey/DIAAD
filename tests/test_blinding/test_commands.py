@@ -8,7 +8,7 @@ from diaad.blinding import encode as encode_module
 from diaad.core.config import AdvancedConfig
 
 
-def test_encode_blinding_generates_codebook_and_skips_missing_cols(tmp_path, monkeypatch):
+def test_encode_blinding_generates_codebook_and_skips_missing_cols(tmp_path):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "output"
     input_dir.mkdir()
@@ -20,8 +20,6 @@ def test_encode_blinding_generates_codebook_and_skips_missing_cols(tmp_path, mon
             "score": [10, 20],
         }
     ).to_excel(source_path, index=False)
-
-    monkeypatch.setattr(encode_module, "find_matching_files", lambda **kwargs: [])
 
     blinded_path, codebook_path, diagnostics_path = encode_module.encode_blinding(
         input_dir,
@@ -43,7 +41,7 @@ def test_encode_blinding_generates_codebook_and_skips_missing_cols(tmp_path, mon
     assert list(diagnostics_df.columns) == ["sample_id", "sample_id_blinded"]
 
 
-def test_decode_blinding_requires_codebook(tmp_path, monkeypatch):
+def test_decode_blinding_requires_codebook(tmp_path):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "output"
     input_dir.mkdir()
@@ -52,8 +50,6 @@ def test_decode_blinding_requires_codebook(tmp_path, monkeypatch):
         input_dir / "analysis_blinded.xlsx",
         index=False,
     )
-    monkeypatch.setattr(decode_module, "find_matching_files", lambda **kwargs: [])
-
     with pytest.raises(FileNotFoundError, match="blind codebook"):
         decode_module.decode_blinding(
             input_dir,
@@ -62,7 +58,7 @@ def test_decode_blinding_requires_codebook(tmp_path, monkeypatch):
         )
 
 
-def test_encode_blinding_uses_codebook_columns_when_codebook_exists(tmp_path, monkeypatch):
+def test_encode_blinding_uses_codebook_columns_when_codebook_exists(tmp_path):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "output"
     input_dir.mkdir()
@@ -84,12 +80,6 @@ def test_encode_blinding_uses_codebook_columns_when_codebook_exists(tmp_path, mo
         }
     ).to_excel(codebook_path, index=False)
 
-    monkeypatch.setattr(
-        encode_module,
-        "find_matching_files",
-        lambda **kwargs: [codebook_path],
-    )
-
     blinded_path, _, _ = encode_module.encode_blinding(
         input_dir,
         output_dir,
@@ -102,7 +92,7 @@ def test_encode_blinding_uses_codebook_columns_when_codebook_exists(tmp_path, mo
     assert list(blinded_df["participant_blinded"]) == [101, 102]
 
 
-def test_decode_blinding_restores_suffixed_columns(tmp_path, monkeypatch):
+def test_decode_blinding_restores_suffixed_columns(tmp_path):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "output"
     input_dir.mkdir()
@@ -123,12 +113,6 @@ def test_decode_blinding_restores_suffixed_columns(tmp_path, monkeypatch):
             "blind_code": [1, 2],
         }
     ).to_excel(codebook_path, index=False)
-
-    monkeypatch.setattr(
-        decode_module,
-        "find_matching_files",
-        lambda **kwargs: [codebook_path],
-    )
 
     decoded_path = decode_module.decode_blinding(
         input_dir,

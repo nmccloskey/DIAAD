@@ -60,6 +60,13 @@ example_files/
       speaking_times/
         speaking_times.xlsx
     expected_outputs/
+      blinding_module/
+        blinding_encode/
+          powers_coding_blinded.xlsx
+          powers_coding_blinding_diagnostics.xlsx
+          blind_codebook.xlsx
+        blinding_decode/
+          cu_coding_decoded.xlsx
       transcripts_module/
         transcripts_tabularize/
           transcript_table.xlsx

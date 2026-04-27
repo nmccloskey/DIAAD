@@ -5,7 +5,6 @@ from pathlib import Path
 import pandas as pd
 
 from psair.core.logger import get_rel_path, logger
-from psair.metadata.discovery import find_matching_files
 
 from diaad.core.config import AdvancedConfig
 from diaad.metadata.unblinding import unblind_dataframe, validate_decode_codebook
@@ -39,11 +38,11 @@ def _choose_first_path(matches, *, resource_name: str) -> Path:
 
 
 def _find_blind_codebook(input_dir: str | Path) -> Path:
-    matches = find_matching_files(
-        directories=[input_dir],
-        search_base="blind_codebook",
-        search_ext=".xlsx",
-    )
+    matches = [
+        Path(p)
+        for p in sorted(Path(input_dir).rglob("*.xlsx"))
+        if "blind_codebook" in p.stem.lower() and not p.name.startswith("~$")
+    ]
     return _choose_first_path(
         matches,
         resource_name="blind codebook",

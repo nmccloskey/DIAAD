@@ -60,24 +60,24 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind c
 
 `expected_outputs/words_module/words_analyze/word_counting_by_utterance.xlsx`
 
-| sample_id | utterance_id | speaker | utterance | word_count |
+| utterance_id | speaker | utterance | word_count | sample_id_blinded |
 | --- | --- | --- | --- | --- |
-| S001 | U0001 | INV | Please tell the picnic story again. |  |
-| S001 | U0002 | PAR | The family brought food to the park. | 7.0 |
-| S001 | U0003 | PAR | The little girl [/] the little girl pours juice. | 8.0 |
-| S001 | U0004 | PAR | Then they share sandwiches. | 4.0 |
-| S001 | U0005 | INV | Anything else? |  |
-| S001 | U0006 | PAR | Yes, the dog waits beside them. | 6.0 |
-| S001 | U0007 | PAR | The day is quiet. | 4.0 |
-| S003 | U0001 | INV | What do you notice first? |  |
+| U0001 | INV | Please tell the picnic story again. |  | 1 |
+| U0002 | PAR | The family brought food to the park. | 7.0 | 1 |
+| U0003 | PAR | The little girl [/] the little girl pours juice. | 8.0 | 1 |
+| U0004 | PAR | Then they share sandwiches. | 4.0 | 1 |
+| U0005 | INV | Anything else? |  | 1 |
+| U0006 | PAR | Yes, the dog waits beside them. | 6.0 | 1 |
+| U0007 | PAR | The day is quiet. | 4.0 | 1 |
+| U0001 | INV | What do you notice first? |  | 2 |
 
 `expected_outputs/words_module/words_analyze/word_counting_by_sample.xlsx`
 
-| sample_id | no_utt_coded | no_utt_missing | total_words | mean_words_per_utt | sd_words_per_utt | min_words_per_utt | max_words_per_utt |
+| no_utt_coded | no_utt_missing | total_words | mean_words_per_utt | sd_words_per_utt | min_words_per_utt | max_words_per_utt | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| S001 | 5 | 2 | 29 | 5.8 | 1.789 | 4 | 8 |
-| S003 | 5 | 2 | 22 | 4.4 | 1.673 | 2 | 6 |
-| S002 | 5 | 2 | 24 | 4.8 | 1.789 | 3 | 7 |
+| 5.0 | 2.0 | 29.0 | 5.8 | 1.789 | 4.0 | 8.0 | 1.0 |
+| 5.0 | 2.0 | 22.0 | 4.4 | 1.673 | 2.0 | 6.0 | 2.0 |
+| 5.0 | 2.0 | 24.0 | 4.8 | 1.789 | 3.0 | 7.0 | 3.0 |
 
 ## Notes
 
