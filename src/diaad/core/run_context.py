@@ -266,6 +266,23 @@ class RunContext:
             "output_dir": self.out_dir,
         }
 
+    def kwargs_encode_blinding(self) -> dict[str, Any]:
+        """Return kwargs for standalone blinding encode."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "blinding_config": self.config.blinding,
+            "seed": self.random_seed,
+        }
+
+    def kwargs_decode_blinding(self) -> dict[str, Any]:
+        """Return kwargs for standalone blinding decode."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "blinding_config": self.config.blinding,
+        }
+
     def kwargs_metadata_field_io(self) -> dict[str, Any]:
         """
         Return the standard metadata field + input/output payload for modules

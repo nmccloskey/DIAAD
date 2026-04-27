@@ -2,6 +2,24 @@ from __future__ import annotations
 
 
 # ------------------------------------------------------------------
+# Blinding
+# ------------------------------------------------------------------
+
+def run_encode_blinding(ctx):
+    """Blind a general xlsx file using or generating a blind codebook."""
+    from diaad.blinding.encode import encode_blinding
+
+    return encode_blinding(**ctx.kwargs_encode_blinding())
+
+
+def run_decode_blinding(ctx):
+    """Decode a general xlsx file using a blind codebook."""
+    from diaad.blinding.decode import decode_blinding
+
+    return decode_blinding(**ctx.kwargs_decode_blinding())
+
+
+# ------------------------------------------------------------------
 # Transcription
 # ------------------------------------------------------------------
 

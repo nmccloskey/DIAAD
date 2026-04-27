@@ -51,3 +51,16 @@ def test_build_dispatch_invokes_wrapper_with_context(monkeypatch):
     dispatch["cus files"]()
 
     assert seen == [ctx]
+
+
+def test_build_dispatch_includes_blinding_commands(monkeypatch):
+    ctx = object()
+    seen = []
+    monkeypatch.setattr(dispatch_module, "run_encode_blinding", lambda value: seen.append(("encode", value)))
+    monkeypatch.setattr(dispatch_module, "run_decode_blinding", lambda value: seen.append(("decode", value)))
+
+    dispatch = dispatch_module.build_dispatch(ctx)
+    dispatch["blinding encode"]()
+    dispatch["blinding decode"]()
+
+    assert seen == [("encode", ctx), ("decode", ctx)]

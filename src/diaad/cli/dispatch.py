@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 
 from diaad.core.run_wrappers import (
+    run_decode_blinding,
+    run_encode_blinding,
     run_analyze_cu_coding,
     run_analyze_word_counts,
     run_analyze_digital_convo_turns,
@@ -93,6 +95,12 @@ def build_dispatch(ctx) -> CommandDispatch:
     the provided RunContext.
     """
     return {
+        # --------------------------------------------------------------
+        # Blinding
+        # --------------------------------------------------------------
+        "blinding encode": lambda: run_encode_blinding(ctx),
+        "blinding decode": lambda: run_decode_blinding(ctx),
+
         # --------------------------------------------------------------
         # Transcription
         # --------------------------------------------------------------
