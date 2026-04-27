@@ -744,7 +744,7 @@ def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 def _template_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
     return _preview_yaml(
         specs["advanced_config"],
-        ["metadata_source", "coding_blind_cols", "id_cols"],
+        ["auto_blind", "blind_cols", "metadata_source", "id_cols", "codebook_filename"],
     )
 
 
@@ -908,7 +908,7 @@ def _cu_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 def _cu_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
     return _preview_yaml(
         specs["advanced_config"],
-        ["cu_paradigms", "metadata_source", "coding_blind_cols", "id_cols"],
+        ["cu_paradigms", "auto_blind", "blind_cols", "metadata_source", "id_cols", "codebook_filename"],
     )
 
 
@@ -1061,7 +1061,7 @@ This example demonstrates how `diaad cus analyze` summarizes filled complete-utt
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["metadata_source", "coding_blind_cols", "id_cols"]), "yaml")}
+{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_cols", "metadata_source", "id_cols", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1148,7 +1148,8 @@ def _word_advanced_snippet(specs: dict[str, dict[str, Any]], keys: list[str] | N
             "word_count_file",
             "word_count_field",
             "metadata_source",
-            "coding_blind_cols",
+            "auto_blind",
+            "blind_cols",
             "id_cols",
         ],
     )
@@ -1302,7 +1303,7 @@ This example demonstrates how `diaad words analyze` summarizes filled word-count
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["word_count_file", "word_count_field", "metadata_source", "coding_blind_cols", "id_cols"]), "yaml")}
+{_fenced(_word_advanced_snippet(specs, ["word_count_file", "word_count_field", "auto_blind", "blind_cols", "metadata_source", "id_cols", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1786,7 +1787,7 @@ This example demonstrates how `diaad turns files` creates blank digital conversa
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["metadata_source", "coding_blind_cols", "id_cols"]), "yaml")}
+{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_cols", "metadata_source", "id_cols", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 

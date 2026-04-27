@@ -72,22 +72,35 @@ class AdvancedConfig:
 
     target_vocabulary_resource_path: str = ""
 
+    auto_blind: bool = False
+    blind_cols: list[str] | None = None
     metadata_source: str = "transcript_tables"
+    codebook_filename: str = ""
+
+    # Deprecated aliases retained so older config files and call sites still work.
     coding_blind_cols: list[str] | None = None
     analysis_blind_cols: list[str] | None = None
     id_cols: list[str] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
+        configured_blind_cols = self.blind_cols
+        if configured_blind_cols is None:
+            configured_blind_cols = self.coding_blind_cols or self.analysis_blind_cols
+        object.__setattr__(
+            self,
+            "blind_cols",
+            list(configured_blind_cols or ["sample_id"]),
+        )
         object.__setattr__(
             self,
             "coding_blind_cols",
-            list(self.coding_blind_cols or ["sample_id"]),
+            list(self.blind_cols),
         )
         object.__setattr__(
             self,
             "analysis_blind_cols",
-            list(self.analysis_blind_cols or ["sample_id"]),
+            list(self.blind_cols),
         )
         object.__setattr__(
             self,
@@ -102,15 +115,13 @@ class AdvancedConfig:
 
     def get_blind_cols(self, mode: str) -> list[str]:
         """Return columns configured for a blinding mode."""
-        if mode == "coding":
-            return self.coding_blind_cols
-        if mode == "analysis":
-            return self.analysis_blind_cols
+        if mode in {"coding", "analysis"}:
+            return self.blind_cols
         raise ValueError(f"Unknown blinding mode: {mode}")
 
     def should_blind(self, mode: str) -> bool:
         """Return True when a blinding mode has configured columns."""
-        return bool(self.get_blind_cols(mode))
+        return bool(self.auto_blind and self.get_blind_cols(mode))
 
 
 # ------------------------------------------------------------------
@@ -268,6 +279,14 @@ class ConfigManager:
         return self.advanced.id_cols
 
     @property
+    def auto_blind(self) -> bool:
+        return self.advanced.auto_blind
+
+    @property
+    def blind_cols(self) -> list[str]:
+        return self.advanced.blind_cols
+
+    @property
     def blinded_suffix(self) -> str:
         return self.advanced.blinded_suffix
 
@@ -282,6 +301,10 @@ class ConfigManager:
     @property
     def metadata_source(self) -> str:
         return self.advanced.metadata_source
+
+    @property
+    def codebook_filename(self) -> str:
+        return self.advanced.codebook_filename
 
     @property
     def metadata_path(self) -> Path:
@@ -324,10 +347,11 @@ class ConfigManager:
                 "target_vocabulary_resource_path": (
                     self.advanced.target_vocabulary_resource_path
                 ),
+                "auto_blind": self.advanced.auto_blind,
+                "blind_cols": self.advanced.blind_cols,
                 "metadata_source": self.advanced.metadata_source,
-                "coding_blind_cols": self.advanced.coding_blind_cols,
-                "analysis_blind_cols": self.advanced.analysis_blind_cols,
                 "id_cols": self.advanced.id_cols,
+                "codebook_filename": self.advanced.codebook_filename,
             },
         }
 
@@ -443,6 +467,13 @@ class ConfigManager:
                 data.get("metadata_source"),
                 default="transcript_tables",
             ),
+            auto_blind=self._as_bool(data.get("auto_blind"), default=False),
+            blind_cols=self._as_optional_str_list(
+                data.get(
+                    "blind_cols",
+                    data.get("coding_blind_cols", data.get("analysis_blind_cols")),
+                ),
+            ),
             coding_blind_cols=self._as_optional_str_list(
                 data.get("coding_blind_cols"),
             ),
@@ -450,6 +481,10 @@ class ConfigManager:
                 data.get("analysis_blind_cols"),
             ),
             id_cols=self._as_optional_str_list(data.get("id_cols")),
+            codebook_filename=self._as_str(
+                data.get("codebook_filename"),
+                default="",
+            ),
         )
 
     def _parse_metadata_fields(

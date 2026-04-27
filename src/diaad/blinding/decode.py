@@ -50,11 +50,39 @@ def _find_blind_codebook(input_dir: str | Path) -> Path:
     )
 
 
-def _find_target_xlsx(input_dir: str | Path) -> Path:
+def _find_named_codebook(input_dir: str | Path, codebook_filename: str) -> Path:
+    filename = str(codebook_filename or "").strip()
+    candidate = Path(filename).expanduser()
+
+    if candidate.is_absolute():
+        matches = [candidate] if candidate.exists() else []
+    else:
+        matches = list(Path(input_dir).rglob(filename))
+
+    if not matches:
+        raise FileNotFoundError(
+            "Configured blind codebook file was not found. Check the "
+            f"codebook_filename setting in advanced.yaml: {filename!r}"
+        )
+
+    return _choose_first_path(
+        matches,
+        resource_name="configured blind codebook",
+    )
+
+
+def _find_target_xlsx(
+    input_dir: str | Path,
+    *,
+    exclude_paths: list[str | Path] | None = None,
+) -> Path:
+    excluded = {Path(p).resolve() for p in normalize_to_list(exclude_paths)}
     target_matches = [
         Path(p)
         for p in sorted(Path(input_dir).rglob("*.xlsx"))
-        if "blind_codebook" not in p.stem.lower() and not p.name.startswith("~$")
+        if p.resolve() not in excluded
+        and "blind_codebook" not in p.stem.lower()
+        and not p.name.startswith("~$")
     ]
     return _choose_first_path(
         target_matches,
@@ -75,8 +103,12 @@ def decode_blinding(
     out_dir = Path(output_dir) / "blinding"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    codebook_path = _find_blind_codebook(input_dir)
-    target_path = _find_target_xlsx(input_dir)
+    codebook_path = (
+        _find_named_codebook(input_dir, blinding_config.codebook_filename)
+        if blinding_config.codebook_filename
+        else _find_blind_codebook(input_dir)
+    )
+    target_path = _find_target_xlsx(input_dir, exclude_paths=[codebook_path])
 
     logger.info("Using blind codebook: %s", get_rel_path(codebook_path))
     logger.info("Decoding target xlsx: %s", get_rel_path(target_path))

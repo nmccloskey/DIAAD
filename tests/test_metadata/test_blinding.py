@@ -38,7 +38,7 @@ def test_validate_blind_codebook_compatibility_rejects_duplicates():
 
 def test_blind_analysis_dataframe_recovers_metadata_columns():
     config = AdvancedConfig(
-        analysis_blind_cols=["speaker"],
+        blind_cols=["speaker"],
         id_cols=["sample_id", "utterance_id"],
     )
     df = pd.DataFrame({"sample_id": ["S1", "S2"], "score": [1, 2]})
@@ -58,7 +58,7 @@ def test_blind_analysis_dataframe_recovers_metadata_columns():
 
 
 def test_blind_file_identifiers_replaces_original_values():
-    config = AdvancedConfig(coding_blind_cols=["sample_id"])
+    config = AdvancedConfig(blind_cols=["sample_id"])
     df = pd.DataFrame({"sample_id": ["S1", "S2"], "value": [10, 20]})
 
     blinded_df, codebook_df = blinding.blind_file_identifiers(df, config, seed=1)

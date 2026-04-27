@@ -62,24 +62,32 @@ target_vocabulary_resource_path: ""
 
 
 # -------------------------------------------------------------------
-# Optional blinding settings
+# Project blinding
+# -------------------------------------------------------------------
+
+# Automatically apply blinding to coding files or analyses.
+# (Ignored when blinding is called explicitly with encode/decode)
+auto_blind: false
+
+# Columns to blind when blinding is requested.
+# Columns not present in a given file are skipped with a warning.
+blind_cols:
+  - sample_id
+
+# -------------------------------------------------------------------
+# Optional: metadata/codebook recovery for blinding
 # -------------------------------------------------------------------
 # Leave these as-is unless you need custom blinding behavior.
 
 # Source from which metadata may be recovered for blinding / unblinding.
 metadata_source: transcript_tables
 
-# Columns to blind in manual coding files.
-coding_blind_cols:
-  - sample_id
-
-# Columns to blind in analysis outputs.
-analysis_blind_cols:
-  - sample_id
-  - site
-  - test
-
 # Join keys used when recovering metadata.
 id_cols:
   - sample_id
   - utterance_id
+
+# If blank, blind codebooks are sought with pattern *blind_codebook*.xlsx
+# e.g., word_count_blind_codebook.xlsx
+# Otherwise, automated & explicit blinding will search for the below.
+codebook_filename: ""

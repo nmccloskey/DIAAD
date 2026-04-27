@@ -46,12 +46,14 @@ exclude_participants:
 
 ```yaml
 cu_paradigms: []
-metadata_source: transcript_tables
-coding_blind_cols:
+auto_blind: true
+blind_cols:
 - sample_id
+metadata_source: transcript_tables
 id_cols:
 - sample_id
 - utterance_id
+codebook_filename: ''
 ```
 
 ## Input Snippet

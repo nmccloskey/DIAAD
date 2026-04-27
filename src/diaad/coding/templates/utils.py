@@ -141,6 +141,7 @@ def apply_optional_identifier_blinding(
     blind: bool,
     blinding_config,
     existing_codebook: pd.DataFrame | None = None,
+    directories=None,
     seed: int = 99,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -153,6 +154,7 @@ def apply_optional_identifier_blinding(
         df=df,
         config=blinding_config,
         existing_codebook=existing_codebook,
+        directories=directories,
         seed=seed,
     )
     return blinded_df, codebook_df

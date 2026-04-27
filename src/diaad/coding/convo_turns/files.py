@@ -106,6 +106,7 @@ def make_digital_convo_turn_files(
             df,
             blind=True,
             blinding_config=blinding_config,
+            directories=[input_dir, output_dir],
             seed=seed,
         )
         export_df = _sort_turns_template(export_df)
@@ -116,6 +117,7 @@ def make_digital_convo_turn_files(
                 blind=True,
                 blinding_config=blinding_config,
                 existing_codebook=codebook_df,
+                directories=[input_dir, output_dir],
                 seed=seed,
             )
             export_rel_df = _sort_turns_template(export_rel_df)

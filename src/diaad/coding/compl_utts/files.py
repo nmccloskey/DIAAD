@@ -290,6 +290,8 @@ def _blind_coding_exports(
     rel_df: pd.DataFrame | None,
     *,
     blinding_config=None,
+    input_dir=None,
+    output_dir=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None]:
     """
     Apply file-identifier blinding to CU and reliability exports.
@@ -313,6 +315,7 @@ def _blind_coding_exports(
     export_cu_df, codebook_df = blind_file_identifiers(
         export_cu_df,
         config=blinding_config,
+        directories=[input_dir, output_dir],
     )
 
     if export_rel_df is not None:
@@ -452,6 +455,8 @@ def make_cu_coding_files(
             cu_df,
             rel_df,
             blinding_config=blinding_config,
+            input_dir=input_dir,
+            output_dir=output_dir,
         )
 
         _write_cu_outputs(

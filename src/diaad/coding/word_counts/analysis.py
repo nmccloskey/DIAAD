@@ -6,6 +6,7 @@ import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
+from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 
 
@@ -167,6 +168,61 @@ def _maybe_unblind_word_count_outputs(
     return unblinded_wc_utts, unblinded_wc_summary, codebook_df
 
 
+def _codebook_covers_targets(codebook_df: pd.DataFrame | None, target_cols: list[str]) -> bool:
+    if codebook_df is None or codebook_df.empty or "column" not in codebook_df.columns:
+        return False
+    available = set(codebook_df["column"].dropna().astype(str))
+    return set(target_cols).issubset(available)
+
+
+def _maybe_blind_word_count_outputs(
+    *,
+    wc_utts: pd.DataFrame,
+    wc_summary: pd.DataFrame | None,
+    blinding_config=None,
+    codebook_df: pd.DataFrame | None = None,
+    input_dir=None,
+    output_dir=None,
+    out_dir=None,
+):
+    if blinding_config is None or not blinding_config.should_blind("analysis"):
+        return wc_utts, wc_summary
+
+    target_cols = blinding_config.get_blind_cols("analysis")
+    reusable_codebook = (
+        codebook_df if _codebook_covers_targets(codebook_df, target_cols) else None
+    )
+
+    blinded_utts, diagnostics_df, analysis_codebook = blind_analysis_dataframe(
+        wc_utts,
+        blinding_config,
+        existing_codebook=reusable_codebook,
+        directories=[input_dir, output_dir],
+    )
+
+    blinded_summary = None
+    if wc_summary is not None:
+        blinded_summary, _, _ = blind_analysis_dataframe(
+            wc_summary,
+            blinding_config,
+            existing_codebook=analysis_codebook,
+            directories=[input_dir, output_dir],
+        )
+
+    if out_dir is not None and analysis_codebook is not None and not analysis_codebook.empty:
+        write_blind_codebook(
+            analysis_codebook,
+            Path(out_dir) / "word_count_analysis_blind_codebook.xlsx",
+        )
+        if not diagnostics_df.empty:
+            diagnostics_df.to_excel(
+                Path(out_dir) / "word_count_analysis_blinding_diagnostics.xlsx",
+                index=False,
+            )
+
+    return blinded_utts, blinded_summary
+
+
 def _write_word_count_analysis_outputs(
     wc_utts: pd.DataFrame,
     wc_summary: pd.DataFrame | None,
@@ -296,13 +352,23 @@ def analyze_word_counts(
         logger.error(f"Word-count aggregation failed for {get_rel_path(cod)}: {e}")
         return
 
-    wc_df, wc_summary, _ = _maybe_unblind_word_count_outputs(
+    wc_df, wc_summary, codebook_df = _maybe_unblind_word_count_outputs(
         wc_utts=wc_df,
         wc_summary=wc_summary,
         blinding_config=blinding_config,
         blind_codebook=blind_codebook,
         input_dir=input_dir,
         output_dir=output_dir,
+    )
+
+    wc_df, wc_summary = _maybe_blind_word_count_outputs(
+        wc_utts=wc_df,
+        wc_summary=wc_summary,
+        blinding_config=blinding_config,
+        codebook_df=codebook_df,
+        input_dir=input_dir,
+        output_dir=output_dir,
+        out_dir=wc_analysis_dir,
     )
 
     _write_word_count_analysis_outputs(

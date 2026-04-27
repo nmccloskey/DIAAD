@@ -321,7 +321,26 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
         ],
     ),
     (
-        "Optional blinding settings",
+        "Project blinding",
+        [
+            {
+                "name": "auto_blind",
+                "label": "Automatically apply blinding",
+                "type": "bool",
+                "default": False,
+                "help": "If true, DIAAD automatically blinds applicable coding files and analysis outputs.",
+            },
+            {
+                "name": "blind_cols",
+                "label": "Blind columns",
+                "type": "list",
+                "default": ["sample_id"],
+                "help": "Columns to blind when blinding is requested. Missing columns are skipped with a warning.",
+            },
+        ],
+    ),
+    (
+        "Optional metadata and codebook recovery",
         [
             {
                 "name": "metadata_source",
@@ -330,25 +349,17 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "Source from which metadata may be recovered for blinding / unblinding.",
             },
             {
-                "name": "coding_blind_cols",
-                "label": "Coding blind columns",
-                "type": "list",
-                "default": ["sample_id"],
-                "help": "Columns to blind in manual coding files.",
-            },
-            {
-                "name": "analysis_blind_cols",
-                "label": "Analysis blind columns",
-                "type": "list",
-                "default": ["sample_id", "site", "test"],
-                "help": "Columns to blind in analysis outputs.",
-            },
-            {
                 "name": "id_cols",
                 "label": "ID columns",
                 "type": "list",
                 "default": ["sample_id", "utterance_id"],
                 "help": "Join keys used when recovering metadata.",
+            },
+            {
+                "name": "codebook_filename",
+                "label": "Codebook filename",
+                "default": "",
+                "help": "Leave blank to search for *blind_codebook*.xlsx, or enter a specific codebook filename to require.",
             },
         ],
     ),

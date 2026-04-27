@@ -6,6 +6,7 @@ from pathlib import Path
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
+from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 
 
@@ -343,6 +344,68 @@ def _maybe_unblind_cu_outputs(
     return unblinded_cu_coding, unblinded_summary_long, unblinded_summary_wide, codebook_df
 
 
+def _codebook_covers_targets(codebook_df: pd.DataFrame | None, target_cols: list[str]) -> bool:
+    if codebook_df is None or codebook_df.empty or "column" not in codebook_df.columns:
+        return False
+    available = set(codebook_df["column"].dropna().astype(str))
+    return set(target_cols).issubset(available)
+
+
+def _maybe_blind_cu_outputs(
+    *,
+    cu_coding: pd.DataFrame,
+    summary_long: pd.DataFrame | None,
+    summary_wide: pd.DataFrame | None,
+    blinding_config=None,
+    codebook_df: pd.DataFrame | None = None,
+    input_dir=None,
+    output_dir=None,
+    out_dir=None,
+):
+    if blinding_config is None or not blinding_config.should_blind("analysis"):
+        return cu_coding, summary_long, summary_wide
+
+    target_cols = blinding_config.get_blind_cols("analysis")
+    reusable_codebook = (
+        codebook_df if _codebook_covers_targets(codebook_df, target_cols) else None
+    )
+
+    blinded_cu, diagnostics_df, analysis_codebook = blind_analysis_dataframe(
+        cu_coding,
+        blinding_config,
+        existing_codebook=reusable_codebook,
+        directories=[input_dir, output_dir],
+    )
+
+    blinded_summary_long = None
+    if summary_long is not None:
+        blinded_summary_long, _, _ = blind_analysis_dataframe(
+            summary_long,
+            blinding_config,
+            existing_codebook=analysis_codebook,
+            directories=[input_dir, output_dir],
+        )
+
+    blinded_summary_wide = None
+    if summary_wide is not None:
+        blinded_summary_wide, _, _ = blind_analysis_dataframe(
+            summary_wide,
+            blinding_config,
+            existing_codebook=analysis_codebook,
+            directories=[input_dir, output_dir],
+        )
+
+    if out_dir is not None and analysis_codebook is not None and not analysis_codebook.empty:
+        write_blind_codebook(analysis_codebook, Path(out_dir) / "cu_analysis_blind_codebook.xlsx")
+        if not diagnostics_df.empty:
+            diagnostics_df.to_excel(
+                Path(out_dir) / "cu_analysis_blinding_diagnostics.xlsx",
+                index=False,
+            )
+
+    return blinded_cu, blinded_summary_long, blinded_summary_wide
+
+
 def _write_cu_analysis_outputs(
     cu_coding,
     summary_long,
@@ -489,7 +552,7 @@ def analyze_cu_coding(
     summary_long = pd.concat(summary_longs, ignore_index=True) if summary_longs else None
     summary_wide = _combine_wide_summaries(summary_wides)
 
-    cu_coding, summary_long, summary_wide, _ = _maybe_unblind_cu_outputs(
+    cu_coding, summary_long, summary_wide, codebook_df = _maybe_unblind_cu_outputs(
         cu_coding=cu_coding,
         summary_long=summary_long,
         summary_wide=summary_wide,
@@ -497,6 +560,17 @@ def analyze_cu_coding(
         blind_codebook=blind_codebook,
         input_dir=input_dir,
         output_dir=output_dir,
+    )
+
+    cu_coding, summary_long, summary_wide = _maybe_blind_cu_outputs(
+        cu_coding=cu_coding,
+        summary_long=summary_long,
+        summary_wide=summary_wide,
+        blinding_config=blinding_config,
+        codebook_df=codebook_df,
+        input_dir=input_dir,
+        output_dir=output_dir,
+        out_dir=cu_analysis_dir,
     )
 
     _write_cu_analysis_outputs(

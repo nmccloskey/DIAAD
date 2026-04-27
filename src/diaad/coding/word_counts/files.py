@@ -409,6 +409,8 @@ def _blind_wc_exports(
     wc_rel_df: pd.DataFrame,
     *,
     blinding_config=None,
+    input_dir=None,
+    output_dir=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame | None]:
     """
     Apply file-identifier blinding to word-count primary and reliability exports.
@@ -432,6 +434,7 @@ def _blind_wc_exports(
     export_wc_df, codebook_df = blind_file_identifiers(
         export_wc_df,
         config=blinding_config,
+        directories=[input_dir, output_dir],
     )
 
     export_wc_rel_df, _ = blind_file_identifiers(
@@ -559,6 +562,8 @@ def make_word_count_files(
             wc_df=wc_df,
             wc_rel_df=wc_rel_df,
             blinding_config=blinding_config,
+            input_dir=input_dir,
+            output_dir=output_dir,
         )
 
         _write_wc_outputs(

@@ -64,6 +64,41 @@ def _choose_first_match(
     return paths[0]
 
 
+def _find_named_codebook_path(
+    *,
+    codebook_filename: str,
+    directories=None,
+) -> Path:
+    """
+    Resolve a specifically configured blind codebook filename.
+    """
+    filename = str(codebook_filename or "").strip()
+    if not filename:
+        raise ValueError("codebook_filename must be non-empty.")
+
+    candidate = Path(filename).expanduser()
+    if candidate.is_absolute():
+        matches = [candidate] if candidate.exists() else []
+    else:
+        matches = []
+        for directory in normalize_to_list(directories):
+            root = Path(directory).expanduser()
+            if root.exists():
+                matches.extend(root.rglob(filename))
+
+    if not matches:
+        raise FileNotFoundError(
+            "Configured blind codebook file was not found. Check the "
+            f"codebook_filename setting in advanced.yaml: {filename!r}"
+        )
+
+    return _choose_first_match(
+        matches=matches,
+        resource_name="configured blind codebook",
+        required=True,
+    )
+
+
 # ---------------------------------------------------------------------
 # Resource finding / loading
 # ---------------------------------------------------------------------
@@ -73,6 +108,7 @@ def _find_blind_codebook_path(
     blind_codebook=None,
     match_metadata_fields=None,
     directories=None,
+    codebook_filename: str = "",
     search_base: str = "blind_codebook",
     search_ext: str = ".xlsx",
     required: bool = False,
@@ -90,6 +126,12 @@ def _find_blind_codebook_path(
             matches=blind_codebook,
             resource_name="blind codebook",
             required=required,
+        )
+
+    if str(codebook_filename or "").strip():
+        return _find_named_codebook_path(
+            codebook_filename=codebook_filename,
+            directories=directories,
         )
 
     matches = find_matching_files(
@@ -110,6 +152,7 @@ def _load_blind_codebook(
     blind_codebook=None,
     match_metadata_fields=None,
     directories=None,
+    codebook_filename: str = "",
     search_base: str = "blind_codebook",
     search_ext: str = ".xlsx",
     required: bool = False,
@@ -125,6 +168,7 @@ def _load_blind_codebook(
         blind_codebook=blind_codebook,
         match_metadata_fields=match_metadata_fields,
         directories=directories,
+        codebook_filename=codebook_filename,
         search_base=search_base,
         search_ext=search_ext,
         required=required,
@@ -364,10 +408,15 @@ def maybe_unblind_dataframe(
     This is useful for analysis modules that should dynamically respond to the
     presence or absence of blind codebooks without special-case logic.
     """
+    if not config.should_blind("analysis"):
+        logger.info("auto_blind is false; returning dataframe unchanged.")
+        return df.copy(), None
+
     codebook_df = _load_blind_codebook(
         blind_codebook=blind_codebook,
         match_metadata_fields=match_metadata_fields,
         directories=directories,
+        codebook_filename=config.codebook_filename,
         required=False,
     )
 
@@ -396,6 +445,8 @@ def resolve_unblinding_resources(
     metadata_df=None,
     match_metadata_fields=None,
     directories=None,
+    config: AdvancedConfig | None = None,
+    codebook_filename: str = "",
     require_codebook: bool = False,
     require_metadata: bool = False,
 ) -> tuple[pd.DataFrame | None, pd.DataFrame | None]:
@@ -411,6 +462,9 @@ def resolve_unblinding_resources(
         blind_codebook=blind_codebook,
         match_metadata_fields=match_metadata_fields,
         directories=directories,
+        codebook_filename=(
+            config.codebook_filename if config is not None else codebook_filename
+        ),
         required=require_codebook,
     )
 

@@ -134,6 +134,7 @@ def build_sample_coding_template(
             blind=True,
             blinding_config=blinding_config,
             existing_codebook=existing_codebook,
+            directories=[Path(transcript_table_path).parent],
             seed=seed,
         )
     else:
@@ -276,6 +277,7 @@ def make_sample_template_files(
             df,
             blind=True,
             blinding_config=blinding_config,
+            directories=[input_dir, output_dir],
             seed=seed,
         )
         export_df = _sort_sample_template(export_df)
@@ -286,6 +288,7 @@ def make_sample_template_files(
                 blind=True,
                 blinding_config=blinding_config,
                 existing_codebook=codebook_df,
+                directories=[input_dir, output_dir],
                 seed=seed,
             )
             export_rel_df = _sort_sample_template(export_rel_df)

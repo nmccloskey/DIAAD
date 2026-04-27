@@ -275,6 +275,8 @@ def _apply_export_blinding(
     rel_df: pd.DataFrame | None,
     transcript_table: Path,
     blinding_config=None,
+    input_dir=None,
+    output_dir=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame | None, pd.DataFrame | None]:
     """
     Blind POWERS exports at write time when configured.
@@ -287,6 +289,7 @@ def _apply_export_blinding(
         pc_export, codebook_df = blind_file_identifiers(
             pc_df,
             config=blinding_config,
+            directories=[input_dir, output_dir],
         )
         rel_export = None
         if rel_df is not None:
@@ -418,6 +421,8 @@ def make_powers_coding_files(
         rel_df=rel_df,
         transcript_table=transcript_table,
         blinding_config=blinding_config,
+        input_dir=input_dir,
+        output_dir=output_dir,
     )
 
     _write_powers_exports(

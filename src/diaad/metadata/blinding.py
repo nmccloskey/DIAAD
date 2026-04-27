@@ -12,6 +12,7 @@ from diaad.metadata.utils import (
     validate_columns,
     load_metadata_from_transcript_tables
 )
+from diaad.metadata.unblinding import _load_blind_codebook
 
 if TYPE_CHECKING:
     from diaad.core.config import AdvancedConfig
@@ -111,9 +112,12 @@ def _resolve_analysis_source_columns(
         return df.copy(), present, [], present_id_cols
 
     if metadata_df is None:
-        raise ValueError(
-            f"Requested blind columns not found in df and no metadata_df provided: {missing}"
+        logger.warning(
+            "Requested blind columns not found in df and no metadata_df provided; "
+            "skipping columns: %s",
+            missing,
         )
+        return df.copy(), present, [], present_id_cols
 
     join_keys = _choose_join_keys(df, metadata_df, id_cols=id_cols)
 
@@ -121,9 +125,14 @@ def _resolve_analysis_source_columns(
     still_missing = [c for c in missing if c not in metadata_df.columns]
 
     if still_missing:
-        raise ValueError(
-            f"Requested blind columns not found in df or metadata_df: {still_missing}"
+        logger.warning(
+            "Requested blind columns not found in df or metadata_df; skipping "
+            "columns: %s",
+            still_missing,
         )
+
+    if not recoverable:
+        return df.copy(), present, [], join_keys
 
     joinable_metadata = _deduplicate_metadata_for_join(
         metadata_df=metadata_df,
@@ -365,7 +374,7 @@ def blind_analysis_dataframe(
     Returns
     -------
     blinded_df
-        Analysis dataframe with original analysis_blind_cols removed and
+        Analysis dataframe with original blind_cols removed and
         '{col}_blinded' columns retained.
     diagnostics_df
         Diagnostic dataframe containing join keys, original blind columns,
@@ -373,9 +382,9 @@ def blind_analysis_dataframe(
     codebook_df
         Long codebook with columns: column, raw_value, blind_code
     """
-    blind_cols = list(dict.fromkeys(config.analysis_blind_cols or []))
+    blind_cols = list(dict.fromkeys(config.get_blind_cols("analysis") or []))
     if not blind_cols:
-        logger.warning("No analysis_blind_cols configured; returning dataframe unchanged.")
+        logger.warning("No blind_cols configured; returning dataframe unchanged.")
         return df.copy(), pd.DataFrame(), pd.DataFrame()
 
     working_metadata = metadata_df
@@ -416,6 +425,14 @@ def blind_analysis_dataframe(
 
     if not resolved_cols:
         raise ValueError("No requested analysis blind columns could be resolved.")
+
+    if existing_codebook is None:
+        existing_codebook = _load_blind_codebook(
+            match_metadata_fields=match_metadata_fields,
+            directories=directories,
+            codebook_filename=config.codebook_filename,
+            required=False,
+        )
 
     if existing_codebook is not None:
         validate_blind_codebook_compatibility(
@@ -473,6 +490,8 @@ def blind_file_identifiers(
     config: AdvancedConfig,
     *,
     existing_codebook: Optional[pd.DataFrame] = None,
+    match_metadata_fields=None,
+    directories=None,
     seed: int = 99,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
@@ -481,13 +500,34 @@ def blind_file_identifiers(
     This replaces the configured identifier columns directly with integer blind codes.
     Missing values remain missing.
     """
-    blind_cols = list(dict.fromkeys(config.coding_blind_cols or []))
+    blind_cols = list(dict.fromkeys(config.get_blind_cols("coding") or []))
 
     if not blind_cols:
-        logger.warning("No coding_blind_cols configured; returning dataframe unchanged.")
+        logger.warning("No blind_cols configured; returning dataframe unchanged.")
         return df.copy(), pd.DataFrame()
 
-    validate_columns(df, blind_cols, df_name="df")
+    missing_from_df = [c for c in blind_cols if c not in df.columns]
+    if missing_from_df:
+        logger.warning(
+            "Configured blind_cols not found in coding dataframe and will be "
+            "skipped: %s",
+            missing_from_df,
+        )
+    blind_cols = present_cols(df, blind_cols)
+    if not blind_cols:
+        logger.warning(
+            "No configured blind_cols are present in coding dataframe; returning "
+            "dataframe unchanged."
+        )
+        return df.copy(), pd.DataFrame()
+
+    if existing_codebook is None:
+        existing_codebook = _load_blind_codebook(
+            match_metadata_fields=match_metadata_fields,
+            directories=directories,
+            codebook_filename=config.codebook_filename,
+            required=False,
+        )
 
     if existing_codebook is not None:
         validate_blind_codebook_compatibility(
