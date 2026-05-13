@@ -15,8 +15,9 @@ class FakeMetadataManager:
 
 
 class FakeConfigManager:
-    def __init__(self, config_dir):
+    def __init__(self, config_dir, config_overrides=None):
         self.config_dir = config_dir
+        self.config_overrides = dict(config_overrides or {})
         self.input_dir = "input"
         self.output_dir = "output"
         self.random_seed = 13
@@ -31,6 +32,8 @@ class FakeConfigManager:
         self.prefer_correction = False
         self.lowercase = True
         self.automate_powers = True
+        self.powers_coding_file = "powers_coding.xlsx"
+        self.powers_reliability_file = "powers_reliability_coding.xlsx"
         self.metadata_fields_config = {"tiers": {"group": "regex"}}
         self.advanced = SimpleNamespace(
             reliability_tag="_rel",
@@ -42,8 +45,11 @@ class FakeConfigManager:
             word_count_field="word_count",
             wc_samples_file="wc_samples.xlsx",
             target_vocabulary_resource_path="",
+            powers_coding_file="powers_coding.xlsx",
+            powers_reliability_file="powers_reliability_coding.xlsx",
         )
         self.blinding = self.advanced
+        self.override_diff = {}
 
     def to_dict(self):
         return {"project": {"input_dir": self.input_dir}, "advanced": {}}
@@ -124,3 +130,19 @@ def test_run_context_termination_kwargs(monkeypatch, tmp_path):
     assert payload["input_dir"] == tmp_path / "input"
     assert payload["output_dir"] == ctx.out_dir
     assert payload["program_name"] == "DIAAD"
+
+
+def test_run_context_can_resolve_paths_without_creating_output(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+        create_output_dir=False,
+    )
+
+    assert ctx.out_dir == tmp_path / "output" / "diaad_260425_1230"
+    assert not ctx.out_dir.exists()
+    assert ctx.run_paths()["run_output_dir"] == str(ctx.out_dir)

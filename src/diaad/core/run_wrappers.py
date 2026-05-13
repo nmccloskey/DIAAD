@@ -256,7 +256,7 @@ def run_evaluate_powers_reliability(ctx):
     """Evaluate POWERS reliability."""
     from diaad.coding.powers.rel_evaluation import evaluate_powers_reliability
 
-    return evaluate_powers_reliability(**ctx.kwargs_io())
+    return evaluate_powers_reliability(**ctx.kwargs_evaluate_powers_reliability())
 
 
 def run_reselect_powers_reliability_coding(ctx):

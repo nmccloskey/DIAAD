@@ -210,7 +210,11 @@ def write_analysis_workbook(out_path: Path, sheets: dict[str, pd.DataFrame]) -> 
                 df.to_excel(writer, sheet_name=sheet_name[:31], index=False)
 
 
-def analyze_powers_coding(input_dir, output_dir):
+def analyze_powers_coding(
+    input_dir,
+    output_dir,
+    powers_coding_file="powers_coding.xlsx",
+):
     """
     Analyze unprefixed POWERS coding files and write summary workbooks.
 
@@ -231,7 +235,7 @@ def analyze_powers_coding(input_dir, output_dir):
 
     pc_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="powers_coding",
+        search_base=Path(powers_coding_file).stem,
     )
 
     if not pc_files:

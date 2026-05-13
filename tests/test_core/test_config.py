@@ -32,6 +32,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "blind_cols": ["sample_id", "speaker"],
             "id_cols": ["sample_id", "utterance_id"],
             "codebook_filename": "custom_codebook.xlsx",
+            "powers_coding_file": "custom_powers.xlsx",
+            "powers_reliability_file": "custom_powers_rel.xlsx",
         },
     )
 
@@ -51,6 +53,37 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.coding_blind_cols == ["sample_id", "speaker"]
     assert config.analysis_blind_cols == ["sample_id", "speaker"]
     assert config.codebook_filename == "custom_codebook.xlsx"
+    assert config.powers_coding_file == "custom_powers.xlsx"
+    assert config.powers_reliability_file == "custom_powers_rel.xlsx"
+
+
+def test_config_manager_applies_overrides_and_records_diff(tmp_path):
+    config_dir = _make_config_dir(
+        tmp_path,
+        project={"input_dir": "input", "output_dir": "output"},
+        advanced={"powers_coding_file": "powers_coding.xlsx"},
+    )
+
+    config = ConfigManager(
+        config_dir,
+        config_overrides={
+            "project.input_dir": "input/siteA",
+            "advanced.powers_coding_file": "siteA_powers.xlsx",
+        },
+    )
+
+    assert config.input_dir == "input/siteA"
+    assert config.powers_coding_file == "siteA_powers.xlsx"
+    assert config.override_diff["project.input_dir"] == {
+        "source": "cli",
+        "old": "input",
+        "new": "input/siteA",
+    }
+    assert config.override_diff["advanced.powers_coding_file"] == {
+        "source": "cli",
+        "old": "powers_coding.xlsx",
+        "new": "siteA_powers.xlsx",
+    }
 
 
 def test_config_manager_rejects_invalid_reliability_fraction(tmp_path):

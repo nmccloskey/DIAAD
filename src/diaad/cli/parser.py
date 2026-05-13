@@ -37,6 +37,49 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--input-dir",
+        type=str,
+        default=None,
+        help="Override project input_dir for this run.",
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Override project output_dir for this run.",
+    )
+
+    parser.add_argument(
+        "--set",
+        dest="set_values",
+        action="append",
+        default=None,
+        metavar="KEY=VALUE",
+        help="Override a DIAAD config value. May be repeated.",
+    )
+
+    parser.add_argument(
+        "--dry-run-config",
+        action="store_true",
+        help="Print the resolved configuration and exit without running commands.",
+    )
+
+    parser.add_argument(
+        "--dry-run-config-out",
+        type=str,
+        default=None,
+        help="Optional path to save --dry-run-config output as JSON or YAML.",
+    )
+
+    parser.add_argument(
+        "--dry-run-config-format",
+        choices=["json", "yaml"],
+        default="json",
+        help="Format for --dry-run-config stdout output (default: json).",
+    )
+
+    parser.add_argument(
         "--files",
         dest="example_files",
         type=str,

@@ -7,6 +7,9 @@ from typing import Any, TypeAlias
 import yaml
 
 from psair.core.logger import logger
+from psair.core.provenance import diff_config_values
+
+from diaad.core.config_overrides import apply_config_overrides
 
 
 # ------------------------------------------------------------------
@@ -69,6 +72,9 @@ class AdvancedConfig:
 
     speaking_time_file: str = "speaking_times.xlsx"
     speaking_time_field: str = "speaking_time"
+
+    powers_coding_file: str = "powers_coding.xlsx"
+    powers_reliability_file: str = "powers_reliability_coding.xlsx"
 
     target_vocabulary_resource_path: str = ""
 
@@ -142,15 +148,35 @@ class ConfigManager:
         "advanced.yaml",
     )
 
-    def __init__(self, config_dir: str | Path) -> None:
+    def __init__(
+        self,
+        config_dir: str | Path,
+        config_overrides: dict[str, Any] | None = None,
+    ) -> None:
         self.config_dir = Path(config_dir).expanduser().resolve()
         self._validate_config_dir()
 
         self._raw_project = self._read_yaml("project.yaml")
         self._raw_advanced = self._read_yaml("advanced.yaml")
+        self.config_overrides = dict(config_overrides or {})
 
+        base_project = self._parse_project(self._raw_project)
+        base_advanced = self._parse_advanced(self._raw_advanced)
+        self._base_dict = self._to_dict(base_project, base_advanced)
+
+        effective_project, effective_advanced = apply_config_overrides(
+            self._raw_project,
+            self._raw_advanced,
+            self.config_overrides,
+        )
         self.project = self._parse_project(self._raw_project)
         self.advanced = self._parse_advanced(self._raw_advanced)
+
+        if self.config_overrides:
+            self.project = self._parse_project(effective_project)
+            self.advanced = self._parse_advanced(effective_advanced)
+
+        self.override_diff = diff_config_values(self._base_dict, self.to_dict())
 
         logger.info("Loaded configuration from %s", self.config_dir)
 
@@ -255,6 +281,14 @@ class ConfigManager:
         return self.advanced.speaking_time_field
 
     @property
+    def powers_coding_file(self) -> str:
+        return self.advanced.powers_coding_file
+
+    @property
+    def powers_reliability_file(self) -> str:
+        return self.advanced.powers_reliability_file
+
+    @property
     def metadata_fields_config(self) -> dict[str, Any]:
         """
         Return normalized metadata field definitions in the shape expected
@@ -316,42 +350,49 @@ class ConfigManager:
 
     def to_dict(self) -> dict[str, Any]:
         """Return normalized configuration as a nested dictionary."""
+        return self._to_dict(self.project, self.advanced)
+
+    @staticmethod
+    def _to_dict(project: ProjectConfig, advanced: AdvancedConfig) -> dict[str, Any]:
+        """Return normalized configuration dataclasses as a nested dictionary."""
         return {
             "project": {
-                "input_dir": self.project.input_dir,
-                "output_dir": self.project.output_dir,
-                "random_seed": self.project.random_seed,
-                "reliability_fraction": self.project.reliability_fraction,
-                "shuffle_samples": self.project.shuffle_samples,
-                "strip_clan": self.project.strip_clan,
-                "prefer_correction": self.project.prefer_correction,
-                "lowercase": self.project.lowercase,
-                "exclude_participants": self.project.exclude_participants,
-                "num_bins": self.project.num_bins,
-                "num_coders": self.project.num_coders,
-                "stimulus_field": self.project.stimulus_field,
-                "automate_powers": self.project.automate_powers,
-                "metadata_fields": self.project.metadata_fields,
+                "input_dir": project.input_dir,
+                "output_dir": project.output_dir,
+                "random_seed": project.random_seed,
+                "reliability_fraction": project.reliability_fraction,
+                "shuffle_samples": project.shuffle_samples,
+                "strip_clan": project.strip_clan,
+                "prefer_correction": project.prefer_correction,
+                "lowercase": project.lowercase,
+                "exclude_participants": project.exclude_participants,
+                "num_bins": project.num_bins,
+                "num_coders": project.num_coders,
+                "stimulus_field": project.stimulus_field,
+                "automate_powers": project.automate_powers,
+                "metadata_fields": project.metadata_fields,
             },
             "advanced": {
-                "reliability_tag": self.advanced.reliability_tag,
-                "reliability_dirname": self.advanced.reliability_dirname,
-                "cu_paradigms": self.advanced.cu_paradigms,
-                "cu_samples_file": self.advanced.cu_samples_file,
-                "cu_utts_file": self.advanced.cu_utts_file,
-                "word_count_file": self.advanced.word_count_file,
-                "word_count_field": self.advanced.word_count_field,
-                "wc_samples_file": self.advanced.wc_samples_file,
-                "speaking_time_file": self.advanced.speaking_time_file,
-                "speaking_time_field": self.advanced.speaking_time_field,
+                "reliability_tag": advanced.reliability_tag,
+                "reliability_dirname": advanced.reliability_dirname,
+                "cu_paradigms": advanced.cu_paradigms,
+                "cu_samples_file": advanced.cu_samples_file,
+                "cu_utts_file": advanced.cu_utts_file,
+                "word_count_file": advanced.word_count_file,
+                "word_count_field": advanced.word_count_field,
+                "wc_samples_file": advanced.wc_samples_file,
+                "speaking_time_file": advanced.speaking_time_file,
+                "speaking_time_field": advanced.speaking_time_field,
+                "powers_coding_file": advanced.powers_coding_file,
+                "powers_reliability_file": advanced.powers_reliability_file,
                 "target_vocabulary_resource_path": (
-                    self.advanced.target_vocabulary_resource_path
+                    advanced.target_vocabulary_resource_path
                 ),
-                "auto_blind": self.advanced.auto_blind,
-                "blind_cols": self.advanced.blind_cols,
-                "metadata_source": self.advanced.metadata_source,
-                "id_cols": self.advanced.id_cols,
-                "codebook_filename": self.advanced.codebook_filename,
+                "auto_blind": advanced.auto_blind,
+                "blind_cols": advanced.blind_cols,
+                "metadata_source": advanced.metadata_source,
+                "id_cols": advanced.id_cols,
+                "codebook_filename": advanced.codebook_filename,
             },
         }
 
@@ -458,6 +499,14 @@ class ConfigManager:
             speaking_time_field=self._as_str(
                 data.get("speaking_time_field"),
                 default="speaking_time",
+            ),
+            powers_coding_file=self._as_str(
+                data.get("powers_coding_file"),
+                default="powers_coding.xlsx",
+            ),
+            powers_reliability_file=self._as_str(
+                data.get("powers_reliability_file"),
+                default="powers_reliability_coding.xlsx",
             ),
             target_vocabulary_resource_path=self._as_str(
                 data.get("target_vocabulary_resource_path"),

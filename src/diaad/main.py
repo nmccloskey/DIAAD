@@ -6,10 +6,17 @@ from pathlib import Path
 
 from diaad import __version__
 from diaad.core.run_context import RunContext
+from diaad.core.config_overrides import build_cli_config_overrides
+from diaad.core.provenance import (
+    emit_dry_run_config,
+    finalize_run_artifacts,
+    write_start_artifacts,
+)
 from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
 from diaad.cli.parser import build_arg_parser
 from diaad.cli.commands import parse_cli_commands
 from psair.core.logger import (
+    add_finalization_hook,
     initialize_logger,
     logger,
     set_root,
@@ -55,6 +62,8 @@ def _run_examples_command(args) -> None:
 def main(args) -> None:
     """Parse CLI arguments and execute the requested DIAAD commands."""
     ctx = None
+    status = "completed"
+    logger_initialized = False
 
     try:
         if _is_examples_command(args):
@@ -67,13 +76,22 @@ def main(args) -> None:
         project_root = Path.cwd().resolve()
         set_root(project_root)
 
-        print("ARGS.CONFIG:", args.config)
+        config_overrides = build_cli_config_overrides(args)
 
         ctx = RunContext(
             config_dir=args.config or "config",
             project_root=project_root,
             start_time=start_time,
+            config_overrides=config_overrides,
+            create_output_dir=not getattr(args, "dry_run_config", False),
         )
+
+        commands = parse_cli_commands(args.command, logger=logger)
+        ctx.set_commands(commands)
+
+        if getattr(args, "dry_run_config", False):
+            emit_dry_run_config(ctx, args, commands)
+            return
 
         # -----------------------------------------------------------------
         # Initialize logger once output folder is ready
@@ -84,18 +102,16 @@ def main(args) -> None:
             program_name="DIAAD",
             version=__version__,
         )
+        logger_initialized = True
         logger.info("Logger initialized and early logs flushed.")
-
-        # ---------------------------------------------------------
-        # Parse commands
-        # ---------------------------------------------------------
-        commands = parse_cli_commands(args.command, logger=logger)
+        add_finalization_hook(lambda context: finalize_run_artifacts(ctx, context))
+        write_start_artifacts(ctx, args)
 
         if not commands:
+            status = "skipped"
             logger.error("No valid commands recognized - exiting.")
             return
 
-        ctx.set_commands(commands)
         logger.info("Executing command(s): %s", ", ".join(commands))
 
         # ---------------------------------------------------------
@@ -121,12 +137,13 @@ def main(args) -> None:
             logger.info("Completed: %s", ", ".join(executed))
 
     except Exception as e:
+        status = "failed"
         logger.error("DIAAD execution failed: %s", e, exc_info=True)
         raise
 
     finally:
-        if ctx is not None:
-            terminate_logger(**ctx.termination_kwargs())
+        if ctx is not None and logger_initialized:
+            terminate_logger(**ctx.termination_kwargs(), status=status)
 
 
 # -------------------------------------------------------------

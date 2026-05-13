@@ -496,7 +496,12 @@ def _write_powers_rel_outputs(
         logger.error(f"Failed writing reliability report {get_rel_path(report_path)}: {e}")
 
 
-def evaluate_powers_reliability(input_dir, output_dir):
+def evaluate_powers_reliability(
+    input_dir,
+    output_dir,
+    powers_coding_file="powers_coding.xlsx",
+    powers_reliability_file="powers_reliability_coding.xlsx",
+):
     """
     Evaluate POWERS reliability by comparing coding and reliability files.
 
@@ -510,11 +515,11 @@ def evaluate_powers_reliability(input_dir, output_dir):
 
     coding_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="powers_coding",
+        search_base=Path(powers_coding_file).stem,
     )
     rel_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="powers_reliability_coding",
+        search_base=Path(powers_reliability_file).stem,
     )
 
     org_file = _get_first_match(coding_files, "POWERS coding")

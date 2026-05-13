@@ -313,12 +313,14 @@ def _write_powers_exports(
     codebook_df: pd.DataFrame | None,
     powers_dir: Path,
     metadata_values: list[str],
+    powers_coding_file: str = "powers_coding.xlsx",
+    powers_reliability_file: str = "powers_reliability_coding.xlsx",
 ) -> None:
     """
     Write POWERS coding and reliability workbooks to disk.
     """
-    pc_filename = Path(powers_dir, *metadata_values, "powers_coding.xlsx")
-    rel_filename = Path(powers_dir, *metadata_values, "powers_reliability_coding.xlsx")
+    pc_filename = Path(powers_dir, *metadata_values, powers_coding_file)
+    rel_filename = Path(powers_dir, *metadata_values, powers_reliability_file)
 
     _write_primary_powers_workbook(pc_export, pc_filename)
     if rel_export is not None:
@@ -376,6 +378,8 @@ def make_powers_coding_files(
     exclude_participants,
     automate_powers=True,
     blinding_config=None,
+    powers_coding_file="powers_coding.xlsx",
+    powers_reliability_file="powers_reliability_coding.xlsx",
 ):
     """
     Build POWERS coding and reliability workbooks from an utterance table.
@@ -431,4 +435,6 @@ def make_powers_coding_files(
         codebook_df=codebook_df,
         powers_dir=powers_dir,
         metadata_values=metadata_values,
+        powers_coding_file=powers_coding_file,
+        powers_reliability_file=powers_reliability_file,
     )

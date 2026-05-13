@@ -33,6 +33,8 @@ class RunContext:
     config_dir: str | Path
     project_root: str | Path
     start_time: datetime
+    config_overrides: dict[str, Any] | None = None
+    create_output_dir: bool = True
 
     # ------------------------------------------------------------------
     # Core managers / config-derived state
@@ -53,13 +55,14 @@ class RunContext:
     # ------------------------------------------------------------------
     chats: Any = field(default=None, init=False)
     commands: list[str] = field(default_factory=list, init=False)
+    start_snapshot: dict[str, Any] | None = field(default=None, init=False)
 
     # ------------------------------------------------------------------
     # Initialization
     # ------------------------------------------------------------------
     def __post_init__(self) -> None:
         self.config_dir = Path(self.config_dir).expanduser().resolve()
-        self.config = ConfigManager(self.config_dir)
+        self.config = ConfigManager(self.config_dir, config_overrides=self.config_overrides)
         self._resolve_directories()
         self._seed_rngs()
         self._build_metadata_field_state()
@@ -152,7 +155,8 @@ class RunContext:
         self.base_output_dir = self._resolve_project_path(self.config.output_dir)
 
         self.out_dir = (self.base_output_dir / f"diaad_{self.timestamp}").resolve()
-        self.out_dir.mkdir(parents=True, exist_ok=True)
+        if self.create_output_dir:
+            self.out_dir.mkdir(parents=True, exist_ok=True)
 
     def _seed_rngs(self) -> None:
         """Seed Python and NumPy random generators from config."""
@@ -251,6 +255,16 @@ class RunContext:
             "start_time": self.start_time,
             "program_name": "DIAAD",
             "version": self.version,
+        }
+
+    def run_paths(self) -> dict[str, str]:
+        """Return standard run paths for provenance and dry-run payloads."""
+        return {
+            "project_root": str(Path(self.project_root).resolve()),
+            "config_dir": str(self.config_dir),
+            "input_dir": str(self.input_dir),
+            "output_dir": str(self.base_output_dir),
+            "run_output_dir": str(self.out_dir),
         }
 
     # ------------------------------------------------------------------
@@ -559,11 +573,16 @@ class RunContext:
             "exclude_participants": self.exclude_participants,
             "automate_powers": self.automate_powers,
             "blinding_config": self.config.blinding,
+            "powers_coding_file": self.config.powers_coding_file,
+            "powers_reliability_file": self.config.powers_reliability_file,
         }
 
     def kwargs_analyze_powers_coding(self) -> dict[str, Any]:
         """Return kwargs for POWERS analysis."""
-        return self.kwargs_io()
+        return {
+            **self.kwargs_io(),
+            "powers_coding_file": self.config.powers_coding_file,
+        }
 
     def kwargs_powers_rates(self) -> dict[str, Any]:
         """Return shared kwargs for POWERS rate calculation."""
@@ -572,6 +591,14 @@ class RunContext:
             "output_dir": self.out_dir,
             "speaking_time_file": self.config.advanced.speaking_time_file,
             "speaking_time_field": self.config.advanced.speaking_time_field,
+        }
+
+    def kwargs_evaluate_powers_reliability(self) -> dict[str, Any]:
+        """Return kwargs for POWERS reliability evaluation."""
+        return {
+            **self.kwargs_io(),
+            "powers_coding_file": self.config.powers_coding_file,
+            "powers_reliability_file": self.config.powers_reliability_file,
         }
 
     def kwargs_reselect_powers_reliability(self) -> dict[str, Any]:
@@ -583,4 +610,6 @@ class RunContext:
             "frac": self.reliability_fraction,
             "random_seed": self.random_seed,
             "automate_powers": self.automate_powers,
+            "powers_coding_file": self.config.powers_coding_file,
+            "powers_reliability_file": self.config.powers_reliability_file,
         }

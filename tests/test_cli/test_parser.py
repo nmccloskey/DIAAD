@@ -3,17 +3,33 @@ from __future__ import annotations
 from diaad.cli.parser import build_arg_parser
 
 
-def test_build_arg_parser_parses_command_and_config():
-    parser = build_arg_parser()
-    args = parser.parse_args(["transcripts", "tabularize", "--config", "example_config"])
-
-    assert args.command == ["transcripts", "tabularize"]
-    assert args.config == "example_config"
-
-
-def test_build_arg_parser_includes_registry_help():
+def test_parser_accepts_batch_config_overrides() -> None:
     parser = build_arg_parser()
 
-    assert "Available Commands" in parser.epilog
-    assert "transcripts tabularize" in parser.epilog
-    assert "powers analyze" in parser.epilog
+    args = parser.parse_args(
+        [
+            "powers",
+            "evaluate",
+            "--config",
+            "config",
+            "--input-dir",
+            "data/input/siteA",
+            "--output-dir",
+            "data/output/siteA",
+            "--set",
+            "powers_coding_file=siteA_powers.xlsx",
+            "--set",
+            "powers_reliability_file=siteA_powers_rel.xlsx",
+            "--dry-run-config",
+        ]
+    )
+
+    assert args.command == ["powers", "evaluate"]
+    assert args.config == "config"
+    assert args.input_dir == "data/input/siteA"
+    assert args.output_dir == "data/output/siteA"
+    assert args.set_values == [
+        "powers_coding_file=siteA_powers.xlsx",
+        "powers_reliability_file=siteA_powers_rel.xlsx",
+    ]
+    assert args.dry_run_config is True

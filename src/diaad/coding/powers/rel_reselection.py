@@ -91,6 +91,8 @@ def reselect_powers_rel(
     frac=0.2,
     random_seed=None,
     automate_powers=True,
+    powers_coding_file="powers_coding.xlsx",
+    powers_reliability_file="powers_reliability_coding.xlsx",
 ):
     """
     Reselect POWERS reliability samples, excluding any `sample_id` already
@@ -106,8 +108,8 @@ def reselect_powers_rel(
     pairs = discover_reliability_pairs(
         metadata_fields=metadata_fields,
         input_dir=input_dir,
-        coding_glob="*powers_coding.xlsx",
-        rel_glob="*powers_reliability_coding.xlsx",
+        coding_glob=f"*{Path(powers_coding_file).name}",
+        rel_glob=f"*{Path(powers_reliability_file).name}",
         rel_label="POWERS",
     )
 
@@ -149,7 +151,7 @@ def reselect_powers_rel(
             df=new_df,
             org_file=org_file,
             out_dir=out_dir,
-            suffix="powers_reliability_coding",
-            stem_token="powers_coding",
+            suffix=Path(powers_reliability_file).stem,
+            stem_token=Path(powers_coding_file).stem,
             rel_label="POWERS",
         )
