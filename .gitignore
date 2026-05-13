@@ -28,6 +28,7 @@ diaad_data/input/
 tmp*/
 .diaad_examples_tmp_*/
 _dx_*/
+manual_prep/
 
 google_creds.json
 
