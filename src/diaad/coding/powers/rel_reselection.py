@@ -56,11 +56,20 @@ def _clear_manual_powers_fields(df):
     return df
 
 
-def _build_powers_reliability_frame(df_org, rel_template, re_ids, automate_powers=True):
+def _build_powers_reliability_frame(
+    df_org,
+    rel_template,
+    re_ids,
+    automate_powers=True,
+    sample_id_field="sample_id",
+):
     """
     Build a reselected POWERS reliability workbook.
     """
-    sub = df_org[df_org["sample_id"].isin(re_ids)].copy()
+    if sample_id_field not in df_org.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    sub = df_org[df_org[sample_id_field].isin(re_ids)].copy()
 
     head_cols = cols_to_comment(df_org)
     template_tail = post_comment_cols(rel_template) if rel_template is not None else []
@@ -93,6 +102,7 @@ def reselect_powers_rel(
     automate_powers=True,
     powers_coding_file="powers_coding.xlsx",
     powers_reliability_file="powers_reliability_coding.xlsx",
+    sample_id_field="sample_id",
 ):
     """
     Reselect POWERS reliability samples, excluding any `sample_id` already
@@ -122,12 +132,19 @@ def reselect_powers_rel(
             org_file,
             rel_mates,
             rel_label="POWERS",
+            sample_id_col=sample_id_field,
         )
         if df_org is None:
             continue
 
-        used_ids = collect_used_ids(rel_dfs)
-        new_ids = select_new_samples(df_org, used_ids, frac, rng=rng)
+        used_ids = collect_used_ids(rel_dfs, sample_id_col=sample_id_field)
+        new_ids = select_new_samples(
+            df_org,
+            used_ids,
+            frac,
+            rng=rng,
+            sample_id_col=sample_id_field,
+        )
         if not new_ids:
             continue
 
@@ -139,6 +156,7 @@ def reselect_powers_rel(
                 rel_template=rel_template,
                 re_ids=new_ids,
                 automate_powers=automate_powers,
+                sample_id_field=sample_id_field,
             )
         except Exception as e:
             logger.error(

@@ -229,6 +229,23 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
 
 ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
     (
+        "Unique identifiers",
+        [
+            {
+                "name": "sample_id_field",
+                "label": "Sample ID column",
+                "default": "sample_id",
+                "help": "Column DIAAD should use as the sample-level identifier where supported.",
+            },
+            {
+                "name": "utterance_id_field",
+                "label": "Utterance ID column",
+                "default": "utterance_id",
+                "help": "Column DIAAD should use as the utterance-level identifier where supported.",
+            },
+        ],
+    ),
+    (
         "Reliability file conventions",
         [
             {

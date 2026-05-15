@@ -128,7 +128,12 @@ def discover_reliability_pairs(metadata_fields, input_dir, coding_glob, rel_glob
     return matches
 
 
-def load_original_and_reliability(org_file, rel_mates, rel_label):
+def load_original_and_reliability(
+    org_file,
+    rel_mates,
+    rel_label,
+    sample_id_col: str = "sample_id",
+):
     """
     Load original and reliability DataFrames.
 
@@ -143,22 +148,22 @@ def load_original_and_reliability(org_file, rel_mates, rel_label):
         logger.error(f"[{rel_label}] Failed reading {get_rel_path(org_file)}: {e}")
         return None, []
 
-    if "sample_id" not in df_org.columns:
-        logger.warning(f"[{rel_label}] Missing sample_id in {org_file.name}")
+    if sample_id_col not in df_org.columns:
+        logger.warning(f"[{rel_label}] Missing {sample_id_col} in {org_file.name}")
         return None, []
 
     df_org = df_org.copy()
-    df_org["sample_id"] = normalize_sample_ids(df_org["sample_id"])
+    df_org[sample_id_col] = normalize_sample_ids(df_org[sample_id_col])
 
     rel_dfs = []
     for rf in rel_mates:
         try:
             rdf = pd.read_excel(rf)
-            if "sample_id" not in rdf.columns:
-                logger.warning(f"[{rel_label}] Skipping {get_rel_path(rf)} because sample_id is missing.")
+            if sample_id_col not in rdf.columns:
+                logger.warning(f"[{rel_label}] Skipping {get_rel_path(rf)} because {sample_id_col} is missing.")
                 continue
             rdf = rdf.copy()
-            rdf["sample_id"] = normalize_sample_ids(rdf["sample_id"])
+            rdf[sample_id_col] = normalize_sample_ids(rdf[sample_id_col])
             rel_dfs.append(rdf)
         except Exception as e:
             logger.warning(f"[{rel_label}] Failed reading {get_rel_path(rf)}: {e}")
@@ -166,15 +171,21 @@ def load_original_and_reliability(org_file, rel_mates, rel_label):
     return df_org, rel_dfs
 
 
-def collect_used_ids(rel_dfs):
+def collect_used_ids(rel_dfs, sample_id_col: str = "sample_id"):
     """Collect already-used sample_ids from prior reliability files."""
     used_ids = set()
     for rdf in rel_dfs:
-        used_ids.update(normalize_sample_ids(rdf["sample_id"]))
+        used_ids.update(normalize_sample_ids(rdf[sample_id_col]))
     return used_ids
 
 
-def select_new_samples(df_org, used_ids, frac, rng=None):
+def select_new_samples(
+    df_org,
+    used_ids,
+    frac,
+    rng=None,
+    sample_id_col: str = "sample_id",
+):
     """
     Randomly select new sample_ids not already used for reliability.
 
@@ -191,7 +202,7 @@ def select_new_samples(df_org, used_ids, frac, rng=None):
     """
     rng = rng or random
 
-    all_ids = set(normalize_sample_ids(df_org["sample_id"]))
+    all_ids = set(normalize_sample_ids(df_org[sample_id_col]))
     available = sorted(all_ids - used_ids)
 
     if not available:

@@ -34,6 +34,8 @@ class FakeConfigManager:
         self.automate_powers = True
         self.powers_coding_file = "powers_coding.xlsx"
         self.powers_reliability_file = "powers_reliability_coding.xlsx"
+        self.sample_id_field = "expanded_sample_id"
+        self.utterance_id_field = "expanded_utterance_id"
         self.metadata_fields_config = {"tiers": {"group": "regex"}}
         self.advanced = SimpleNamespace(
             reliability_tag="_rel",
@@ -47,6 +49,8 @@ class FakeConfigManager:
             target_vocabulary_resource_path="",
             powers_coding_file="powers_coding.xlsx",
             powers_reliability_file="powers_reliability_coding.xlsx",
+            sample_id_field="expanded_sample_id",
+            utterance_id_field="expanded_utterance_id",
         )
         self.blinding = self.advanced
         self.override_diff = {}
@@ -146,3 +150,22 @@ def test_run_context_can_resolve_paths_without_creating_output(monkeypatch, tmp_
     assert ctx.out_dir == tmp_path / "output" / "diaad_260425_1230"
     assert not ctx.out_dir.exists()
     assert ctx.run_paths()["run_output_dir"] == str(ctx.out_dir)
+
+
+def test_run_context_threads_powers_identifier_fields(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    assert ctx.kwargs_make_powers_coding_files()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_make_powers_coding_files()["utterance_id_field"] == "expanded_utterance_id"
+    assert ctx.kwargs_analyze_powers_coding()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_powers_rates()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_evaluate_powers_reliability()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_evaluate_powers_reliability()["utterance_id_field"] == "expanded_utterance_id"
+    assert ctx.kwargs_reselect_powers_reliability()["sample_id_field"] == "expanded_sample_id"

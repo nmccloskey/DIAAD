@@ -25,6 +25,8 @@ PROJECT_KEYS = {
 }
 
 ADVANCED_KEYS = {
+    "sample_id_field",
+    "utterance_id_field",
     "reliability_tag",
     "reliability_dirname",
     "cu_paradigms",

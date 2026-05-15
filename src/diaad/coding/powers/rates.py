@@ -46,6 +46,7 @@ def find_powers_analysis_files(
 def read_powers_dialog_summaries(
     directories,
     sheet_name: str = "Dialogs",
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Read and combine sample/dialog-level POWERS analysis sheets.
@@ -64,7 +65,7 @@ def read_powers_dialog_summaries(
                 f"Failed reading sheet {sheet_name!r} from {get_rel_path(path)}: {e}"
             ) from e
 
-        validate_columns(df, ["sample_id"], df_name=f"POWERS {sheet_name} summary")
+        validate_columns(df, [sample_id_field], df_name=f"POWERS {sheet_name} summary")
 
         df = df.copy()
         df["source_file"] = path.name
@@ -72,16 +73,19 @@ def read_powers_dialog_summaries(
         logger.info(f"Loaded POWERS {sheet_name} summary from {get_rel_path(path)}")
 
     combined = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-    if combined["sample_id"].duplicated().any():
+    if combined[sample_id_field].duplicated().any():
         logger.warning(
-            "Combined POWERS dialog summaries contain duplicate sample_id values; "
+            f"Combined POWERS dialog summaries contain duplicate {sample_id_field} values; "
             "retaining all rows in the rates output."
         )
 
     return combined
 
 
-def infer_powers_rate_numerators(df: pd.DataFrame) -> list[str]:
+def infer_powers_rate_numerators(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> list[str]:
     """
     Infer count-like POWERS columns that should be expressed per minute.
     """
@@ -89,7 +93,7 @@ def infer_powers_rate_numerators(df: pd.DataFrame) -> list[str]:
     numerator_cols: list[str] = []
 
     for col in df.columns:
-        if col in {"sample_id", "source_file"} or col in excluded:
+        if col in {sample_id_field, "source_file"} or col in excluded:
             continue
         if col.startswith("prop_") or col.startswith("ratio_"):
             continue
@@ -103,13 +107,14 @@ def infer_powers_rate_numerators(df: pd.DataFrame) -> list[str]:
 def finalize_powers_rates_columns(
     df: pd.DataFrame,
     numerator_cols: list[str],
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Keep the canonical POWERS rates output columns in a clean order.
     """
     rate_cols = [f"{col}_per_min" for col in numerator_cols if f"{col}_per_min" in df.columns]
     preferred = [
-        "sample_id",
+        sample_id_field,
         "source_file",
         *numerator_cols,
         "speaking_time",
@@ -148,25 +153,34 @@ def calculate_powers_rates(
     output_dir,
     speaking_time_file: str | Path | None = None,
     speaking_time_field: str = "speaking_time",
+    sample_id_field: str = "sample_id",
 ):
     """
     Compute POWERS sample/dialog-level measures per minute.
     """
-    powers_df = read_powers_dialog_summaries(directories=[input_dir, output_dir])
+    powers_df = read_powers_dialog_summaries(
+        directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
+    )
 
     speaking_time_df = read_speaking_time_table(
         speaking_time_file=speaking_time_file,
         speaking_time_field=speaking_time_field,
         directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
     )
 
     merged = merge_speaking_time(
         df=powers_df,
         speaking_time_df=speaking_time_df,
         how="left",
+        sample_id_field=sample_id_field,
     )
 
-    numerator_cols = infer_powers_rate_numerators(merged)
+    numerator_cols = infer_powers_rate_numerators(
+        merged,
+        sample_id_field=sample_id_field,
+    )
     rated = add_rate_columns(
         merged,
         numerator_cols=numerator_cols,
@@ -175,7 +189,11 @@ def calculate_powers_rates(
         round_digits=3,
     )
 
-    rated = finalize_powers_rates_columns(rated, numerator_cols=numerator_cols)
+    rated = finalize_powers_rates_columns(
+        rated,
+        numerator_cols=numerator_cols,
+        sample_id_field=sample_id_field,
+    )
 
     write_powers_rates_output(
         rated,

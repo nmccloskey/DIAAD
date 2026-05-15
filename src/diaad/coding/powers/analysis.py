@@ -74,25 +74,36 @@ def add_turn_labels(utt_df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def compute_level_summaries(utt_df: pd.DataFrame) -> dict[str, pd.DataFrame]:
+def compute_level_summaries(
+    utt_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> dict[str, pd.DataFrame]:
     """
     Build utterance-, turn-, speaker-, and dialog-level POWERS summaries.
     """
     return {
         "Utterances": utt_df,
-        "Turns": _compute_turn_summary(utt_df),
-        "Speakers": _compute_speaker_summary(utt_df),
-        "Dialogs": _compute_dialog_summary(utt_df),
+        "Turns": _compute_turn_summary(utt_df, sample_id_field=sample_id_field),
+        "Speakers": _compute_speaker_summary(utt_df, sample_id_field=sample_id_field),
+        "Dialogs": _compute_dialog_summary(utt_df, sample_id_field=sample_id_field),
     }
 
 
-def _compute_turn_summary(utt_df: pd.DataFrame) -> pd.DataFrame:
+def _compute_turn_summary(
+    utt_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Aggregate utterances to the turn level.
     """
-    group_cols = [col for col in ["sample_id", "speaker", "turn_label"] if col in utt_df.columns]
+    group_cols = [
+        col for col in [sample_id_field, "speaker", "turn_label"]
+        if col in utt_df.columns
+    ]
     if len(group_cols) < 3:
-        raise KeyError("Turn summary requires sample_id, speaker, and turn_label.")
+        raise KeyError(
+            f"Turn summary requires {sample_id_field}, speaker, and turn_label."
+        )
 
     agg_map = {
         f"{col}_sum": (col, "sum")
@@ -107,12 +118,15 @@ def _compute_turn_summary(utt_df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def _compute_speaker_summary(utt_df: pd.DataFrame) -> pd.DataFrame:
+def _compute_speaker_summary(
+    utt_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Aggregate utterances to the speaker level and add derived metrics.
     """
-    if not {"sample_id", "speaker"}.issubset(utt_df.columns):
-        raise KeyError("Speaker summary requires sample_id and speaker.")
+    if not {sample_id_field, "speaker"}.issubset(utt_df.columns):
+        raise KeyError(f"Speaker summary requires {sample_id_field} and speaker.")
 
     agg_map = {
         f"{col}_sum": (col, "sum")
@@ -128,7 +142,7 @@ def _compute_speaker_summary(utt_df: pd.DataFrame) -> pd.DataFrame:
             agg_map[f"num_{ttype}"] = ("turn_type", count_value(ttype))
 
     speaker_df = (
-        utt_df.groupby(["sample_id", "speaker"])
+        utt_df.groupby([sample_id_field, "speaker"])
         .agg(**agg_map)
         .reset_index()
     )
@@ -178,12 +192,15 @@ def _add_speaker_derived_metrics(speaker_df: pd.DataFrame) -> None:
             )
 
 
-def _compute_dialog_summary(utt_df: pd.DataFrame) -> pd.DataFrame:
+def _compute_dialog_summary(
+    utt_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Aggregate utterances to the dialog/sample level.
     """
-    if "sample_id" not in utt_df.columns:
-        raise KeyError("Dialog summary requires sample_id.")
+    if sample_id_field not in utt_df.columns:
+        raise KeyError(f"Dialog summary requires {sample_id_field}.")
 
     agg_map = {
         f"{col}_sum": (col, "sum")
@@ -195,7 +212,7 @@ def _compute_dialog_summary(utt_df: pd.DataFrame) -> pd.DataFrame:
         agg_map["num_repairs"] = ("collab_repair", "nunique")
         agg_map["prop_repairs"] = ("collab_repair", lambda x: x.notna().mean())
 
-    return utt_df.groupby("sample_id").agg(**agg_map).reset_index()
+    return utt_df.groupby(sample_id_field).agg(**agg_map).reset_index()
 
 
 def write_analysis_workbook(out_path: Path, sheets: dict[str, pd.DataFrame]) -> None:
@@ -214,6 +231,7 @@ def analyze_powers_coding(
     input_dir,
     output_dir,
     powers_coding_file="powers_coding.xlsx",
+    sample_id_field="sample_id",
 ):
     """
     Analyze unprefixed POWERS coding files and write summary workbooks.
@@ -249,7 +267,10 @@ def analyze_powers_coding(
 
         try:
             utt_df = add_turn_labels(utt_df)
-            sheets = compute_level_summaries(utt_df)
+            sheets = compute_level_summaries(
+                utt_df,
+                sample_id_field=sample_id_field,
+            )
         except Exception as e:
             logger.error(f"Failed to analyze {get_rel_path(pc_file)}: {e}")
             continue

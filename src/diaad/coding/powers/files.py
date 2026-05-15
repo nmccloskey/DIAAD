@@ -122,15 +122,31 @@ def _match_metadata_field_values(metadata_fields, source_path: str) -> list[str]
     return values
 
 
+def _validate_identifier_columns(
+    df: pd.DataFrame,
+    sample_id_field: str,
+    utterance_id_field: str,
+) -> None:
+    """Raise a clear error when configured POWERS identifier columns are absent."""
+    missing = [
+        col
+        for col in (sample_id_field, utterance_id_field)
+        if col not in df.columns
+    ]
+    if missing:
+        raise KeyError(f"Missing required POWERS identifier columns: {missing}")
+
+
 def _prepare_powers_dataframe(
     uttdf: pd.DataFrame,
     metadata_fields,
     exclude_participants,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Shuffle by sample, drop non-POWERS transcript columns, and initialize fields.
     """
-    shuffled = _shuffle_by_sample(uttdf)
+    shuffled = _shuffle_by_sample(uttdf, sample_id_field=sample_id_field)
     drop_cols = _get_powers_drop_cols(shuffled, metadata_fields)
     df = shuffled.drop(columns=drop_cols).copy()
 
@@ -147,11 +163,17 @@ def _prepare_powers_dataframe(
     return df
 
 
-def _shuffle_by_sample(df: pd.DataFrame) -> pd.DataFrame:
+def _shuffle_by_sample(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Shuffle transcript rows at the sample level.
     """
-    subdfs = [subdf for _, subdf in df.groupby("sample_id", sort=False)]
+    if sample_id_field not in df.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    subdfs = [subdf for _, subdf in df.groupby(sample_id_field, sort=False)]
     random.shuffle(subdfs)
     if not subdfs:
         return df.copy()
@@ -184,11 +206,15 @@ def _resolve_powers_coder_ids(num_coders: int) -> list[str]:
 def _assign_primary_coders(
     df: pd.DataFrame,
     coder_ids: list[str],
+    sample_id_field: str = "sample_id",
 ) -> tuple[pd.DataFrame, dict[str, str], list[list[str]]]:
     """
     Assign primary coders across samples and populate `coder_id`.
     """
-    sample_ids = list(df["sample_id"].drop_duplicates())
+    if sample_id_field not in df.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    sample_ids = list(df[sample_id_field].drop_duplicates())
     if not sample_ids:
         logger.warning("No sample_ids found in transcript table.")
         return df, {}, []
@@ -200,7 +226,7 @@ def _assign_primary_coders(
         for sample_id in seg:
             primary_assignment[sample_id] = coder_id
 
-    df["coder_id"] = df["sample_id"].map(primary_assignment).fillna("")
+    df["coder_id"] = df[sample_id_field].map(primary_assignment).fillna("")
     return df, primary_assignment, segments
 
 
@@ -210,6 +236,7 @@ def _build_reliability_dataframe(
     coder_ids: list[str],
     primary_assignment: dict[str, str],
     segments: list[list[str]],
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame | None:
     """
     Build a reliability subset dataframe when frac > 0.
@@ -223,13 +250,16 @@ def _build_reliability_dataframe(
         logger.info("No reliability samples were selected.")
         return None
 
-    rel_df = pc_df[pc_df["sample_id"].isin(rel_samples)].copy()
+    if sample_id_field not in pc_df.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    rel_df = pc_df[pc_df[sample_id_field].isin(rel_samples)].copy()
     rel_assignment = _rotate_reliability_assignments(primary_assignment, coder_ids)
-    rel_df["coder_id"] = rel_df["sample_id"].map(rel_assignment).fillna("")
+    rel_df["coder_id"] = rel_df[sample_id_field].map(rel_assignment).fillna("")
 
     logger.info(
-        f"Selected {len(set(rel_df['sample_id']))} samples for reliability "
-        f"from {len(set(pc_df['sample_id']))} total samples."
+        f"Selected {len(set(rel_df[sample_id_field]))} samples for reliability "
+        f"from {len(set(pc_df[sample_id_field]))} total samples."
     )
     return rel_df
 
@@ -315,6 +345,7 @@ def _write_powers_exports(
     metadata_values: list[str],
     powers_coding_file: str = "powers_coding.xlsx",
     powers_reliability_file: str = "powers_reliability_coding.xlsx",
+    sample_id_field: str = "sample_id",
 ) -> None:
     """
     Write POWERS coding and reliability workbooks to disk.
@@ -322,7 +353,11 @@ def _write_powers_exports(
     pc_filename = Path(powers_dir, *metadata_values, powers_coding_file)
     rel_filename = Path(powers_dir, *metadata_values, powers_reliability_file)
 
-    _write_primary_powers_workbook(pc_export, pc_filename)
+    _write_primary_powers_workbook(
+        pc_export,
+        pc_filename,
+        sample_id_field=sample_id_field,
+    )
     if rel_export is not None:
         _write_excel(rel_export, rel_filename, "POWERS reliability coding")
     if codebook_df is not None and not codebook_df.empty:
@@ -332,23 +367,33 @@ def _write_powers_exports(
         )
 
 
-def _build_section_e_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+def _build_section_e_dataframe(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Build the sample-level Section E sheet for primary POWERS coding.
     """
-    section_e = df[["sample_id"]].drop_duplicates().copy()
+    if sample_id_field not in df.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    section_e = df[[sample_id_field]].drop_duplicates().copy()
     for col in SECTION_E_cols:
         section_e[col] = ""
     return section_e
 
 
-def _write_primary_powers_workbook(df: pd.DataFrame, filename: Path) -> None:
+def _write_primary_powers_workbook(
+    df: pd.DataFrame,
+    filename: Path,
+    sample_id_field: str = "sample_id",
+) -> None:
     """
     Write primary POWERS coding workbook with utterance and Section E sheets.
     """
     try:
         filename.parent.mkdir(parents=True, exist_ok=True)
-        section_e = _build_section_e_dataframe(df)
+        section_e = _build_section_e_dataframe(df, sample_id_field=sample_id_field)
         with pd.ExcelWriter(filename, engine="openpyxl") as writer:
             df.to_excel(writer, sheet_name="utterance_coding", index=False, na_rep="")
             section_e.to_excel(writer, sheet_name="section_e", index=False, na_rep="")
@@ -380,6 +425,8 @@ def make_powers_coding_files(
     blinding_config=None,
     powers_coding_file="powers_coding.xlsx",
     powers_reliability_file="powers_reliability_coding.xlsx",
+    sample_id_field="sample_id",
+    utterance_id_field="utterance_id",
 ):
     """
     Build POWERS coding and reliability workbooks from an utterance table.
@@ -404,13 +451,27 @@ def make_powers_coding_files(
         return
 
     metadata_values = _match_metadata_field_values(metadata_fields, str(transcript_table))
-    pc_df = _prepare_powers_dataframe(uttdf, metadata_fields, exclude_participants)
+    _validate_identifier_columns(
+        uttdf,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
+    pc_df = _prepare_powers_dataframe(
+        uttdf,
+        metadata_fields,
+        exclude_participants,
+        sample_id_field=sample_id_field,
+    )
 
     if automate_powers:
         pc_df = run_automation(pc_df)
 
     coder_ids = _resolve_powers_coder_ids(num_coders)
-    pc_df, primary_assignment, segments = _assign_primary_coders(pc_df, coder_ids)
+    pc_df, primary_assignment, segments = _assign_primary_coders(
+        pc_df,
+        coder_ids,
+        sample_id_field=sample_id_field,
+    )
 
     rel_df = _build_reliability_dataframe(
         pc_df=pc_df,
@@ -418,6 +479,7 @@ def make_powers_coding_files(
         coder_ids=coder_ids,
         primary_assignment=primary_assignment,
         segments=segments,
+        sample_id_field=sample_id_field,
     )
 
     pc_export, rel_export, codebook_df = _apply_export_blinding(
@@ -437,4 +499,5 @@ def make_powers_coding_files(
         metadata_values=metadata_values,
         powers_coding_file=powers_coding_file,
         powers_reliability_file=powers_reliability_file,
+        sample_id_field=sample_id_field,
     )

@@ -2,6 +2,17 @@
 # Most users can leave this file unchanged.
 
 # -------------------------------------------------------------------
+# Unique identifiers
+# -------------------------------------------------------------------
+
+# Sample-level identifier column in reading/writing.
+sample_id_field: sample_id
+
+# Utterance-level unique identifier column name.
+utterance_id_field: utterance_id
+
+
+# -------------------------------------------------------------------
 # Reliability file conventions
 # -------------------------------------------------------------------
 
@@ -39,6 +50,17 @@ word_count_field: word_count
 
 # Expected word-count sample-level summary file name.
 wc_samples_file: word_counting_by_sample.xlsx
+
+
+# -------------------------------------------------------------------
+# POWERS coding
+# -------------------------------------------------------------------
+
+# POWERS coding file name search base.
+powers_coding_file: powers_coding
+
+# POWERS reliability coding file name search base.
+powers_reliability_file: powers_reliability_coding
 
 
 # -------------------------------------------------------------------

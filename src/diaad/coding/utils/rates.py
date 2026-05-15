@@ -52,6 +52,7 @@ def read_speaking_time_table(
     speaking_time_file: str | Path | None = None,
     speaking_time_field: str = DEFAULT_SPEAKING_TIME_FIELD,
     directories=None,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Read and standardize a speaking-time spreadsheet.
@@ -59,7 +60,7 @@ def read_speaking_time_table(
     Expected structure
     ------------------
     Must contain:
-        - sample_id
+        - sample_id (or the configured `sample_id_field`)
         - speaking_time  (or the configured `speaking_time_field`)
 
     Assumptions
@@ -119,11 +120,11 @@ def read_speaking_time_table(
 
     validate_columns(
         df,
-        required_cols=["sample_id", speaking_time_field],
+        required_cols=[sample_id_field, speaking_time_field],
         df_name="Speaking time table",
     )
 
-    df = df[["sample_id", speaking_time_field]].copy()
+    df = df[[sample_id_field, speaking_time_field]].copy()
     df = df.rename(columns={speaking_time_field: "speaking_time"})
 
     df["speaking_time"] = pd.to_numeric(df["speaking_time"], errors="coerce")
@@ -135,15 +136,15 @@ def read_speaking_time_table(
             "speaking_time; these rows will be retained as NaN."
         )
 
-    dupes = df["sample_id"].duplicated(keep=False)
+    dupes = df[sample_id_field].duplicated(keep=False)
     if dupes.any():
         n_dupe_rows = int(dupes.sum())
         logger.warning(
-            f"Speaking time table contains {n_dupe_rows} rows with duplicate sample_id "
-            "values; collapsing by sample_id and summing speaking_time."
+            f"Speaking time table contains {n_dupe_rows} rows with duplicate {sample_id_field} "
+            f"values; collapsing by {sample_id_field} and summing speaking_time."
         )
         df = (
-            df.groupby("sample_id", as_index=False, dropna=False)["speaking_time"]
+            df.groupby(sample_id_field, as_index=False, dropna=False)["speaking_time"]
             .sum(min_count=1)
         )
 
@@ -155,23 +156,25 @@ def read_speaking_time_table(
 
 def speaking_time_dict_from_table(
     speaking_time_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
 ) -> dict:
     """
     Convert a standardized speaking time table to a sample_id -> seconds dict.
     """
     validate_columns(
         speaking_time_df,
-        required_cols=["sample_id", "speaking_time"],
+        required_cols=[sample_id_field, "speaking_time"],
         df_name="Speaking time table",
     )
 
-    return dict(zip(speaking_time_df["sample_id"], speaking_time_df["speaking_time"]))
+    return dict(zip(speaking_time_df[sample_id_field], speaking_time_df["speaking_time"]))
 
 
 def load_speaking_time_dict(
     speaking_time_file: str | Path | None = None,
     speaking_time_field: str = DEFAULT_SPEAKING_TIME_FIELD,
     directories=None,
+    sample_id_field: str = "sample_id",
 ) -> dict:
     """
     Convenience wrapper to read the speaking time file and return
@@ -181,8 +184,9 @@ def load_speaking_time_dict(
         speaking_time_file=speaking_time_file,
         speaking_time_field=speaking_time_field,
         directories=directories,
+        sample_id_field=sample_id_field,
     )
-    return speaking_time_dict_from_table(df)
+    return speaking_time_dict_from_table(df, sample_id_field=sample_id_field)
 
 
 # ---------------------------------------------------------------------
@@ -193,6 +197,7 @@ def merge_speaking_time(
     df: pd.DataFrame,
     speaking_time_df: pd.DataFrame,
     how: str = "left",
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Merge speaking-time information onto an analysis table by sample_id.
@@ -213,17 +218,17 @@ def merge_speaking_time(
             speaking_time
             speaking_minutes
     """
-    validate_columns(df, ["sample_id"], df_name="Analysis table")
+    validate_columns(df, [sample_id_field], df_name="Analysis table")
     validate_columns(
         speaking_time_df,
-        ["sample_id", "speaking_time", "speaking_minutes"],
+        [sample_id_field, "speaking_time", "speaking_minutes"],
         df_name="Speaking time table",
     )
 
     merged = pd.merge(
         df,
-        speaking_time_df[["sample_id", "speaking_time", "speaking_minutes"]],
-        on="sample_id",
+        speaking_time_df[[sample_id_field, "speaking_time", "speaking_minutes"]],
+        on=sample_id_field,
         how=how,
     )
 

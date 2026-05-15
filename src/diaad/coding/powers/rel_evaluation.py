@@ -31,12 +31,6 @@ CATEGORICAL_COLS = [
     "collab_repair",
 ]
 
-JOIN_COLS = [
-    "sample_id",
-    "utterance_id",
-]
-
-
 LOW_VARIANCE_POOLED_VAR_THRESHOLD = 0.05
 LOW_VARIANCE_MAX_VALUE_PROP_THRESHOLD = 0.95
 SPARSE_NONZERO_EITHER_PCT_THRESHOLD = 5.0
@@ -71,15 +65,34 @@ def _read_powers_pair(org_file: Path, rel_file: Path) -> tuple[pd.DataFrame | No
         return None, None
 
 
-def _required_rel_cols() -> list[str]:
+def _join_cols(
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+) -> list[str]:
+    """Return configured POWERS reliability join columns."""
+    return [sample_id_field, utterance_id_field]
+
+
+def _required_rel_cols(
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+) -> list[str]:
     """Return the minimum set of columns needed from the reliability file."""
-    return JOIN_COLS + CONTINUOUS_COLS + CATEGORICAL_COLS
+    return _join_cols(sample_id_field, utterance_id_field) + CONTINUOUS_COLS + CATEGORICAL_COLS
 
 
-def _prepare_rel_subset(rel_df: pd.DataFrame) -> pd.DataFrame:
+def _prepare_rel_subset(
+    rel_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+) -> pd.DataFrame:
     """Keep only evaluation-relevant columns from the reliability file."""
-    keep = [col for col in _required_rel_cols() if col in rel_df.columns]
-    missing = [col for col in JOIN_COLS if col not in rel_df.columns]
+    join_cols = _join_cols(sample_id_field, utterance_id_field)
+    keep = [
+        col for col in _required_rel_cols(sample_id_field, utterance_id_field)
+        if col in rel_df.columns
+    ]
+    missing = [col for col in join_cols if col not in rel_df.columns]
     if missing:
         raise KeyError(f"Missing required reliability join columns: {missing}")
     return rel_df.loc[:, keep].copy()
@@ -94,27 +107,41 @@ def _coerce_continuous_cols(df: pd.DataFrame, suffix: str) -> pd.DataFrame:
     return df
 
 
-def _merge_powers_reliability(org_df: pd.DataFrame, rel_df: pd.DataFrame) -> pd.DataFrame:
+def _merge_powers_reliability(
+    org_df: pd.DataFrame,
+    rel_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+) -> pd.DataFrame:
     """Merge original and reliability POWERS data on sample and utterance IDs."""
-    rel_sub = _prepare_rel_subset(rel_df)
+    join_cols = _join_cols(sample_id_field, utterance_id_field)
+    missing_org = [col for col in join_cols if col not in org_df.columns]
+    if missing_org:
+        raise KeyError(f"Missing required original join columns: {missing_org}")
+
+    rel_sub = _prepare_rel_subset(
+        rel_df,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
 
     # Diagnose duplicate keys before merge because duplicates can silently inflate rows.
-    org_dupes = org_df.duplicated(subset=JOIN_COLS, keep=False).sum()
-    rel_dupes = rel_sub.duplicated(subset=JOIN_COLS, keep=False).sum()
+    org_dupes = org_df.duplicated(subset=join_cols, keep=False).sum()
+    rel_dupes = rel_sub.duplicated(subset=join_cols, keep=False).sum()
 
     if org_dupes:
         logger.warning(
-            f"Original POWERS file contains {org_dupes} rows with duplicated join keys: {JOIN_COLS}."
+            f"Original POWERS file contains {org_dupes} rows with duplicated join keys: {join_cols}."
         )
     if rel_dupes:
         logger.warning(
-            f"Reliability POWERS file contains {rel_dupes} rows with duplicated join keys: {JOIN_COLS}."
+            f"Reliability POWERS file contains {rel_dupes} rows with duplicated join keys: {join_cols}."
         )
 
     merged = pd.merge(
         org_df,
         rel_sub,
-        on=JOIN_COLS,
+        on=join_cols,
         how="inner",
         suffixes=("_org", "_rel"),
     )
@@ -501,12 +528,14 @@ def evaluate_powers_reliability(
     output_dir,
     powers_coding_file="powers_coding.xlsx",
     powers_reliability_file="powers_reliability_coding.xlsx",
+    sample_id_field="sample_id",
+    utterance_id_field="utterance_id",
 ):
     """
     Evaluate POWERS reliability by comparing coding and reliability files.
 
     Uses the first discovered powers_coding and powers_reliability_coding
-    files, merges on sample_id and utterance_id, computes row-level absolute
+    files, merges on the configured sample and utterance IDs, computes row-level absolute
     and percent differences for continuous measures, computes ICC(2,1) where
     applicable, and computes agreement/kappa for categorical measures.
     """
@@ -532,7 +561,12 @@ def evaluate_powers_reliability(
         return
 
     try:
-        merged = _merge_powers_reliability(org_df, rel_df)
+        merged = _merge_powers_reliability(
+            org_df,
+            rel_df,
+            sample_id_field=sample_id_field,
+            utterance_id_field=utterance_id_field,
+        )
     except Exception as e:
         logger.error(f"Failed merging {get_rel_path(org_file)} and {get_rel_path(rel_file)}: {e}")
         return

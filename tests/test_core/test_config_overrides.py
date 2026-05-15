@@ -16,6 +16,7 @@ def test_parse_config_overrides_maps_bare_keys_to_sections() -> None:
         [
             "input_dir=data/input/siteA",
             "powers_coding_file=siteA_powers_coding.xlsx",
+            "sample_id_field=expanded_sample_id",
             "automate_powers=false",
         ]
     )
@@ -23,6 +24,7 @@ def test_parse_config_overrides_maps_bare_keys_to_sections() -> None:
     assert overrides == {
         "project.input_dir": "data/input/siteA",
         "advanced.powers_coding_file": "siteA_powers_coding.xlsx",
+        "advanced.sample_id_field": "expanded_sample_id",
         "project.automate_powers": False,
     }
 
@@ -32,12 +34,14 @@ def test_parse_config_overrides_accepts_explicit_sections() -> None:
         [
             "project.output_dir=data/output/siteA",
             "advanced.powers_reliability_file=siteA_powers_rel.xlsx",
+            "advanced.utterance_id_field=expanded_utterance_id",
         ]
     )
 
     assert overrides == {
         "project.output_dir": "data/output/siteA",
         "advanced.powers_reliability_file": "siteA_powers_rel.xlsx",
+        "advanced.utterance_id_field": "expanded_utterance_id",
     }
 
 

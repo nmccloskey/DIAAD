@@ -28,6 +28,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "metadata_fields": {"group": r"group\d+"},
         },
         advanced={
+            "sample_id_field": "expanded_sample_id",
+            "utterance_id_field": "expanded_utterance_id",
             "auto_blind": "true",
             "blind_cols": ["sample_id", "speaker"],
             "id_cols": ["sample_id", "utterance_id"],
@@ -48,6 +50,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.num_bins == 3
     assert config.num_coders == 2
     assert config.metadata_fields_config == {"tiers": {"group": r"group\d+"}}
+    assert config.sample_id_field == "expanded_sample_id"
+    assert config.utterance_id_field == "expanded_utterance_id"
     assert config.auto_blind is True
     assert config.blind_cols == ["sample_id", "speaker"]
     assert config.coding_blind_cols == ["sample_id", "speaker"]
@@ -107,6 +111,8 @@ def test_advanced_config_blinding_helpers():
 def test_advanced_config_defaults_do_not_auto_blind():
     advanced = AdvancedConfig()
 
+    assert advanced.sample_id_field == "sample_id"
+    assert advanced.utterance_id_field == "utterance_id"
     assert advanced.blind_cols == ["sample_id"]
     assert advanced.should_blind("coding") is False
     assert advanced.should_blind("analysis") is False

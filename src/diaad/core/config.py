@@ -59,6 +59,9 @@ class ProjectConfig:
 class AdvancedConfig:
     """Normalized advanced configuration."""
 
+    sample_id_field: str = "sample_id"
+    utterance_id_field: str = "utterance_id"
+
     reliability_tag: str = "_reliability"
     reliability_dirname: str = "reliability"
 
@@ -89,6 +92,14 @@ class AdvancedConfig:
     id_cols: list[str] | None = None
 
     def __post_init__(self) -> None:
+        sample_id_field = str(self.sample_id_field).strip()
+        utterance_id_field = str(self.utterance_id_field).strip()
+        if not sample_id_field:
+            raise ValueError("sample_id_field must be a non-empty string.")
+        if not utterance_id_field:
+            raise ValueError("utterance_id_field must be a non-empty string.")
+        object.__setattr__(self, "sample_id_field", sample_id_field)
+        object.__setattr__(self, "utterance_id_field", utterance_id_field)
         object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
         configured_blind_cols = self.blind_cols
         if configured_blind_cols is None:
@@ -281,6 +292,14 @@ class ConfigManager:
         return self.advanced.speaking_time_field
 
     @property
+    def sample_id_field(self) -> str:
+        return self.advanced.sample_id_field
+
+    @property
+    def utterance_id_field(self) -> str:
+        return self.advanced.utterance_id_field
+
+    @property
     def powers_coding_file(self) -> str:
         return self.advanced.powers_coding_file
 
@@ -373,6 +392,8 @@ class ConfigManager:
                 "metadata_fields": project.metadata_fields,
             },
             "advanced": {
+                "sample_id_field": advanced.sample_id_field,
+                "utterance_id_field": advanced.utterance_id_field,
                 "reliability_tag": advanced.reliability_tag,
                 "reliability_dirname": advanced.reliability_dirname,
                 "cu_paradigms": advanced.cu_paradigms,
@@ -463,6 +484,14 @@ class ConfigManager:
 
     def _parse_advanced(self, data: dict[str, Any]) -> AdvancedConfig:
         return AdvancedConfig(
+            sample_id_field=self._as_str(
+                data.get("sample_id_field"),
+                default="sample_id",
+            ),
+            utterance_id_field=self._as_str(
+                data.get("utterance_id_field"),
+                default="utterance_id",
+            ),
             reliability_tag=self._as_str(
                 data.get("reliability_tag"),
                 default="_reliability",

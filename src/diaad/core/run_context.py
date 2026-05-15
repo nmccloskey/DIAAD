@@ -575,6 +575,8 @@ class RunContext:
             "blinding_config": self.config.blinding,
             "powers_coding_file": self.config.powers_coding_file,
             "powers_reliability_file": self.config.powers_reliability_file,
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
 
     def kwargs_analyze_powers_coding(self) -> dict[str, Any]:
@@ -582,6 +584,7 @@ class RunContext:
         return {
             **self.kwargs_io(),
             "powers_coding_file": self.config.powers_coding_file,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_powers_rates(self) -> dict[str, Any]:
@@ -591,6 +594,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "speaking_time_file": self.config.advanced.speaking_time_file,
             "speaking_time_field": self.config.advanced.speaking_time_field,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_evaluate_powers_reliability(self) -> dict[str, Any]:
@@ -599,6 +603,8 @@ class RunContext:
             **self.kwargs_io(),
             "powers_coding_file": self.config.powers_coding_file,
             "powers_reliability_file": self.config.powers_reliability_file,
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
 
     def kwargs_reselect_powers_reliability(self) -> dict[str, Any]:
@@ -612,4 +618,5 @@ class RunContext:
             "automate_powers": self.automate_powers,
             "powers_coding_file": self.config.powers_coding_file,
             "powers_reliability_file": self.config.powers_reliability_file,
+            "sample_id_field": self.config.sample_id_field,
         }
