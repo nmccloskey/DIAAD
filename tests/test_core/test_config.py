@@ -23,6 +23,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "reliability_fraction": "0.5",
             "shuffle_samples": "false",
             "exclude_participants": ["INV"],
+            "auto_tabularize": "true",
             "num_bins": 3.0,
             "num_coders": "2",
             "metadata_fields": {"group": r"group\d+"},
@@ -46,6 +47,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.reliability_fraction == 0.5
     assert config.shuffle_samples is False
     assert config.exclude_participants == ["INV"]
+    assert config.auto_tabularize is True
     assert config.num_bins == 3
     assert config.num_coders == 2
     assert config.metadata_fields_config == {"tiers": {"group": r"group\d+"}}
@@ -94,6 +96,15 @@ def test_config_manager_rejects_invalid_reliability_fraction(tmp_path):
 
     with pytest.raises(ValueError, match="reliability_fraction"):
         ConfigManager(config_dir)
+
+
+def test_config_manager_defaults_do_not_auto_tabularize(tmp_path):
+    config_dir = _make_config_dir(tmp_path)
+
+    config = ConfigManager(config_dir)
+
+    assert config.auto_tabularize is False
+    assert config.to_dict()["project"]["auto_tabularize"] is False
 
 
 def test_advanced_config_blinding_helpers():

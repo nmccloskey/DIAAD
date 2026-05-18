@@ -20,6 +20,9 @@ def test_generate_synthetic_project(tmp_path):
     assert len(list((project_dir / "input" / "chat").glob("*.cha"))) == 3
     assert len(list((project_dir / "input" / "chat" / "reliability").glob("*.cha"))) == 2
     assert (
+        project_dir / "input" / "transcript_tables" / "transcript_tables.xlsx"
+    ).exists()
+    assert (
         project_dir
         / "input"
         / "transcription_reliability_selection"

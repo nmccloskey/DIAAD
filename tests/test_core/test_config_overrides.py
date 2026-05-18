@@ -18,6 +18,7 @@ def test_parse_config_overrides_maps_bare_keys_to_sections() -> None:
             "powers_coding_file=siteA_powers_coding.xlsx",
             "sample_id_field=expanded_sample_id",
             "automate_powers=false",
+            "auto_tabularize=true",
         ]
     )
 
@@ -26,6 +27,7 @@ def test_parse_config_overrides_maps_bare_keys_to_sections() -> None:
         "advanced.powers_coding_file": "siteA_powers_coding.xlsx",
         "advanced.sample_id_field": "expanded_sample_id",
         "project.automate_powers": False,
+        "project.auto_tabularize": True,
     }
 
 

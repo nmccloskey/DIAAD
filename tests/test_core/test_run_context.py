@@ -31,6 +31,7 @@ class FakeConfigManager:
         self.strip_clan = True
         self.prefer_correction = False
         self.lowercase = True
+        self.auto_tabularize = True
         self.automate_powers = True
         self.powers_coding_file = "powers_coding.xlsx"
         self.powers_reliability_file = "powers_reliability_coding.xlsx"
@@ -104,6 +105,53 @@ def test_run_context_ensure_transcript_tables_generates_when_missing(monkeypatch
     assert calls["chats"] is chats
     assert calls["shuffle"] is True
     assert calls["random_seed"] == 13
+
+
+def test_run_context_ensure_transcript_tables_errors_when_auto_disabled(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+    monkeypatch.setattr(run_context_module, "find_matching_files", lambda **kwargs: [])
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+    ctx.config.auto_tabularize = False
+
+    with pytest.raises(RuntimeError, match="auto_tabularize: true"):
+        ctx.ensure_transcript_tables()
+
+
+def test_run_context_ensure_transcript_tables_uses_existing_tables(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+    table_path = tmp_path / "input" / "transcript_tables" / "transcript_tables.xlsx"
+    monkeypatch.setattr(
+        run_context_module,
+        "find_matching_files",
+        lambda **kwargs: [table_path],
+    )
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+    ctx.config.auto_tabularize = False
+    monkeypatch.setattr(
+        ctx,
+        "load_chats",
+        lambda force=False: pytest.fail("existing transcript tables should be used"),
+    )
+
+    ctx.ensure_transcript_tables()
 
 
 def test_run_context_kwargs_tabularize_requires_chats(monkeypatch, tmp_path):

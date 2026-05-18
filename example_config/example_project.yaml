@@ -44,6 +44,15 @@ exclude_participants: [INV]
 
 
 # -------------------------------------------------------------------
+# Transcript tabularization
+# -------------------------------------------------------------------
+
+# If true, functions requiring transcript tables will automatically
+# tabularize input .cha transcripts when transcript tables are absent.
+auto_tabularize: false
+
+
+# -------------------------------------------------------------------
 # Coding workflow
 # -------------------------------------------------------------------
 

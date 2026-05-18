@@ -17,6 +17,7 @@ PROJECT_KEYS = {
     "prefer_correction",
     "lowercase",
     "exclude_participants",
+    "auto_tabularize",
     "num_bins",
     "num_coders",
     "stimulus_field",

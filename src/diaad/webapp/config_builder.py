@@ -191,6 +191,18 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
         ],
     ),
     (
+        "Transcript tabularization",
+        [
+            {
+                "name": "auto_tabularize",
+                "label": "Auto-tabularize transcripts",
+                "type": "bool",
+                "default": False,
+                "help": "If true, commands that require transcript tables automatically create them from input .cha transcripts when tables are absent.",
+            },
+        ],
+    ),
+    (
         "Coding workflow",
         [
             {

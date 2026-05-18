@@ -340,6 +340,22 @@ def _write_expected_transcript_table(project_dir: Path, specs: dict[str, dict[st
     return target
 
 
+def _write_provided_transcript_table(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    transcript_table: Path,
+    *,
+    force: bool,
+) -> Path:
+    input_dir = project_dir / specs["project_config"].get("input_dir", "input")
+    target = input_dir / "transcript_tables" / "transcript_tables.xlsx"
+    if target.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {target}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(transcript_table, target)
+    return target
+
+
 def _replace_tree(source: Path, target: Path, *, force: bool) -> None:
     source = Path(source)
     target = Path(target)
@@ -1751,7 +1767,8 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     project_dir.mkdir(parents=True, exist_ok=True)
     _materialize_inputs(project_dir, specs, force=force)
     _cleanup_obsolete_expected_dirs(project_dir, force=force)
-    _write_expected_transcript_table(project_dir, specs, force=force)
+    transcript_table = _write_expected_transcript_table(project_dir, specs, force=force)
+    _write_provided_transcript_table(project_dir, specs, transcript_table, force=force)
     _write_expected_selection(project_dir, specs, force=force)
     _write_expected_evaluation(project_dir, specs, force=force)
     _write_expected_reselection(project_dir, specs, force=force)

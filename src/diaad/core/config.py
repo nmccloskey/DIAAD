@@ -35,6 +35,8 @@ class ProjectConfig:
     lowercase: bool = True
     exclude_participants: list[str] | None = None
 
+    auto_tabularize: bool = False
+
     num_bins: int = 4
     num_coders: int = 0
     stimulus_field: str = ""
@@ -242,6 +244,10 @@ class ConfigManager:
         return self.project.automate_powers
 
     @property
+    def auto_tabularize(self) -> bool:
+        return self.project.auto_tabularize
+
+    @property
     def reliability_tag(self) -> str:
         return self.advanced.reliability_tag
 
@@ -375,6 +381,7 @@ class ConfigManager:
                 "prefer_correction": project.prefer_correction,
                 "lowercase": project.lowercase,
                 "exclude_participants": project.exclude_participants,
+                "auto_tabularize": project.auto_tabularize,
                 "num_bins": project.num_bins,
                 "num_coders": project.num_coders,
                 "stimulus_field": project.stimulus_field,
@@ -455,6 +462,7 @@ class ConfigManager:
                 data.get("exclude_participants"),
                 default=[],
             ),
+            auto_tabularize=self._as_bool(data.get("auto_tabularize"), default=False),
             num_bins=self._as_int(data.get("num_bins"), default=4),
             num_coders=self._as_int(data.get("num_coders"), default=0),
             stimulus_field=self._as_str(data.get("stimulus_field"), default=""),

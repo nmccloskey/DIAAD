@@ -131,6 +131,10 @@ class RunContext:
     def automate_powers(self) -> bool:
         return self.config.automate_powers
 
+    @property
+    def auto_tabularize(self) -> bool:
+        return self.config.auto_tabularize
+
     # ------------------------------------------------------------------
     # Setup helpers
     # ------------------------------------------------------------------
@@ -205,34 +209,64 @@ class RunContext:
         )
         return self.chats
 
+    def find_transcript_tables(self) -> list[Path]:
+        """
+        Return transcript tables present in the input directory or current run
+        output directory.
+        """
+        return list(
+            find_matching_files(
+                directories=[self.input_dir, self.out_dir],
+                search_base="transcript_tables",
+            )
+        )
+
     def transcript_tables_exist(self) -> bool:
         """
         Return True if transcript tables are already present in either the
         input directory or current run output directory.
         """
-        transcript_tables = find_matching_files(
-            directories=[self.input_dir, self.out_dir],
-            search_base="transcript_tables",
-        )
-        return bool(transcript_tables)
+        return bool(self.find_transcript_tables())
 
     def ensure_transcript_tables(self) -> None:
         """
         Create transcript tables automatically if required tables are not
         already available.
         """
-        if self.transcript_tables_exist():
+        transcript_tables = self.find_transcript_tables()
+        if transcript_tables:
+            logger.info(
+                "Transcript tables already available; using %s.",
+                ", ".join(str(path) for path in transcript_tables),
+            )
             return
 
+        message = (
+            "Commands requested for this run require transcript tables, but DIAAD "
+            f"did not find any transcript_tables files in {self.input_dir} or "
+            f"{self.out_dir}. Provide transcript tables in the input directory, "
+            "run 'diaad transcripts tabularize' first, or set "
+            "'auto_tabularize: true' in config/project.yaml to let DIAAD create "
+            "transcript tables from input .cha transcripts automatically."
+        )
+        if not self.auto_tabularize:
+            logger.error(message)
+            raise RuntimeError(message)
+
         logger.info(
-            "No input transcript tables detected - creating them automatically."
+            "No transcript tables detected in %s or %s; auto_tabularize is true, "
+            "so DIAAD will create transcript tables from input .cha transcripts "
+            "in %s.",
+            self.input_dir,
+            self.out_dir,
+            self.out_dir,
         )
 
         chats = self.load_chats()
 
         from diaad.transcripts.transcript_tables import tabularize_transcripts
 
-        tabularize_transcripts(
+        written = tabularize_transcripts(
             metadata_fields=self.metadata_fields,
             chats=chats,
             output_dir=self.out_dir,
@@ -241,6 +275,11 @@ class RunContext:
             sample_id_field=self.config.sample_id_field,
             utterance_id_field=self.config.utterance_id_field,
         )
+        if written:
+            logger.info(
+                "Auto-generated transcript table(s): %s.",
+                ", ".join(str(path) for path in written),
+            )
 
     # ------------------------------------------------------------------
     # Logging / termination helpers
