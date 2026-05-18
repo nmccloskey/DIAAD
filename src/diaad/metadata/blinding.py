@@ -30,33 +30,35 @@ def _has_codebook_discovery_context(
 def _choose_join_keys(
     df: pd.DataFrame,
     metadata_df: pd.DataFrame,
-    id_cols: tuple[str, ...] | list[str] = [],
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> list[str]:
     """
     Choose the most specific usable join keys shared by df and metadata_df.
 
     Preference:
-    1. sample_id + utterance_id if both are shared
-    2. sample_id if shared
-    3. otherwise any shared requested keys
+    1. configured sample + utterance identifiers if both are shared
+    2. configured sample identifier if shared
+    3. configured utterance identifier if shared
     4. otherwise error
     """
-    requested = list(id_cols)
+    sample_id_field = str(sample_id_field).strip()
+    utterance_id_field = str(utterance_id_field).strip()
+    requested = list(dict.fromkeys([sample_id_field, utterance_id_field]))
     shared = [c for c in requested if c in df.columns and c in metadata_df.columns]
 
-    if "sample_id" in shared and "utterance_id" in shared:
-        return ["sample_id", "utterance_id"]
-    if "sample_id" in shared:
-        return ["sample_id"]
-    if shared:
-        logger.warning(
-            f"Using nonstandard join key(s) for blinding metadata resolution: {shared}"
-        )
-        return shared
+    has_sample = sample_id_field in shared
+    has_utterance = utterance_id_field in shared
+    if has_sample and has_utterance and sample_id_field != utterance_id_field:
+        return [sample_id_field, utterance_id_field]
+    if has_sample:
+        return [sample_id_field]
+    if has_utterance:
+        return [utterance_id_field]
 
     raise ValueError(
         "Could not determine join keys shared by input dataframe and metadata dataframe. "
-        f"Requested id_cols={requested}"
+        f"Requested identifier fields={requested}"
     )
 
 
@@ -95,7 +97,8 @@ def _resolve_analysis_source_columns(
     blind_cols: list[str],
     *,
     metadata_df: pd.DataFrame | None = None,
-    id_cols: tuple[str, ...] | list[str] = [],
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> tuple[pd.DataFrame, list[str], list[str], list[str]]:
     """
     Ensure requested analysis blind columns are present in a working dataframe.
@@ -109,16 +112,18 @@ def _resolve_analysis_source_columns(
     recovered_cols
         Blind columns recovered from metadata_df.
     join_keys
-        Join keys actually used if metadata recovery occurred, else present id_cols from df.
+        Join keys actually used if metadata recovery occurred, else present
+        configured identifier fields from df.
     """
     blind_cols = list(dict.fromkeys(blind_cols))
     present = present_cols(df, blind_cols)
     missing = [c for c in blind_cols if c not in present]
 
-    present_id_cols = [c for c in id_cols if c in df.columns]
+    id_fields = list(dict.fromkeys([sample_id_field, utterance_id_field]))
+    present_identifier_cols = [c for c in id_fields if c in df.columns]
 
     if not missing:
-        return df.copy(), present, [], present_id_cols
+        return df.copy(), present, [], present_identifier_cols
 
     if metadata_df is None:
         logger.warning(
@@ -126,9 +131,14 @@ def _resolve_analysis_source_columns(
             "skipping columns: %s",
             missing,
         )
-        return df.copy(), present, [], present_id_cols
+        return df.copy(), present, [], present_identifier_cols
 
-    join_keys = _choose_join_keys(df, metadata_df, id_cols=id_cols)
+    join_keys = _choose_join_keys(
+        df,
+        metadata_df,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
 
     recoverable = [c for c in missing if c in metadata_df.columns]
     still_missing = [c for c in missing if c not in metadata_df.columns]
@@ -430,7 +440,8 @@ def blind_analysis_dataframe(
         df=df,
         blind_cols=blind_cols,
         metadata_df=working_metadata,
-        id_cols=config.id_cols,
+        sample_id_field=config.sample_id_field,
+        utterance_id_field=config.utterance_id_field,
     )
 
     if not resolved_cols:

@@ -51,9 +51,6 @@ metadata_source: transcript_tables
 auto_blind: true
 blind_cols:
 - sample_id
-id_cols:
-- sample_id
-- utterance_id
 ```
 
 ## Input Snippet

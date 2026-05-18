@@ -366,13 +366,6 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "Source from which metadata may be recovered for blinding / unblinding.",
             },
             {
-                "name": "id_cols",
-                "label": "ID columns",
-                "type": "list",
-                "default": ["sample_id", "utterance_id"],
-                "help": "Join keys used when recovering metadata.",
-            },
-            {
                 "name": "codebook_filename",
                 "label": "Codebook filename",
                 "default": "",

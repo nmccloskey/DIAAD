@@ -44,9 +44,6 @@ random_seed: 99
 auto_blind: true
 blind_cols:
 - sample_id
-id_cols:
-- sample_id
-- utterance_id
 ```
 
 ## Input Snippet

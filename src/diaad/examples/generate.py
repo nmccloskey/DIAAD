@@ -641,7 +641,6 @@ def _blinding_command_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig
         coding_blind_cols=["sample_id"],
         analysis_blind_cols=["sample_id"],
         metadata_source=specs["advanced_config"].get("metadata_source", "transcript_tables"),
-        id_cols=specs["advanced_config"].get("id_cols", ["sample_id"]),
     )
 
 

@@ -7,11 +7,18 @@ from diaad.core.config import AdvancedConfig
 from diaad.metadata import blinding
 
 
-def test_choose_join_keys_prefers_sample_and_utterance():
-    df = pd.DataFrame(columns=["sample_id", "utterance_id"])
-    metadata_df = pd.DataFrame(columns=["sample_id", "utterance_id", "speaker"])
+def test_choose_join_keys_prefers_configured_sample_and_utterance():
+    df = pd.DataFrame(columns=["expanded_sample_id", "expanded_utterance_id"])
+    metadata_df = pd.DataFrame(
+        columns=["expanded_sample_id", "expanded_utterance_id", "speaker"]
+    )
 
-    assert blinding._choose_join_keys(df, metadata_df, id_cols=["sample_id", "utterance_id"]) == ["sample_id", "utterance_id"]
+    assert blinding._choose_join_keys(
+        df,
+        metadata_df,
+        sample_id_field="expanded_sample_id",
+        utterance_id_field="expanded_utterance_id",
+    ) == ["expanded_sample_id", "expanded_utterance_id"]
 
 
 def test_generate_integer_blind_codebook_is_deterministic():
@@ -38,11 +45,14 @@ def test_validate_blind_codebook_compatibility_rejects_duplicates():
 
 def test_blind_analysis_dataframe_recovers_metadata_columns():
     config = AdvancedConfig(
+        sample_id_field="expanded_sample_id",
+        utterance_id_field="expanded_utterance_id",
         blind_cols=["speaker"],
-        id_cols=["sample_id", "utterance_id"],
     )
-    df = pd.DataFrame({"sample_id": ["S1", "S2"], "score": [1, 2]})
-    metadata_df = pd.DataFrame({"sample_id": ["S1", "S2"], "speaker": ["A", "B"]})
+    df = pd.DataFrame({"expanded_sample_id": ["S1", "S2"], "score": [1, 2]})
+    metadata_df = pd.DataFrame(
+        {"expanded_sample_id": ["S1", "S2"], "speaker": ["A", "B"]}
+    )
 
     blinded_df, diagnostics_df, codebook_df = blinding.blind_analysis_dataframe(
         df,
@@ -53,7 +63,11 @@ def test_blind_analysis_dataframe_recovers_metadata_columns():
 
     assert "speaker" not in blinded_df.columns
     assert "speaker_blinded" in blinded_df.columns
-    assert list(diagnostics_df.columns) == ["sample_id", "speaker", "speaker_blinded"]
+    assert list(diagnostics_df.columns) == [
+        "expanded_sample_id",
+        "speaker",
+        "speaker_blinded",
+    ]
     assert not codebook_df.empty
 
 

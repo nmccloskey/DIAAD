@@ -48,6 +48,8 @@ def test_parse_config_overrides_accepts_explicit_sections() -> None:
 def test_parse_config_overrides_rejects_unknown_keys() -> None:
     with pytest.raises(ValueError, match="Unknown DIAAD config override key"):
         parse_config_overrides(["just_c2_powers=true"])
+    with pytest.raises(ValueError, match="Unknown DIAAD config override key"):
+        parse_config_overrides(["id" + "_cols=sample_id"])
 
 
 def test_build_cli_config_overrides_prefers_direct_input_output_flags() -> None:

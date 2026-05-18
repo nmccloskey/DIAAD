@@ -41,7 +41,6 @@ ADVANCED_KEYS = {
     "auto_blind",
     "blind_cols",
     "metadata_source",
-    "id_cols",
     "codebook_filename",
     "coding_blind_cols",
     "analysis_blind_cols",

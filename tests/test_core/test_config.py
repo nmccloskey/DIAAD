@@ -32,7 +32,6 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "utterance_id_field": "expanded_utterance_id",
             "auto_blind": "true",
             "blind_cols": ["sample_id", "speaker"],
-            "id_cols": ["sample_id", "utterance_id"],
             "codebook_filename": "custom_codebook.xlsx",
             "powers_coding_file": "custom_powers.xlsx",
             "powers_reliability_file": "custom_powers_rel.xlsx",

@@ -89,7 +89,6 @@ class AdvancedConfig:
     # Deprecated aliases retained so older config files and call sites still work.
     coding_blind_cols: list[str] | None = None
     analysis_blind_cols: list[str] | None = None
-    id_cols: list[str] | None = None
 
     def __post_init__(self) -> None:
         sample_id_field = str(self.sample_id_field).strip()
@@ -118,11 +117,6 @@ class AdvancedConfig:
             self,
             "analysis_blind_cols",
             list(self.blind_cols),
-        )
-        object.__setattr__(
-            self,
-            "id_cols",
-            list(self.id_cols or ["sample_id", "utterance_id"]),
         )
 
     @property
@@ -328,10 +322,6 @@ class ConfigManager:
         return self.advanced
 
     @property
-    def id_cols(self) -> list[str]:
-        return self.advanced.id_cols
-
-    @property
     def auto_blind(self) -> bool:
         return self.advanced.auto_blind
 
@@ -412,7 +402,6 @@ class ConfigManager:
                 "auto_blind": advanced.auto_blind,
                 "blind_cols": advanced.blind_cols,
                 "metadata_source": advanced.metadata_source,
-                "id_cols": advanced.id_cols,
                 "codebook_filename": advanced.codebook_filename,
             },
         }
@@ -558,7 +547,6 @@ class ConfigManager:
             analysis_blind_cols=self._as_optional_str_list(
                 data.get("analysis_blind_cols"),
             ),
-            id_cols=self._as_optional_str_list(data.get("id_cols")),
             codebook_filename=self._as_str(
                 data.get("codebook_filename"),
                 default="",
