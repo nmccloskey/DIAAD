@@ -107,6 +107,7 @@ def _prepare_blank_reliability_subset(
     cu_df: pd.DataFrame,
     sample_ids: list,
     frac: float,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame | None:
     """Build a blank reliability subset with no assigned coder."""
     n_rel_samples = calc_subset_size(frac=frac, samples=sample_ids)
@@ -114,7 +115,7 @@ def _prepare_blank_reliability_subset(
         return None
 
     rel_samples = random.sample(sample_ids, k=n_rel_samples)
-    return cu_df[cu_df["sample_id"].isin(rel_samples)].copy()
+    return cu_df[cu_df[sample_id_field].isin(rel_samples)].copy()
 
 
 def _prepare_two_coder_reliability_subset(
@@ -122,6 +123,7 @@ def _prepare_two_coder_reliability_subset(
     seg: list,
     rel_coder: int,
     frac: float,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame | None:
     """Build a 2-coder reliability subset from one coder's primary assignments."""
     n_rel_samples = calc_subset_size(frac=frac, samples=seg)
@@ -129,7 +131,7 @@ def _prepare_two_coder_reliability_subset(
         return None
 
     rel_samples = random.sample(seg, k=n_rel_samples)
-    relsegdf = cu_df[cu_df["sample_id"].isin(rel_samples)].copy()
+    relsegdf = cu_df[cu_df[sample_id_field].isin(rel_samples)].copy()
     relsegdf["id"] = rel_coder
     return relsegdf
 
@@ -140,6 +142,7 @@ def _prepare_three_coder_reliability_subset(
     assn: list[int],
     frac: float,
     cu_paradigms,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame | None:
     """Build the reliability subset for the 3-coder workflow."""
     n_rel_samples = calc_subset_size(frac=frac, samples=seg)
@@ -147,7 +150,7 @@ def _prepare_three_coder_reliability_subset(
         return None
 
     rel_samples = random.sample(seg, k=n_rel_samples)
-    relsegdf = cu_df[cu_df["sample_id"].isin(rel_samples)].copy()
+    relsegdf = cu_df[cu_df[sample_id_field].isin(rel_samples)].copy()
     relsegdf.drop(columns=["c1_id", "c1_comment"], inplace=True, errors="ignore")
 
     if len(cu_paradigms) >= 2:
@@ -190,13 +193,17 @@ def _prepare_cu_base_dataframe(
     uttdf: pd.DataFrame,
     metadata_fields,
     stimulus_field,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Shuffle sample blocks and drop non-coding columns from an utterance dataframe.
     """
     stim_cols = resolve_stim_cols(stimulus_field)
 
-    subdfs = [subdf for _, subdf in uttdf.groupby(by="sample_id")]
+    if sample_id_field not in uttdf.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    subdfs = [subdf for _, subdf in uttdf.groupby(by=sample_id_field)]
     random.shuffle(subdfs)
     shuffled_utt_df = pd.concat(subdfs, ignore_index=True)
 
@@ -224,6 +231,7 @@ def _build_cu_assignments(
     frac: float,
     cu_paradigms,
     exclude_participants,
+    sample_id_field: str = "sample_id",
 ) -> tuple[pd.DataFrame, Optional[pd.DataFrame]]:
     """
     Populate coder assignment columns and construct the reliability dataframe.
@@ -233,7 +241,10 @@ def _build_cu_assignments(
     else:
         cu_df = _assign_single_coding_columns(cu_df, cu_paradigms, exclude_participants)
 
-    unique_ids = list(cu_df["sample_id"].drop_duplicates())
+    if sample_id_field not in cu_df.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
+
+    unique_ids = list(cu_df[sample_id_field].drop_duplicates())
     rel_subsets: list[pd.DataFrame] = []
 
     if mode in {"single", "zero"}:
@@ -245,19 +256,38 @@ def _build_cu_assignments(
         )
 
         if frac > 0:
-            rel_subsets.append(_prepare_blank_reliability_subset(cu_df, unique_ids, frac))
+            rel_subsets.append(
+                _prepare_blank_reliability_subset(
+                    cu_df,
+                    unique_ids,
+                    frac,
+                    sample_id_field=sample_id_field,
+                )
+            )
 
     elif mode == "two":
         segments = segment(unique_ids, n=2)
 
         for seg, coder in zip(segments, coder_ids):
-            cu_df.loc[cu_df["sample_id"].isin(seg), "id"] = coder
+            cu_df.loc[cu_df[sample_id_field].isin(seg), "id"] = coder
 
         if frac > 0:
             rel_subsets.extend(
                 [
-                    _prepare_two_coder_reliability_subset(cu_df, segments[0], coder_ids[1], frac),
-                    _prepare_two_coder_reliability_subset(cu_df, segments[1], coder_ids[0], frac),
+                    _prepare_two_coder_reliability_subset(
+                        cu_df,
+                        segments[0],
+                        coder_ids[1],
+                        frac,
+                        sample_id_field=sample_id_field,
+                    ),
+                    _prepare_two_coder_reliability_subset(
+                        cu_df,
+                        segments[1],
+                        coder_ids[0],
+                        frac,
+                        sample_id_field=sample_id_field,
+                    ),
                 ]
             )
 
@@ -266,7 +296,7 @@ def _build_cu_assignments(
         assignments = assign_coders(coder_ids)
 
         for seg, assn in zip(segments, assignments):
-            cu_df.loc[cu_df["sample_id"].isin(seg), ["c1_id", "c2_id"]] = assn[:2]
+            cu_df.loc[cu_df[sample_id_field].isin(seg), ["c1_id", "c2_id"]] = assn[:2]
 
             if frac > 0:
                 rel_subsets.append(
@@ -276,6 +306,7 @@ def _build_cu_assignments(
                         assn,
                         frac,
                         cu_paradigms,
+                        sample_id_field=sample_id_field,
                     )
                 )
 
@@ -336,6 +367,7 @@ def _write_cu_outputs(
     cu_coding_dir: Path,
     source_name: str,
     total_unique_ids: int,
+    sample_id_field: str = "sample_id",
 ) -> None:
     """
     Write CU coding outputs, reliability outputs, and optional blind codebook.
@@ -344,7 +376,7 @@ def _write_cu_outputs(
 
     if export_rel_df is not None:
         logger.info(
-            f"{source_name}: reliability={export_rel_df['sample_id'].nunique()} / total={total_unique_ids}"
+            f"{source_name}: reliability={export_rel_df[sample_id_field].nunique()} / total={total_unique_ids}"
         )
         export_rel_df.to_excel(
             cu_coding_dir / "cu_reliability_coding.xlsx",
@@ -370,6 +402,7 @@ def make_cu_coding_files(
     exclude_participants,
     stimulus_field,
     blinding_config=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Build CU coding and reliability workbooks from an utterance table.
@@ -440,6 +473,7 @@ def make_cu_coding_files(
             uttdf=uttdf,
             metadata_fields=metadata_fields,
             stimulus_field=stimulus_field,
+            sample_id_field=sample_id_field,
         )
 
         cu_df, rel_df = _build_cu_assignments(
@@ -449,6 +483,7 @@ def make_cu_coding_files(
             frac=frac,
             cu_paradigms=cu_paradigms,
             exclude_participants=exclude_participants,
+            sample_id_field=sample_id_field,
         )
 
         export_cu_df, export_rel_df, codebook_df = _blind_coding_exports(
@@ -465,7 +500,8 @@ def make_cu_coding_files(
             codebook_df=codebook_df,
             cu_coding_dir=cu_coding_dir,
             source_name=transcript_table.name,
-            total_unique_ids=cu_df["sample_id"].nunique(),
+            total_unique_ids=cu_df[sample_id_field].nunique(),
+            sample_id_field=sample_id_field,
         )
 
     except Exception as e:

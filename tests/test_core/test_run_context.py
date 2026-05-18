@@ -208,3 +208,35 @@ def test_run_context_threads_template_identifier_fields(monkeypatch, tmp_path):
     assert utterance_kwargs["utterance_id_field"] == "expanded_utterance_id"
     assert sample_kwargs["sample_id_field"] == "expanded_sample_id"
     assert time_kwargs["sample_id_field"] == "expanded_sample_id"
+
+
+def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    assert ctx.kwargs_make_cu_coding_files()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_evaluate_cu_reliability()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_evaluate_cu_reliability()["utterance_id_field"] == "expanded_utterance_id"
+    assert ctx.kwargs_reselect_cu_rel()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_cu_analysis()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_cu_rates()["sample_id_field"] == "expanded_sample_id"
+
+    assert ctx.kwargs_make_word_count_files()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_make_word_count_files()["utterance_id_field"] == "expanded_utterance_id"
+    assert ctx.kwargs_reselect_wc_rel()["sample_id_field"] == "expanded_sample_id"
+    assert (
+        ctx.kwargs_evaluate_word_count_reliability()["sample_id_field"]
+        == "expanded_sample_id"
+    )
+    assert (
+        ctx.kwargs_evaluate_word_count_reliability()["utterance_id_field"]
+        == "expanded_utterance_id"
+    )
+    assert ctx.kwargs_analyze_word_counts()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_wc_rates()["sample_id_field"] == "expanded_sample_id"

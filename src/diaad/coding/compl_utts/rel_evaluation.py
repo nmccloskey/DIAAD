@@ -96,7 +96,12 @@ def _compute_measure_stats(df, col1, col2):
     }
 
 
-def _compute_icc_for_totals(summary_df, col2, col3):
+def _compute_icc_for_totals(
+    summary_df,
+    col2,
+    col3,
+    sample_id_field: str = "sample_id",
+):
     """
     Compute ICC(2,1) and ICC(2,k) on paired sample-level totals.
 
@@ -116,7 +121,7 @@ def _compute_icc_for_totals(summary_df, col2, col3):
             'icc2_k': float | np.nan,
         }
     """
-    paired = summary_df[["sample_id", col2, col3]].dropna().copy()
+    paired = summary_df[[sample_id_field, col2, col3]].dropna().copy()
 
     if len(paired) < 2:
         return {
@@ -127,8 +132,8 @@ def _compute_icc_for_totals(summary_df, col2, col3):
 
     icc_long = pd.concat(
         [
-            paired[["sample_id", col2]].rename(columns={col2: "score"}).assign(coder="coder_2"),
-            paired[["sample_id", col3]].rename(columns={col3: "score"}).assign(coder="coder_3"),
+            paired[[sample_id_field, col2]].rename(columns={col2: "score"}).assign(coder="coder_2"),
+            paired[[sample_id_field, col3]].rename(columns={col3: "score"}).assign(coder="coder_3"),
         ],
         ignore_index=True,
     )
@@ -136,7 +141,7 @@ def _compute_icc_for_totals(summary_df, col2, col3):
     try:
         icc = intraclass_corr(
             data=icc_long,
-            targets="sample_id",
+            targets=sample_id_field,
             raters="coder",
             ratings="score",
         )
@@ -225,7 +230,10 @@ def _resolve_coder_columns(cu_coding, cu_rel, paradigm=None):
 # Sample-level summary
 # ---------------------------------------------------------------------
 
-def summarize_cu_reliability(cu_rel_coding):
+def summarize_cu_reliability(
+    cu_rel_coding,
+    sample_id_field: str = "sample_id",
+):
     """
     Aggregate utterance-level CU reliability to the sample level and compute
     overall reliability statistics.
@@ -234,7 +242,7 @@ def summarize_cu_reliability(cu_rel_coding):
     ----------------------
     Canonical utterance-level columns:
       - utterance_id
-      - sample_id
+      - sample_id (or configured sample_id_field)
       - c2_sv, c2_rel, c2_cu
       - c3_sv, c3_rel, c3_cu
       - agmt_sv, agmt_rel, agmt_cu
@@ -256,7 +264,7 @@ def summarize_cu_reliability(cu_rel_coding):
     cu_rel_sum.drop(columns=["utterance_id"], inplace=True, errors="ignore")
 
     try:
-        cu_rel_sum = cu_rel_sum.groupby("sample_id").agg(
+        cu_rel_sum = cu_rel_sum.groupby(sample_id_field).agg(
             num_utterances2=("c2_cu", utt_ct),
             plus_sv2=("c2_sv", ptotal),
             minus_sv2=("c2_sv", lambda x: utt_ct(x) - ptotal(x) if utt_ct(x) > 0 else np.nan),
@@ -292,9 +300,24 @@ def summarize_cu_reliability(cu_rel_coding):
                 "cu": _compute_measure_stats(cu_rel_coding, "c2_cu", "c3_cu"),
             },
             "sample_totals": {
-                "sv": _compute_icc_for_totals(cu_rel_sum, "plus_sv2", "plus_sv3"),
-                "rel": _compute_icc_for_totals(cu_rel_sum, "plus_rel2", "plus_rel3"),
-                "cu": _compute_icc_for_totals(cu_rel_sum, "plus_cu2", "plus_cu3"),
+                "sv": _compute_icc_for_totals(
+                    cu_rel_sum,
+                    "plus_sv2",
+                    "plus_sv3",
+                    sample_id_field=sample_id_field,
+                ),
+                "rel": _compute_icc_for_totals(
+                    cu_rel_sum,
+                    "plus_rel2",
+                    "plus_rel3",
+                    sample_id_field=sample_id_field,
+                ),
+                "cu": _compute_icc_for_totals(
+                    cu_rel_sum,
+                    "plus_cu2",
+                    "plus_cu3",
+                    sample_id_field=sample_id_field,
+                ),
             },
         }
 
@@ -419,6 +442,7 @@ def _write_cu_reliability_outputs(
     base_dir,
     paradigm,
     comparison_mode,
+    sample_id_field: str = "sample_id",
 ):
     """
     Write utterance-level, sample-level, and report outputs.
@@ -438,7 +462,10 @@ def _write_cu_reliability_outputs(
     cu_rel_coding.to_excel(utterance_path, index=False)
     logger.info(f"Wrote CU reliability utterance file to {get_rel_path(utterance_path)}")
 
-    cu_rel_sum, overall_stats = summarize_cu_reliability(cu_rel_coding)
+    cu_rel_sum, overall_stats = summarize_cu_reliability(
+        cu_rel_coding,
+        sample_id_field=sample_id_field,
+    )
 
     summary_path = output_path / f"cu_reliability_coding_by_sample{paradigm_str}.xlsx"
     cu_rel_sum.to_excel(summary_path, index=False)
@@ -458,7 +485,13 @@ def _write_cu_reliability_outputs(
 # Main evaluator
 # ---------------------------------------------------------------------
 
-def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
+def evaluate_cu_reliability(
+    input_dir,
+    output_dir,
+    cu_paradigms,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+):
     """
     Compute and summarize Complete Utterance (CU) reliability across matched
     coding and reliability workbooks.
@@ -536,7 +569,12 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
             out_subdir = cu_reliability_dir / (paradigm or "")
 
             left = cu_coding[
-                ["utterance_id", "sample_id", resolved["coding_sv"], resolved["coding_rel"]]
+                [
+                    utterance_id_field,
+                    sample_id_field,
+                    resolved["coding_sv"],
+                    resolved["coding_rel"],
+                ]
             ].rename(
                 columns={
                     resolved["coding_sv"]: "c2_sv",
@@ -545,7 +583,7 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
             )
 
             right = cu_rel[
-                ["utterance_id", resolved["rel_sv"], resolved["rel_rel"]]
+                [utterance_id_field, resolved["rel_sv"], resolved["rel_rel"]]
             ].rename(
                 columns={
                     resolved["rel_sv"]: "c3_sv",
@@ -553,7 +591,7 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
                 }
             )
 
-            merged = pd.merge(left, right, on="utterance_id", how="inner")
+            merged = pd.merge(left, right, on=utterance_id_field, how="inner")
 
             if len(right) != len(merged):
                 logger.warning(
@@ -582,6 +620,7 @@ def evaluate_cu_reliability(input_dir, output_dir, cu_paradigms):
                 base_dir=out_subdir,
                 paradigm=paradigm,
                 comparison_mode=comparison_mode,
+                sample_id_field=sample_id_field,
             )
 
         except KeyError as e:

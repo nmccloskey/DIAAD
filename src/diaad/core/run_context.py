@@ -383,6 +383,7 @@ class RunContext:
             "exclude_participants": self.exclude_participants,
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
+            "sample_id_field": self.config.sample_id_field,
         }
     
     def kwargs_evaluate_cu_reliability(self) -> dict[str, Any]:
@@ -391,6 +392,8 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
 
     def kwargs_reselect_cu_rel(self) -> dict[str, Any]:
@@ -401,6 +404,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
             "random_seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_cu_analysis(self) -> dict[str, Any]:
@@ -413,6 +417,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
             "blinding_config": self.config.blinding,
+            "sample_id_field": self.config.sample_id_field,
         }
     
     def kwargs_cu_rates(self) -> dict[str, Any]:
@@ -425,6 +430,7 @@ class RunContext:
             "cu_samples_file": self.config.advanced.cu_samples_file,
             "speaking_time_file": self.config.advanced.speaking_time_file,
             "speaking_time_field": self.config.advanced.speaking_time_field,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     # ------------------------------------------------------------------
@@ -439,6 +445,8 @@ class RunContext:
             "output_dir": self.out_dir,
             "exclude_participants": self.exclude_participants,
             "blinding_config": self.config.blinding,
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
 
     def kwargs_reselect_wc_rel(self) -> dict[str, Any]:
@@ -449,6 +457,15 @@ class RunContext:
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
             "random_seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
+        }
+
+    def kwargs_evaluate_word_count_reliability(self) -> dict[str, Any]:
+        """Return kwargs for word-count reliability evaluation."""
+        return {
+            **self.kwargs_io(),
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
     
     def kwargs_analyze_word_counts(self) -> dict[str, Any]:
@@ -459,6 +476,7 @@ class RunContext:
             "word_count_file": self.config.advanced.word_count_file,
             "word_count_field": self.config.advanced.word_count_field,
             "blinding_config": self.config.blinding,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_wc_rates(self) -> dict[str, Any]:
@@ -471,6 +489,7 @@ class RunContext:
             "wc_samples_file": self.config.advanced.wc_samples_file,
             "speaking_time_file": self.config.advanced.speaking_time_file,
             "speaking_time_field": self.config.advanced.speaking_time_field,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     # ------------------------------------------------------------------
@@ -529,6 +548,7 @@ class RunContext:
             "output_dir": self.out_dir,
             "frac": self.reliability_fraction,
             "random_seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_digital_convo_turns(self) -> dict[str, Any]:

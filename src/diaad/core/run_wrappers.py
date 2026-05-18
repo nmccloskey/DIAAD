@@ -132,7 +132,9 @@ def run_evaluate_word_count_reliability(ctx):
         evaluate_word_count_reliability,
     )
 
-    return evaluate_word_count_reliability(**ctx.kwargs_io())
+    return evaluate_word_count_reliability(
+        **ctx.kwargs_evaluate_word_count_reliability()
+    )
 
 def run_analyze_word_counts(ctx):
     """Analyze word counts."""

@@ -29,6 +29,7 @@ DEFAULT_CU_RATES_FILE = "cu_coding_rates.xlsx"
 def read_cu_sample_summary(
     cu_samples_file: str | Path | None = None,
     directories=None,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Read the canonical long-format CU sample summary table.
@@ -36,7 +37,7 @@ def read_cu_sample_summary(
     Expected columns
     ----------------
     Required:
-        - sample_id
+        - sample_id (or configured sample_id_field)
         - coder
         - paradigm
         - sv_col
@@ -91,7 +92,7 @@ def read_cu_sample_summary(
         raise RuntimeError(f"Failed reading CU sample summary {get_rel_path(path)}: {e}") from e
 
     required_cols = [
-        "sample_id",
+        sample_id_field,
         "coder",
         "paradigm",
         "sv_col",
@@ -107,12 +108,15 @@ def read_cu_sample_summary(
     return df
 
 
-def finalize_cu_rates_columns(df: pd.DataFrame) -> pd.DataFrame:
+def finalize_cu_rates_columns(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Keep the canonical CU rates output columns in a clean order.
     """
     preferred = [
-        "sample_id",
+        sample_id_field,
         "coder",
         "paradigm",
         "sv_col",
@@ -159,6 +163,7 @@ def calculate_cu_rates(
     cu_samples_file: str | Path | None = None,
     speaking_time_file: str | Path | None = None,
     speaking_time_field: str = "speaking_time",
+    sample_id_field: str = "sample_id",
 ):
     """
     Compute CU, SV, and REL rates per minute from the canonical long-format
@@ -192,18 +197,21 @@ def calculate_cu_rates(
     cu_df = read_cu_sample_summary(
         cu_samples_file=cu_samples_file,
         directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
     )
 
     speaking_time_df = read_speaking_time_table(
         speaking_time_file=speaking_time_file,
         speaking_time_field=speaking_time_field,
         directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
     )
 
     merged = merge_speaking_time(
         df=cu_df,
         speaking_time_df=speaking_time_df,
         how="left",
+        sample_id_field=sample_id_field,
     )
 
     rated = add_rate_columns(
@@ -214,7 +222,7 @@ def calculate_cu_rates(
         round_digits=3,
     )
 
-    rated = finalize_cu_rates_columns(rated)
+    rated = finalize_cu_rates_columns(rated, sample_id_field=sample_id_field)
 
     write_cu_rates_output(
         rated,

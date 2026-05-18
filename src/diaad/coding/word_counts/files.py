@@ -99,12 +99,15 @@ def count_words(text: str) -> int:
 # Input discovery / reading
 # ------------------------------------------------------------------
 
-def _shuffle_by_sample(df: pd.DataFrame) -> pd.DataFrame:
+def _shuffle_by_sample(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """Shuffle rows at the sample level while preserving within-sample order."""
-    if "sample_id" not in df.columns:
-        raise KeyError("Expected column 'sample_id' in input dataframe.")
+    if sample_id_field not in df.columns:
+        raise KeyError(f"Expected column '{sample_id_field}' in input dataframe.")
 
-    subdfs = [subdf for _, subdf in df.groupby("sample_id", sort=False)]
+    subdfs = [subdf for _, subdf in df.groupby(sample_id_field, sort=False)]
     random.shuffle(subdfs)
     return pd.concat(subdfs, ignore_index=True) if subdfs else df.copy()
 
@@ -150,7 +153,11 @@ def _find_input_file(input_dir, output_dir):
     return None, None
 
 
-def _read_source_file(file: Path, source_type: str) -> pd.DataFrame:
+def _read_source_file(
+    file: Path,
+    source_type: str,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """Read one CU or transcript-table file and shuffle by sample."""
     if source_type == "cu":
         df = pd.read_excel(file)
@@ -159,7 +166,7 @@ def _read_source_file(file: Path, source_type: str) -> pd.DataFrame:
     else:
         raise ValueError(f"Unknown source_type: {source_type}")
 
-    df = _shuffle_by_sample(df)
+    df = _shuffle_by_sample(df, sample_id_field=sample_id_field)
     logger.info(f"Read and shuffled {get_rel_path(file)}")
     return df
 
@@ -248,12 +255,32 @@ BLINDED_COLUMNS = [
 ]
 
 
-def _ensure_required_columns(df: pd.DataFrame) -> pd.DataFrame:
+def _blinded_columns(
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+) -> list[str]:
+    return [
+        sample_id_field,
+        utterance_id_field,
+        "speaker",
+        "utterance",
+        "comment",
+        "id",
+        "word_count",
+        "wc_comment",
+    ]
+
+
+def _ensure_required_columns(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+) -> pd.DataFrame:
     """
     Ensure all blinded output columns exist.
     """
     df = df.copy()
-    for col in BLINDED_COLUMNS:
+    for col in _blinded_columns(sample_id_field, utterance_id_field):
         if col not in df.columns:
             df[col] = ""
     return df
@@ -263,6 +290,8 @@ def _prepare_wc_df(
     df: pd.DataFrame,
     source_type: str,
     exclude_participants: list[str] | None = None,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> pd.DataFrame:
     """
     Build blinded primary word-count dataframe.
@@ -274,7 +303,11 @@ def _prepare_wc_df(
     - Else compute automated first-pass count from utterance text
     """
     df = df.copy()
-    df = _ensure_required_columns(df)
+    df = _ensure_required_columns(
+        df,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
 
     exclude_set = {str(x).strip().lower() for x in (exclude_participants or [])}
     cu_cols = _get_cu_columns(df) if source_type == "cu" else []
@@ -293,7 +326,7 @@ def _prepare_wc_df(
     df["wc_comment"] = ""
 
     # Blind / restrict output columns.
-    df = df[BLINDED_COLUMNS].copy()
+    df = df[_blinded_columns(sample_id_field, utterance_id_field)].copy()
     return df
 
 
@@ -306,19 +339,28 @@ def _coder_ids(num_coders: int) -> list[int]:
     return list(range(1, max(0, int(num_coders)) + 1))
 
 
-def _sample_reliability_subset(df: pd.DataFrame, frac: float) -> pd.DataFrame:
+def _sample_reliability_subset(
+    df: pd.DataFrame,
+    frac: float,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """Sample a whole-sample reliability subset."""
-    unique_ids = list(df["sample_id"].drop_duplicates())
+    unique_ids = list(df[sample_id_field].drop_duplicates())
     n_rel_samples = calc_subset_size(frac=frac, samples=unique_ids)
 
     if n_rel_samples <= 0:
         return df.iloc[0:0].copy()
 
     rel_samples = random.sample(unique_ids, k=n_rel_samples)
-    return df[df["sample_id"].isin(rel_samples)].copy()
+    return df[df[sample_id_field].isin(rel_samples)].copy()
 
 
-def _assign_wc_coders(wc_df: pd.DataFrame, num_coders: int, frac: float):
+def _assign_wc_coders(
+    wc_df: pd.DataFrame,
+    num_coders: int,
+    frac: float,
+    sample_id_field: str = "sample_id",
+):
     """
     Assign coder IDs for primary and reliability word-count workbooks.
 
@@ -338,16 +380,18 @@ def _assign_wc_coders(wc_df: pd.DataFrame, num_coders: int, frac: float):
 
     if "id" not in wc_df.columns:
         wc_df["id"] = ""
+    if sample_id_field not in wc_df.columns:
+        raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
 
     # frac = 0 -> empty reliability workbook
     if frac == 0:
         if num_coders == 1:
             wc_df["id"] = 1
         elif num_coders >= 2:
-            unique_ids = list(wc_df["sample_id"].drop_duplicates())
+            unique_ids = list(wc_df[sample_id_field].drop_duplicates())
             sample_segments = segment(unique_ids, n=len(coder_ids))
             for seg, coder in zip(sample_segments, coder_ids):
-                wc_df.loc[wc_df["sample_id"].isin(seg), "id"] = coder
+                wc_df.loc[wc_df[sample_id_field].isin(seg), "id"] = coder
 
         wc_rel_df = wc_df.iloc[0:0].copy()
         logger.info("frac=0, so no reliability subset was created.")
@@ -356,7 +400,11 @@ def _assign_wc_coders(wc_df: pd.DataFrame, num_coders: int, frac: float):
     # 0 coders -> blank IDs
     if num_coders == 0:
         wc_df["id"] = ""
-        wc_rel_df = _sample_reliability_subset(wc_df, frac=frac)
+        wc_rel_df = _sample_reliability_subset(
+            wc_df,
+            frac=frac,
+            sample_id_field=sample_id_field,
+        )
         wc_rel_df["id"] = ""
         logger.info("num_coders=0; created primary/reliability files with blank ID column.")
         return wc_df, wc_rel_df
@@ -364,14 +412,18 @@ def _assign_wc_coders(wc_df: pd.DataFrame, num_coders: int, frac: float):
     # 1 coder -> same ID everywhere
     if num_coders == 1:
         wc_df["id"] = 1
-        wc_rel_df = _sample_reliability_subset(wc_df, frac=frac)
+        wc_rel_df = _sample_reliability_subset(
+            wc_df,
+            frac=frac,
+            sample_id_field=sample_id_field,
+        )
         wc_rel_df["id"] = 1
         logger.info("num_coders=1; created reliability subset with coder ID 1.")
         return wc_df, wc_rel_df
 
     # 2+ coders -> segment samples and assign IDs
     assignments = assign_coders(coder_ids)
-    unique_ids = list(wc_df["sample_id"].drop_duplicates())
+    unique_ids = list(wc_df[sample_id_field].drop_duplicates())
     sample_segments = segment(unique_ids, n=len(coder_ids))
 
     rel_subsets = []
@@ -383,10 +435,14 @@ def _assign_wc_coders(wc_df: pd.DataFrame, num_coders: int, frac: float):
         primary_coder = assn[0]
         rel_coder = assn[1]
 
-        wc_df.loc[wc_df["sample_id"].isin(seg), "id"] = primary_coder
+        wc_df.loc[wc_df[sample_id_field].isin(seg), "id"] = primary_coder
 
-        seg_df = wc_df[wc_df["sample_id"].isin(seg)].copy()
-        rel_df = _sample_reliability_subset(seg_df, frac=frac)
+        seg_df = wc_df[wc_df[sample_id_field].isin(seg)].copy()
+        rel_df = _sample_reliability_subset(
+            seg_df,
+            frac=frac,
+            sample_id_field=sample_id_field,
+        )
         rel_df["id"] = rel_coder
         rel_subsets.append(rel_df)
 
@@ -491,6 +547,8 @@ def make_word_count_files(
     output_dir,
     exclude_participants: list[str] | None = None,
     blinding_config=None,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ):
     """
     Create blinded word-count coding and reliability workbooks from either:
@@ -540,23 +598,39 @@ def make_word_count_files(
         return
 
     try:
-        df = _read_source_file(file, source_type=source_type)
+        df = _read_source_file(
+            file,
+            source_type=source_type,
+            sample_id_field=sample_id_field,
+        )
 
         wc_df = _prepare_wc_df(
             df=df,
             source_type=source_type,
             exclude_participants=exclude_participants,
+            sample_id_field=sample_id_field,
+            utterance_id_field=utterance_id_field,
         )
 
         wc_df, wc_rel_df = _assign_wc_coders(
             wc_df=wc_df,
             num_coders=num_coders,
             frac=frac,
+            sample_id_field=sample_id_field,
         )
 
         # Reassert required output order after coder assignment.
-        wc_df = _ensure_required_columns(wc_df)[BLINDED_COLUMNS].copy()
-        wc_rel_df = _ensure_required_columns(wc_rel_df)[BLINDED_COLUMNS].copy()
+        blinded_columns = _blinded_columns(sample_id_field, utterance_id_field)
+        wc_df = _ensure_required_columns(
+            wc_df,
+            sample_id_field=sample_id_field,
+            utterance_id_field=utterance_id_field,
+        )[blinded_columns].copy()
+        wc_rel_df = _ensure_required_columns(
+            wc_rel_df,
+            sample_id_field=sample_id_field,
+            utterance_id_field=utterance_id_field,
+        )[blinded_columns].copy()
 
         export_wc_df, export_wc_rel_df, codebook_df = _blind_wc_exports(
             wc_df=wc_df,

@@ -29,6 +29,7 @@ DEFAULT_WC_RATES_FILE = "word_counting_rates.xlsx"
 def read_word_count_sample_summary(
     wc_samples_file: str | Path | None = None,
     directories=None,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Read the canonical sample-level word-count summary table.
@@ -95,7 +96,7 @@ def read_word_count_sample_summary(
 
     validate_columns(
         df,
-        required_cols=["sample_id", "total_words"],
+        required_cols=[sample_id_field, "total_words"],
         df_name="Word-count sample summary",
     )
 
@@ -103,12 +104,15 @@ def read_word_count_sample_summary(
     return df
 
 
-def finalize_word_count_rates_columns(df: pd.DataFrame) -> pd.DataFrame:
+def finalize_word_count_rates_columns(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Keep the canonical word-count rates output columns in a clean order.
     """
     preferred = [
-        "sample_id",
+        sample_id_field,
         "no_utt_coded",
         "no_utt_missing",
         "total_words",
@@ -157,6 +161,7 @@ def calculate_word_count_rates(
     wc_samples_file: str | Path | None = None,
     speaking_time_file: str | Path | None = None,
     speaking_time_field: str = "speaking_time",
+    sample_id_field: str = "sample_id",
 ):
     """
     Compute word-count rate per minute from the canonical sample-level
@@ -191,18 +196,21 @@ def calculate_word_count_rates(
     wc_df = read_word_count_sample_summary(
         wc_samples_file=wc_samples_file,
         directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
     )
 
     speaking_time_df = read_speaking_time_table(
         speaking_time_file=speaking_time_file,
         speaking_time_field=speaking_time_field,
         directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
     )
 
     merged = merge_speaking_time(
         df=wc_df,
         speaking_time_df=speaking_time_df,
         how="left",
+        sample_id_field=sample_id_field,
     )
 
     rated = add_rate_columns(
@@ -213,7 +221,7 @@ def calculate_word_count_rates(
         round_digits=3,
     )
 
-    rated = finalize_word_count_rates_columns(rated)
+    rated = finalize_word_count_rates_columns(rated, sample_id_field=sample_id_field)
 
     write_word_count_rates_output(
         rated,

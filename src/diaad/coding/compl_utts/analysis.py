@@ -186,7 +186,7 @@ def _drop_coder_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _summarize_pair(cu_coding, pair):
+def _summarize_pair(cu_coding, pair, sample_id_field: str = "sample_id"):
     """
     Summarize one coder/paradigm SV-REL pair at the sample level.
 
@@ -204,7 +204,7 @@ def _summarize_pair(cu_coding, pair):
     coder_label = coder_prefix or "primary"
     paradigm_label = paradigm or "base"
 
-    work_df = cu_coding[["sample_id", sv_col, rel_col]].copy()
+    work_df = cu_coding[[sample_id_field, sv_col, rel_col]].copy()
     work_df[[sv_col, rel_col]] = work_df[[sv_col, rel_col]].apply(
         pd.to_numeric,
         errors="coerce",
@@ -214,7 +214,7 @@ def _summarize_pair(cu_coding, pair):
         axis=1,
     )
 
-    cu_sum = work_df.groupby("sample_id").agg(
+    cu_sum = work_df.groupby(sample_id_field).agg(
         no_utt=(cu_col, utt_ct),
 
         p_sv=(sv_col, ptotal),
@@ -233,12 +233,12 @@ def _summarize_pair(cu_coding, pair):
     ).reset_index()
 
     inconsistency_df = (
-        work_df.groupby("sample_id")
+        work_df.groupby(sample_id_field)
         .apply(lambda df: _count_pair_inconsistency(df, sv_col, rel_col))
         .reset_index(name="sv_rel_inconsistent")
     )
 
-    cu_sum = pd.merge(cu_sum, inconsistency_df, on="sample_id", how="left")
+    cu_sum = pd.merge(cu_sum, inconsistency_df, on=sample_id_field, how="left")
 
     summary_long = cu_sum.copy()
     summary_long["coder"] = coder_label
@@ -249,7 +249,7 @@ def _summarize_pair(cu_coding, pair):
 
     summary_long = summary_long[
         [
-            "sample_id",
+            sample_id_field,
             "coder",
             "paradigm",
             "sv_col",
@@ -277,14 +277,17 @@ def _summarize_pair(cu_coding, pair):
     return summary_long, summary_wide, cu_col
 
 
-def _combine_wide_summaries(summary_wides):
-    """Merge wide summaries across coder/paradigm pairs by sample_id."""
+def _combine_wide_summaries(
+    summary_wides,
+    sample_id_field: str = "sample_id",
+):
+    """Merge wide summaries across coder/paradigm pairs by sample id."""
     if not summary_wides:
         return None
 
     merged = summary_wides[0].copy()
     for df in summary_wides[1:]:
-        merged = pd.merge(merged, df, on="sample_id", how="outer")
+        merged = pd.merge(merged, df, on=sample_id_field, how="outer")
     return merged
 
 
@@ -297,6 +300,7 @@ def _maybe_unblind_cu_outputs(
     blind_codebook=None,
     input_dir=None,
     output_dir=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Unblind sample identifiers in CU analysis outputs if a coding-stage
@@ -308,7 +312,7 @@ def _maybe_unblind_cu_outputs(
     if blinding_config is None:
         return cu_coding, summary_long, summary_wide, None
 
-    target_cols = ["sample_id"]
+    target_cols = [sample_id_field]
 
     unblinded_cu_coding, codebook_df = maybe_unblind_dataframe(
         df=cu_coding,
@@ -454,6 +458,7 @@ def analyze_cu_coding(
     cu_paradigms=None,
     blinding_config=None,
     blind_codebook=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Summarize Complete Utterance (CU) coding by sample across all available
@@ -516,6 +521,12 @@ def analyze_cu_coding(
         return
 
     cu_coding = _drop_coder_admin_cols(cu_coding)
+    if sample_id_field not in cu_coding.columns:
+        logger.error(
+            f"CU coding file is missing required sample identifier column: {sample_id_field}. "
+            f"Available columns: {list(cu_coding.columns)}"
+        )
+        return
 
     coder_pairs = _detect_coder_paradigm_pairs(
         cu_coding.columns,
@@ -534,7 +545,11 @@ def analyze_cu_coding(
         paradigm_label = pair["paradigm"] or "base"
 
         try:
-            summary_long, summary_wide, cu_col = _summarize_pair(cu_coding, pair)
+            summary_long, summary_wide, cu_col = _summarize_pair(
+                cu_coding,
+                pair,
+                sample_id_field=sample_id_field,
+            )
 
             work_df = cu_coding[[pair["sv_col"], pair["rel_col"]]].apply(
                 pd.to_numeric,
@@ -550,7 +565,10 @@ def analyze_cu_coding(
             logger.error(f"Aggregation failed for {get_rel_path(cod)} ({label}): {e}")
 
     summary_long = pd.concat(summary_longs, ignore_index=True) if summary_longs else None
-    summary_wide = _combine_wide_summaries(summary_wides)
+    summary_wide = _combine_wide_summaries(
+        summary_wides,
+        sample_id_field=sample_id_field,
+    )
 
     cu_coding, summary_long, summary_wide, codebook_df = _maybe_unblind_cu_outputs(
         cu_coding=cu_coding,
@@ -560,6 +578,7 @@ def analyze_cu_coding(
         blind_codebook=blind_codebook,
         input_dir=input_dir,
         output_dir=output_dir,
+        sample_id_field=sample_id_field,
     )
 
     cu_coding, summary_long, summary_wide = _maybe_blind_cu_outputs(

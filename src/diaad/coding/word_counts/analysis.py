@@ -84,6 +84,7 @@ def _max_words(x: pd.Series) -> float:
 def _summarize_word_counts(
     wc_df: pd.DataFrame,
     word_count_field: str,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Summarize utterance-level word counts by sample.
@@ -98,7 +99,7 @@ def _summarize_word_counts(
     - min_words_per_utt
     - max_words_per_utt
     """
-    grouped = wc_df.groupby("sample_id")[word_count_field]
+    grouped = wc_df.groupby(sample_id_field)[word_count_field]
 
     summary = grouped.agg(
         no_utt_coded=_count_nonmissing,
@@ -132,6 +133,7 @@ def _maybe_unblind_word_count_outputs(
     blind_codebook=None,
     input_dir=None,
     output_dir=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Unblind sample identifiers in word-count analysis outputs if a coding-stage
@@ -143,7 +145,7 @@ def _maybe_unblind_word_count_outputs(
     if blinding_config is None:
         return wc_utts, wc_summary, None
 
-    target_cols = ["sample_id"]
+    target_cols = [sample_id_field]
 
     unblinded_wc_utts, codebook_df = maybe_unblind_dataframe(
         df=wc_utts,
@@ -263,6 +265,7 @@ def analyze_word_counts(
     word_count_field: str = DEFAULT_WORD_COUNT_FIELD,
     blinding_config=None,
     blind_codebook=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Summarize utterance-level word-count coding by sample.
@@ -324,7 +327,7 @@ def analyze_word_counts(
         logger.error(f"Failed reading {get_rel_path(cod)}: {e}")
         return
 
-    required_cols = ["sample_id", word_count_field]
+    required_cols = [sample_id_field, word_count_field]
     missing = [c for c in required_cols if c not in wc_df.columns]
     if missing:
         logger.error(
@@ -347,6 +350,7 @@ def analyze_word_counts(
         wc_summary = _summarize_word_counts(
             wc_df=wc_df,
             word_count_field=word_count_field,
+            sample_id_field=sample_id_field,
         )
     except Exception as e:
         logger.error(f"Word-count aggregation failed for {get_rel_path(cod)}: {e}")
@@ -359,6 +363,7 @@ def analyze_word_counts(
         blind_codebook=blind_codebook,
         input_dir=input_dir,
         output_dir=output_dir,
+        sample_id_field=sample_id_field,
     )
 
     wc_df, wc_summary = _maybe_blind_word_count_outputs(

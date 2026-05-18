@@ -22,7 +22,12 @@ def agreement(row):
     return 1 if perc_sim >= 85 else 0
 
 
-def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
+def _write_word_rel_outputs(
+    wc_merged,
+    out_dir,
+    rel_name,
+    utterance_id_field: str = "utterance_id",
+):
     """Write Excel results and plain-text report for word-count reliability."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -42,7 +47,7 @@ def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
     # ICC
     icc_value = calculate_icc_from_pingouin(
         wc_merged,
-        target_col="utterance_id",
+        target_col=utterance_id_field,
         col_org="word_count_org",
         col_rel="word_count_rel",
     )
@@ -79,7 +84,12 @@ def _write_word_rel_outputs(wc_merged, out_dir, rel_name):
         logger.error(f"Failed writing reliability report {get_rel_path(report_path)}: {e}")
 
 
-def evaluate_word_count_reliability(input_dir, output_dir):
+def evaluate_word_count_reliability(
+    input_dir,
+    output_dir,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
+):
     """
     Evaluate word-count reliability by comparing primary and reliability files.
 
@@ -144,7 +154,7 @@ def evaluate_word_count_reliability(input_dir, output_dir):
 
     try:
         # Keep only the columns needed from the reliability sheet.
-        rel_keep = ["sample_id", "utterance_id", "word_count"]
+        rel_keep = [sample_id_field, utterance_id_field, "word_count"]
         missing_rel = [col for col in rel_keep if col not in wc_rel_df.columns]
         if missing_rel:
             raise KeyError(f"Missing required reliability columns: {missing_rel}")
@@ -161,7 +171,7 @@ def evaluate_word_count_reliability(input_dir, output_dir):
         wc_merged = pd.merge(
             wc_df,
             wc_rel_df,
-            on=["sample_id", "utterance_id"],
+            on=[sample_id_field, utterance_id_field],
             how="inner",
             suffixes=("_org", "_rel"),
         )
@@ -189,4 +199,5 @@ def evaluate_word_count_reliability(input_dir, output_dir):
         wc_merged=wc_merged,
         out_dir=word_rel_dir,
         rel_name=rel.name,
+        utterance_id_field=utterance_id_field,
     )
