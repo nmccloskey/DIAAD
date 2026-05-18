@@ -46,14 +46,18 @@ def _discover_turn_pairs(metadata_fields, input_dir: Path) -> dict[Path, list[Pa
     return {coding_files[0]: rel_files}
 
 
-def _build_turns_reliability_frame(df_org, re_ids):
+def _build_turns_reliability_frame(
+    df_org,
+    re_ids,
+    sample_id_field: str = "sample_id",
+):
     """
     Build a reselected digital conversation turns reliability workbook.
 
     Session and bin structure are preserved, while turns are cleared so the
     reliability file is ready for fresh coding.
     """
-    sub = df_org[df_org["sample_id"].isin(re_ids)].copy()
+    sub = df_org[df_org[sample_id_field].isin(re_ids)].copy()
 
     if "turns" in sub.columns:
         sub["turns"] = ""
@@ -67,6 +71,7 @@ def reselect_digital_convo_turns_rel(
     output_dir,
     frac=0.2,
     random_seed=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Reselect digital conversation turn reliability samples, excluding any
@@ -86,17 +91,32 @@ def reselect_digital_convo_turns_rel(
         return
 
     for org_file, rel_mates in tqdm(pairs.items(), desc="Reselecting turns reliability"):
-        df_org, rel_dfs = load_original_and_reliability(org_file, rel_mates, rel_label="TURNS")
+        df_org, rel_dfs = load_original_and_reliability(
+            org_file,
+            rel_mates,
+            rel_label="TURNS",
+            sample_id_col=sample_id_field,
+        )
         if df_org is None:
             continue
 
-        used_ids = collect_used_ids(rel_dfs)
-        new_ids = select_new_samples(df_org, used_ids, frac, rng=rng)
+        used_ids = collect_used_ids(rel_dfs, sample_id_col=sample_id_field)
+        new_ids = select_new_samples(
+            df_org,
+            used_ids,
+            frac,
+            rng=rng,
+            sample_id_col=sample_id_field,
+        )
         if not new_ids:
             continue
 
         try:
-            new_df = _build_turns_reliability_frame(df_org, new_ids)
+            new_df = _build_turns_reliability_frame(
+                df_org,
+                new_ids,
+                sample_id_field=sample_id_field,
+            )
         except Exception as e:
             logger.error(
                 f"[TURNS] Failed building reselected reliability frame for {org_file.name}: {e}"

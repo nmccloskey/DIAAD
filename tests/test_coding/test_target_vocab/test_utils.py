@@ -51,3 +51,26 @@ def test_prepare_target_vocab_inputs_for_unblind_mode(monkeypatch):
 
     assert list(utt_df["narrative"]) == ["StoryA"]
     assert present == {"StoryA"}
+
+
+def test_prepare_target_vocab_inputs_accepts_custom_sample_id(monkeypatch):
+    df = pd.DataFrame(
+        {
+            "expanded_sample_id": ["S1", "S2"],
+            "story": ["StoryA", "Other"],
+            "word_count": [10, 20],
+        }
+    )
+    monkeypatch.setattr(utils, "find_target_vocab_inputs", lambda *args, **kwargs: ("unblind", df))
+
+    utt_df, present = utils.prepare_target_vocab_inputs(
+        "input",
+        "output",
+        exclude_participants=[],
+        stimulus_field="story",
+        resources=_resources(),
+        sample_id_field="expanded_sample_id",
+    )
+
+    assert list(utt_df["expanded_sample_id"]) == ["S1"]
+    assert present == {"StoryA"}

@@ -240,3 +240,30 @@ def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tm
     )
     assert ctx.kwargs_analyze_word_counts()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_wc_rates()["sample_id_field"] == "expanded_sample_id"
+
+
+def test_run_context_threads_target_vocab_and_turn_identifier_fields(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    assert ctx.kwargs_target_vocab()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_target_vocab_rates()["sample_id_field"] == "expanded_sample_id"
+    assert (
+        ctx.kwargs_make_digital_convo_turn_files()["sample_id_field"]
+        == "expanded_sample_id"
+    )
+    assert (
+        ctx.kwargs_digital_convo_turns_reliability()["sample_id_field"]
+        == "expanded_sample_id"
+    )
+    assert (
+        ctx.kwargs_reselect_digital_convo_turns()["sample_id_field"]
+        == "expanded_sample_id"
+    )
+    assert ctx.kwargs_digital_convo_turns()["sample_id_field"] == "expanded_sample_id"

@@ -414,7 +414,10 @@ def compute_transition_metrics(df):
         'speaker_ratios': pd.DataFrame(speaker_ratios)
     }
 
-def _analyze_convo_turns_file(df):
+def _analyze_convo_turns_file(
+    df,
+    sample_id_field: str = "sample_id",
+):
     """
     Analyze a single conversation turns dataframe.
 
@@ -437,8 +440,8 @@ def _analyze_convo_turns_file(df):
         }
     """
     df = df.copy()
-    if 'group' not in df.columns and 'sample_id' in df.columns:
-        df = df.rename(columns={'sample_id': 'group'})
+    if 'group' not in df.columns and sample_id_field in df.columns:
+        df = df.rename(columns={sample_id_field: 'group'})
 
     required_cols = ['group', 'turns']
     for col in required_cols:
@@ -525,7 +528,11 @@ def write_if_not_empty(df, writer, sheet_name):
     if isinstance(df, pd.DataFrame) and not df.empty:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
 
-def analyze_digital_convo_turns(input_dir, output_dir):
+def analyze_digital_convo_turns(
+    input_dir,
+    output_dir,
+    sample_id_field: str = "sample_id",
+):
     """
     Run full analysis pipeline on conversation turn files.
 
@@ -562,7 +569,10 @@ def analyze_digital_convo_turns(input_dir, output_dir):
                 logger.warning(f"Empty data in file: {ct_file.name}")
                 continue
 
-            ct_data = _analyze_convo_turns_file(df)
+            ct_data = _analyze_convo_turns_file(
+                df,
+                sample_id_field=sample_id_field,
+            )
 
             # Extract all data levels (with fallback to empty df)
             bin_level = ct_data.get('bin_level', pd.DataFrame())

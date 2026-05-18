@@ -42,6 +42,7 @@ def find_target_vocab_analysis_files(
 def read_target_vocab_summary(
     directories,
     sheet_name: str = TARGET_VOCAB_SUMMARY_SHEET,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Read and combine target vocabulary summary sheets from analysis workbooks.
@@ -61,7 +62,7 @@ def read_target_vocab_summary(
 
         validate_columns(
             df,
-            required_cols=["sample_id", "speaking_time"],
+            required_cols=[sample_id_field, "speaking_time"],
             df_name="Target vocabulary summary",
         )
         df = df.copy()
@@ -79,12 +80,15 @@ def _ensure_speaking_minutes(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def infer_target_vocab_rate_numerators(df: pd.DataFrame) -> list[str]:
+def infer_target_vocab_rate_numerators(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> list[str]:
     """
     Infer count-like target vocabulary summary columns that should be rated per minute.
     """
     excluded = {
-        "sample_id",
+        sample_id_field,
         "narrative",
         "speaking_time",
         "speaking_minutes",
@@ -111,12 +115,13 @@ def infer_target_vocab_rate_numerators(df: pd.DataFrame) -> list[str]:
 def finalize_target_vocab_rates_columns(
     df: pd.DataFrame,
     numerator_cols: list[str],
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Keep the canonical target vocabulary rates output columns in a clean order.
     """
     preferred = [
-        "sample_id",
+        sample_id_field,
         "narrative",
         "source_file",
         *numerator_cols,
@@ -158,14 +163,21 @@ def write_target_vocab_rates_output(
 def calculate_target_vocab_rates(
     input_dir,
     output_dir,
+    sample_id_field: str = "sample_id",
 ):
     """
     Compute target vocabulary per-minute rates from the analysis summary workbook.
     """
-    summary_df = read_target_vocab_summary(directories=[input_dir, output_dir])
+    summary_df = read_target_vocab_summary(
+        directories=[input_dir, output_dir],
+        sample_id_field=sample_id_field,
+    )
     summary_df = _ensure_speaking_minutes(summary_df)
 
-    numerator_cols = infer_target_vocab_rate_numerators(summary_df)
+    numerator_cols = infer_target_vocab_rate_numerators(
+        summary_df,
+        sample_id_field=sample_id_field,
+    )
     rated = add_rate_columns(
         summary_df,
         numerator_cols=numerator_cols,
@@ -173,7 +185,11 @@ def calculate_target_vocab_rates(
         suffix="_per_min",
         round_digits=3,
     )
-    rated = finalize_target_vocab_rates_columns(rated, numerator_cols=numerator_cols)
+    rated = finalize_target_vocab_rates_columns(
+        rated,
+        numerator_cols=numerator_cols,
+        sample_id_field=sample_id_field,
+    )
 
     write_target_vocab_rates_output(
         rated,

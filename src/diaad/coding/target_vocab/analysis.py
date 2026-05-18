@@ -16,6 +16,33 @@ from diaad.coding.target_vocab.utils import (
 from psair.core.logger import get_rel_path, logger
 
 
+def summary_columns(sample_id_field: str = "sample_id") -> list[str]:
+    return [
+        sample_id_field,
+        "narrative",
+        "speaking_time",
+        "num_tokens",
+        "num_base_forms_produced",
+        "num_core_token_matches",
+        "lexicon_coverage",
+        "core_tokens_per_min",
+        "accuracy_pwa_percentile",
+        "accuracy_control_percentile",
+        "efficiency_pwa_percentile",
+        "efficiency_control_percentile",
+    ]
+
+
+def detail_columns(sample_id_field: str = "sample_id") -> list[str]:
+    return [
+        sample_id_field,
+        "narrative",
+        "base_form",
+        "num_tokens_matched",
+        "score",
+    ]
+
+
 SUMMARY_COLUMNS = [
     "sample_id",
     "narrative",
@@ -88,6 +115,7 @@ def _detail_rows_from_stats(
     narrative: str,
     coverage_stats: dict,
     resources: dict | None = None,
+    sample_id_field: str = "sample_id",
 ) -> list[dict]:
     resource = get_resource(narrative, resources)
     base_forms = resource.get("base_forms", []) if resource else []
@@ -95,7 +123,7 @@ def _detail_rows_from_stats(
 
     return [
         {
-            "sample_id": sample_id,
+            sample_id_field: sample_id,
             "narrative": narrative,
             "base_form": base_form,
             "num_tokens_matched": int(counts.get(base_form, 0)),
@@ -113,6 +141,7 @@ def compute_target_vocabulary_coverage_for_text(
     norm_lookup: dict | None = None,
     sample_id=None,
     resources: dict | None = None,
+    sample_id_field: str = "sample_id",
 ) -> tuple[dict, list[dict]]:
     """
     Compute target vocabulary coverage metrics for one sample.
@@ -180,7 +209,13 @@ def compute_target_vocabulary_coverage_for_text(
         "efficiency_pwa_percentile": efficiency_pwa,
         "efficiency_control_percentile": efficiency_control,
     }
-    detail_rows = _detail_rows_from_stats(sample_id, narrative, coverage_stats, resources)
+    detail_rows = _detail_rows_from_stats(
+        sample_id,
+        narrative,
+        coverage_stats,
+        resources,
+        sample_id_field=sample_id_field,
+    )
     return summary, detail_rows
 
 
@@ -213,9 +248,12 @@ def compute_target_vocab_for_text(
         return {}
 
 
-def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
+def extract_target_vocab_inputs_from_sample_df(
+    sample_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> dict:
     """
-    Extract text, speaking_time, narrative, and sample_id from a DIAAD sample.
+    Extract text, speaking_time, narrative, and sample id from a DIAAD sample.
 
     The function name remains for compatibility with existing callers.
     """
@@ -223,7 +261,7 @@ def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         if sample_df is None or sample_df.empty:
             return {}
 
-        required = {"utterance", "narrative", "sample_id"}
+        required = {"utterance", "narrative", sample_id_field}
         missing = [c for c in required if c not in sample_df.columns]
         if missing:
             logger.warning(
@@ -231,7 +269,7 @@ def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
             )
             return {}
 
-        sample_id = sample_df["sample_id"].iloc[0]
+        sample_id = sample_df[sample_id_field].iloc[0]
         narrative = sample_df["narrative"].iloc[0]
         speaking_time = (
             sample_df["speaking_time"].iloc[0]
@@ -245,7 +283,7 @@ def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         )
 
         return {
-            "sample_id": sample_id,
+            sample_id_field: sample_id,
             "narrative": narrative,
             "speaking_time": speaking_time,
             "text": text,
@@ -256,24 +294,33 @@ def extract_target_vocab_inputs_from_sample_df(sample_df: pd.DataFrame) -> dict:
         return {}
 
 
-def _compute_target_vocab_for_sample(sample_df, norm_lookup, resources=None):
+def _compute_target_vocab_for_sample(
+    sample_df,
+    norm_lookup,
+    resources=None,
+    sample_id_field: str = "sample_id",
+):
     """
     Backward-compatible wrapper that returns a summary row and long detail rows.
     """
     try:
-        extracted = extract_target_vocab_inputs_from_sample_df(sample_df)
+        extracted = extract_target_vocab_inputs_from_sample_df(
+            sample_df,
+            sample_id_field=sample_id_field,
+        )
         if not extracted:
             return {}, []
 
-        row_prefix = {"sample_id": extracted["sample_id"]}
+        row_prefix = {sample_id_field: extracted[sample_id_field]}
 
         summary, details = compute_target_vocabulary_coverage_for_text(
             text=extracted["text"],
             speaking_time=extracted["speaking_time"],
             narrative=extracted["narrative"],
             norm_lookup=norm_lookup,
-            sample_id=extracted["sample_id"],
+            sample_id=extracted[sample_id_field],
             resources=resources,
+            sample_id_field=sample_id_field,
         )
         if not summary:
             return {}, []
@@ -286,8 +333,11 @@ def _compute_target_vocab_for_sample(sample_df, norm_lookup, resources=None):
         return {}, []
 
 
-def _ordered_summary_columns(df: pd.DataFrame) -> list[str]:
-    ordered = [c for c in SUMMARY_COLUMNS if c in df.columns]
+def _ordered_summary_columns(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> list[str]:
+    ordered = [c for c in summary_columns(sample_id_field) if c in df.columns]
     return ordered + [c for c in df.columns if c not in ordered]
 
 
@@ -298,6 +348,7 @@ def run_target_vocab(
     exclude_participants=None,
     stimulus_field="narrative",
     resource_path=None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Execute target vocabulary coverage analysis using built-in or custom resources.
@@ -315,6 +366,7 @@ def run_target_vocab(
         exclude_participants,
         stimulus_field=stimulus_field,
         resources=resources,
+        sample_id_field=sample_id_field,
     )
     if utt_df is None:
         return
@@ -324,16 +376,17 @@ def run_target_vocab(
     detail_rows = []
 
     for sample in tqdm(
-        sorted(utt_df["sample_id"].dropna().unique()),
+        sorted(utt_df[sample_id_field].dropna().unique()),
         desc="Computing target vocabulary coverage",
     ):
-        sample_df = utt_df[utt_df["sample_id"] == sample]
+        sample_df = utt_df[utt_df[sample_id_field] == sample]
         if sample_df.empty:
             continue
         summary_row, sample_details = _compute_target_vocab_for_sample(
             sample_df,
             norm_lookup,
             resources,
+            sample_id_field=sample_id_field,
         )
         if summary_row:
             summary_rows.append(summary_row)
@@ -344,9 +397,11 @@ def run_target_vocab(
         return
 
     summary_df = pd.DataFrame(summary_rows)
-    summary_df = summary_df[_ordered_summary_columns(summary_df)]
+    summary_df = summary_df[
+        _ordered_summary_columns(summary_df, sample_id_field=sample_id_field)
+    ]
 
-    detail_df = pd.DataFrame(detail_rows, columns=DETAIL_COLUMNS)
+    detail_df = pd.DataFrame(detail_rows, columns=detail_columns(sample_id_field))
 
     output_file = target_vocab_dir / f"target_vocab_data_{timestamp}.xlsx"
     try:

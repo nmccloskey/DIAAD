@@ -54,3 +54,34 @@ def test_extract_target_vocab_inputs_from_sample_df_and_ordered_columns():
 
     assert extracted["text"] == "hello world"
     assert ordered[:2] == ["sample_id", "narrative"]
+
+
+def test_target_vocab_analysis_accepts_custom_sample_id():
+    sample_df = pd.DataFrame(
+        {
+            "expanded_sample_id": ["S1", "S1"],
+            "narrative": ["StoryA", "StoryA"],
+            "speaking_time": [60, 60],
+            "utterance": ["cat", "dogs"],
+        }
+    )
+
+    extracted = analysis.extract_target_vocab_inputs_from_sample_df(
+        sample_df,
+        sample_id_field="expanded_sample_id",
+    )
+    row, details = analysis._compute_target_vocab_for_sample(
+        sample_df,
+        norm_lookup={},
+        resources=_resources(),
+        sample_id_field="expanded_sample_id",
+    )
+    ordered = analysis._ordered_summary_columns(
+        pd.DataFrame([{"narrative": "StoryA", "expanded_sample_id": "S1"}]),
+        sample_id_field="expanded_sample_id",
+    )
+
+    assert extracted["expanded_sample_id"] == "S1"
+    assert row["expanded_sample_id"] == "S1"
+    assert details[0]["expanded_sample_id"] == "S1"
+    assert ordered[:2] == ["expanded_sample_id", "narrative"]

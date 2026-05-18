@@ -88,6 +88,7 @@ def prepare_target_vocab_inputs(
     exclude_participants,
     stimulus_field="narrative",
     resources: dict | None = None,
+    sample_id_field: str = "sample_id",
 ):
     """
     Load and normalize utterance-level target vocabulary coverage inputs.
@@ -98,6 +99,11 @@ def prepare_target_vocab_inputs(
     try:
         mode, utt_df = find_target_vocab_inputs(input_dir, output_dir)
         if utt_df is None:
+            return None, None
+        if sample_id_field not in utt_df.columns:
+            logger.error(
+                f"Required sample identifier column missing in target vocabulary input: {sample_id_field}"
+            )
             return None, None
 
         stim_cols = resolve_stim_cols(stimulus_field)

@@ -504,6 +504,7 @@ class RunContext:
             "exclude_participants": self.exclude_participants,
             "stimulus_field": self.stimulus_field,
             "resource_path": self.config.advanced.target_vocabulary_resource_path,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_target_vocab_check(self) -> dict[str, Any]:
@@ -519,7 +520,10 @@ class RunContext:
 
     def kwargs_target_vocab_rates(self) -> dict[str, Any]:
         """Return kwargs for target vocabulary rate calculation."""
-        return self.kwargs_io()
+        return {
+            **self.kwargs_io(),
+            "sample_id_field": self.config.sample_id_field,
+        }
 
     # ------------------------------------------------------------------
     # Digital Conversation Turns
@@ -534,11 +538,15 @@ class RunContext:
             "num_coders": self.num_coders,
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_digital_convo_turns_reliability(self) -> dict[str, Any]:
         """Return kwargs for digital conversation turn reliability evaluation."""
-        return self.kwargs_metadata_field_io()
+        return {
+            **self.kwargs_metadata_field_io(),
+            "sample_id_field": self.config.sample_id_field,
+        }
 
     def kwargs_reselect_digital_convo_turns(self) -> dict[str, Any]:
         """Return kwargs for digital conversation turn reliability reselection."""
@@ -553,7 +561,10 @@ class RunContext:
 
     def kwargs_digital_convo_turns(self) -> dict[str, Any]:
         """Return kwargs for digital conversation turn analysis."""
-        return self.kwargs_io()
+        return {
+            **self.kwargs_io(),
+            "sample_id_field": self.config.sample_id_field,
+        }
 
     # ------------------------------------------------------------------
     # Generic coding templates
