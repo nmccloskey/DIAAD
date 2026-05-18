@@ -20,6 +20,7 @@ MODULE_COMMANDS = {
         "transcripts evaluate",
         "transcripts reselect",
         "transcripts tabularize",
+        "transcripts chats",
     ],
 
     "templates": [

@@ -30,6 +30,13 @@ def run_tabularize_transcripts(ctx):
     return tabularize_transcripts(**ctx.kwargs_tabularize_transcripts())
 
 
+def run_detabularize_transcripts(ctx):
+    """Convert transcript tables into CHAT files."""
+    from diaad.transcripts.detabularization import detabularize_transcripts
+
+    return detabularize_transcripts(**ctx.kwargs_detabularize_transcripts())
+
+
 def run_select_transcription_reliability_samples(ctx):
     """Select transcript samples for transcription reliability coding."""
     from diaad.transcripts.transcription_reliability_selection import (

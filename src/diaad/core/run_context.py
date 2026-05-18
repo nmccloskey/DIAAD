@@ -323,6 +323,10 @@ class RunContext:
             "random_seed": self.random_seed,
         }
 
+    def kwargs_detabularize_transcripts(self) -> dict[str, Any]:
+        """Return kwargs for transcript de-tabularization."""
+        return self.kwargs_io()
+
     def kwargs_select_transcription_reliability_samples(self) -> dict[str, Any]:
         """Return kwargs for transcription reliability sample selection."""
         if self.chats is None:

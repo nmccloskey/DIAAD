@@ -21,6 +21,7 @@ from diaad.core.run_wrappers import (
     run_evaluate_transcription_reliability,
     run_evaluate_word_count_reliability,
     run_make_cu_coding_files,
+    run_detabularize_transcripts,
     run_make_sample_templates,
     run_make_speaking_time_templates,
     run_make_utterance_templates,
@@ -54,6 +55,7 @@ TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "cus files",
     "vocab analyze",
     "powers files",
+    "transcripts chats",
     "templates utterances",
     "templates samples",
     "templates times",
@@ -105,6 +107,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         # Transcription
         # --------------------------------------------------------------
         "transcripts tabularize": lambda: run_tabularize_transcripts(ctx),
+        "transcripts chats": lambda: run_detabularize_transcripts(ctx),
         "transcripts select": lambda: run_select_transcription_reliability_samples(ctx),
         "transcripts reselect": lambda: run_reselect_transcription_reliability_samples(ctx),
         "transcripts evaluate": lambda: run_evaluate_transcription_reliability(ctx),
