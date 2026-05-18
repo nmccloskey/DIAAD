@@ -188,3 +188,23 @@ def test_run_context_threads_powers_identifier_fields(monkeypatch, tmp_path):
     assert ctx.kwargs_evaluate_powers_reliability()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_evaluate_powers_reliability()["utterance_id_field"] == "expanded_utterance_id"
     assert ctx.kwargs_reselect_powers_reliability()["sample_id_field"] == "expanded_sample_id"
+
+
+def test_run_context_threads_template_identifier_fields(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    utterance_kwargs = ctx.kwargs_make_utterance_templates()
+    sample_kwargs = ctx.kwargs_make_sample_templates()
+    time_kwargs = ctx.kwargs_make_speaking_time_templates()
+
+    assert utterance_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert utterance_kwargs["utterance_id_field"] == "expanded_utterance_id"
+    assert sample_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert time_kwargs["sample_id_field"] == "expanded_sample_id"

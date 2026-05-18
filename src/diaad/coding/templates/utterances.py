@@ -45,9 +45,15 @@ def _prepare_utterance_template(
     """
     Build the base utterance-level coding template.
     """
-    require_columns(utt_df, ["sample_id", "utterance_id", "utterance"], "utt_df")
+    sample_id_field = config.sample_id_field
+    utterance_id_field = config.utterance_id_field
+    require_columns(
+        utt_df,
+        [sample_id_field, utterance_id_field, "utterance"],
+        "utt_df",
+    )
 
-    out = utt_df.loc[:, ["sample_id", "utterance_id", "utterance"]].copy()
+    out = utt_df.loc[:, [sample_id_field, utterance_id_field, "utterance"]].copy()
 
     stimulus_field = resolve_available_stimulus_field(
         sample_df,
@@ -55,9 +61,13 @@ def _prepare_utterance_template(
     )
 
     if stimulus_field:
-        stim_df = prepare_stimulus_lookup(sample_df, stimulus_field)
-        out = out.merge(stim_df, on="sample_id", how="left", validate="m:1")
-        out = out.loc[:, ["sample_id", "utterance_id", "stimulus", "utterance"]]
+        stim_df = prepare_stimulus_lookup(
+            sample_df,
+            stimulus_field,
+            sample_id_field=sample_id_field,
+        )
+        out = out.merge(stim_df, on=sample_id_field, how="left", validate="m:1")
+        out = out.loc[:, [sample_id_field, utterance_id_field, "stimulus", "utterance"]]
 
     return out
 
@@ -71,11 +81,16 @@ def build_utterance_coding_template(
     blinding_config=None,
     existing_codebook: pd.DataFrame | None = None,
     seed: int = 99,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Build an utterance-level blank coding template from transcript tables.
     """
-    template_config = template_config or UtteranceTemplateConfig()
+    template_config = template_config or UtteranceTemplateConfig(
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
     coder_ids = normalize_coder_ids(coder_ids)
 
     sample_df = extract_transcript_data(transcript_table_path, kind="sample")
@@ -86,7 +101,11 @@ def build_utterance_coding_template(
         sample_df=sample_df,
         config=template_config,
     )
-    out = expand_by_coder(out, coder_ids, insert_after="utterance_id")
+    out = expand_by_coder(
+        out,
+        coder_ids,
+        insert_after=template_config.utterance_id_field,
+    )
 
     if blind:
         if blinding_config is None:
@@ -117,11 +136,17 @@ def make_utterance_coding_template(
     existing_codebook: pd.DataFrame | None = None,
     codebook_path: str | Path | None = None,
     seed: int = 99,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> Path:
     """
     Convenience wrapper: build and write an utterance-level coding template.
     """
-    config = UtteranceTemplateConfig(stimulus_field=stimulus_field)
+    config = UtteranceTemplateConfig(
+        stimulus_field=stimulus_field,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
     df, codebook_df = build_utterance_coding_template(
         transcript_table_path,
         coder_ids=coder_ids,
@@ -130,6 +155,8 @@ def make_utterance_coding_template(
         blinding_config=blinding_config,
         existing_codebook=existing_codebook,
         seed=seed,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
     )
     return write_coding_template(
         df,
@@ -148,6 +175,8 @@ def make_utterance_template_files(
     stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     blinding_config=None,
     seed: int = 99,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> Path | None:
     """
     Create utterance-level primary and reliability template workbooks.
@@ -159,23 +188,34 @@ def make_utterance_template_files(
     template_dir = Path(output_dir) / TEMPLATE_SUBDIR
     template_dir.mkdir(parents=True, exist_ok=True)
 
-    config = UtteranceTemplateConfig(stimulus_field=stimulus_field)
+    config = UtteranceTemplateConfig(
+        stimulus_field=stimulus_field,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
+    )
     df, _ = build_utterance_coding_template(
         transcript_table_path=transcript_table,
         coder_ids=None,
         template_config=config,
         blind=False,
         seed=seed,
+        sample_id_field=sample_id_field,
+        utterance_id_field=utterance_id_field,
     )
 
     coder_ids = resolve_template_coder_ids(num_coders)
-    df, segments, assignments = assign_template_coders(df, coder_ids=coder_ids)
+    df, segments, assignments = assign_template_coders(
+        df,
+        coder_ids=coder_ids,
+        sample_id_field=config.sample_id_field,
+    )
     rel_df = build_reliability_subset(
         df,
         frac=frac,
         coder_ids=coder_ids,
         segments=segments,
         assignments=assignments,
+        sample_id_field=config.sample_id_field,
     )
 
     codebook_df = pd.DataFrame()

@@ -32,6 +32,8 @@ class StimulusTemplateConfig:
     Shared stimulus-related settings for coding templates.
     """
     stimulus_field: str = DEFAULT_STIMULUS_FIELD
+    sample_id_field: str = "sample_id"
+    utterance_id_field: str = "utterance_id"
 
     @property
     def use_stimulus(self) -> bool:
@@ -75,15 +77,16 @@ def coerce_bin_labels(num_bins: int) -> list[int]:
 def prepare_stimulus_lookup(
     sample_df: pd.DataFrame,
     stimulus_field: str,
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Return sample_id + stimulus lookup table.
     """
-    require_columns(sample_df, ["sample_id", stimulus_field], "sample_df")
+    require_columns(sample_df, [sample_id_field, stimulus_field], "sample_df")
 
-    stim_df = sample_df.loc[:, ["sample_id", stimulus_field]].copy()
+    stim_df = sample_df.loc[:, [sample_id_field, stimulus_field]].copy()
     stim_df = stim_df.rename(columns={stimulus_field: "stimulus"})
-    stim_df = stim_df.drop_duplicates(subset=["sample_id"])
+    stim_df = stim_df.drop_duplicates(subset=[sample_id_field])
 
     return stim_df
 
@@ -198,12 +201,15 @@ def assign_template_coders(
     df: pd.DataFrame,
     *,
     coder_ids: list[str],
+    sample_id_field: str = "sample_id",
 ) -> tuple[pd.DataFrame, list[list[str]], list[tuple[str, ...]]]:
     """
     Assign primary coders by sample while keeping sample rows together.
     """
+    require_columns(df, [sample_id_field], "template_df")
+
     out = df.copy()
-    sample_ids = list(out["sample_id"].drop_duplicates())
+    sample_ids = list(out[sample_id_field].drop_duplicates())
 
     if not sample_ids:
         return out, [], []
@@ -218,7 +224,7 @@ def assign_template_coders(
     for seg, assn in zip(segments, assignments):
         if not seg:
             continue
-        out.loc[out["sample_id"].isin(seg), "coder_id"] = assn[0]
+        out.loc[out[sample_id_field].isin(seg), "coder_id"] = assn[0]
 
     return out, segments, assignments
 
@@ -230,6 +236,7 @@ def build_reliability_subset(
     coder_ids: list[str],
     segments: list[list[str]],
     assignments: list[tuple[str, ...]],
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame | None:
     """
     Build a sample-preserving reliability subset from a primary template.
@@ -238,7 +245,9 @@ def build_reliability_subset(
         logger.info("frac=0 detected; no reliability subset will be generated.")
         return None
 
-    sample_ids = list(df["sample_id"].drop_duplicates())
+    require_columns(df, [sample_id_field], "template_df")
+
+    sample_ids = list(df[sample_id_field].drop_duplicates())
     if not sample_ids:
         logger.warning("No sample IDs available for reliability subset generation.")
         return None
@@ -246,7 +255,7 @@ def build_reliability_subset(
     if len(coder_ids) <= 1:
         n_rel = calc_subset_size(frac=frac, samples=sample_ids)
         rel_samples = random.sample(sample_ids, k=n_rel)
-        rel_df = df[df["sample_id"].isin(rel_samples)].copy()
+        rel_df = df[df[sample_id_field].isin(rel_samples)].copy()
         rel_df["coder_id"] = coder_ids[0] if coder_ids else ""
         return rel_df
 
@@ -258,7 +267,7 @@ def build_reliability_subset(
 
         n_rel = calc_subset_size(frac=frac, samples=seg)
         rel_samples = random.sample(seg, k=n_rel)
-        rel_df = df[df["sample_id"].isin(rel_samples)].copy()
+        rel_df = df[df[sample_id_field].isin(rel_samples)].copy()
         rel_df["coder_id"] = assn[1]
         rel_subsets.append(rel_df)
 

@@ -46,9 +46,10 @@ def _prepare_sample_template(
     """
     Build the base sample-level coding template.
     """
-    require_columns(sample_df, ["sample_id"], "sample_df")
+    sample_id_field = config.sample_id_field
+    require_columns(sample_df, [sample_id_field], "sample_df")
 
-    cols = ["sample_id"]
+    cols = [sample_id_field]
     stimulus_field = resolve_available_stimulus_field(
         sample_df,
         config.stimulus_field,
@@ -56,15 +57,15 @@ def _prepare_sample_template(
     if stimulus_field:
         cols.append(stimulus_field)
 
-    out = sample_df.loc[:, cols].copy().drop_duplicates(subset=["sample_id"])
+    out = sample_df.loc[:, cols].copy().drop_duplicates(subset=[sample_id_field])
 
     if stimulus_field:
         out = out.rename(columns={stimulus_field: "stimulus"})
         out["bin"] = pd.NA
-        out = out.loc[:, ["sample_id", "stimulus", "bin"]]
+        out = out.loc[:, [sample_id_field, "stimulus", "bin"]]
     else:
         out["bin"] = pd.NA
-        out = out.loc[:, ["sample_id", "bin"]]
+        out = out.loc[:, [sample_id_field, "bin"]]
 
     return out
 
@@ -95,11 +96,14 @@ def _expand_sample_template_bins(
     return pd.concat(frames, ignore_index=True)
 
 
-def _sort_sample_template(df: pd.DataFrame) -> pd.DataFrame:
+def _sort_sample_template(
+    df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Sort sample templates for readable output.
     """
-    sort_cols = [col for col in ["sample_id", "bin"] if col in df.columns]
+    sort_cols = [col for col in [sample_id_field, "bin"] if col in df.columns]
     if not sort_cols:
         return df.copy()
     return df.sort_values(sort_cols, kind="stable").reset_index(drop=True)
@@ -114,17 +118,20 @@ def build_sample_coding_template(
     blinding_config=None,
     existing_codebook: pd.DataFrame | None = None,
     seed: int = 99,
+    sample_id_field: str = "sample_id",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Build a sample-level blank coding template from transcript tables.
     """
-    template_config = template_config or SampleTemplateConfig()
+    template_config = template_config or SampleTemplateConfig(
+        sample_id_field=sample_id_field,
+    )
     coder_ids = normalize_coder_ids(coder_ids)
 
     sample_df = extract_transcript_data(transcript_table_path, kind="sample")
     out = _prepare_sample_template(sample_df=sample_df, config=template_config)
-    out = expand_by_coder(out, coder_ids, insert_after="sample_id")
-    out = _sort_sample_template(out)
+    out = expand_by_coder(out, coder_ids, insert_after=template_config.sample_id_field)
+    out = _sort_sample_template(out, sample_id_field=template_config.sample_id_field)
 
     if blind:
         if blinding_config is None:
@@ -188,6 +195,7 @@ def make_sample_coding_template(
     existing_codebook: pd.DataFrame | None = None,
     codebook_path: str | Path | None = None,
     seed: int = 99,
+    sample_id_field: str = "sample_id",
 ) -> Path:
     """
     Convenience wrapper: build and write a sample-level coding template.
@@ -195,6 +203,7 @@ def make_sample_coding_template(
     config = SampleTemplateConfig(
         num_bins=num_bins,
         stimulus_field=stimulus_field,
+        sample_id_field=sample_id_field,
     )
     df, codebook_df = build_sample_coding_template(
         transcript_table_path,
@@ -204,10 +213,15 @@ def make_sample_coding_template(
         blinding_config=blinding_config,
         existing_codebook=existing_codebook,
         seed=seed,
+        sample_id_field=sample_id_field,
     )
 
     if prefill_bins:
-        df = add_balanced_bins(df, num_bins=config.num_bins)
+        df = add_balanced_bins(
+            df,
+            num_bins=config.num_bins,
+            sample_id_col=config.sample_id_field,
+        )
 
     return write_coding_template(
         df,
@@ -227,6 +241,7 @@ def make_sample_template_files(
     stimulus_field: str = DEFAULT_STIMULUS_FIELD,
     blinding_config=None,
     seed: int = 99,
+    sample_id_field: str = "sample_id",
 ) -> Path | None:
     """
     Create sample-level primary and reliability template workbooks.
@@ -241,6 +256,7 @@ def make_sample_template_files(
     config = SampleTemplateConfig(
         num_bins=num_bins,
         stimulus_field=stimulus_field,
+        sample_id_field=sample_id_field,
     )
 
     df, _ = build_sample_coding_template(
@@ -249,14 +265,19 @@ def make_sample_template_files(
         template_config=config,
         blind=False,
         seed=seed,
+        sample_id_field=sample_id_field,
     )
 
     df = _expand_sample_template_bins(df, num_bins=config.num_bins)
-    df = _sort_sample_template(df)
+    df = _sort_sample_template(df, sample_id_field=config.sample_id_field)
 
     coder_ids = resolve_template_coder_ids(num_coders)
-    df, segments, assignments = assign_template_coders(df, coder_ids=coder_ids)
-    df = _sort_sample_template(df)
+    df, segments, assignments = assign_template_coders(
+        df,
+        coder_ids=coder_ids,
+        sample_id_field=config.sample_id_field,
+    )
+    df = _sort_sample_template(df, sample_id_field=config.sample_id_field)
 
     rel_df = build_reliability_subset(
         df,
@@ -264,9 +285,10 @@ def make_sample_template_files(
         coder_ids=coder_ids,
         segments=segments,
         assignments=assignments,
+        sample_id_field=config.sample_id_field,
     )
     if rel_df is not None:
-        rel_df = _sort_sample_template(rel_df)
+        rel_df = _sort_sample_template(rel_df, sample_id_field=config.sample_id_field)
 
     codebook_df = pd.DataFrame()
     export_df = df
@@ -280,7 +302,7 @@ def make_sample_template_files(
             directories=[input_dir, output_dir],
             seed=seed,
         )
-        export_df = _sort_sample_template(export_df)
+        export_df = _sort_sample_template(export_df, sample_id_field=config.sample_id_field)
 
         if rel_df is not None:
             export_rel_df, _ = apply_optional_identifier_blinding(
@@ -291,7 +313,10 @@ def make_sample_template_files(
                 directories=[input_dir, output_dir],
                 seed=seed,
             )
-            export_rel_df = _sort_sample_template(export_rel_df)
+            export_rel_df = _sort_sample_template(
+                export_rel_df,
+                sample_id_field=config.sample_id_field,
+            )
 
     logger.info(
         "Prepared sample template exports: primary=%s rows, reliability=%s rows.",

@@ -548,6 +548,8 @@ class RunContext:
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
 
     def kwargs_make_sample_templates(self) -> dict[str, Any]:
@@ -561,6 +563,7 @@ class RunContext:
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     def kwargs_make_speaking_time_templates(self) -> dict[str, Any]:
@@ -568,6 +571,7 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
+            "sample_id_field": self.config.sample_id_field,
         }
 
     # ------------------------------------------------------------------
