@@ -94,12 +94,18 @@ def _get_transcript_table(input_dir, output_dir) -> Path | None:
     return transcript_tables[0]
 
 
-def _load_utterance_table(transcript_table: Path) -> pd.DataFrame | None:
+def _load_utterance_table(
+    transcript_table: Path,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame | None:
     """
     Load utterance-level transcript data from a transcript table file.
     """
     try:
-        return extract_transcript_data(transcript_table)
+        return extract_transcript_data(
+            transcript_table,
+            sample_id_field=sample_id_field,
+        )
     except Exception as e:
         logger.error(f"Failed to read transcript table {get_rel_path(transcript_table)}: {e}")
         return None
@@ -446,7 +452,10 @@ def make_powers_coding_files(
     if transcript_table is None:
         return
 
-    uttdf = _load_utterance_table(transcript_table)
+    uttdf = _load_utterance_table(
+        transcript_table,
+        sample_id_field=sample_id_field,
+    )
     if uttdf is None:
         return
 

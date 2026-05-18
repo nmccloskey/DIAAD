@@ -238,6 +238,8 @@ class RunContext:
             output_dir=self.out_dir,
             shuffle=self.shuffle_samples,
             random_seed=self.random_seed,
+            sample_id_field=self.config.sample_id_field,
+            utterance_id_field=self.config.utterance_id_field,
         )
 
     # ------------------------------------------------------------------
@@ -321,11 +323,16 @@ class RunContext:
             "output_dir": self.out_dir,
             "shuffle": self.shuffle_samples,
             "random_seed": self.random_seed,
+            "sample_id_field": self.config.sample_id_field,
+            "utterance_id_field": self.config.utterance_id_field,
         }
 
     def kwargs_detabularize_transcripts(self) -> dict[str, Any]:
         """Return kwargs for transcript de-tabularization."""
-        return self.kwargs_io()
+        return {
+            **self.kwargs_io(),
+            "sample_id_field": self.config.sample_id_field,
+        }
 
     def kwargs_select_transcription_reliability_samples(self) -> dict[str, Any]:
         """Return kwargs for transcription reliability sample selection."""

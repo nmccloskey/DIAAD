@@ -19,7 +19,6 @@ TEMPLATE_HEADER_PATTERN = "*template_header.cha"
 DERIVED_FILE_COL = "derived_file"
 
 FILENAME_EXCLUDE_COLS = {
-    "sample_id",
     "input_order",
     "shuffled_order",
     DERIVED_FILE_COL,
@@ -63,14 +62,24 @@ def _safe_filename_part(value: object) -> str:
     return text.strip("._ ")
 
 
-def _filename_metadata_columns(samples_df: pd.DataFrame) -> list[str]:
+def _filename_metadata_columns(
+    samples_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> list[str]:
     """
     Return columns eligible for metadata-derived filenames, in sheet order.
     """
-    return [col for col in samples_df.columns if col not in FILENAME_EXCLUDE_COLS]
+    exclude_cols = set(FILENAME_EXCLUDE_COLS)
+    exclude_cols.add(sample_id_field)
+    return [col for col in samples_df.columns if col not in exclude_cols]
 
 
-def _build_base_filename(row: pd.Series, metadata_cols: list[str], row_index: int) -> str:
+def _build_base_filename(
+    row: pd.Series,
+    metadata_cols: list[str],
+    row_index: int,
+    sample_id_field: str = "sample_id",
+) -> str:
     """
     Build an underscore-connected CHAT filename from a sample row.
     """
@@ -78,7 +87,7 @@ def _build_base_filename(row: pd.Series, metadata_cols: list[str], row_index: in
     parts = [part for part in parts if part]
 
     if not parts:
-        sample_id = _safe_filename_part(row.get("sample_id"))
+        sample_id = _safe_filename_part(row.get(sample_id_field))
         parts = [sample_id or f"sample_{row_index + 1}"]
 
     return f"{'_'.join(parts)}.cha"
@@ -92,24 +101,35 @@ def _append_row_index(filename: str, row_index: int) -> str:
     return f"{path.stem}_{row_index + 1}{path.suffix or '.cha'}"
 
 
-def _assign_derived_files(samples_df: pd.DataFrame) -> pd.DataFrame:
+def _assign_derived_files(
+    samples_df: pd.DataFrame,
+    sample_id_field: str = "sample_id",
+) -> pd.DataFrame:
     """
     Add a derived_file column with generated CHAT filenames.
     """
-    if "sample_id" not in samples_df.columns:
-        raise ValueError("Samples sheet must contain a 'sample_id' column.")
+    if sample_id_field not in samples_df.columns:
+        raise ValueError(f"Samples sheet must contain a {sample_id_field!r} column.")
 
     samples_df = samples_df.copy()
-    metadata_cols = _filename_metadata_columns(samples_df)
+    metadata_cols = _filename_metadata_columns(
+        samples_df,
+        sample_id_field=sample_id_field,
+    )
 
     base_names = [
-        _build_base_filename(row, metadata_cols, row_index)
+        _build_base_filename(
+            row,
+            metadata_cols,
+            row_index,
+            sample_id_field=sample_id_field,
+        )
         for row_index, (_, row) in enumerate(samples_df.iterrows())
     ]
 
     name_counts = pd.Series(base_names).value_counts()
     duplicate_names = {name for name, count in name_counts.items() if count > 1}
-    duplicate_sample_ids = samples_df["sample_id"].map(_cell_to_text).duplicated(keep=False)
+    duplicate_sample_ids = samples_df[sample_id_field].map(_cell_to_text).duplicated(keep=False)
 
     if duplicate_names or duplicate_sample_ids.any():
         logger.warning(
@@ -343,6 +363,7 @@ def _deduplicate_across_tables(
 def detabularize_transcripts(
     input_dir: str | Path,
     output_dir: str | Path,
+    sample_id_field: str = "sample_id",
 ) -> List[str]:
     """
     Convert transcript tables into CHAT (.cha) files.
@@ -378,7 +399,10 @@ def detabularize_transcripts(
     ):
         try:
             sheets, samples_sheet_name, utterances_sheet_name = _load_transcript_table(table_path)
-            samples_df = _assign_derived_files(sheets[samples_sheet_name])
+            samples_df = _assign_derived_files(
+                sheets[samples_sheet_name],
+                sample_id_field=sample_id_field,
+            )
             samples_df = _deduplicate_across_tables(
                 samples_df,
                 used_filenames,
@@ -386,11 +410,13 @@ def detabularize_transcripts(
             )
             utterances_df = sheets[utterances_sheet_name].copy()
 
-            if "sample_id" not in utterances_df.columns:
-                raise ValueError("Utterances sheet must contain a 'sample_id' column.")
+            if sample_id_field not in utterances_df.columns:
+                raise ValueError(
+                    f"Utterances sheet must contain a {sample_id_field!r} column."
+                )
 
-            samples_df["_sample_key"] = samples_df["sample_id"].map(_cell_to_text)
-            utterances_df["_sample_key"] = utterances_df["sample_id"].map(_cell_to_text)
+            samples_df["_sample_key"] = samples_df[sample_id_field].map(_cell_to_text)
+            utterances_df["_sample_key"] = utterances_df[sample_id_field].map(_cell_to_text)
             utterance_groups: Dict[str, pd.DataFrame] = dict(
                 tuple(utterances_df.groupby("_sample_key", sort=False))
             )
@@ -414,7 +440,7 @@ def detabularize_transcripts(
                 if sample_utts is None:
                     logger.warning(
                         "No utterances found for sample_id %r; writing header-only CHAT file.",
-                        sample_row.get("sample_id"),
+                        sample_row.get(sample_id_field),
                     )
                     sample_utts = utterances_df.iloc[0:0].copy()
 

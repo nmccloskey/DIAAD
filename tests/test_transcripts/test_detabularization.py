@@ -126,3 +126,42 @@ def test_detabularize_transcripts_matches_integer_and_float_sample_ids(tmp_path)
 
     chat_text = (output_dir / "chat_files" / "TU_Pre_Story.cha").read_text(encoding="utf-8")
     assert "*PAR0:\tmatched\n" in chat_text
+
+
+def test_detabularize_transcripts_accepts_custom_sample_id_field(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    table_path = input_dir / "transcript_tables" / "transcript_tables.xlsx"
+
+    samples = pd.DataFrame(
+        [{"expanded_sample_id": "A-1", "study_id": "TU", "test": "Post"}]
+    )
+    utterances = pd.DataFrame(
+        [
+            {
+                "expanded_sample_id": "A-1",
+                "expanded_utterance_id": "A-1-U1",
+                "speaker": "PAR0",
+                "utterance": "custom id matched",
+                "comment": "",
+            }
+        ]
+    )
+    _write_table(table_path, samples, utterances)
+
+    written = detabularize_transcripts(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        sample_id_field="expanded_sample_id",
+    )
+
+    assert written == [str(output_dir / "chat_files" / "TU_Post.cha")]
+    chat_text = (output_dir / "chat_files" / "TU_Post.cha").read_text(encoding="utf-8")
+    assert "*PAR0:\tcustom id matched\n" in chat_text
+
+    derived = pd.read_excel(
+        output_dir / "transcript_tables" / "transcript_tables.xlsx",
+        sheet_name="samples",
+    )
+    assert "expanded_sample_id" in derived.columns
+    assert list(derived["derived_file"]) == ["TU_Post.cha"]

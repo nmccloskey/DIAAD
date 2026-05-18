@@ -11,7 +11,6 @@ from psair.core.logger import logger, get_rel_path
 
 
 SAMPLE_BASE_COLS = [
-    "sample_id",
     "file",
     "file_ext",
     "file_dir",
@@ -20,8 +19,6 @@ SAMPLE_BASE_COLS = [
 ]
 
 UTT_COLS = [
-    "sample_id",
-    "utterance_id",
     "position",
     "position_sub",
     "speaker",
@@ -170,6 +167,8 @@ def tabularize_transcripts(
     *,
     shuffle: bool = False,
     random_seed: int | None = 99,
+    sample_id_field: str = "sample_id",
+    utterance_id_field: str = "utterance_id",
 ) -> List[str]:
     """
     Create and write transcript tables (samples + utterances) to Excel.
@@ -203,7 +202,8 @@ def tabularize_transcripts(
         return []
 
     metadata_field_names = list(metadata_fields.keys())
-    sample_cols = SAMPLE_BASE_COLS + metadata_field_names
+    sample_cols = [sample_id_field] + SAMPLE_BASE_COLS + metadata_field_names
+    utt_cols = [sample_id_field, utterance_id_field] + UTT_COLS
 
     file_list_sorted = sorted(chats.keys())
     rng = np.random.default_rng(random_seed) if shuffle else None
@@ -275,7 +275,7 @@ def tabularize_transcripts(
             continue
 
     sample_df = pd.DataFrame(sample_rows, columns=sample_cols)
-    utt_df = pd.DataFrame(utt_rows, columns=UTT_COLS)
+    utt_df = pd.DataFrame(utt_rows, columns=utt_cols)
 
     written_file = _write_transcript_tables(sample_df, utt_df, output_dir)
 
@@ -287,6 +287,7 @@ def tabularize_transcripts(
 def extract_transcript_data(
     transcript_table_path: str | Path,
     kind: str = "joined",
+    sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
     Load data from a transcript table Excel file.
@@ -299,7 +300,7 @@ def extract_transcript_data(
         Which dataset to return:
           - 'utterance': utterance-level data
           - 'sample': sample-level metadata
-          - 'joined': merged table of both (inner join on 'sample_id')
+          - 'joined': merged table of both (inner join on `sample_id_field`)
 
     Returns
     -------
@@ -350,7 +351,18 @@ def extract_transcript_data(
         if sample_df is None or utt_df is None:
             raise ValueError("Both sheets required for joined kind are missing.")
 
-        joined = sample_df.merge(utt_df, on="sample_id", how="inner")
+        missing_join = [
+            sheet
+            for sheet, df in (("samples", sample_df), ("utterances", utt_df))
+            if sample_id_field not in df.columns
+        ]
+        if missing_join:
+            raise ValueError(
+                f"Missing join column {sample_id_field!r} in transcript table "
+                f"sheet(s): {missing_join}."
+            )
+
+        joined = sample_df.merge(utt_df, on=sample_id_field, how="inner")
         logger.info(f"Loaded joined transcript data from {get_rel_path(path)}")
         return joined
 

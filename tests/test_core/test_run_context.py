@@ -120,6 +120,25 @@ def test_run_context_kwargs_tabularize_requires_chats(monkeypatch, tmp_path):
         ctx.kwargs_tabularize_transcripts()
 
 
+def test_run_context_threads_transcript_identifier_fields(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+    ctx.chats = {"sample.cha": object()}
+
+    tabularize_kwargs = ctx.kwargs_tabularize_transcripts()
+    detabularize_kwargs = ctx.kwargs_detabularize_transcripts()
+
+    assert tabularize_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert tabularize_kwargs["utterance_id_field"] == "expanded_utterance_id"
+    assert detabularize_kwargs["sample_id_field"] == "expanded_sample_id"
+
+
 def test_run_context_termination_kwargs(monkeypatch, tmp_path):
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
