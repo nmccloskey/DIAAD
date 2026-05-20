@@ -160,10 +160,14 @@ class ConfigManager:
 
     def __init__(
         self,
-        config_dir: str | Path | None = "config",
+        config_dir: str | Path | None = None,
         config_overrides: dict[str, Any] | None = None,
     ) -> None:
-        self.config_dir = Path(config_dir or "config").expanduser().resolve()
+        self.config_dir = (
+            Path(config_dir).expanduser().resolve()
+            if config_dir is not None
+            else None
+        )
         self.config_overrides = dict(config_overrides or {})
 
         default_config = self._load_default_config()
@@ -445,36 +449,24 @@ class ConfigManager:
             for section in CONFIG_SECTIONS
         }
 
-    def _load_user_config(self, path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-        if not path.exists():
-            logger.warning(
-                "Config source not found at %s; using packaged DIAAD defaults.",
-                path,
-            )
+    def _load_user_config(
+        self,
+        path: Path | None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        if path is None:
+            logger.info("No DIAAD config source provided; using packaged defaults.")
             return {}, {
                 "kind": "packaged_default",
-                "path": str(path),
+                "path": None,
                 "files": {},
                 "missing_sections": list(CONFIG_SECTIONS),
             }
 
-        try:
-            loaded = load_sectioned_config(
-                path,
-                CONFIG_SECTIONS,
-                allow_missing_sections=True,
-            )
-        except FileNotFoundError:
-            logger.warning(
-                "No config files found at %s; using packaged DIAAD defaults.",
-                path,
-            )
-            return {}, {
-                "kind": "packaged_default",
-                "path": str(path),
-                "files": {},
-                "missing_sections": list(CONFIG_SECTIONS),
-            }
+        loaded = load_sectioned_config(
+            path,
+            CONFIG_SECTIONS,
+            allow_missing_sections=True,
+        )
 
         return loaded.sections, {
             "kind": loaded.source.kind,

@@ -32,8 +32,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--config",
         type=str,
-        default="config",
-        help="Path to the configuration directory (default: config)",
+        default=None,
+        help=(
+            "Path to a split config directory or nested YAML config file. "
+            "If omitted, DIAAD uses ./config when present, otherwise packaged defaults."
+        ),
     )
 
     parser.add_argument(

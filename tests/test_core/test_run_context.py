@@ -77,6 +77,41 @@ def test_run_context_resolves_paths_and_builds_metadata(monkeypatch, tmp_path):
     assert ctx.timestamp == "260425_1230"
 
 
+def test_run_context_uses_project_config_dir_when_config_omitted(monkeypatch, tmp_path):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+
+    ctx = run_context_module.RunContext(
+        config_dir=None,
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    assert ctx.config_dir == config_dir.resolve()
+    assert ctx.config.config_dir == config_dir.resolve()
+    assert ctx.run_paths()["config_source"] == str(config_dir.resolve())
+
+
+def test_run_context_uses_packaged_defaults_when_config_omitted_without_project_config(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=None,
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    assert ctx.config_dir is None
+    assert ctx.config.config_dir is None
+    assert ctx.run_paths()["config_source"] is None
+
+
 def test_run_context_ensure_transcript_tables_generates_when_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)

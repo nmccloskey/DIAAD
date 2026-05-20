@@ -159,13 +159,19 @@ def test_config_manager_rejects_ambiguous_config_directory(tmp_path):
         ConfigManager(config_dir)
 
 
-def test_config_manager_uses_packaged_defaults_when_config_missing(tmp_path):
-    config = ConfigManager(tmp_path / "missing_config")
+def test_config_manager_uses_packaged_defaults_when_config_omitted():
+    config = ConfigManager(None)
 
     assert config.input_dir == "diaad_data/input"
     assert config.output_dir == "diaad_data/output"
     assert config.config_source["kind"] == "packaged_default"
+    assert config.config_source["path"] is None
     assert config.config_source["missing_sections"] == ["project", "advanced"]
+
+
+def test_config_manager_rejects_explicit_missing_config(tmp_path):
+    with pytest.raises(FileNotFoundError, match="Config source not found"):
+        ConfigManager(tmp_path / "missing_config")
 
 
 def test_packaged_default_config_parses_cleanly():

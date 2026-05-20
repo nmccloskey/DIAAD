@@ -79,7 +79,7 @@ def main(args) -> None:
         config_overrides = build_cli_config_overrides(args)
 
         ctx = RunContext(
-            config_dir=args.config or "config",
+            config_dir=args.config,
             project_root=project_root,
             start_time=start_time,
             config_overrides=config_overrides,

@@ -30,7 +30,7 @@ class RunContext:
     dispatch/wrapper layers.
     """
 
-    config_dir: str | Path
+    config_dir: str | Path | None
     project_root: str | Path
     start_time: datetime
     config_overrides: dict[str, Any] | None = None
@@ -61,7 +61,8 @@ class RunContext:
     # Initialization
     # ------------------------------------------------------------------
     def __post_init__(self) -> None:
-        self.config_dir = Path(self.config_dir).expanduser().resolve()
+        self.project_root = Path(self.project_root).expanduser().resolve()
+        self.config_dir = self._resolve_config_source(self.config_dir)
         self.config = ConfigManager(self.config_dir, config_overrides=self.config_overrides)
         self._resolve_directories()
         self._seed_rngs()
@@ -149,6 +150,26 @@ class RunContext:
         if p.is_absolute():
             return p.resolve()
         return (self.project_root / p).resolve()
+
+    def _resolve_config_source(self, config_source: str | Path | None) -> Path | None:
+        """
+        Resolve the selected config source.
+
+        When omitted, DIAAD uses a conventional project-local config directory
+        if present, otherwise ConfigManager falls back to packaged defaults.
+        Explicit sources are resolved here and validated by ConfigManager.
+        """
+        if config_source is not None:
+            path = Path(config_source).expanduser()
+            if not path.is_absolute():
+                path = self.project_root / path
+            resolved = path.resolve()
+            return resolved
+
+        default_config_dir = self.project_root / "config"
+        if default_config_dir.exists():
+            return default_config_dir.resolve()
+        return None
 
     def _resolve_directories(self) -> None:
         """
@@ -302,7 +323,7 @@ class RunContext:
         """Return standard run paths for provenance and dry-run payloads."""
         return {
             "project_root": str(Path(self.project_root).resolve()),
-            "config_dir": str(self.config_dir),
+            "config_source": str(self.config_dir) if self.config_dir is not None else None,
             "input_dir": str(self.input_dir),
             "output_dir": str(self.base_output_dir),
             "run_output_dir": str(self.out_dir),

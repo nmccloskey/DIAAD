@@ -3,6 +3,14 @@ from __future__ import annotations
 from diaad.cli.parser import build_arg_parser
 
 
+def test_parser_leaves_config_unset_when_omitted() -> None:
+    parser = build_arg_parser()
+
+    args = parser.parse_args(["powers", "evaluate"])
+
+    assert args.config is None
+
+
 def test_parser_accepts_batch_config_overrides() -> None:
     parser = build_arg_parser()
 
