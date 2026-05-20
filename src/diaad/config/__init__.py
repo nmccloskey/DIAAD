@@ -1,0 +1,1 @@
+"""Packaged DIAAD configuration defaults."""

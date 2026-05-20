@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from importlib.resources import files as resource_files
 from pathlib import Path
 from typing import Any, TypeAlias
 
-import yaml
-
+from psair.core.config_files import (
+    load_sectioned_config,
+    load_yaml_mapping,
+    merge_defaults,
+)
 from psair.core.logger import logger
 from psair.core.provenance import diff_config_values
 
@@ -17,6 +21,10 @@ from diaad.core.config_overrides import apply_config_overrides
 # ------------------------------------------------------------------
 
 MetadataFieldSpec: TypeAlias = str | list[str]
+
+CONFIG_SECTIONS = ("project", "advanced")
+DEFAULT_CONFIG_PACKAGE = "diaad.config"
+DEFAULT_CONFIG_FILENAME = "default_config.yaml"
 
 
 @dataclass(frozen=True)
@@ -145,27 +153,34 @@ class ConfigManager:
     """
     Read, validate, normalize, and expose DIAAD configuration.
 
-    Expected config directory contents:
-        project.yaml
-        advanced.yaml
+    Configuration may be provided as a split directory containing
+    project.yaml/advanced.yaml, a nested YAML file with project:/advanced:
+    sections, or omitted to use the packaged defaults.
     """
-
-    REQUIRED_FILES = (
-        "project.yaml",
-        "advanced.yaml",
-    )
 
     def __init__(
         self,
-        config_dir: str | Path,
+        config_dir: str | Path | None = "config",
         config_overrides: dict[str, Any] | None = None,
     ) -> None:
-        self.config_dir = Path(config_dir).expanduser().resolve()
-        self._validate_config_dir()
-
-        self._raw_project = self._read_yaml("project.yaml")
-        self._raw_advanced = self._read_yaml("advanced.yaml")
+        self.config_dir = Path(config_dir or "config").expanduser().resolve()
         self.config_overrides = dict(config_overrides or {})
+
+        default_config = self._load_default_config()
+        user_config, user_source = self._load_user_config(self.config_dir)
+        merged_config = merge_defaults(default_config, user_config)
+        self.config_source = self._build_config_source_metadata(
+            user_source=user_source,
+            default_path=self.default_config_path(),
+            missing_sections=[
+                section
+                for section in CONFIG_SECTIONS
+                if section not in user_config or not user_config[section]
+            ],
+        )
+
+        self._raw_project = merged_config["project"]
+        self._raw_advanced = merged_config["advanced"]
 
         base_project = self._parse_project(self._raw_project)
         base_advanced = self._parse_advanced(self._raw_advanced)
@@ -176,16 +191,16 @@ class ConfigManager:
             self._raw_advanced,
             self.config_overrides,
         )
-        self.project = self._parse_project(self._raw_project)
-        self.advanced = self._parse_advanced(self._raw_advanced)
-
-        if self.config_overrides:
-            self.project = self._parse_project(effective_project)
-            self.advanced = self._parse_advanced(effective_advanced)
-
+        self.project = self._parse_project(effective_project)
+        self.advanced = self._parse_advanced(effective_advanced)
         self.override_diff = diff_config_values(self._base_dict, self.to_dict())
 
-        logger.info("Loaded configuration from %s", self.config_dir)
+        logger.info(
+            "Loaded DIAAD configuration from %s (%s; defaults applied from %s)",
+            self.config_source["path"],
+            self.config_source["kind"],
+            self.config_source["default_path"],
+        )
 
     # ------------------------------------------------------------------
     # Public convenience properties
@@ -417,26 +432,73 @@ class ConfigManager:
     # Internal file loading
     # ------------------------------------------------------------------
 
-    def _validate_config_dir(self) -> None:
-        if not self.config_dir.exists():
-            raise FileNotFoundError(f"Config directory not found: {self.config_dir}")
-        if not self.config_dir.is_dir():
-            raise NotADirectoryError(f"Config path is not a directory: {self.config_dir}")
+    @staticmethod
+    def default_config_path() -> Path:
+        """Return the packaged default config path when available on disk."""
+        return Path(resource_files(DEFAULT_CONFIG_PACKAGE) / DEFAULT_CONFIG_FILENAME)
 
-        missing = [name for name in self.REQUIRED_FILES if not (self.config_dir / name).exists()]
-        if missing:
-            raise FileNotFoundError(
-                f"Missing required config file(s) in {self.config_dir}: {', '.join(missing)}"
+    def _load_default_config(self) -> dict[str, Any]:
+        default_path = self.default_config_path()
+        data = load_yaml_mapping(default_path)
+        return {
+            section: data.get(section, {})
+            for section in CONFIG_SECTIONS
+        }
+
+    def _load_user_config(self, path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+        if not path.exists():
+            logger.warning(
+                "Config source not found at %s; using packaged DIAAD defaults.",
+                path,
             )
+            return {}, {
+                "kind": "packaged_default",
+                "path": str(path),
+                "files": {},
+                "missing_sections": list(CONFIG_SECTIONS),
+            }
 
-    def _read_yaml(self, filename: str) -> dict[str, Any]:
-        path = self.config_dir / filename
-        with path.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+        try:
+            loaded = load_sectioned_config(
+                path,
+                CONFIG_SECTIONS,
+                allow_missing_sections=True,
+            )
+        except FileNotFoundError:
+            logger.warning(
+                "No config files found at %s; using packaged DIAAD defaults.",
+                path,
+            )
+            return {}, {
+                "kind": "packaged_default",
+                "path": str(path),
+                "files": {},
+                "missing_sections": list(CONFIG_SECTIONS),
+            }
 
-        if not isinstance(data, dict):
-            raise TypeError(f"{filename} must parse to a dictionary-like object.")
-        return data
+        return loaded.sections, {
+            "kind": loaded.source.kind,
+            "path": str(loaded.source.path),
+            "files": {
+                section: str(section_path)
+                for section, section_path in loaded.source.files.items()
+            },
+            "missing_sections": list(loaded.source.missing_sections),
+        }
+
+    @staticmethod
+    def _build_config_source_metadata(
+        *,
+        user_source: dict[str, Any],
+        default_path: Path,
+        missing_sections: list[str],
+    ) -> dict[str, Any]:
+        return {
+            **user_source,
+            "defaults_applied": True,
+            "default_path": str(default_path),
+            "missing_sections": missing_sections,
+        }
 
     # ------------------------------------------------------------------
     # Section parsing

@@ -49,6 +49,7 @@ nlp = ["spacy>=3.8,<3.9"]
 [tool.setuptools.package-data]
 diaad = [
     "coding/target_vocab/resources/*.json",
+    "config/*.yaml",
     "examples/assets/spec/*.yaml",
     "examples/assets/spec/*/*.yaml",
     "examples/assets/rendered_docs/example_io/*.md",

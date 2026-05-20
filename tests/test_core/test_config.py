@@ -60,6 +60,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.codebook_filename == "custom_codebook.xlsx"
     assert config.powers_coding_file == "custom_powers.xlsx"
     assert config.powers_reliability_file == "custom_powers_rel.xlsx"
+    assert config.config_source["kind"] == "split_dir"
+    assert config.config_source["defaults_applied"] is True
 
 
 def test_config_manager_applies_overrides_and_records_diff(tmp_path):
@@ -89,6 +91,89 @@ def test_config_manager_applies_overrides_and_records_diff(tmp_path):
         "old": "powers_coding.xlsx",
         "new": "siteA_powers.xlsx",
     }
+
+
+def test_config_manager_loads_nested_yaml_file(tmp_path):
+    config_path = tmp_path / "effective_config.yaml"
+    write_yaml(
+        config_path,
+        {
+            "project": {
+                "input_dir": "nested/input",
+                "output_dir": "nested/output",
+                "metadata_fields": {"site": ["AC", "BU"]},
+            },
+            "advanced": {
+                "sample_id_field": "sample",
+                "powers_coding_file": "nested_powers.xlsx",
+            },
+        },
+    )
+
+    config = ConfigManager(config_path)
+
+    assert config.input_dir == "nested/input"
+    assert config.output_dir == "nested/output"
+    assert config.metadata_fields_config == {"tiers": {"site": ["AC", "BU"]}}
+    assert config.sample_id_field == "sample"
+    assert config.powers_coding_file == "nested_powers.xlsx"
+    assert config.config_source["kind"] == "nested_file"
+    assert config.config_source["path"] == str(config_path)
+
+
+def test_config_manager_fills_missing_nested_sections_from_defaults(tmp_path):
+    config_path = tmp_path / "config.yaml"
+    write_yaml(config_path, {"project": {"input_dir": "only/project"}})
+
+    config = ConfigManager(config_path)
+
+    assert config.input_dir == "only/project"
+    assert config.powers_coding_file == "powers_coding.xlsx"
+    assert config.config_source["missing_sections"] == ["advanced"]
+
+
+def test_config_manager_loads_directory_config_yaml(tmp_path):
+    config_dir = tmp_path / "config"
+    write_yaml(
+        config_dir / "config.yaml",
+        {
+            "project": {"input_dir": "joined/input"},
+            "advanced": {"auto_blind": True},
+        },
+    )
+
+    config = ConfigManager(config_dir)
+
+    assert config.input_dir == "joined/input"
+    assert config.auto_blind is True
+    assert config.config_source["kind"] == "nested_file"
+    assert config.config_source["path"] == str(config_dir / "config.yaml")
+
+
+def test_config_manager_rejects_ambiguous_config_directory(tmp_path):
+    config_dir = tmp_path / "config"
+    write_yaml(config_dir / "project.yaml", {"input_dir": "split/input"})
+    write_yaml(config_dir / "config.yaml", {"project": {"input_dir": "nested/input"}})
+
+    with pytest.raises(ValueError, match="Ambiguous config directory"):
+        ConfigManager(config_dir)
+
+
+def test_config_manager_uses_packaged_defaults_when_config_missing(tmp_path):
+    config = ConfigManager(tmp_path / "missing_config")
+
+    assert config.input_dir == "diaad_data/input"
+    assert config.output_dir == "diaad_data/output"
+    assert config.config_source["kind"] == "packaged_default"
+    assert config.config_source["missing_sections"] == ["project", "advanced"]
+
+
+def test_packaged_default_config_parses_cleanly():
+    config = ConfigManager(ConfigManager.default_config_path())
+
+    assert config.to_dict()["project"]["input_dir"] == "diaad_data/input"
+    assert config.to_dict()["advanced"]["sample_id_field"] == "sample_id"
+    assert config.override_diff == {}
 
 
 def test_config_manager_rejects_invalid_reliability_fraction(tmp_path):
