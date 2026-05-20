@@ -55,6 +55,7 @@ def build_dry_run_payload(ctx, args: Namespace, commands: list[str]) -> dict[str
         config_overrides=ctx.config.override_diff,
         effective_config=ctx.config.to_dict(),
         environment=capture_environment(ENVIRONMENT_PACKAGES),
+        extra={"config_source": ctx.config.config_source},
     )
 
 
@@ -110,6 +111,7 @@ def finalize_run_artifacts(ctx, context: dict[str, Any]) -> None:
         command=command,
         status=status,
         artifacts=manifest_artifacts,
+        extra={"config_source": ctx.config.config_source},
     )
     write_json(
         logs_dir / "run_metadata.json",
@@ -152,6 +154,7 @@ def _compact_run_metadata(
         "ended_at": end_time.isoformat(timespec="seconds"),
         "runtime_seconds": runtime_seconds,
         "paths": ctx.run_paths(),
+        "config_source": ctx.config.config_source,
         "logs": dict(LOG_ARTIFACTS),
     }
 

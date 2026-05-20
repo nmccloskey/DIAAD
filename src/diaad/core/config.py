@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, TypeAlias
 
 from psair.core.config_files import (
+    build_config_source_metadata,
     load_sectioned_config,
     load_yaml_mapping,
     merge_defaults,
@@ -173,14 +174,15 @@ class ConfigManager:
         default_config = self._load_default_config()
         user_config, user_source = self._load_user_config(self.config_dir)
         merged_config = merge_defaults(default_config, user_config)
-        self.config_source = self._build_config_source_metadata(
-            user_source=user_source,
+        self.config_source = build_config_source_metadata(
+            user_source,
             default_path=self.default_config_path(),
             missing_sections=[
                 section
                 for section in CONFIG_SECTIONS
                 if section not in user_config or not user_config[section]
             ],
+            defaults_applied=True,
         )
 
         self._raw_project = merged_config["project"]
@@ -476,20 +478,6 @@ class ConfigManager:
                 for section, section_path in loaded.source.files.items()
             },
             "missing_sections": list(loaded.source.missing_sections),
-        }
-
-    @staticmethod
-    def _build_config_source_metadata(
-        *,
-        user_source: dict[str, Any],
-        default_path: Path,
-        missing_sections: list[str],
-    ) -> dict[str, Any]:
-        return {
-            **user_source,
-            "defaults_applied": True,
-            "default_path": str(default_path),
-            "missing_sections": missing_sections,
         }
 
     # ------------------------------------------------------------------
