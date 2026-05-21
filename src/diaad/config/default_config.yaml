@@ -11,27 +11,27 @@ project:
   auto_tabularize: false
   num_bins: 4
   num_coders: 0
-  stimulus_field: ''
+  stimulus_column: ''
   automate_powers: true
   metadata_fields: {}
 advanced:
-  sample_id_field: sample_id
-  utterance_id_field: utterance_id
+  sample_id_column: sample_id
+  utterance_id_column: utterance_id
   reliability_tag: _reliability
   reliability_dirname: reliability
   cu_paradigms: []
-  cu_samples_file: cu_coding_by_sample_long.xlsx
-  cu_utts_file: cu_coding_by_utterance.xlsx
-  word_count_file: word_counting.xlsx
-  word_count_field: word_count
-  wc_samples_file: word_counting_by_sample.xlsx
-  speaking_time_file: speaking_times.xlsx
-  speaking_time_field: speaking_time
-  powers_coding_file: powers_coding.xlsx
-  powers_reliability_file: powers_reliability_coding.xlsx
+  cu_samples_filename: cu_coding_by_sample_long.xlsx
+  cu_utts_filename: cu_coding_by_utterance.xlsx
+  word_count_filename: word_counting.xlsx
+  word_count_column: word_count
+  wc_samples_filename: word_counting_by_sample.xlsx
+  speaking_time_filename: speaking_times.xlsx
+  speaking_time_column: speaking_time
+  powers_coding_filename: powers_coding.xlsx
+  powers_reliability_filename: powers_reliability_coding.xlsx
   target_vocabulary_resource_path: ''
   auto_blind: false
-  blind_cols:
+  blind_columns:
   - sample_id
   metadata_source: transcript_tables
   codebook_filename: ''

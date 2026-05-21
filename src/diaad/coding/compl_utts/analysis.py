@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
@@ -476,8 +476,7 @@ def analyze_cu_coding(
 
     Behavior
     --------
-    - Finds CU coding workbooks.
-    - If multiple are found, warns and uses only the first returned file.
+    - Finds exactly one CU coding workbook by exact filename.
     - Detects valid coder/paradigm SV-REL pairs.
     - Computes CU = 1 if SV == REL == 1,
       0 if both are present but not both 1,
@@ -496,22 +495,11 @@ def analyze_cu_coding(
     cu_analysis_dir = Path(output_dir) / "cu_coding_analysis"
     cu_analysis_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = find_matching_files(
+    cod = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="cu_coding",
+        filename="cu_coding.xlsx",
+        label="CU coding file",
     )
-
-    if not coding_files:
-        logger.warning("No CU coding files found for analysis.")
-        return
-
-    if len(coding_files) > 1:
-        logger.warning(
-            "Multiple CU coding files detected for analysis. "
-            f"Using only the first returned file: {get_rel_path(coding_files[0])}"
-        )
-
-    cod = coding_files[0]
 
     try:
         cu_coding = pd.read_excel(cod)

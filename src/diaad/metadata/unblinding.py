@@ -7,6 +7,7 @@ import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file, require_one_file
 from diaad.metadata.utils import (
     validate_columns,
     normalize_to_list,
@@ -44,24 +45,23 @@ def _choose_first_match(
     *,
     resource_name: str,
     required: bool = False,
+    directories=None,
+    configured_filename: str | Path | None = None,
 ) -> Path | None:
     """
-    Choose the first path from a list of matches, warning if multiple are present.
+    Resolve one path from a list of matches, raising if multiple are present.
     """
     paths = [Path(p) for p in normalize_to_list(matches)]
 
-    if not paths:
-        if required:
-            raise FileNotFoundError(f"No {resource_name} files found.")
+    if not paths and not required:
         return None
 
-    if len(paths) > 1:
-        logger.warning(
-            f"Multiple {resource_name} files detected; using first in list: "
-            f"{[get_rel_path(p) for p in paths]}"
-        )
-
-    return paths[0]
+    return require_one_file(
+        paths,
+        label=f"{resource_name} file",
+        configured_filename=configured_filename,
+        directories=directories,
+    )
 
 
 def _find_named_codebook_path(
@@ -76,26 +76,10 @@ def _find_named_codebook_path(
     if not filename:
         raise ValueError("codebook_filename must be non-empty.")
 
-    candidate = Path(filename).expanduser()
-    if candidate.is_absolute():
-        matches = [candidate] if candidate.exists() else []
-    else:
-        matches = []
-        for directory in normalize_to_list(directories):
-            root = Path(directory).expanduser()
-            if root.exists():
-                matches.extend(root.rglob(filename))
-
-    if not matches:
-        raise FileNotFoundError(
-            "Configured blind codebook file was not found. Check the "
-            f"codebook_filename setting in advanced.yaml: {filename!r}"
-        )
-
-    return _choose_first_match(
-        matches=matches,
-        resource_name="configured blind codebook",
-        required=True,
+    return find_one_matching_file(
+        directories=directories,
+        filename=filename,
+        label="configured blind codebook file",
     )
 
 
@@ -126,6 +110,7 @@ def _find_blind_codebook_path(
             matches=blind_codebook,
             resource_name="blind codebook",
             required=required,
+            directories=directories,
         )
 
     if str(codebook_filename or "").strip():
@@ -139,11 +124,16 @@ def _find_blind_codebook_path(
         directories=directories,
         search_base=search_base,
         search_ext=search_ext,
+        deduplicate=False,
     )
+    if not matches and not required:
+        return None
     return _choose_first_match(
         matches=matches,
         resource_name="blind codebook",
         required=required,
+        directories=directories,
+        configured_filename=f"{search_base}*{search_ext}",
     )
 
 

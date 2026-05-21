@@ -48,9 +48,9 @@ The reselection command reads the prior selection workbook:
 
 ### Sheet: reselected_reliability
 
-| file | file_ext | file_dir | participant_id | stimulus | timepoint | selected_for_reliability |
-| --- | --- | --- | --- | --- | --- | --- |
-| P1_picnic_post | .cha | input/chat | P1 | picnic | post | 1 |
+| sample_id | file | file_ext | file_dir | input_order | shuffled_order | participant_id | stimulus | timepoint | selected_for_reliability |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S001 | P1_picnic_post | .cha | input/chat | 1 |  | P1 | picnic | post | 1 |
 
 ## Notes
 

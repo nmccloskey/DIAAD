@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.coding.utils.rates import (
     read_speaking_time_table,
     merge_speaking_time,
@@ -51,7 +51,7 @@ def read_word_count_sample_summary(
     Parameters
     ----------
     wc_samples_file : str | Path | None
-        Exact file path, or filename/base pattern to search for.
+        Exact file path or filename to search for.
         If None, defaults to DEFAULT_WC_SAMPLES_FILE.
     directories : Path | str | list[Path | str] | None
         Directories to search.
@@ -63,29 +63,11 @@ def read_word_count_sample_summary(
     """
     wc_samples_file = wc_samples_file or DEFAULT_WC_SAMPLES_FILE
 
-    candidate_path = Path(wc_samples_file)
-    if candidate_path.exists():
-        matches = [candidate_path]
-    else:
-        search_base = Path(wc_samples_file).stem
-        matches = find_matching_files(
-            directories=directories,
-            search_base=search_base,
-            search_ext=".xlsx",
-        )
-
-    if not matches:
-        raise FileNotFoundError(
-            f"No word-count sample summary file found matching: {wc_samples_file}"
-        )
-
-    if len(matches) > 1:
-        logger.warning(
-            "Multiple word-count sample summary files detected; "
-            f"using first in list: {get_rel_path(matches[0])}"
-        )
-
-    path = Path(matches[0])
+    path = find_one_matching_file(
+        directories=directories,
+        filename=wc_samples_file,
+        label="word-count sample summary file",
+    )
 
     try:
         df = pd.read_excel(path)

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 
@@ -278,8 +278,7 @@ def analyze_word_counts(
 
     Behavior
     --------
-    - Finds the word-count coding workbook.
-    - If multiple are found, warns and uses only the first returned file.
+    - Finds exactly one word-count coding workbook by exact filename.
     - Coerces the configured word-count field to numeric.
     - Treats non-numeric / neutral entries (e.g., 'NA') as missing.
     - Writes:
@@ -297,28 +296,11 @@ def analyze_word_counts(
     wc_analysis_dir = Path(output_dir) / "word_count_analysis"
     wc_analysis_dir.mkdir(parents=True, exist_ok=True)
 
-    candidate_path = Path(word_count_file)
-    if candidate_path.exists():
-        coding_files = [candidate_path]
-    else:
-        search_base = Path(word_count_file).stem
-        coding_files = find_matching_files(
-            directories=[input_dir, output_dir],
-            search_base=search_base,
-            search_ext=".xlsx",
-        )
-
-    if not coding_files:
-        logger.warning("No word-count coding files found for analysis.")
-        return
-
-    if len(coding_files) > 1:
-        logger.warning(
-            "Multiple word-count coding files detected for analysis. "
-            f"Using only the first returned file: {get_rel_path(coding_files[0])}"
-        )
-
-    cod = Path(coding_files[0])
+    cod = find_one_matching_file(
+        directories=[input_dir, output_dir],
+        filename=word_count_file,
+        label="word-count coding file",
+    )
 
     try:
         wc_df = pd.read_excel(cod)

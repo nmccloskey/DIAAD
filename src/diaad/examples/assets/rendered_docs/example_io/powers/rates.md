@@ -40,8 +40,8 @@ output_dir: diaad_data/output
 ## Advanced Config
 
 ```yaml
-speaking_time_file: speaking_times.xlsx
-speaking_time_field: speaking_time
+speaking_time_filename: speaking_times.xlsx
+speaking_time_column: speaking_time
 ```
 
 ## Input Snippet

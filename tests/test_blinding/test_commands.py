@@ -25,7 +25,7 @@ def test_encode_blinding_generates_codebook_and_skips_missing_cols(tmp_path):
         input_dir,
         output_dir,
         blinding_config=AdvancedConfig(
-            blind_cols=["sample_id", "site", "test"],
+            blind_columns=["sample_id", "site", "test"],
         ),
         seed=1,
     )
@@ -83,7 +83,7 @@ def test_encode_blinding_uses_codebook_columns_when_codebook_exists(tmp_path):
     blinded_path, _, _ = encode_module.encode_blinding(
         input_dir,
         output_dir,
-        blinding_config=AdvancedConfig(blind_cols=["sample_id"]),
+        blinding_config=AdvancedConfig(blind_columns=["sample_id"]),
     )
 
     blinded_df = pd.read_excel(blinded_path)

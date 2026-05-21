@@ -238,7 +238,9 @@ class RunContext:
         return list(
             find_matching_files(
                 directories=[self.input_dir, self.out_dir],
-                search_base="transcript_tables",
+                filename="transcript_tables.xlsx",
+                match_mode="exact",
+                deduplicate=False,
             )
         )
 
@@ -487,9 +489,9 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "cu_samples_file": self.config.advanced.cu_samples_file,
-            "speaking_time_file": self.config.advanced.speaking_time_file,
-            "speaking_time_field": self.config.advanced.speaking_time_field,
+            "cu_samples_file": self.config.advanced.cu_samples_filename,
+            "speaking_time_file": self.config.advanced.speaking_time_filename,
+            "speaking_time_field": self.config.advanced.speaking_time_column,
             "sample_id_field": self.config.sample_id_field,
         }
 
@@ -533,8 +535,8 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "word_count_file": self.config.advanced.word_count_file,
-            "word_count_field": self.config.advanced.word_count_field,
+            "word_count_file": self.config.advanced.word_count_filename,
+            "word_count_field": self.config.advanced.word_count_column,
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
         }
@@ -546,9 +548,9 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "wc_samples_file": self.config.advanced.wc_samples_file,
-            "speaking_time_file": self.config.advanced.speaking_time_file,
-            "speaking_time_field": self.config.advanced.speaking_time_field,
+            "wc_samples_file": self.config.advanced.wc_samples_filename,
+            "speaking_time_file": self.config.advanced.speaking_time_filename,
+            "speaking_time_field": self.config.advanced.speaking_time_column,
             "sample_id_field": self.config.sample_id_field,
         }
 
@@ -679,8 +681,8 @@ class RunContext:
             "exclude_participants": self.exclude_participants,
             "automate_powers": self.automate_powers,
             "blinding_config": self.config.blinding,
-            "powers_coding_file": self.config.powers_coding_file,
-            "powers_reliability_file": self.config.powers_reliability_file,
+            "powers_coding_file": self.config.powers_coding_filename,
+            "powers_reliability_file": self.config.powers_reliability_filename,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
         }
@@ -689,7 +691,7 @@ class RunContext:
         """Return kwargs for POWERS analysis."""
         return {
             **self.kwargs_io(),
-            "powers_coding_file": self.config.powers_coding_file,
+            "powers_coding_file": self.config.powers_coding_filename,
             "sample_id_field": self.config.sample_id_field,
         }
 
@@ -698,8 +700,8 @@ class RunContext:
         return {
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "speaking_time_file": self.config.advanced.speaking_time_file,
-            "speaking_time_field": self.config.advanced.speaking_time_field,
+            "speaking_time_file": self.config.advanced.speaking_time_filename,
+            "speaking_time_field": self.config.advanced.speaking_time_column,
             "sample_id_field": self.config.sample_id_field,
         }
 
@@ -707,8 +709,8 @@ class RunContext:
         """Return kwargs for POWERS reliability evaluation."""
         return {
             **self.kwargs_io(),
-            "powers_coding_file": self.config.powers_coding_file,
-            "powers_reliability_file": self.config.powers_reliability_file,
+            "powers_coding_file": self.config.powers_coding_filename,
+            "powers_reliability_file": self.config.powers_reliability_filename,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
         }
@@ -722,7 +724,7 @@ class RunContext:
             "frac": self.reliability_fraction,
             "random_seed": self.random_seed,
             "automate_powers": self.automate_powers,
-            "powers_coding_file": self.config.powers_coding_file,
-            "powers_reliability_file": self.config.powers_reliability_file,
+            "powers_coding_file": self.config.powers_coding_filename,
+            "powers_reliability_file": self.config.powers_reliability_filename,
             "sample_id_field": self.config.sample_id_field,
         }

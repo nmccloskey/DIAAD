@@ -37,7 +37,7 @@ input_dir: diaad_data/input
 output_dir: diaad_data/output
 reliability_fraction: 0.34
 num_coders: 2
-stimulus_field: stimulus
+stimulus_column: stimulus
 exclude_participants:
 - INV
 ```
@@ -45,11 +45,11 @@ exclude_participants:
 ## Advanced Config
 
 ```yaml
-word_count_file: word_counting.xlsx
-word_count_field: word_count
+word_count_filename: word_counting.xlsx
+word_count_column: word_count
 metadata_source: transcript_tables
 auto_blind: true
-blind_cols:
+blind_columns:
 - sample_id
 ```
 

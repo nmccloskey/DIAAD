@@ -42,7 +42,7 @@ output_dir: diaad_data/output
 
 ```yaml
 auto_blind: true
-blind_cols:
+blind_columns:
 - sample_id
 metadata_source: transcript_tables
 codebook_filename: ''

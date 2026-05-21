@@ -10,7 +10,7 @@ import pandas as pd
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import assign_coders, resolve_stim_cols, segment
 from diaad.coding.utils.sampling import calc_subset_size
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.metadata.utils import validate_columns
 
@@ -170,22 +170,11 @@ def find_transcript_table(
     """
     Locate the transcript table workbook for template generation.
     """
-    transcript_tables = find_matching_files(
+    return find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="transcript_tables",
+        filename="transcript_tables.xlsx",
+        label="transcript table file",
     )
-
-    if not transcript_tables:
-        logger.error("No transcript_tables file found.")
-        return None
-
-    if len(transcript_tables) > 1:
-        logger.warning(
-            "Multiple transcript tables detected. "
-            f"Processing only the first returned file: {get_rel_path(transcript_tables[0])}"
-        )
-
-    return transcript_tables[0]
 
 
 def resolve_template_coder_ids(num_coders: int) -> list[str]:

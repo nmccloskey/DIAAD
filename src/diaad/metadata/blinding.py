@@ -240,7 +240,7 @@ def validate_blind_codebook_compatibility(
     blind_cols = list(dict.fromkeys(blind_cols))
 
     if not blind_cols:
-        raise ValueError("blind_cols must contain at least one column name.")
+        raise ValueError("blind_columns must contain at least one column name.")
 
     required_codebook_cols = ["column", "raw_value", "blind_code"]
     missing_codebook_cols = [c for c in required_codebook_cols if c not in codebook_df.columns]
@@ -394,7 +394,7 @@ def blind_analysis_dataframe(
     Returns
     -------
     blinded_df
-        Analysis dataframe with original blind_cols removed and
+        Analysis dataframe with original blind_columns removed and
         '{col}_blinded' columns retained.
     diagnostics_df
         Diagnostic dataframe containing join keys, original blind columns,
@@ -404,7 +404,7 @@ def blind_analysis_dataframe(
     """
     blind_cols = list(dict.fromkeys(config.get_blind_cols("analysis") or []))
     if not blind_cols:
-        logger.warning("No blind_cols configured; returning dataframe unchanged.")
+        logger.warning("No blind_columns configured; returning dataframe unchanged.")
         return df.copy(), pd.DataFrame(), pd.DataFrame()
 
     working_metadata = metadata_df
@@ -532,20 +532,20 @@ def blind_file_identifiers(
     blind_cols = list(dict.fromkeys(config.get_blind_cols("coding") or []))
 
     if not blind_cols:
-        logger.warning("No blind_cols configured; returning dataframe unchanged.")
+        logger.warning("No blind_columns configured; returning dataframe unchanged.")
         return df.copy(), pd.DataFrame()
 
     missing_from_df = [c for c in blind_cols if c not in df.columns]
     if missing_from_df:
         logger.warning(
-            "Configured blind_cols not found in coding dataframe and will be "
+            "Configured blind_columns not found in coding dataframe and will be "
             "skipped: %s",
             missing_from_df,
         )
     blind_cols = present_cols(df, blind_cols)
     if not blind_cols:
         logger.warning(
-            "No configured blind_cols are present in coding dataframe; returning "
+            "No configured blind_columns are present in coding dataframe; returning "
             "dataframe unchanged."
         )
         return df.copy(), pd.DataFrame()

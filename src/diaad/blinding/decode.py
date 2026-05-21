@@ -7,6 +7,7 @@ import pandas as pd
 from psair.core.logger import get_rel_path, logger
 
 from diaad.core.config import AdvancedConfig
+from diaad.metadata.discovery import find_one_matching_file, require_one_file
 from diaad.metadata.unblinding import unblind_dataframe, validate_decode_codebook
 from diaad.metadata.utils import normalize_to_list
 
@@ -18,23 +19,14 @@ def _read_xlsx(path: str | Path) -> pd.DataFrame:
     return pd.read_excel(path)
 
 
-def _choose_first_path(matches, *, resource_name: str) -> Path:
+def _choose_first_path(matches, *, resource_name: str, directories=None) -> Path:
     paths = [Path(p) for p in normalize_to_list(matches)]
 
-    if not paths:
-        raise FileNotFoundError(
-            f"No {resource_name} file found. Please provide one in the input directory."
-        )
-
-    if len(paths) > 1:
-        logger.warning(
-            "Multiple %s files found; using %s. All matches: %s",
-            resource_name,
-            get_rel_path(paths[0]),
-            [get_rel_path(p) for p in paths],
-        )
-
-    return paths[0]
+    return require_one_file(
+        paths,
+        label=f"{resource_name} file",
+        directories=directories,
+    )
 
 
 def _find_blind_codebook(input_dir: str | Path) -> Path:
@@ -46,27 +38,16 @@ def _find_blind_codebook(input_dir: str | Path) -> Path:
     return _choose_first_path(
         matches,
         resource_name="blind codebook",
+        directories=input_dir,
     )
 
 
 def _find_named_codebook(input_dir: str | Path, codebook_filename: str) -> Path:
     filename = str(codebook_filename or "").strip()
-    candidate = Path(filename).expanduser()
-
-    if candidate.is_absolute():
-        matches = [candidate] if candidate.exists() else []
-    else:
-        matches = list(Path(input_dir).rglob(filename))
-
-    if not matches:
-        raise FileNotFoundError(
-            "Configured blind codebook file was not found. Check the "
-            f"codebook_filename setting in advanced.yaml: {filename!r}"
-        )
-
-    return _choose_first_path(
-        matches,
-        resource_name="configured blind codebook",
+    return find_one_matching_file(
+        directories=input_dir,
+        filename=filename,
+        label="configured blind codebook file",
     )
 
 
@@ -86,6 +67,7 @@ def _find_target_xlsx(
     return _choose_first_path(
         target_matches,
         resource_name="non-blind-codebook xlsx",
+        directories=input_dir,
     )
 
 

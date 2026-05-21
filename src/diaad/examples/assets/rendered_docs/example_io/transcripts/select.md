@@ -72,18 +72,18 @@ The command uses the synthetic CHAT files in `diaad_data/input/chat/`.
 
 ### Sheet: reliability_selection
 
-| file | file_ext | file_dir | participant_id | stimulus | timepoint |
-| --- | --- | --- | --- | --- | --- |
-| P1_picnic_pre | .cha | input/chat | P1 | picnic | pre |
-| P2_picnic_pre | .cha | input/chat | P2 | picnic | pre |
+| sample_id | file | file_ext | file_dir | input_order | shuffled_order | participant_id | stimulus | timepoint |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S002 | P1_picnic_pre | .cha | input/chat | 2 |  | P1 | picnic | pre |
+| S003 | P2_picnic_pre | .cha | input/chat | 3 |  | P2 | picnic | pre |
 
 ### Sheet: all_transcripts
 
-| file | file_ext | file_dir | participant_id | stimulus | timepoint | selected_for_reliability |
-| --- | --- | --- | --- | --- | --- | --- |
-| P1_picnic_post | .cha | input/chat | P1 | picnic | post | 0 |
-| P1_picnic_pre | .cha | input/chat | P1 | picnic | pre | 1 |
-| P2_picnic_pre | .cha | input/chat | P2 | picnic | pre | 1 |
+| sample_id | file | file_ext | file_dir | input_order | shuffled_order | participant_id | stimulus | timepoint | selected_for_reliability |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S001 | P1_picnic_post | .cha | input/chat | 1 |  | P1 | picnic | post | 0 |
+| S002 | P1_picnic_pre | .cha | input/chat | 2 |  | P1 | picnic | pre | 1 |
+| S003 | P2_picnic_pre | .cha | input/chat | 3 |  | P2 | picnic | pre | 1 |
 
 ## Notes
 

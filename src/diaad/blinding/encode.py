@@ -8,6 +8,7 @@ import pandas as pd
 from psair.core.logger import get_rel_path, logger
 
 from diaad.core.config import AdvancedConfig
+from diaad.metadata.discovery import find_one_matching_file, require_one_file
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.utils import normalize_to_list, present_cols, validate_columns
 
@@ -24,23 +25,18 @@ def _choose_first_path(
     *,
     resource_name: str,
     required: bool = False,
+    directories=None,
 ) -> Path | None:
     paths = [Path(p) for p in normalize_to_list(matches)]
 
-    if not paths:
-        if required:
-            raise FileNotFoundError(f"No {resource_name} file found.")
+    if not paths and not required:
         return None
 
-    if len(paths) > 1:
-        logger.warning(
-            "Multiple %s files found; using %s. All matches: %s",
-            resource_name,
-            get_rel_path(paths[0]),
-            [get_rel_path(p) for p in paths],
-        )
-
-    return paths[0]
+    return require_one_file(
+        paths,
+        label=f"{resource_name} file",
+        directories=directories,
+    )
 
 
 def _find_blind_codebook(input_dir: str | Path) -> Path | None:
@@ -49,10 +45,13 @@ def _find_blind_codebook(input_dir: str | Path) -> Path | None:
         for p in sorted(Path(input_dir).rglob("*.xlsx"))
         if "blind_codebook" in p.stem.lower() and not p.name.startswith("~$")
     ]
+    if not matches:
+        return None
     return _choose_first_path(
         matches,
         resource_name="blind codebook",
         required=False,
+        directories=input_dir,
     )
 
 
@@ -74,6 +73,7 @@ def _find_target_xlsx(
         target_matches,
         resource_name="non-blind-codebook xlsx",
         required=True,
+        directories=input_dir,
     )
 
 
@@ -105,7 +105,7 @@ def _config_for_present_analysis_cols(
     logger.info("Applying blinding to column(s): %s", available_cols)
     return replace(
         config,
-        blind_cols=available_cols,
+        blind_columns=available_cols,
     )
 
 
@@ -116,23 +116,10 @@ def _codebook_target_cols(codebook_df: pd.DataFrame) -> list[str]:
 
 def _find_named_codebook(input_dir: str | Path, codebook_filename: str) -> Path:
     filename = str(codebook_filename or "").strip()
-    candidate = Path(filename).expanduser()
-
-    if candidate.is_absolute():
-        matches = [candidate] if candidate.exists() else []
-    else:
-        matches = list(Path(input_dir).rglob(filename))
-
-    if not matches:
-        raise FileNotFoundError(
-            "Configured blind codebook file was not found. Check the "
-            f"codebook_filename setting in advanced.yaml: {filename!r}"
-        )
-
-    return _choose_first_path(
-        matches,
-        resource_name="configured blind codebook",
-        required=True,
+    return find_one_matching_file(
+        directories=input_dir,
+        filename=filename,
+        label="configured blind codebook file",
     )
 
 
@@ -178,7 +165,7 @@ def encode_blinding(
             target_df,
             blinding_config,
             blinding_config.get_blind_cols("analysis") or [],
-            source_name="configured blind_cols",
+            source_name="configured blind_columns",
         )
     else:
         logger.info("Using blind codebook: %s", get_rel_path(codebook_path))

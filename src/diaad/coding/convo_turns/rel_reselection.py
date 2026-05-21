@@ -6,6 +6,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 from psair.core.logger import logger
+from diaad.metadata.discovery import require_one_file
 from diaad.coding.utils.reselection_utils import (
     discover_reliability_pairs,
     load_original_and_reliability,
@@ -36,14 +37,15 @@ def _discover_turn_pairs(metadata_fields, input_dir: Path) -> dict[Path, list[Pa
     if not coding_files or not rel_files:
         return pairs
 
-    if len(coding_files) > 1:
-        logger.warning(
-            "[TURNS] Multiple conversation turns coding files detected during fallback pairing. "
-            "Using the first returned file only."
-        )
+    coding_file = require_one_file(
+        coding_files,
+        label="conversation turns coding file",
+        configured_filename="conversation_turns_template.xlsx",
+        directories=input_dir,
+    )
 
     logger.info("[TURNS] Falling back to filename-based pairing for turns reselection.")
-    return {coding_files[0]: rel_files}
+    return {coding_file: rel_files}
 
 
 def _build_turns_reliability_frame(

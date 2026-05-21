@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 
 
 # ---------------------------------------------------------------------
@@ -72,7 +72,7 @@ def read_speaking_time_table(
     Parameters
     ----------
     speaking_time_file : str | Path | None
-        Exact file path, or filename/base pattern to search for.
+        Exact file path or filename to search for.
         If None, defaults to DEFAULT_SPEAKING_TIME_FILE.
     speaking_time_field : str
         Name of the speaking time column in the file.
@@ -89,29 +89,11 @@ def read_speaking_time_table(
     """
     speaking_time_file = speaking_time_file or DEFAULT_SPEAKING_TIME_FILE
 
-    candidate_path = Path(speaking_time_file)
-    if candidate_path.exists():
-        matches = [candidate_path]
-    else:
-        search_base = Path(speaking_time_file).stem
-        matches = find_matching_files(
-            directories=directories,
-            search_base=search_base,
-            search_ext=".xlsx",
-        )
-
-    if not matches:
-        raise FileNotFoundError(
-            f"No speaking time file found matching: {speaking_time_file}"
-        )
-
-    if len(matches) > 1:
-        logger.warning(
-            "Multiple speaking time files detected; "
-            f"using first in list: {get_rel_path(matches[0])}"
-        )
-
-    path = Path(matches[0])
+    path = find_one_matching_file(
+        directories=directories,
+        filename=speaking_time_file,
+        label="speaking time file",
+    )
 
     try:
         df = pd.read_excel(path)

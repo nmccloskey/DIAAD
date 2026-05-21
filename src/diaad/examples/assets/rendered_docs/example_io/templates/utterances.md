@@ -38,14 +38,14 @@ output_dir: diaad_data/output
 reliability_fraction: 0.34
 num_bins: 2
 num_coders: 2
-stimulus_field: stimulus
+stimulus_column: stimulus
 ```
 
 ## Advanced Config
 
 ```yaml
 auto_blind: true
-blind_cols:
+blind_columns:
 - sample_id
 metadata_source: transcript_tables
 codebook_filename: ''

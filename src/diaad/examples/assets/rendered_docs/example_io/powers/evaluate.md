@@ -73,10 +73,10 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx` and `diaad
 
 ### Sheet: categorical_summary
 
-| metric | paired_utterances | percent_agreement | kappa |
-| --- | --- | --- | --- |
-| turn_type | 14 | 57.1 | 0.3333 |
-| collab_repair | 14 | 78.6 | 0.2759 |
+| metric | paired_utterances | percent_agreement | kappa | org_var | rel_var | pooled_var |
+| --- | --- | --- | --- | --- | --- | --- |
+| turn_type | 14 | 57.1 | 0.3333 | 1.3022 | 1.3626 | 1.3324 |
+| collab_repair | 14 | 78.6 | 0.2759 | 0.1813 | 0.1319 | 0.1566 |
 
 `expected_outputs/powers_module/powers_evaluate/powers_reliability_report.txt`
 
@@ -85,14 +85,14 @@ POWERS Reliability Report
 
 Source reliability file: powers_reliability_coding.xlsx
 
+Coverage in primary coding file
+--------------------------------
+Samples represented: 2/3 (66.7%)
+Utterances represented: 14/21 (66.7%)
+
 Paired utterances: 14
 
 Note: ICC(2,1) is variance-sensitive. Sparse or low-variance count metrics may show low ICC values despite high exact agreement or small absolute differences. For flagged metrics, interpret ICC alongside agreement and distribution diagnostics.
-
-Continuous metrics
-------------------
-speech_units: n=14, mean_abs_diff=0.5, mean_perc_diff=33.335%, mean_perc_sim=66.665%, exact_agreement=50.0%, within_1_count=100.0%, ICC(2,1)=-0.0
-content_words: n=14, mean_abs_diff=0.214, mean_perc_diff=4.926%, mean_perc_sim=95.074%, exact_agreement=78.571%, within_1_count=100.0%, ICC(2,1)=0.9781
 ```
 
 ## Notes

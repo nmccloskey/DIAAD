@@ -25,9 +25,9 @@ def test_parser_accepts_batch_config_overrides() -> None:
             "--output-dir",
             "data/output/siteA",
             "--set",
-            "powers_coding_file=siteA_powers.xlsx",
+            "powers_coding_filename=siteA_powers.xlsx",
             "--set",
-            "powers_reliability_file=siteA_powers_rel.xlsx",
+            "powers_reliability_filename=siteA_powers_rel.xlsx",
             "--dry-run-config",
         ]
     )
@@ -37,7 +37,7 @@ def test_parser_accepts_batch_config_overrides() -> None:
     assert args.input_dir == "data/input/siteA"
     assert args.output_dir == "data/output/siteA"
     assert args.set_values == [
-        "powers_coding_file=siteA_powers.xlsx",
-        "powers_reliability_file=siteA_powers_rel.xlsx",
+        "powers_coding_filename=siteA_powers.xlsx",
+        "powers_reliability_filename=siteA_powers_rel.xlsx",
     ]
     assert args.dry_run_config is True

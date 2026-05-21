@@ -568,7 +568,7 @@ def _write_expected_utterance_templates(
             output_dir=output_dir,
             frac=specs["project_config"].get("reliability_fraction", 0.34),
             num_coders=specs["project_config"].get("num_coders", 0),
-            stimulus_field=specs["project_config"].get("stimulus_field", ""),
+            stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
         )
@@ -608,7 +608,7 @@ def _write_expected_sample_templates(
             frac=specs["project_config"].get("reliability_fraction", 0.34),
             num_bins=specs["project_config"].get("num_bins", 2),
             num_coders=specs["project_config"].get("num_coders", 0),
-            stimulus_field=specs["project_config"].get("stimulus_field", ""),
+            stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
         )
@@ -653,9 +653,7 @@ def _write_expected_time_templates(
 def _blinding_command_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig:
     return AdvancedConfig(
         auto_blind=True,
-        blind_cols=["sample_id"],
-        coding_blind_cols=["sample_id"],
-        analysis_blind_cols=["sample_id"],
+        blind_columns=["sample_id"],
         metadata_source=specs["advanced_config"].get("metadata_source", "transcript_tables"),
     )
 
@@ -794,7 +792,7 @@ def _write_expected_cu_files(
             output_dir=output_dir,
             cu_paradigms=specs["advanced_config"].get("cu_paradigms", []),
             exclude_participants=specs["project_config"].get("exclude_participants", []),
-            stimulus_field=specs["project_config"].get("stimulus_field", ""),
+            stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_cu_blinding_config(specs),
         )
         source = output_dir / "cu_coding"
@@ -906,7 +904,7 @@ def _write_expected_cu_rates(
     cu_summary_input = (
         input_dir
         / "cu_coding_analysis"
-        / specs["advanced_config"].get("cu_samples_file", "cu_coding_by_sample_long.xlsx")
+        / specs["advanced_config"].get("cu_samples_filename", "cu_coding_by_sample_long.xlsx")
     )
     cu_analysis_codebook = input_dir / "cu_coding_analysis" / "cu_analysis_blind_codebook.xlsx"
     if cu_summary_input.exists() and cu_analysis_codebook.exists():
@@ -931,15 +929,15 @@ def _write_expected_cu_rates(
             input_dir=input_dir,
             output_dir=tmpdir,
             cu_samples_file=specs["advanced_config"].get(
-                "cu_samples_file",
+                "cu_samples_filename",
                 "cu_coding_by_sample_long.xlsx",
             ),
             speaking_time_file=specs["advanced_config"].get(
-                "speaking_time_file",
+                "speaking_time_filename",
                 "speaking_times.xlsx",
             ),
             speaking_time_field=specs["advanced_config"].get(
-                "speaking_time_field",
+                "speaking_time_column",
                 "speaking_time",
             ),
         )
@@ -1072,8 +1070,8 @@ def _write_expected_word_analysis(
         analyze_word_counts(
             input_dir=input_dir,
             output_dir=tmpdir,
-            word_count_file=specs["advanced_config"].get("word_count_file", "word_counting.xlsx"),
-            word_count_field=specs["advanced_config"].get("word_count_field", "word_count"),
+            word_count_file=specs["advanced_config"].get("word_count_filename", "word_counting.xlsx"),
+            word_count_field=specs["advanced_config"].get("word_count_column", "word_count"),
             blinding_config=_word_blinding_config(specs),
         )
         _replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
@@ -1117,7 +1115,7 @@ def _write_expected_word_rates(
     wc_summary_input = (
         input_dir
         / "word_count_analysis"
-        / specs["advanced_config"].get("wc_samples_file", "word_counting_by_sample.xlsx")
+        / specs["advanced_config"].get("wc_samples_filename", "word_counting_by_sample.xlsx")
     )
     wc_analysis_codebook = (
         input_dir / "word_count_analysis" / "word_count_analysis_blind_codebook.xlsx"
@@ -1144,15 +1142,15 @@ def _write_expected_word_rates(
             input_dir=input_dir,
             output_dir=tmpdir,
             wc_samples_file=specs["advanced_config"].get(
-                "wc_samples_file",
+                "wc_samples_filename",
                 "word_counting_by_sample.xlsx",
             ),
             speaking_time_file=specs["advanced_config"].get(
-                "speaking_time_file",
+                "speaking_time_filename",
                 "speaking_times.xlsx",
             ),
             speaking_time_field=specs["advanced_config"].get(
-                "speaking_time_field",
+                "speaking_time_column",
                 "speaking_time",
             ),
         )
@@ -1403,11 +1401,11 @@ def _write_expected_powers_rates(
             input_dir=input_dir,
             output_dir=tmpdir,
             speaking_time_file=specs["advanced_config"].get(
-                "speaking_time_file",
+                "speaking_time_filename",
                 "speaking_times.xlsx",
             ),
             speaking_time_field=specs["advanced_config"].get(
-                "speaking_time_field",
+                "speaking_time_column",
                 "speaking_time",
             ),
         )
@@ -1565,7 +1563,7 @@ def _write_expected_vocab_analysis(
             input_dir=input_dir,
             output_dir=tmpdir,
             exclude_participants=specs["project_config"].get("exclude_participants", []),
-            stimulus_field=specs["project_config"].get("stimulus_field", "stimulus"),
+            stimulus_field=specs["project_config"].get("stimulus_column", "stimulus"),
             resource_path=resource_path,
         )
         output_dir = tmpdir / "target_vocab"

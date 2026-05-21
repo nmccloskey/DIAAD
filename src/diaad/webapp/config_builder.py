@@ -222,7 +222,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "Number of coders to assign in coding template workflows.",
             },
             {
-                "name": "stimulus_field",
+                "name": "stimulus_column",
                 "label": "Stimulus field",
                 "default": "narrative",
                 "help": "Column containing the elicitation stimulus / narrative label.",
@@ -244,13 +244,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
         "Unique identifiers",
         [
             {
-                "name": "sample_id_field",
+                "name": "sample_id_column",
                 "label": "Sample ID column",
                 "default": "sample_id",
                 "help": "Column DIAAD should use as the sample-level identifier where supported.",
             },
             {
-                "name": "utterance_id_field",
+                "name": "utterance_id_column",
                 "label": "Utterance ID column",
                 "default": "utterance_id",
                 "help": "Column DIAAD should use as the utterance-level identifier where supported.",
@@ -285,13 +285,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "Complete Utterance paradigms to include. Leave empty to use no paradigm-specific expansion.",
             },
             {
-                "name": "cu_samples_file",
+                "name": "cu_samples_filename",
                 "label": "CU sample-level coding file name",
                 "default": "cu_coding_by_sample_long.xlsx",
                 "help": "Expected CU sample-level coding file name.",
             },
             {
-                "name": "cu_utts_file",
+                "name": "cu_utts_filename",
                 "label": "CU utterance-level coding file name",
                 "default": "cu_coding_by_utterance.xlsx",
                 "help": "Expected CU utterance-level coding file name.",
@@ -302,19 +302,19 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
         "Word counting",
         [
             {
-                "name": "word_count_file",
+                "name": "word_count_filename",
                 "label": "Word-count coding file name",
                 "default": "word_counting.xlsx",
                 "help": "Expected word-count coding file name.",
             },
             {
-                "name": "word_count_field",
+                "name": "word_count_column",
                 "label": "Word-count column",
                 "default": "word_count",
                 "help": "Column containing utterance-level word counts.",
             },
             {
-                "name": "wc_samples_file",
+                "name": "wc_samples_filename",
                 "label": "Word-count sample summary file name",
                 "default": "word_counting_by_sample.xlsx",
                 "help": "Expected word-count sample-level summary file name.",
@@ -325,13 +325,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
         "Rate analysis",
         [
             {
-                "name": "speaking_time_file",
+                "name": "speaking_time_filename",
                 "label": "Speaking-time file name",
                 "default": "speaking_times.xlsx",
                 "help": "File containing speaking-time values for rate calculations.",
             },
             {
-                "name": "speaking_time_field",
+                "name": "speaking_time_column",
                 "label": "Speaking-time column",
                 "default": "speaking_time",
                 "help": "Column containing speaking-time values.",
@@ -360,7 +360,7 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "If true, DIAAD automatically blinds applicable coding files and analysis outputs.",
             },
             {
-                "name": "blind_cols",
+                "name": "blind_columns",
                 "label": "Blind columns",
                 "type": "list",
                 "default": ["sample_id"],

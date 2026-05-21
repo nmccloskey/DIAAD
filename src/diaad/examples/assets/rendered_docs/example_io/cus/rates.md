@@ -40,9 +40,9 @@ output_dir: diaad_data/output
 ## Advanced Config
 
 ```yaml
-cu_samples_file: cu_coding_by_sample_long.xlsx
-speaking_time_file: speaking_times.xlsx
-speaking_time_field: speaking_time
+cu_samples_filename: cu_coding_by_sample_long.xlsx
+speaking_time_filename: speaking_times.xlsx
+speaking_time_column: speaking_time
 ```
 
 ## Input Snippet

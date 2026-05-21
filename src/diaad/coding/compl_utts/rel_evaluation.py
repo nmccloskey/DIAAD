@@ -7,7 +7,7 @@ from pingouin import intraclass_corr
 from sklearn.metrics import cohen_kappa_score
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
 from diaad.coding.utils.rel_eval_utils import (
     coverage_summary,
@@ -544,35 +544,16 @@ def evaluate_cu_reliability(
     cu_reliability_dir = Path(output_dir) / "cu_reliability"
     cu_reliability_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = find_matching_files(
+    cod = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="cu_coding",
+        filename="cu_coding.xlsx",
+        label="CU coding file",
     )
-    rel_files = find_matching_files(
+    rel = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="cu_reliability_coding",
+        filename="cu_reliability_coding.xlsx",
+        label="CU reliability coding file",
     )
-
-    if not coding_files:
-        logger.error("No CU coding file found.")
-        return
-    if not rel_files:
-        logger.error("No CU reliability coding file found.")
-        return
-
-    if len(coding_files) > 1:
-        logger.warning(
-            "Multiple CU coding files detected. "
-            f"Processing only the first returned file: {get_rel_path(coding_files[0])}"
-        )
-    if len(rel_files) > 1:
-        logger.warning(
-            "Multiple CU reliability coding files detected. "
-            f"Processing only the first returned file: {get_rel_path(rel_files[0])}"
-        )
-
-    cod = coding_files[0]
-    rel = rel_files[0]
 
     try:
         cu_coding = pd.read_excel(cod)

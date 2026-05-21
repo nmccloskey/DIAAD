@@ -48,7 +48,7 @@ class ProjectConfig:
 
     num_bins: int = 4
     num_coders: int = 0
-    stimulus_field: str = ""
+    stimulus_column: str = ""
     automate_powers: bool = True
 
     metadata_fields: dict[str, MetadataFieldSpec] | None = None
@@ -70,64 +70,47 @@ class ProjectConfig:
 class AdvancedConfig:
     """Normalized advanced configuration."""
 
-    sample_id_field: str = "sample_id"
-    utterance_id_field: str = "utterance_id"
+    sample_id_column: str = "sample_id"
+    utterance_id_column: str = "utterance_id"
 
     reliability_tag: str = "_reliability"
     reliability_dirname: str = "reliability"
 
     cu_paradigms: list[str] | None = None
-    cu_samples_file: str = "cu_coding_by_sample_long.xlsx"
-    cu_utts_file: str = "cu_coding_by_utterance.xlsx"
+    cu_samples_filename: str = "cu_coding_by_sample_long.xlsx"
+    cu_utts_filename: str = "cu_coding_by_utterance.xlsx"
 
-    word_count_file: str = "word_counting.xlsx"
-    word_count_field: str = "word_count"
-    wc_samples_file: str = "word_counting_by_sample.xlsx"
+    word_count_filename: str = "word_counting.xlsx"
+    word_count_column: str = "word_count"
+    wc_samples_filename: str = "word_counting_by_sample.xlsx"
 
-    speaking_time_file: str = "speaking_times.xlsx"
-    speaking_time_field: str = "speaking_time"
+    speaking_time_filename: str = "speaking_times.xlsx"
+    speaking_time_column: str = "speaking_time"
 
-    powers_coding_file: str = "powers_coding.xlsx"
-    powers_reliability_file: str = "powers_reliability_coding.xlsx"
+    powers_coding_filename: str = "powers_coding.xlsx"
+    powers_reliability_filename: str = "powers_reliability_coding.xlsx"
 
     target_vocabulary_resource_path: str = ""
 
     auto_blind: bool = False
-    blind_cols: list[str] | None = None
+    blind_columns: list[str] | None = None
     metadata_source: str = "transcript_tables"
     codebook_filename: str = ""
 
-    # Deprecated aliases retained so older config files and call sites still work.
-    coding_blind_cols: list[str] | None = None
-    analysis_blind_cols: list[str] | None = None
-
     def __post_init__(self) -> None:
-        sample_id_field = str(self.sample_id_field).strip()
-        utterance_id_field = str(self.utterance_id_field).strip()
-        if not sample_id_field:
-            raise ValueError("sample_id_field must be a non-empty string.")
-        if not utterance_id_field:
-            raise ValueError("utterance_id_field must be a non-empty string.")
-        object.__setattr__(self, "sample_id_field", sample_id_field)
-        object.__setattr__(self, "utterance_id_field", utterance_id_field)
+        sample_id_column = str(self.sample_id_column).strip()
+        utterance_id_column = str(self.utterance_id_column).strip()
+        if not sample_id_column:
+            raise ValueError("sample_id_column must be a non-empty string.")
+        if not utterance_id_column:
+            raise ValueError("utterance_id_column must be a non-empty string.")
+        object.__setattr__(self, "sample_id_column", sample_id_column)
+        object.__setattr__(self, "utterance_id_column", utterance_id_column)
         object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
-        configured_blind_cols = self.blind_cols
-        if configured_blind_cols is None:
-            configured_blind_cols = self.coding_blind_cols or self.analysis_blind_cols
         object.__setattr__(
             self,
-            "blind_cols",
-            list(configured_blind_cols or ["sample_id"]),
-        )
-        object.__setattr__(
-            self,
-            "coding_blind_cols",
-            list(self.blind_cols),
-        )
-        object.__setattr__(
-            self,
-            "analysis_blind_cols",
-            list(self.blind_cols),
+            "blind_columns",
+            list(self.blind_columns or ["sample_id"]),
         )
 
     @property
@@ -138,12 +121,68 @@ class AdvancedConfig:
     def get_blind_cols(self, mode: str) -> list[str]:
         """Return columns configured for a blinding mode."""
         if mode in {"coding", "analysis"}:
-            return self.blind_cols
+            return self.blind_columns
         raise ValueError(f"Unknown blinding mode: {mode}")
 
     def should_blind(self, mode: str) -> bool:
         """Return True when a blinding mode has configured columns."""
         return bool(self.auto_blind and self.get_blind_cols(mode))
+
+    @property
+    def sample_id_field(self) -> str:
+        return self.sample_id_column
+
+    @property
+    def utterance_id_field(self) -> str:
+        return self.utterance_id_column
+
+    @property
+    def blind_cols(self) -> list[str]:
+        return self.blind_columns
+
+    @property
+    def cu_samples_file(self) -> str:
+        return self.cu_samples_filename
+
+    @property
+    def cu_utts_file(self) -> str:
+        return self.cu_utts_filename
+
+    @property
+    def word_count_file(self) -> str:
+        return self.word_count_filename
+
+    @property
+    def word_count_field(self) -> str:
+        return self.word_count_column
+
+    @property
+    def wc_samples_file(self) -> str:
+        return self.wc_samples_filename
+
+    @property
+    def speaking_time_file(self) -> str:
+        return self.speaking_time_filename
+
+    @property
+    def speaking_time_field(self) -> str:
+        return self.speaking_time_column
+
+    @property
+    def powers_coding_file(self) -> str:
+        return self.powers_coding_filename
+
+    @property
+    def powers_reliability_file(self) -> str:
+        return self.powers_reliability_filename
+
+    @property
+    def coding_blind_cols(self) -> list[str]:
+        return self.blind_columns
+
+    @property
+    def analysis_blind_cols(self) -> list[str]:
+        return self.blind_columns
 
 
 # ------------------------------------------------------------------
@@ -258,7 +297,11 @@ class ConfigManager:
 
     @property
     def stimulus_field(self) -> str:
-        return self.project.stimulus_field
+        return self.project.stimulus_column
+
+    @property
+    def stimulus_column(self) -> str:
+        return self.project.stimulus_column
 
     @property
     def automate_powers(self) -> bool:
@@ -286,47 +329,91 @@ class ConfigManager:
 
     @property
     def cu_utts_file(self) -> str:
-        return self.advanced.cu_utts_file
+        return self.advanced.cu_utts_filename
+
+    @property
+    def cu_utts_filename(self) -> str:
+        return self.advanced.cu_utts_filename
 
     @property
     def cu_samples_file(self) -> str:
-        return self.advanced.cu_samples_file
+        return self.advanced.cu_samples_filename
+
+    @property
+    def cu_samples_filename(self) -> str:
+        return self.advanced.cu_samples_filename
 
     @property
     def word_count_file(self) -> str:
-        return self.advanced.word_count_file
+        return self.advanced.word_count_filename
+
+    @property
+    def word_count_filename(self) -> str:
+        return self.advanced.word_count_filename
 
     @property
     def word_count_field(self) -> str:
-        return self.advanced.word_count_field
+        return self.advanced.word_count_column
+
+    @property
+    def word_count_column(self) -> str:
+        return self.advanced.word_count_column
 
     @property
     def wc_samples_file(self) -> str:
-        return self.advanced.wc_samples_file
+        return self.advanced.wc_samples_filename
+
+    @property
+    def wc_samples_filename(self) -> str:
+        return self.advanced.wc_samples_filename
 
     @property
     def speaking_time_file(self) -> str:
-        return self.advanced.speaking_time_file
+        return self.advanced.speaking_time_filename
+
+    @property
+    def speaking_time_filename(self) -> str:
+        return self.advanced.speaking_time_filename
 
     @property
     def speaking_time_field(self) -> str:
-        return self.advanced.speaking_time_field
+        return self.advanced.speaking_time_column
+
+    @property
+    def speaking_time_column(self) -> str:
+        return self.advanced.speaking_time_column
 
     @property
     def sample_id_field(self) -> str:
-        return self.advanced.sample_id_field
+        return self.advanced.sample_id_column
+
+    @property
+    def sample_id_column(self) -> str:
+        return self.advanced.sample_id_column
 
     @property
     def utterance_id_field(self) -> str:
-        return self.advanced.utterance_id_field
+        return self.advanced.utterance_id_column
+
+    @property
+    def utterance_id_column(self) -> str:
+        return self.advanced.utterance_id_column
 
     @property
     def powers_coding_file(self) -> str:
-        return self.advanced.powers_coding_file
+        return self.advanced.powers_coding_filename
+
+    @property
+    def powers_coding_filename(self) -> str:
+        return self.advanced.powers_coding_filename
 
     @property
     def powers_reliability_file(self) -> str:
-        return self.advanced.powers_reliability_file
+        return self.advanced.powers_reliability_filename
+
+    @property
+    def powers_reliability_filename(self) -> str:
+        return self.advanced.powers_reliability_filename
 
     @property
     def metadata_fields_config(self) -> dict[str, Any]:
@@ -354,7 +441,11 @@ class ConfigManager:
 
     @property
     def blind_cols(self) -> list[str]:
-        return self.advanced.blind_cols
+        return self.advanced.blind_columns
+
+    @property
+    def blind_columns(self) -> list[str]:
+        return self.advanced.blind_columns
 
     @property
     def blinded_suffix(self) -> str:
@@ -405,30 +496,30 @@ class ConfigManager:
                 "auto_tabularize": project.auto_tabularize,
                 "num_bins": project.num_bins,
                 "num_coders": project.num_coders,
-                "stimulus_field": project.stimulus_field,
+                "stimulus_column": project.stimulus_column,
                 "automate_powers": project.automate_powers,
                 "metadata_fields": project.metadata_fields,
             },
             "advanced": {
-                "sample_id_field": advanced.sample_id_field,
-                "utterance_id_field": advanced.utterance_id_field,
+                "sample_id_column": advanced.sample_id_column,
+                "utterance_id_column": advanced.utterance_id_column,
                 "reliability_tag": advanced.reliability_tag,
                 "reliability_dirname": advanced.reliability_dirname,
                 "cu_paradigms": advanced.cu_paradigms,
-                "cu_samples_file": advanced.cu_samples_file,
-                "cu_utts_file": advanced.cu_utts_file,
-                "word_count_file": advanced.word_count_file,
-                "word_count_field": advanced.word_count_field,
-                "wc_samples_file": advanced.wc_samples_file,
-                "speaking_time_file": advanced.speaking_time_file,
-                "speaking_time_field": advanced.speaking_time_field,
-                "powers_coding_file": advanced.powers_coding_file,
-                "powers_reliability_file": advanced.powers_reliability_file,
+                "cu_samples_filename": advanced.cu_samples_filename,
+                "cu_utts_filename": advanced.cu_utts_filename,
+                "word_count_filename": advanced.word_count_filename,
+                "word_count_column": advanced.word_count_column,
+                "wc_samples_filename": advanced.wc_samples_filename,
+                "speaking_time_filename": advanced.speaking_time_filename,
+                "speaking_time_column": advanced.speaking_time_column,
+                "powers_coding_filename": advanced.powers_coding_filename,
+                "powers_reliability_filename": advanced.powers_reliability_filename,
                 "target_vocabulary_resource_path": (
                     advanced.target_vocabulary_resource_path
                 ),
                 "auto_blind": advanced.auto_blind,
-                "blind_cols": advanced.blind_cols,
+                "blind_columns": advanced.blind_columns,
                 "metadata_source": advanced.metadata_source,
                 "codebook_filename": advanced.codebook_filename,
             },
@@ -507,7 +598,7 @@ class ConfigManager:
             auto_tabularize=self._as_bool(data.get("auto_tabularize"), default=False),
             num_bins=self._as_int(data.get("num_bins"), default=4),
             num_coders=self._as_int(data.get("num_coders"), default=0),
-            stimulus_field=self._as_str(data.get("stimulus_field"), default=""),
+            stimulus_column=self._as_str(data.get("stimulus_column"), default=""),
             automate_powers=self._as_bool(data.get("automate_powers"), default=True),
             metadata_fields=self._parse_metadata_fields(data),
         )
@@ -523,12 +614,12 @@ class ConfigManager:
 
     def _parse_advanced(self, data: dict[str, Any]) -> AdvancedConfig:
         return AdvancedConfig(
-            sample_id_field=self._as_str(
-                data.get("sample_id_field"),
+            sample_id_column=self._as_str(
+                data.get("sample_id_column"),
                 default="sample_id",
             ),
-            utterance_id_field=self._as_str(
-                data.get("utterance_id_field"),
+            utterance_id_column=self._as_str(
+                data.get("utterance_id_column"),
                 default="utterance_id",
             ),
             reliability_tag=self._as_str(
@@ -540,40 +631,40 @@ class ConfigManager:
                 default="reliability",
             ),
             cu_paradigms=self._as_str_list(data.get("cu_paradigms"), default=[]),
-            cu_samples_file=self._as_str(
-                data.get("cu_samples_file"),
+            cu_samples_filename=self._as_str(
+                data.get("cu_samples_filename"),
                 default="cu_coding_by_sample_long.xlsx",
             ),
-            cu_utts_file=self._as_str(
-                data.get("cu_utts_file"),
+            cu_utts_filename=self._as_str(
+                data.get("cu_utts_filename"),
                 default="cu_coding_by_utterance.xlsx",
             ),
-            word_count_file=self._as_str(
-                data.get("word_count_file"),
+            word_count_filename=self._as_str(
+                data.get("word_count_filename"),
                 default="word_counting.xlsx",
             ),
-            word_count_field=self._as_str(
-                data.get("word_count_field"),
+            word_count_column=self._as_str(
+                data.get("word_count_column"),
                 default="word_count",
             ),
-            wc_samples_file=self._as_str(
-                data.get("wc_samples_file"),
+            wc_samples_filename=self._as_str(
+                data.get("wc_samples_filename"),
                 default="word_counting_by_sample.xlsx",
             ),
-            speaking_time_file=self._as_str(
-                data.get("speaking_time_file"),
+            speaking_time_filename=self._as_str(
+                data.get("speaking_time_filename"),
                 default="speaking_times.xlsx",
             ),
-            speaking_time_field=self._as_str(
-                data.get("speaking_time_field"),
+            speaking_time_column=self._as_str(
+                data.get("speaking_time_column"),
                 default="speaking_time",
             ),
-            powers_coding_file=self._as_str(
-                data.get("powers_coding_file"),
+            powers_coding_filename=self._as_str(
+                data.get("powers_coding_filename"),
                 default="powers_coding.xlsx",
             ),
-            powers_reliability_file=self._as_str(
-                data.get("powers_reliability_file"),
+            powers_reliability_filename=self._as_str(
+                data.get("powers_reliability_filename"),
                 default="powers_reliability_coding.xlsx",
             ),
             target_vocabulary_resource_path=self._as_str(
@@ -585,18 +676,7 @@ class ConfigManager:
                 default="transcript_tables",
             ),
             auto_blind=self._as_bool(data.get("auto_blind"), default=False),
-            blind_cols=self._as_optional_str_list(
-                data.get(
-                    "blind_cols",
-                    data.get("coding_blind_cols", data.get("analysis_blind_cols")),
-                ),
-            ),
-            coding_blind_cols=self._as_optional_str_list(
-                data.get("coding_blind_cols"),
-            ),
-            analysis_blind_cols=self._as_optional_str_list(
-                data.get("analysis_blind_cols"),
-            ),
+            blind_columns=self._as_optional_str_list(data.get("blind_columns")),
             codebook_filename=self._as_str(
                 data.get("codebook_filename"),
                 default="",

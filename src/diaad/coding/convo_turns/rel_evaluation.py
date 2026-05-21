@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from psair.core.logger import get_rel_path, logger
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.coding.convo_turns.analysis import extract_turn_counts
 from diaad.coding.utils.rel_eval_utils import (
     calculate_icc_from_pingouin,
@@ -26,21 +26,6 @@ TURN_KEY_COLS = ["sample_id", "session", "bin"]
 
 def _turn_key_cols(sample_id_field: str = "sample_id") -> list[str]:
     return [sample_id_field, "session", "bin"]
-
-
-def _get_first_match(files: list[Path], label: str) -> Path | None:
-    """Return the first discovered file, warning if multiple were found."""
-    if not files:
-        logger.error(f"No {label} file found.")
-        return None
-
-    if len(files) > 1:
-        logger.warning(
-            f"Multiple {label} files detected. "
-            f"Using only the first returned file: {get_rel_path(files[0])}"
-        )
-
-    return files[0]
 
 
 def _normalize_turn_file(
@@ -367,19 +352,16 @@ def evaluate_digital_convo_turns_reliability(
     out_dir = Path(output_dir) / "turns_reliability"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = find_matching_files(
+    org_file = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="conversation_turns_template",
+        filename="conversation_turns_template.xlsx",
+        label="conversation turns coding file",
     )
-    rel_files = find_matching_files(
+    rel_file = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="conversation_turns_reliability",
+        filename="conversation_turns_reliability_template.xlsx",
+        label="conversation turns reliability file",
     )
-
-    org_file = _get_first_match(coding_files, "conversation turns coding")
-    rel_file = _get_first_match(rel_files, "conversation turns reliability")
-    if org_file is None or rel_file is None:
-        return
 
     try:
         org_df = _normalize_turn_file(

@@ -6,7 +6,7 @@ from typing import Optional
 
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils.sampling import calc_subset_size
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders, resolve_stim_cols
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
@@ -431,10 +431,6 @@ def make_cu_coding_files(
     frac == 0 means no reliability subset is generated.
     stimulus_field overrides legacy stimulus-column fallback behavior.
 
-    Transcript table selection
-    --------------------------
-    If multiple transcript tables are detected, only the first returned match is processed.
-
     Blinding
     --------
     Blinding is applied only at export time, after coder assignment and reliability
@@ -449,22 +445,11 @@ def make_cu_coding_files(
     if frac == 0:
         logger.info("frac=0 detected; no reliability subset will be generated.")
 
-    transcript_tables = find_matching_files(
+    transcript_table = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="transcript_tables",
+        filename="transcript_tables.xlsx",
+        label="transcript table file",
     )
-
-    if not transcript_tables:
-        logger.error("No transcript_tables file found.")
-        return
-
-    if len(transcript_tables) > 1:
-        logger.warning(
-            "Multiple transcript tables detected. "
-            f"Processing only the first returned file: {get_rel_path(transcript_tables[0])}"
-        )
-
-    transcript_table = transcript_tables[0]
 
     try:
         uttdf = extract_transcript_data(transcript_table)

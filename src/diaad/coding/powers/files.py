@@ -8,7 +8,7 @@ from pathlib import Path
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import segment
 from diaad.coding.utils.sampling import calc_subset_size
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.coding.powers.automation import run_automation
@@ -76,22 +76,11 @@ def _get_transcript_table(input_dir, output_dir) -> Path | None:
     """
     Locate the transcript table used to generate POWERS files.
     """
-    transcript_tables = find_matching_files(
+    return find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="transcript_tables",
+        filename="transcript_tables.xlsx",
+        label="transcript table file",
     )
-
-    if not transcript_tables:
-        logger.error("No transcript_tables file found.")
-        return None
-
-    if len(transcript_tables) > 1:
-        logger.warning(
-            "Multiple transcript tables detected. "
-            f"Processing only the first returned file: {get_rel_path(transcript_tables[0])}"
-        )
-
-    return transcript_tables[0]
 
 
 def _load_utterance_table(
@@ -443,7 +432,7 @@ def make_powers_coding_files(
     the same coder ID; for multiple coders, reliability rotates assignment
     to the next coder. Blinding, when enabled, is applied only at export.
 
-    If multiple transcript tables are found, only the first is processed.
+    DIAAD requires exactly one transcript_tables.xlsx file for this workflow.
     """
     powers_dir = Path(output_dir) / "powers_coding"
     powers_dir.mkdir(parents=True, exist_ok=True)

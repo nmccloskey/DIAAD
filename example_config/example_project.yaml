@@ -63,7 +63,7 @@ num_bins: 4
 num_coders: 3
 
 # Column containing the elicitation stimulus / narrative label.
-stimulus_field: narrative
+stimulus_column: narrative
 
 # If true, generate automated POWERS support where available.
 automate_powers: true

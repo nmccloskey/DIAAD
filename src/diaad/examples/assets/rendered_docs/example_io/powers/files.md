@@ -36,7 +36,7 @@ input_dir: diaad_data/input
 output_dir: diaad_data/output
 reliability_fraction: 0.34
 num_coders: 2
-stimulus_field: stimulus
+stimulus_column: stimulus
 exclude_participants:
 - INV
 automate_powers: false

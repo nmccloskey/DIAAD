@@ -71,13 +71,13 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx` and `diaad_data/in
 CU Reliability Coding Report
 Comparison mode: primary_vs_reliability
 
+Coverage in primary coding file
+--------------------------------
+Samples represented: 3/3 (100.0%)
+Utterances represented: 21/21 (100.0%)
+
 Primary reliability metrics
 ---------------------------
-
-Utterance-level categorical reliability
-SV: paired utterances=27, raw agreement=55.556, Cohen's kappa=-0.058824
-REL: paired utterances=27, raw agreement=51.852, Cohen's kappa=0.04878
-CU: paired utterances=27, raw agreement=59.259, Cohen's kappa=0.0
 ```
 
 ## Notes

@@ -42,7 +42,7 @@ metadata_fields:
   timepoint:
   - pre
   - post
-stimulus_field: stimulus
+stimulus_column: stimulus
 exclude_participants:
 - INV
 ```

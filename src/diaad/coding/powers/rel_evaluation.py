@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.metrics import cohen_kappa_score
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.coding.utils.rel_eval_utils import (
     calculate_icc_from_pingouin,
     categorical_variance_pair_stats,
@@ -39,21 +39,6 @@ LOW_VARIANCE_MAX_VALUE_PROP_THRESHOLD = 0.95
 SPARSE_NONZERO_EITHER_PCT_THRESHOLD = 5.0
 EXACT_AGREEMENT_TOLERANCE = 0.0
 NEAR_AGREEMENT_TOLERANCE = 1.0
-
-
-def _get_first_match(files: list[Path], label: str) -> Path | None:
-    """Return the first discovered file, warning if multiple were found."""
-    if not files:
-        logger.error(f"No {label} file found.")
-        return None
-
-    if len(files) > 1:
-        logger.warning(
-            f"Multiple {label} files detected. "
-            f"Using only the first returned file: {get_rel_path(files[0])}"
-        )
-
-    return files[0]
 
 
 def _read_powers_pair(org_file: Path, rel_file: Path) -> tuple[pd.DataFrame | None, pd.DataFrame | None]:
@@ -547,27 +532,24 @@ def evaluate_powers_reliability(
     """
     Evaluate POWERS reliability by comparing coding and reliability files.
 
-    Uses the first discovered powers_coding and powers_reliability_coding
-    files, merges on the configured sample and utterance IDs, computes row-level absolute
+    Uses exact configured powers_coding and powers_reliability_coding
+    filenames, merges on the configured sample and utterance IDs, computes row-level absolute
     and percent differences for continuous measures, computes ICC(2,1) where
     applicable, and computes agreement/kappa for categorical measures.
     """
     out_dir = Path(output_dir) / "powers_reliability"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = find_matching_files(
+    org_file = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base=Path(powers_coding_file).stem,
+        filename=powers_coding_file,
+        label="POWERS coding file",
     )
-    rel_files = find_matching_files(
+    rel_file = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base=Path(powers_reliability_file).stem,
+        filename=powers_reliability_file,
+        label="POWERS reliability file",
     )
-
-    org_file = _get_first_match(coding_files, "POWERS coding")
-    rel_file = _get_first_match(rel_files, "POWERS reliability")
-    if org_file is None or rel_file is None:
-        return
 
     org_df, rel_df = _read_powers_pair(org_file, rel_file)
     if org_df is None or rel_df is None:

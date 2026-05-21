@@ -42,7 +42,7 @@ random_seed: 99
 
 ```yaml
 auto_blind: true
-blind_cols:
+blind_columns:
 - sample_id
 ```
 

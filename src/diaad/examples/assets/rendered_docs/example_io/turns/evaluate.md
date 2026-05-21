@@ -109,16 +109,16 @@ Digital Conversation Turns Reliability Report
 
 Source reliability file: conversation_turns_reliability_template.xlsx
 
+Coverage in primary coding file
+--------------------------------
+Samples represented: 2/2 (100.0%)
+Session-bin rows represented: 6/6 (100.0%)
+
 Primary reliability metrics
 ---------------------------
 
 Count totals by participant within sample/session/bin
 Paired participant targets: 24
-Mean percent agreement: 62.5
-ICC(2,1): 0.2515
-
-Sequence consistency
---------------------
 ```
 
 ## Notes

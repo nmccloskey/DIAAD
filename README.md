@@ -75,7 +75,7 @@ These automated procedures are secondary to the architectural contribution and s
 ### Relational Database Model
 
 - Transcriptions are **tabularized with stable unique identifiers** at both document and utterance levels.
-- Identifier column names are configurable with `sample_id_field` and `utterance_id_field` for projects that need dataset-wide IDs such as treatment-cycle or site-expanded sample keys.
+- Identifier column names are configurable with `sample_id_column` and `utterance_id_column` for projects that need dataset-wide IDs such as treatment-cycle or site-expanded sample keys.
 - Transcript metadata are automatically extracted from filenames based on user-defined configuration, enabling hierarchical dataset organization.
 - Transcript content, metadata, and derived measurements are stored within a **unified relational database structure**, enabling:
 
@@ -455,11 +455,11 @@ diaad transcripts tabularize --config other_config.yaml
 Advanced identifier settings live in `advanced.yaml`:
 
 ```yaml
-sample_id_field: sample_id
-utterance_id_field: utterance_id
+sample_id_column: sample_id
+utterance_id_column: utterance_id
 ```
 
-These fields define the sample- and utterance-level identifiers used for transcript tables, coding workflows, rates, reliability joins, and blinding metadata recovery.
+These columns define the sample- and utterance-level identifiers used for transcript tables, coding workflows, rates, reliability joins, and blinding metadata recovery.
 
 ---
 

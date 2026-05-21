@@ -40,10 +40,10 @@ output_dir: diaad_data/output
 ## Advanced Config
 
 ```yaml
-word_count_file: word_counting.xlsx
-word_count_field: word_count
+word_count_filename: word_counting.xlsx
+word_count_column: word_count
 auto_blind: true
-blind_cols:
+blind_columns:
 - sample_id
 metadata_source: transcript_tables
 codebook_filename: ''

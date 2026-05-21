@@ -40,9 +40,9 @@ output_dir: diaad_data/output
 ## Advanced Config
 
 ```yaml
-wc_samples_file: word_counting_by_sample.xlsx
-speaking_time_file: speaking_times.xlsx
-speaking_time_field: speaking_time
+wc_samples_filename: word_counting_by_sample.xlsx
+speaking_time_filename: speaking_times.xlsx
+speaking_time_column: speaking_time
 ```
 
 ## Input Snippet

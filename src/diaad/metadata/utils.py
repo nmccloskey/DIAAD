@@ -5,6 +5,7 @@ import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import require_one_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 
@@ -56,14 +57,15 @@ def load_metadata_from_transcript_tables(
     ----------
     transcript_tables : Path | str | list[Path | str] | None
         Explicit transcript table path(s). If None, matching files are discovered
-        with ``find_matching_files(...)`` using ``search_base='transcript_tables'``.
+        with ``find_matching_files(...)`` using exact filename
+        ``transcript_tables.xlsx``.
     match_metadata_fields : list[str] | None
         Metadata values passed to ``find_matching_files`` when ``transcript_tables`` is None.
     directories : Path | str | list[Path | str] | None
         Directories passed to ``find_matching_files`` when ``transcript_tables`` is None.
     combine : bool, default True
         If True, load and concatenate all resolved transcript tables.
-        If False, warn when multiple are found and use only the first.
+        If False, require exactly one resolved transcript table.
     include_source_file : bool, default True
         If True, append a ``file`` column containing the source filename.
 
@@ -81,8 +83,9 @@ def load_metadata_from_transcript_tables(
         transcript_tables = find_matching_files(
             match_metadata_fields=match_metadata_fields,
             directories=directories,
-            search_base="transcript_tables",
-            search_ext=".xlsx",
+            filename="transcript_tables.xlsx",
+            match_mode="exact",
+            deduplicate=False,
         )
 
     transcript_tables = [Path(p) for p in normalize_to_list(transcript_tables)]
@@ -90,12 +93,15 @@ def load_metadata_from_transcript_tables(
     if not transcript_tables:
         raise FileNotFoundError("No transcript tables found for metadata resolution.")
 
-    if not combine and len(transcript_tables) > 1:
-        logger.warning(
-            "Multiple transcript tables detected for metadata resolution; "
-            f"using first in list: {get_rel_path(transcript_tables[0])}"
-        )
-        transcript_tables = [transcript_tables[0]]
+    if not combine:
+        transcript_tables = [
+            require_one_file(
+                transcript_tables,
+                label="transcript table file",
+                configured_filename="transcript_tables.xlsx",
+                directories=directories,
+            )
+        ]
 
     metadata_dfs = []
 

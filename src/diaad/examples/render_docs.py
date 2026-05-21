@@ -547,8 +547,8 @@ def _all_workbook_sheet_tables(path: Path) -> str:
 def _blinding_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
     data = specs["advanced_config"].copy()
     data["auto_blind"] = True
-    data["blind_cols"] = ["sample_id"]
-    return _preview_yaml(data, ["auto_blind", "blind_cols"])
+    data["blind_columns"] = ["sample_id"]
+    return _preview_yaml(data, ["auto_blind", "blind_columns"])
 
 
 def _blinding_encode_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
@@ -868,7 +868,7 @@ def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "reliability_fraction",
             "num_bins",
             "num_coders",
-            "stimulus_field",
+            "stimulus_column",
         ],
     )
 
@@ -876,7 +876,7 @@ def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 def _template_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
     return _preview_yaml(
         specs["advanced_config"],
-        ["auto_blind", "blind_cols", "metadata_source", "codebook_filename"],
+        ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"],
     )
 
 
@@ -1031,7 +1031,7 @@ def _cu_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "output_dir",
             "reliability_fraction",
             "num_coders",
-            "stimulus_field",
+            "stimulus_column",
             "exclude_participants",
         ],
     )
@@ -1040,7 +1040,7 @@ def _cu_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 def _cu_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
     return _preview_yaml(
         specs["advanced_config"],
-        ["cu_paradigms", "auto_blind", "blind_cols", "metadata_source", "codebook_filename"],
+        ["cu_paradigms", "auto_blind", "blind_columns", "metadata_source", "codebook_filename"],
     )
 
 
@@ -1193,7 +1193,7 @@ This example demonstrates how `diaad cus analyze` summarizes filled complete-utt
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_cols", "metadata_source", "codebook_filename"]), "yaml")}
+{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1240,7 +1240,7 @@ This example demonstrates how `diaad cus rates` combines CU sample summaries wit
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["cu_samples_file", "speaking_time_file", "speaking_time_field"]), "yaml")}
+{_fenced(_preview_yaml(specs["advanced_config"], ["cu_samples_filename", "speaking_time_filename", "speaking_time_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1266,7 +1266,7 @@ def _word_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "output_dir",
             "reliability_fraction",
             "num_coders",
-            "stimulus_field",
+            "stimulus_column",
             "exclude_participants",
         ],
     )
@@ -1277,11 +1277,11 @@ def _word_advanced_snippet(specs: dict[str, dict[str, Any]], keys: list[str] | N
         specs["advanced_config"],
         keys
         or [
-            "word_count_file",
-            "word_count_field",
+            "word_count_filename",
+            "word_count_column",
             "metadata_source",
             "auto_blind",
-            "blind_cols",
+            "blind_columns",
         ],
     )
 
@@ -1356,7 +1356,7 @@ This example demonstrates how `diaad words evaluate` compares primary word count
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["word_count_file", "word_count_field"]), "yaml")}
+{_fenced(_word_advanced_snippet(specs, ["word_count_filename", "word_count_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1434,7 +1434,7 @@ This example demonstrates how `diaad words analyze` summarizes filled word-count
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["word_count_file", "word_count_field", "auto_blind", "blind_cols", "metadata_source", "codebook_filename"]), "yaml")}
+{_fenced(_word_advanced_snippet(specs, ["word_count_filename", "word_count_column", "auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1477,7 +1477,7 @@ This example demonstrates how `diaad words rates` combines word-count sample sum
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["wc_samples_file", "speaking_time_file", "speaking_time_field"]), "yaml")}
+{_fenced(_word_advanced_snippet(specs, ["wc_samples_filename", "speaking_time_filename", "speaking_time_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1503,7 +1503,7 @@ def _powers_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "output_dir",
             "reliability_fraction",
             "num_coders",
-            "stimulus_field",
+            "stimulus_column",
             "exclude_participants",
             "automate_powers",
         ],
@@ -1681,7 +1681,7 @@ This example demonstrates how `diaad powers rates` combines POWERS dialog summar
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["speaking_time_file", "speaking_time_field"]), "yaml")}
+{_fenced(_preview_yaml(specs["advanced_config"], ["speaking_time_filename", "speaking_time_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1830,7 +1830,7 @@ This example demonstrates how `diaad vocab analyze` calculates target-vocabulary
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_field", "exclude_participants"]), "yaml")}
+{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_column", "exclude_participants"]), "yaml")}
 
 ## Advanced Config
 
@@ -1918,7 +1918,7 @@ This example demonstrates how `diaad turns files` creates blank digital conversa
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_cols", "metadata_source", "codebook_filename"]), "yaml")}
+{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 

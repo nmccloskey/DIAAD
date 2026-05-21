@@ -29,13 +29,13 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "metadata_fields": {"group": r"group\d+"},
         },
         advanced={
-            "sample_id_field": "expanded_sample_id",
-            "utterance_id_field": "expanded_utterance_id",
+            "sample_id_column": "expanded_sample_id",
+            "utterance_id_column": "expanded_utterance_id",
             "auto_blind": "true",
-            "blind_cols": ["sample_id", "speaker"],
+            "blind_columns": ["sample_id", "speaker"],
             "codebook_filename": "custom_codebook.xlsx",
-            "powers_coding_file": "custom_powers.xlsx",
-            "powers_reliability_file": "custom_powers_rel.xlsx",
+            "powers_coding_filename": "custom_powers.xlsx",
+            "powers_reliability_filename": "custom_powers_rel.xlsx",
         },
     )
 
@@ -51,15 +51,15 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.num_bins == 3
     assert config.num_coders == 2
     assert config.metadata_fields_config == {"tiers": {"group": r"group\d+"}}
-    assert config.sample_id_field == "expanded_sample_id"
-    assert config.utterance_id_field == "expanded_utterance_id"
+    assert config.sample_id_column == "expanded_sample_id"
+    assert config.utterance_id_column == "expanded_utterance_id"
     assert config.auto_blind is True
-    assert config.blind_cols == ["sample_id", "speaker"]
+    assert config.blind_columns == ["sample_id", "speaker"]
     assert config.coding_blind_cols == ["sample_id", "speaker"]
     assert config.analysis_blind_cols == ["sample_id", "speaker"]
     assert config.codebook_filename == "custom_codebook.xlsx"
-    assert config.powers_coding_file == "custom_powers.xlsx"
-    assert config.powers_reliability_file == "custom_powers_rel.xlsx"
+    assert config.powers_coding_filename == "custom_powers.xlsx"
+    assert config.powers_reliability_filename == "custom_powers_rel.xlsx"
     assert config.config_source["kind"] == "split_dir"
     assert config.config_source["defaults_applied"] is True
 
@@ -68,25 +68,25 @@ def test_config_manager_applies_overrides_and_records_diff(tmp_path):
     config_dir = _make_config_dir(
         tmp_path,
         project={"input_dir": "input", "output_dir": "output"},
-        advanced={"powers_coding_file": "powers_coding.xlsx"},
+        advanced={"powers_coding_filename": "powers_coding.xlsx"},
     )
 
     config = ConfigManager(
         config_dir,
         config_overrides={
             "project.input_dir": "input/siteA",
-            "advanced.powers_coding_file": "siteA_powers.xlsx",
+            "advanced.powers_coding_filename": "siteA_powers.xlsx",
         },
     )
 
     assert config.input_dir == "input/siteA"
-    assert config.powers_coding_file == "siteA_powers.xlsx"
+    assert config.powers_coding_filename == "siteA_powers.xlsx"
     assert config.override_diff["project.input_dir"] == {
         "source": "cli",
         "old": "input",
         "new": "input/siteA",
     }
-    assert config.override_diff["advanced.powers_coding_file"] == {
+    assert config.override_diff["advanced.powers_coding_filename"] == {
         "source": "cli",
         "old": "powers_coding.xlsx",
         "new": "siteA_powers.xlsx",
@@ -104,8 +104,8 @@ def test_config_manager_loads_nested_yaml_file(tmp_path):
                 "metadata_fields": {"site": ["AC", "BU"]},
             },
             "advanced": {
-                "sample_id_field": "sample",
-                "powers_coding_file": "nested_powers.xlsx",
+                "sample_id_column": "sample",
+                "powers_coding_filename": "nested_powers.xlsx",
             },
         },
     )
@@ -115,8 +115,8 @@ def test_config_manager_loads_nested_yaml_file(tmp_path):
     assert config.input_dir == "nested/input"
     assert config.output_dir == "nested/output"
     assert config.metadata_fields_config == {"tiers": {"site": ["AC", "BU"]}}
-    assert config.sample_id_field == "sample"
-    assert config.powers_coding_file == "nested_powers.xlsx"
+    assert config.sample_id_column == "sample"
+    assert config.powers_coding_filename == "nested_powers.xlsx"
     assert config.config_source["kind"] == "nested_file"
     assert config.config_source["path"] == str(config_path)
 
@@ -128,7 +128,7 @@ def test_config_manager_fills_missing_nested_sections_from_defaults(tmp_path):
     config = ConfigManager(config_path)
 
     assert config.input_dir == "only/project"
-    assert config.powers_coding_file == "powers_coding.xlsx"
+    assert config.powers_coding_filename == "powers_coding.xlsx"
     assert config.config_source["missing_sections"] == ["advanced"]
 
 
@@ -178,7 +178,7 @@ def test_packaged_default_config_parses_cleanly():
     config = ConfigManager(ConfigManager.default_config_path())
 
     assert config.to_dict()["project"]["input_dir"] == "diaad_data/input"
-    assert config.to_dict()["advanced"]["sample_id_field"] == "sample_id"
+    assert config.to_dict()["advanced"]["sample_id_column"] == "sample_id"
     assert config.override_diff == {}
 
 
@@ -199,7 +199,7 @@ def test_config_manager_defaults_do_not_auto_tabularize(tmp_path):
 
 
 def test_advanced_config_blinding_helpers():
-    advanced = AdvancedConfig(auto_blind=True, blind_cols=["sample_id"])
+    advanced = AdvancedConfig(auto_blind=True, blind_columns=["sample_id"])
 
     assert advanced.should_blind("coding") is True
     assert advanced.should_blind("analysis") is True
@@ -212,15 +212,15 @@ def test_advanced_config_blinding_helpers():
 def test_advanced_config_defaults_do_not_auto_blind():
     advanced = AdvancedConfig()
 
-    assert advanced.sample_id_field == "sample_id"
-    assert advanced.utterance_id_field == "utterance_id"
-    assert advanced.blind_cols == ["sample_id"]
+    assert advanced.sample_id_column == "sample_id"
+    assert advanced.utterance_id_column == "utterance_id"
+    assert advanced.blind_columns == ["sample_id"]
     assert advanced.should_blind("coding") is False
     assert advanced.should_blind("analysis") is False
 
 
-def test_advanced_config_accepts_legacy_blind_cols():
-    advanced = AdvancedConfig(coding_blind_cols=["sample_id", "speaker"])
+def test_advanced_config_accepts_blind_columns():
+    advanced = AdvancedConfig(blind_columns=["sample_id", "speaker"])
 
-    assert advanced.blind_cols == ["sample_id", "speaker"]
+    assert advanced.blind_columns == ["sample_id", "speaker"]
     assert advanced.analysis_blind_cols == ["sample_id", "speaker"]

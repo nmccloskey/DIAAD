@@ -5,11 +5,11 @@
 # Unique identifiers
 # -------------------------------------------------------------------
 
-# Sample-level identifier column in reading/writing.
-sample_id_field: sample_id
+# Sample-level identifier column in spreadsheets/dataframes.
+sample_id_column: sample_id
 
-# Utterance-level unique identifier column name.
-utterance_id_field: utterance_id
+# Utterance-level identifier column in spreadsheets/dataframes.
+utterance_id_column: utterance_id
 
 
 # -------------------------------------------------------------------
@@ -31,47 +31,54 @@ reliability_dirname: "reliability"
 # Set to [] to use no paradigm-specific expansion.
 cu_paradigms: [SAE, AAE]
 
-# Expected CU sample-level coding file name.
-cu_samples_file: cu_coding_by_sample_long.xlsx
+# Exact CU sample-level coding filename.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+cu_samples_filename: cu_coding_by_sample_long.xlsx
 
-# Expected CU utterance-level coding file name.
-cu_utts_file: cu_coding_by_utterance.xlsx
+# Exact CU utterance-level coding filename.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+cu_utts_filename: cu_coding_by_utterance.xlsx
 
 
 # -------------------------------------------------------------------
 # Word counting
 # -------------------------------------------------------------------
 
-# Expected word-count coding file name.
-word_count_file: word_counting.xlsx
+# Exact word-count coding filename.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+word_count_filename: word_counting.xlsx
 
 # Column containing utterance-level word counts.
-word_count_field: word_count
+word_count_column: word_count
 
-# Expected word-count sample-level summary file name.
-wc_samples_file: word_counting_by_sample.xlsx
+# Exact word-count sample-level summary filename.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+wc_samples_filename: word_counting_by_sample.xlsx
 
 
 # -------------------------------------------------------------------
 # POWERS coding
 # -------------------------------------------------------------------
 
-# POWERS coding file name search base.
-powers_coding_file: powers_coding
+# Exact POWERS coding filename.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+powers_coding_filename: powers_coding.xlsx
 
-# POWERS reliability coding file name search base.
-powers_reliability_file: powers_reliability_coding
+# Exact POWERS reliability coding filename.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+powers_reliability_filename: powers_reliability_coding.xlsx
 
 
 # -------------------------------------------------------------------
 # Rate analysis
 # -------------------------------------------------------------------
 
-# File containing speaking-time values for rate calculations.
-speaking_time_file: speaking_times.xlsx
+# Exact filename containing speaking-time values for rate calculations.
+# DIAAD searches recursively and errors if multiple exact matches exist.
+speaking_time_filename: speaking_times.xlsx
 
 # Column containing speaking-time values.
-speaking_time_field: speaking_time
+speaking_time_column: speaking_time
 
 
 # -------------------------------------------------------------------
@@ -93,7 +100,7 @@ auto_blind: false
 
 # Columns to blind when blinding is requested.
 # Columns not present in a given file are skipped with a warning.
-blind_cols:
+blind_columns:
   - sample_id
 
 # -------------------------------------------------------------------
@@ -105,11 +112,10 @@ blind_cols:
 metadata_source: transcript_tables
 
 # Join keys used when recovering metadata.
-id_cols:
+id_columns:
   - sample_id
   - utterance_id
 
-# If blank, blind codebooks are sought with pattern *blind_codebook*.xlsx
-# e.g., word_count_blind_codebook.xlsx
-# Otherwise, automated & explicit blinding will search for the below.
+# If blank, blind codebooks are sought with internal contains-mode discovery.
+# Otherwise, set one exact filename to require.
 codebook_filename: ""

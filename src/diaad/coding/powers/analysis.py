@@ -236,7 +236,7 @@ def analyze_powers_coding(
     """
     Analyze unprefixed POWERS coding files and write summary workbooks.
 
-    Each input powers_coding file is read, assigned sequential turn labels,
+    Each exact powers_coding filename match is read, assigned sequential turn labels,
     summarized to turn/speaker/dialog levels, and written to
     <output_dir>/powers_coding_analysis/.
     """
@@ -253,7 +253,9 @@ def analyze_powers_coding(
 
     pc_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base=Path(powers_coding_file).stem,
+        filename=powers_coding_file,
+        match_mode="exact",
+        deduplicate=False,
     )
 
     if not pc_files:

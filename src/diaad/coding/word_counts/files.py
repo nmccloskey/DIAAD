@@ -9,6 +9,7 @@ from pathlib import Path
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils.sampling import calc_subset_size
 from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import require_one_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
@@ -116,39 +117,41 @@ def _find_input_file(input_dir, output_dir):
     """
     Prefer CU coding files. If none are found, fall back to transcript tables.
 
-    If multiple candidate files are found, warn and use only the first returned file.
+    If multiple candidate files are found for a source, raise an error.
     """
     cu_files = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="cu_coding_by_utterance",
+        filename="cu_coding_by_utterance.xlsx",
+        match_mode="exact",
+        deduplicate=False,
     )
 
     if cu_files:
-        if len(cu_files) > 1:
-            logger.warning(
-                "Multiple CU coding files detected for word-count prep. "
-                f"Using only the first returned file: {get_rel_path(cu_files[0])}"
-            )
-        else:
-            logger.info("Found CU coding file for word-count prep.")
-        return "cu", cu_files[0]
+        logger.info("Found CU coding file for word-count prep.")
+        return "cu", require_one_file(
+            cu_files,
+            label="CU utterance coding file",
+            configured_filename="cu_coding_by_utterance.xlsx",
+            directories=[input_dir, output_dir],
+        )
 
     transcript_tables = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="transcript_tables",
+        filename="transcript_tables.xlsx",
+        match_mode="exact",
+        deduplicate=False,
     )
 
     if transcript_tables:
-        if len(transcript_tables) > 1:
-            logger.warning(
-                "Multiple transcript table files detected for word-count prep. "
-                f"Using only the first returned file: {get_rel_path(transcript_tables[0])}"
-            )
-        else:
-            logger.info(
-                "No CU coding file found. Found transcript table file for automated first-pass word-count prep."
-            )
-        return "transcript", transcript_tables[0]
+        logger.info(
+            "No CU coding file found. Found transcript table file for automated first-pass word-count prep."
+        )
+        return "transcript", require_one_file(
+            transcript_tables,
+            label="transcript table file",
+            configured_filename="transcript_tables.xlsx",
+            directories=[input_dir, output_dir],
+        )
 
     return None, None
 
@@ -559,7 +562,7 @@ def make_word_count_files(
     --------
     - CU files are preferred so neutral utterances can be excluded from counting.
     - If no CU files are found, transcript tables are used for automated first-pass counts.
-    - If multiple candidate input files are found, only the first returned file is used.
+    - If multiple exact candidate input files are found, DIAAD raises an error.
     - Output columns are restricted to:
         sample_id, utterance_id, speaker, utterance, comment, id, word_count, wc_comment
     - Any utterance from exclude_participants gets word_count = 'NA'.

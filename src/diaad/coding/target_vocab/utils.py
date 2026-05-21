@@ -15,6 +15,7 @@ from diaad.coding.target_vocab.resources import (
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
 from psair.core.logger import get_rel_path, logger
 from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import require_one_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 
@@ -51,11 +52,19 @@ def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | Non
     """
     search_dirs = [Path(output_dir), Path(input_dir)]
 
-    unblind_matches = []
-    for d in search_dirs:
-        unblind_matches += list(d.rglob("*unblind_utterance_data*.xlsx"))
+    unblind_matches = find_matching_files(
+        directories=search_dirs,
+        search_base="unblind_utterance_data",
+        search_ext=".xlsx",
+        deduplicate=False,
+    )
     if unblind_matches:
-        p = unblind_matches[0]
+        p = require_one_file(
+            unblind_matches,
+            label="unblind utterance data file",
+            configured_filename="unblind_utterance_data*.xlsx",
+            directories=search_dirs,
+        )
         df = read_excel_safely(p)
         if df is not None:
             logger.info(f"Using unblind utterance data: {get_rel_path(p)}")
@@ -63,7 +72,9 @@ def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | Non
 
     transcript_tables = find_matching_files(
         directories=[input_dir, output_dir],
-        search_base="transcript_tables",
+        filename="transcript_tables.xlsx",
+        match_mode="exact",
+        deduplicate=False,
     )
     if not transcript_tables:
         logger.error(

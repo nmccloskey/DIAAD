@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
 from diaad.coding.utils.rel_eval_utils import (
     calculate_icc_from_pingouin,
     coverage_summary,
@@ -108,9 +108,7 @@ def evaluate_word_count_reliability(
 
     Behavior
     --------
-    - Finds word_counting.xlsx and word_count_reliability.xlsx.
-    - If multiple matches are found for either search base, warns and uses only
-      the first returned file.
+    - Finds word_counting.xlsx and word_count_reliability.xlsx by exact filename.
     - Merges on sample_id and utterance_id.
     - Computes:
         abs_diff, perc_diff, perc_sim, agmt
@@ -125,37 +123,16 @@ def evaluate_word_count_reliability(
     word_rel_dir = Path(output_dir) / "word_count_reliability"
     word_rel_dir.mkdir(parents=True, exist_ok=True)
 
-    coding_files = find_matching_files(
+    cod = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="word_counting",
+        filename="word_counting.xlsx",
+        label="word-count coding file",
     )
-    rel_files = find_matching_files(
+    rel = find_one_matching_file(
         directories=[input_dir, output_dir],
-        search_base="word_count_reliability",
+        filename="word_count_reliability.xlsx",
+        label="word-count reliability file",
     )
-
-    if not coding_files:
-        logger.error("No word_counting.xlsx file found.")
-        return
-
-    if not rel_files:
-        logger.error("No word_count_reliability.xlsx file found.")
-        return
-
-    if len(coding_files) > 1:
-        logger.warning(
-            "Multiple word-count coding files detected. "
-            f"Using only the first returned file: {get_rel_path(coding_files[0])}"
-        )
-
-    if len(rel_files) > 1:
-        logger.warning(
-            "Multiple word-count reliability files detected. "
-            f"Using only the first returned file: {get_rel_path(rel_files[0])}"
-        )
-
-    cod = coding_files[0]
-    rel = rel_files[0]
 
     try:
         wc_df = pd.read_excel(cod)

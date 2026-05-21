@@ -40,8 +40,8 @@ output_dir: diaad_data/output
 ## Advanced Config
 
 ```yaml
-word_count_file: word_counting.xlsx
-word_count_field: word_count
+word_count_filename: word_counting.xlsx
+word_count_column: word_count
 ```
 
 ## Input Snippet
@@ -70,12 +70,12 @@ Word Count Reliability Report
 
 Source reliability file: word_count_reliability.xlsx
 
+Coverage in primary coding file
+--------------------------------
+Samples represented: 2/3 (66.7%)
+Utterances represented: 10/21 (47.6%)
+
 Paired utterances: 10
-Utterances in agreement: 10/10 (100.0%)
-Mean absolute difference: 0.4
-Mean percent difference: 9.728%
-Mean percent similarity: 90.272%
-ICC(2,1): 0.9836
 ```
 
 ## Notes
