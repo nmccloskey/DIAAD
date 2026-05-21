@@ -9,8 +9,11 @@ from sklearn.metrics import cohen_kappa_score
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
 from diaad.coding.utils.rel_eval_utils import (
-    percent_difference,
     calculate_icc_from_pingouin,
+    categorical_variance_pair_stats,
+    coverage_summary,
+    percent_difference,
+    write_coverage_section,
 )
 
 
@@ -419,12 +422,14 @@ def _compute_categorical_summary(merged: pd.DataFrame) -> pd.DataFrame:
         except Exception:
             kappa = np.nan
 
+        variance = categorical_variance_pair_stats(y1, y2)
         rows.append(
             {
                 "metric": col,
                 "paired_utterances": len(merged),
                 "percent_agreement": agreement,
                 "kappa": kappa,
+                **variance,
             }
         )
 
@@ -437,6 +442,7 @@ def _write_powers_rel_outputs(
     cat_summary: pd.DataFrame,
     out_dir: Path,
     rel_name: str,
+    coverage: dict | None = None,
 ) -> None:
     """Write merged results, summaries, and plain-text report."""
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -463,6 +469,7 @@ def _write_powers_rel_outputs(
         with open(report_path, "w", encoding="utf-8") as f:
             f.write("POWERS Reliability Report\n\n")
             f.write(f"Source reliability file: {rel_name}\n\n")
+            write_coverage_section(f, coverage)
             f.write(f"Paired utterances: {len(merged)}\n\n")
 
             f.write(
@@ -488,7 +495,10 @@ def _write_powers_rel_outputs(
                         f"mean_perc_sim={row['mean_perc_sim']}%, "
                         f"exact_agreement={row.get('exact_agreement_pct', np.nan)}%, "
                         f"within_1_count={row.get('within_1_count_pct', np.nan)}%, "
-                        f"ICC(2,1)={row['ICC2']}"
+                        f"ICC(2,1)={row['ICC2']}, "
+                        f"org_var={row.get('org_var', np.nan)}, "
+                        f"rel_var={row.get('rel_var', np.nan)}, "
+                        f"pooled_var={row.get('pooled_var', np.nan)}"
                         f"{warning_text}\n"
                     )
 
@@ -515,7 +525,10 @@ def _write_powers_rel_outputs(
                         f"{row['metric']}: "
                         f"n={row['paired_utterances']}, "
                         f"agreement={row['percent_agreement']}%, "
-                        f"kappa={row['kappa']}\n"
+                        f"kappa={row['kappa']}, "
+                        f"org_var={row.get('org_var', np.nan)}, "
+                        f"rel_var={row.get('rel_var', np.nan)}, "
+                        f"pooled_var={row.get('pooled_var', np.nan)}\n"
                     )
 
         logger.info(f"Successfully wrote reliability report to {get_rel_path(report_path)}")
@@ -585,4 +598,10 @@ def evaluate_powers_reliability(
         cat_summary=cat_summary,
         out_dir=out_dir,
         rel_name=rel_file.name,
+        coverage=coverage_summary(
+            org_df,
+            merged,
+            sample_id_field=sample_id_field,
+            utterance_id_field=utterance_id_field,
+        ),
     )

@@ -4,7 +4,13 @@ from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
-from diaad.coding.utils.rel_eval_utils import percent_difference, calculate_icc_from_pingouin
+from diaad.coding.utils.rel_eval_utils import (
+    calculate_icc_from_pingouin,
+    coverage_summary,
+    percent_difference,
+    variance_pair_stats,
+    write_coverage_section,
+)
 
 
 def agreement(row):
@@ -26,6 +32,7 @@ def _write_word_rel_outputs(
     wc_merged,
     out_dir,
     rel_name,
+    coverage=None,
     utterance_id_field: str = "utterance_id",
 ):
     """Write Excel results and plain-text report for word-count reliability."""
@@ -52,6 +59,7 @@ def _write_word_rel_outputs(
         col_rel="word_count_rel",
     )
     logger.info(f"Calculated ICC(2,1) for {rel_name}: {icc_value}")
+    variance = variance_pair_stats(wc_merged, "word_count_org", "word_count_rel")
 
     # Agreement summary
     total = len(wc_merged)
@@ -67,6 +75,7 @@ def _write_word_rel_outputs(
         with open(report_path, "w", encoding="utf-8") as f:
             f.write("Word Count Reliability Report\n\n")
             f.write(f"Source reliability file: {rel_name}\n\n")
+            write_coverage_section(f, coverage)
 
             if total > 0:
                 f.write(f"Paired utterances: {total}\n")
@@ -77,7 +86,11 @@ def _write_word_rel_outputs(
             else:
                 f.write("No valid utterances available for agreement calculation.\n")
 
-            f.write(f"ICC(2,1): {icc_value}\n")
+            f.write(
+                f"ICC(2,1): {icc_value} "
+                f"(org_var={variance['org_var']}, rel_var={variance['rel_var']}, "
+                f"pooled_var={variance['pooled_var']})\n"
+            )
 
         logger.info(f"Successfully wrote reliability report to {get_rel_path(report_path)}")
     except Exception as e:
@@ -147,6 +160,7 @@ def evaluate_word_count_reliability(
     try:
         wc_df = pd.read_excel(cod)
         wc_rel_df = pd.read_excel(rel)
+        wc_primary_df = wc_df.copy()
         logger.info(f"Processing pair: {get_rel_path(cod)} + {get_rel_path(rel)}")
     except Exception as e:
         logger.error(f"Failed reading {get_rel_path(cod)} or {get_rel_path(rel)}: {e}")
@@ -199,5 +213,11 @@ def evaluate_word_count_reliability(
         wc_merged=wc_merged,
         out_dir=word_rel_dir,
         rel_name=rel.name,
+        coverage=coverage_summary(
+            wc_primary_df,
+            wc_merged,
+            sample_id_field=sample_id_field,
+            utterance_id_field=utterance_id_field,
+        ),
         utterance_id_field=utterance_id_field,
     )

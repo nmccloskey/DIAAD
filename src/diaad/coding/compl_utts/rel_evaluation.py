@@ -9,6 +9,11 @@ from sklearn.metrics import cohen_kappa_score
 from psair.core.logger import logger, get_rel_path
 from psair.metadata.discovery import find_matching_files
 from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
+from diaad.coding.utils.rel_eval_utils import (
+    coverage_summary,
+    variance_pair_stats,
+    write_coverage_section,
+)
 
 
 # ---------------------------------------------------------------------
@@ -93,6 +98,7 @@ def _compute_measure_stats(df, col1, col2):
         "positive_2": float(np.nansum(y == 1)),
         "raw_agreement": _raw_agreement(x, y),
         "kappa": _safe_kappa(x, y),
+        **variance_pair_stats(paired, col1, col2),
     }
 
 
@@ -128,6 +134,9 @@ def _compute_icc_for_totals(
             "paired_samples": int(len(paired)),
             "icc2_1": np.nan,
             "icc2_k": np.nan,
+            "org_var": np.nan,
+            "rel_var": np.nan,
+            "pooled_var": np.nan,
         }
 
     icc_long = pd.concat(
@@ -153,6 +162,7 @@ def _compute_icc_for_totals(
             "paired_samples": int(len(paired)),
             "icc2_1": round(float(icc2_1.iloc[0]), 6) if not icc2_1.empty else np.nan,
             "icc2_k": round(float(icc2_k.iloc[0]), 6) if not icc2_k.empty else np.nan,
+            **variance_pair_stats(paired, col2, col3),
         }
     except Exception as e:
         logger.warning(f"Failed to compute ICC for {col2}/{col3}: {e}")
@@ -160,6 +170,9 @@ def _compute_icc_for_totals(
             "paired_samples": int(len(paired)),
             "icc2_1": np.nan,
             "icc2_k": np.nan,
+            "org_var": np.nan,
+            "rel_var": np.nan,
+            "pooled_var": np.nan,
         }
 
 
@@ -339,6 +352,7 @@ def write_reliability_report(
     report_path,
     comparison_mode=None,
     paradigm=None,
+    coverage=None,
 ):
     """
     Write a plain-text CU reliability summary.
@@ -366,6 +380,7 @@ def write_reliability_report(
             if paradigm:
                 report.write(f"Paradigm: {paradigm}\n")
             report.write("\n")
+            write_coverage_section(report, coverage)
 
             # ---------------------------------------------------------
             # Primary metrics
@@ -380,7 +395,10 @@ def write_reliability_report(
                     f"{measure.upper()}: "
                     f"paired utterances={stats.get('paired_n', np.nan)}, "
                     f"raw agreement={stats.get('raw_agreement', np.nan)}, "
-                    f"Cohen's kappa={stats.get('kappa', np.nan)}\n"
+                    f"Cohen's kappa={stats.get('kappa', np.nan)}, "
+                    f"c2_var={stats.get('org_var', np.nan)}, "
+                    f"c3_var={stats.get('rel_var', np.nan)}, "
+                    f"pooled_var={stats.get('pooled_var', np.nan)}\n"
                 )
             report.write("\n")
 
@@ -391,7 +409,10 @@ def write_reliability_report(
                     f"{measure.upper()} totals: "
                     f"paired samples={stats.get('paired_samples', np.nan)}, "
                     f"ICC(2,1)={stats.get('icc2_1', np.nan)}, "
-                    f"ICC(2,k)={stats.get('icc2_k', np.nan)}\n"
+                    f"ICC(2,k)={stats.get('icc2_k', np.nan)}, "
+                    f"c2_var={stats.get('org_var', np.nan)}, "
+                    f"c3_var={stats.get('rel_var', np.nan)}, "
+                    f"pooled_var={stats.get('pooled_var', np.nan)}\n"
                 )
             report.write("\n")
 
@@ -442,6 +463,7 @@ def _write_cu_reliability_outputs(
     base_dir,
     paradigm,
     comparison_mode,
+    coverage=None,
     sample_id_field: str = "sample_id",
 ):
     """
@@ -478,6 +500,7 @@ def _write_cu_reliability_outputs(
         report_path=report_path,
         comparison_mode=comparison_mode,
         paradigm=paradigm,
+        coverage=coverage,
     )
 
 
@@ -620,6 +643,12 @@ def evaluate_cu_reliability(
                 base_dir=out_subdir,
                 paradigm=paradigm,
                 comparison_mode=comparison_mode,
+                coverage=coverage_summary(
+                    left,
+                    merged,
+                    sample_id_field=sample_id_field,
+                    utterance_id_field=utterance_id_field,
+                ),
                 sample_id_field=sample_id_field,
             )
 

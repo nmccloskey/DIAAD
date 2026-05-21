@@ -8,7 +8,12 @@ import pandas as pd
 from psair.core.logger import get_rel_path, logger
 from psair.metadata.discovery import find_matching_files
 from diaad.coding.convo_turns.analysis import extract_turn_counts
-from diaad.coding.utils.rel_eval_utils import calculate_icc_from_pingouin
+from diaad.coding.utils.rel_eval_utils import (
+    calculate_icc_from_pingouin,
+    coverage_summary,
+    variance_pair_stats,
+    write_coverage_section,
+)
 from diaad.transcripts.transcription_reliability_evaluation import (
     _format_alignment_output,
     _levenshtein_metrics,
@@ -270,6 +275,7 @@ def _write_turns_reliability_report(
     sequences_df: pd.DataFrame,
     report_path: Path,
     rel_name: str,
+    coverage: dict | None = None,
 ) -> None:
     """Write a plain-text reliability report for digital conversation turns."""
     icc_value = np.nan
@@ -286,6 +292,7 @@ def _write_turns_reliability_report(
             col_rel="count_rel",
             rater_labels=("main", "rel"),
         )
+    variance = variance_pair_stats(counts_df, "count_main", "count_rel")
 
     sims = (
         sequences_df["levenshtein_similarity"].astype(float).dropna()
@@ -327,13 +334,18 @@ def _write_turns_reliability_report(
     with report_path.open("w", encoding="utf-8") as f:
         f.write("Digital Conversation Turns Reliability Report\n\n")
         f.write(f"Source reliability file: {rel_name}\n\n")
+        write_coverage_section(f, coverage)
 
         f.write("Primary reliability metrics\n")
         f.write("---------------------------\n\n")
         f.write("Count totals by participant within sample/session/bin\n")
         f.write(f"Paired participant targets: {paired_targets}\n")
         f.write(f"Mean percent agreement: {mean_perc_agmt}\n")
-        f.write(f"ICC(2,1): {icc_value}\n\n")
+        f.write(
+            f"ICC(2,1): {icc_value} "
+            f"(main_var={variance['org_var']}, rel_var={variance['rel_var']}, "
+            f"pooled_var={variance['pooled_var']})\n\n"
+        )
 
         f.write("Sequence consistency\n")
         f.write("--------------------\n")
@@ -434,6 +446,14 @@ def evaluate_digital_convo_turns_reliability(
             sequences_df=sequences_df,
             report_path=report_path,
             rel_name=rel_file.name,
+            coverage=coverage_summary(
+                org_df,
+                merged,
+                sample_id_field=sample_id_field,
+                utterance_id_field=None,
+                unit_label="session-bin rows",
+                unit_key_cols=turn_key_cols,
+            ),
         )
         logger.info(f"Successfully wrote turns reliability report to {get_rel_path(report_path)}")
     except Exception as e:
