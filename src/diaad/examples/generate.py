@@ -1277,7 +1277,7 @@ def _write_expected_powers_files(
             output_dir=output_dir,
             exclude_participants=specs["project_config"].get("exclude_participants", []),
             automate_powers=specs["project_config"].get("automate_powers", False),
-            blinding_config=None,
+            blinding_config=_powers_blinding_config(specs),
         )
         _replace_tree(output_dir / "powers_coding", expected_dir, force=force)
 
@@ -1346,7 +1346,11 @@ def _write_expected_powers_analysis(
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
     with _scratch_dir(project_dir) as tmpdir:
-        analyze_powers_coding(input_dir=input_dir, output_dir=tmpdir)
+        analyze_powers_coding(
+            input_dir=input_dir,
+            output_dir=tmpdir,
+            blinding_config=_powers_blinding_config(specs),
+        )
         _replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
 
     analysis_input_dir = (

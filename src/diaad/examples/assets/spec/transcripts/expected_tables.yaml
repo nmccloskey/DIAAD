@@ -114,6 +114,7 @@ powers_files:
   files:
     - powers_coding.xlsx
     - powers_reliability_coding.xlsx
+    - powers_blind_codebook.xlsx
 powers_evaluate:
   directory: expected_outputs/powers_module/powers_evaluate
   files:

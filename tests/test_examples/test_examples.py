@@ -186,6 +186,13 @@ def test_generate_synthetic_project(tmp_path):
         project_dir
         / "expected_outputs"
         / "powers_module"
+        / "powers_files"
+        / "powers_blind_codebook.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "expected_outputs"
+        / "powers_module"
         / "powers_evaluate"
         / "powers_reliability_results.xlsx"
     )

@@ -253,7 +253,8 @@ def _project_tree(command: str = "all") -> str:
         transcript_tables.xlsx"""
         outputs = """        powers_coding/
           powers_coding.xlsx
-          powers_reliability_coding.xlsx"""
+          powers_reliability_coding.xlsx
+          powers_blind_codebook.xlsx"""
     elif command == "powers_evaluate":
         input_files = """      powers_coding/
         powers_coding.xlsx
@@ -378,6 +379,7 @@ def _example_files_tree() -> str:
       powers_coding/
         powers_coding.xlsx
         powers_reliability_coding.xlsx
+        powers_blind_codebook.xlsx
       powers_coding_analysis/
         powers_analysis.xlsx
       target_vocab/
@@ -460,6 +462,7 @@ def _example_files_tree() -> str:
         powers_files/
           powers_coding.xlsx
           powers_reliability_coding.xlsx
+          powers_blind_codebook.xlsx
         powers_evaluate/
           powers_reliability_results.xlsx
           powers_reliability_report.txt
@@ -1543,9 +1546,13 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 {_markdown_table(pd.read_excel(output_dir / "powers_reliability_coding.xlsx"))}
 
+`expected_outputs/powers_module/powers_files/powers_blind_codebook.xlsx`
+
+{_markdown_table(pd.read_excel(output_dir / "powers_blind_codebook.xlsx"))}
+
 ## Notes
 
-The generated local example fills synthetic POWERS values into the blank coding workbooks so downstream POWERS examples can be demonstrated. Real `powers files` output starts as coding material for human review. Automation is disabled in the synthetic config to keep the example deterministic and dependency-light.
+The generated local example fills synthetic POWERS values into the blank coding workbooks so downstream POWERS examples can be demonstrated. The blind codebook lets later POWERS analysis reconnect blinded sample IDs to speaking times. Real `powers files` output starts as coding material for human review.
 """
 
 

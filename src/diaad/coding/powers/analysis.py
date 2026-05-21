@@ -4,10 +4,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
+from diaad.metadata.discovery import find_one_matching_file
+from diaad.metadata.unblinding import maybe_unblind_dataframe
 
 
 TURN_AGG_COLS = [
@@ -231,13 +231,15 @@ def analyze_powers_coding(
     input_dir,
     output_dir,
     powers_coding_file="powers_coding.xlsx",
+    blinding_config=None,
+    blind_codebook=None,
     sample_id_field="sample_id",
 ):
     """
-    Analyze unprefixed POWERS coding files and write summary workbooks.
+    Analyze one unprefixed POWERS coding file and write summary workbooks.
 
-    Each exact powers_coding filename match is read, assigned sequential turn labels,
-    summarized to turn/speaker/dialog levels, and written to
+    The exact configured powers_coding filename is read, assigned sequential
+    turn labels, summarized to turn/speaker/dialog levels, and written to
     <output_dir>/powers_coding_analysis/.
     """
     input_dir = Path(input_dir)
@@ -251,39 +253,43 @@ def analyze_powers_coding(
         logger.error(f"Failed to create POWERS analysis directory {get_rel_path(out_dir)}: {e}")
         return
 
-    pc_files = find_matching_files(
+    pc_file = find_one_matching_file(
         directories=[input_dir, output_dir],
         filename=powers_coding_file,
-        match_mode="exact",
-        deduplicate=False,
+        label="POWERS coding file",
     )
 
-    if not pc_files:
-        logger.warning("No POWERS coding files found for analysis.")
+    utt_df = _read_powers_file(pc_file)
+    if utt_df is None:
         return
 
-    for pc_file in tqdm(pc_files, desc="Analyzing POWERS coding"):
-        utt_df = _read_powers_file(pc_file)
-        if utt_df is None:
-            continue
+    if blinding_config is not None:
+        utt_df, _ = maybe_unblind_dataframe(
+            utt_df,
+            blinding_config,
+            blind_codebook=blind_codebook,
+            target_cols=[sample_id_field],
+            directories=[input_dir, output_dir],
+            strict=False,
+        )
 
-        try:
-            utt_df = add_turn_labels(utt_df)
-            sheets = compute_level_summaries(
-                utt_df,
-                sample_id_field=sample_id_field,
-            )
-        except Exception as e:
-            logger.error(f"Failed to analyze {get_rel_path(pc_file)}: {e}")
-            continue
+    try:
+        utt_df = add_turn_labels(utt_df)
+        sheets = compute_level_summaries(
+            utt_df,
+            sample_id_field=sample_id_field,
+        )
+    except Exception as e:
+        logger.error(f"Failed to analyze {get_rel_path(pc_file)}: {e}")
+        return
 
-        out_file = out_dir / f"{pc_file.stem.replace('coding', 'analysis')}.xlsx"
+    out_file = out_dir / f"{pc_file.stem.replace('coding', 'analysis')}.xlsx"
 
-        try:
-            write_analysis_workbook(out_file, sheets)
-            logger.info(f"Wrote analysis workbook: {get_rel_path(out_file)}")
-        except Exception as e:
-            logger.error(f"Failed to write {get_rel_path(out_file)}: {e}")
+    try:
+        write_analysis_workbook(out_file, sheets)
+        logger.info(f"Wrote analysis workbook: {get_rel_path(out_file)}")
+    except Exception as e:
+        logger.error(f"Failed to write {get_rel_path(out_file)}: {e}")
 
 
 def _read_powers_file(pc_file: Path) -> pd.DataFrame | None:

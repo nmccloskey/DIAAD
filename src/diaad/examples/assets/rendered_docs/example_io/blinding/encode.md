@@ -52,14 +52,14 @@ blind_columns:
 
 | sample_id | utterance_id | speaker | utterance | comment | coder_id | POWERS_comment | speech_units | turn_type | content_words | num_nouns | circumlocutions | sem_paras | phon_errs | neologisms | comments | lg_pauses | filled_pauses | collab_repair |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S001 | U0001 | INV | Please tell the picnic story again. |  | 1 |  | 1 | T | 5 | 2 | 1 | 1 | 1 | 1 |  | 1 | 1 |  |
-| S001 | U0002 | PAR | The family brought food to the park. |  | 1 |  | 2 | T | 7 | 3 | 2 | 2 | 2 | 2 |  | 2 | 2 |  |
-| S001 | U0003 | PAR | The little girl [/] the little girl pours juice. |  | 1 |  | 1 | ST | 9 | 3 | 3 | 3 | 1 | 3 |  | 3 | 1 | repair_1 |
-| S001 | U0004 | PAR | Then they share sandwiches. |  | 1 |  | 2 | MT | 4 | 2 | 1 | 4 | 2 | 4 |  | 1 | 2 |  |
-| S001 | U0005 | INV | Anything else? |  | 1 |  | 1 | T | 1 | 0 | 2 | 1 | 1 | 5 |  | 2 | 1 |  |
-| S001 | U0006 | PAR | Yes, the dog waits beside them. |  | 1 |  | 2 | NV | 6 | 3 | 3 | 2 | 2 | 1 |  | 3 | 2 |  |
-| S001 | U0007 | PAR | The day is quiet. |  | 1 |  | 1 | T | 4 | 2 | 1 | 3 | 1 | 2 |  | 1 | 1 |  |
-| S003 | U0001 | INV | What do you notice first? |  | 1 |  | 2 | T | 4 | 2 | 2 | 4 | 2 | 3 |  | 2 | 2 |  |
+| 1 | U0001 | INV | Please tell the picnic story again. |  | 1 |  | 1 | T | 5 | 2 | 1 | 1 | 1 | 1 |  | 1 | 1 |  |
+| 1 | U0002 | PAR | The family brought food to the park. |  | 1 |  | 2 | T | 7 | 3 | 2 | 2 | 2 | 2 |  | 2 | 2 |  |
+| 1 | U0003 | PAR | The little girl [/] the little girl pours juice. |  | 1 |  | 1 | ST | 9 | 3 | 3 | 3 | 1 | 3 |  | 3 | 1 | repair_1 |
+| 1 | U0004 | PAR | Then they share sandwiches. |  | 1 |  | 2 | MT | 4 | 2 | 1 | 4 | 2 | 4 |  | 1 | 2 |  |
+| 1 | U0005 | INV | Anything else? |  | 1 |  | 1 | T | 1 | 0 | 2 | 1 | 1 | 5 |  | 2 | 1 |  |
+| 1 | U0006 | PAR | Yes, the dog waits beside them. |  | 1 |  | 2 | NV | 6 | 3 | 3 | 2 | 2 | 1 |  | 3 | 2 |  |
+| 1 | U0007 | PAR | The day is quiet. |  | 1 |  | 1 | T | 4 | 2 | 1 | 3 | 1 | 2 |  | 1 | 1 |  |
+| 2 | U0001 | INV | What do you notice first? |  | 1 |  | 2 | T | 4 | 2 | 2 | 4 | 2 | 3 |  | 2 | 2 |  |
 
 ## Output Preview
 
@@ -74,28 +74,28 @@ blind_columns:
 | U0005 | INV | Anything else? |  | 1 |  | 1 | T | 1 | 0 | 2 | 1 | 1 | 5 |  | 2 | 1 |  | 1 |
 | U0006 | PAR | Yes, the dog waits beside them. |  | 1 |  | 2 | NV | 6 | 3 | 3 | 2 | 2 | 1 |  | 3 | 2 |  | 1 |
 | U0007 | PAR | The day is quiet. |  | 1 |  | 1 | T | 4 | 2 | 1 | 3 | 1 | 2 |  | 1 | 1 |  | 1 |
-| U0001 | INV | What do you notice first? |  | 1 |  | 2 | T | 4 | 2 | 2 | 4 | 2 | 3 |  | 2 | 2 |  | 2 |
+| U0001 | INV | What do you notice first? |  | 1 |  | 2 | T | 4 | 2 | 2 | 4 | 2 | 3 |  | 2 | 2 |  | 3 |
 
 `expected_outputs/blinding_module/blinding_encode/blind_codebook.xlsx`
 
 | column | raw_value | blind_code |
 | --- | --- | --- |
-| sample_id | S001 | 1 |
-| sample_id | S003 | 2 |
-| sample_id | S002 | 3 |
+| sample_id | 1 | 1 |
+| sample_id | 3 | 2 |
+| sample_id | 2 | 3 |
 
 `expected_outputs/blinding_module/blinding_encode/powers_coding_blinding_diagnostics.xlsx`
 
 | sample_id | utterance_id | sample_id_blinded |
 | --- | --- | --- |
-| S001 | U0001 | 1 |
-| S001 | U0002 | 1 |
-| S001 | U0003 | 1 |
-| S001 | U0004 | 1 |
-| S001 | U0005 | 1 |
-| S001 | U0006 | 1 |
-| S001 | U0007 | 1 |
-| S003 | U0001 | 2 |
+| 1 | U0001 | 1 |
+| 1 | U0002 | 1 |
+| 1 | U0003 | 1 |
+| 1 | U0004 | 1 |
+| 1 | U0005 | 1 |
+| 1 | U0006 | 1 |
+| 1 | U0007 | 1 |
+| 2 | U0001 | 3 |
 
 ## Notes
 

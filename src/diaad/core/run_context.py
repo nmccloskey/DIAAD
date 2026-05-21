@@ -692,6 +692,7 @@ class RunContext:
         return {
             **self.kwargs_io(),
             "powers_coding_file": self.config.powers_coding_filename,
+            "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
         }
 

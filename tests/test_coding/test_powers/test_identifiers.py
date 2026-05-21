@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pandas as pd
 import random
+import pytest
 
+from diaad.metadata.discovery import MultipleFilesFoundError
 from diaad.coding.powers import analysis, files, rates, rel_evaluation, rel_reselection
 from diaad.coding.utils import reselection_utils
 
@@ -64,6 +66,28 @@ def test_powers_analysis_groups_by_custom_sample_id():
         "A": 3,
         "B": 3,
     }
+
+
+def test_powers_analysis_requires_one_exact_coding_file(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    for root in [input_dir / "site_a", output_dir / "site_b"]:
+        root.mkdir(parents=True)
+        pd.DataFrame(
+            {
+                "sample_id": ["S1"],
+                "speaker": ["P"],
+                "turn_type": ["T"],
+                "speech_units": [1],
+                "content_words": [2],
+            }
+        ).to_excel(root / "powers_coding.xlsx", index=False)
+
+    with pytest.raises(MultipleFilesFoundError):
+        analysis.analyze_powers_coding(
+            input_dir=input_dir,
+            output_dir=output_dir,
+        )
 
 
 def test_powers_reliability_merges_on_custom_identifiers():

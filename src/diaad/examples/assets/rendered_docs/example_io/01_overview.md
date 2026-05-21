@@ -46,6 +46,7 @@ example_files/
       powers_coding/
         powers_coding.xlsx
         powers_reliability_coding.xlsx
+        powers_blind_codebook.xlsx
       powers_coding_analysis/
         powers_analysis.xlsx
       target_vocab/
@@ -125,6 +126,7 @@ example_files/
         powers_files/
           powers_coding.xlsx
           powers_reliability_coding.xlsx
+          powers_blind_codebook.xlsx
         powers_evaluate/
           powers_reliability_results.xlsx
           powers_reliability_report.txt
