@@ -6,15 +6,14 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
-from tqdm import tqdm
 
 from psair.core.logger import logger, get_rel_path
+from psair.metadata.discovery import find_one_matching_file
 
 
 CHAT_SUBDIR = "chat_files"
 TRANSCRIPT_SUBDIR = "transcript_tables"
 TRANSCRIPT_FILENAME = "transcript_tables.xlsx"
-TRANSCRIPT_TABLE_PATTERN = "*transcript_tables.xlsx"
 TEMPLATE_HEADER_PATTERN = "*template_header.cha"
 DERIVED_FILE_COL = "derived_file"
 
@@ -156,9 +155,9 @@ def _assign_derived_files(
 def _find_transcript_tables(
     input_dir: str | Path,
     output_dir: str | Path | None = None,
-) -> list[Path]:
+) -> Path:
     """
-    Find transcript table Excel files under the input and output directories.
+    Find the one exact transcript table workbook for this detabularization run.
     """
     directories = [Path(input_dir).expanduser().resolve()]
     if output_dir is not None:
@@ -166,26 +165,13 @@ def _find_transcript_tables(
         if output_path not in directories:
             directories.append(output_path)
 
-    seen: set[Path] = set()
-    tables: list[Path] = []
-    for directory in directories:
-        for path in sorted(directory.rglob(TRANSCRIPT_TABLE_PATTERN)):
-            if path.name.startswith("~$"):
-                continue
-            resolved = path.resolve()
-            if resolved in seen:
-                continue
-            seen.add(resolved)
-            tables.append(resolved)
-
-    if not tables:
-        logger.error(
-            "No transcript table files matching %r found in %s.",
-            TRANSCRIPT_TABLE_PATTERN,
-            [get_rel_path(directory) for directory in directories],
-        )
-
-    return tables
+    return find_one_matching_file(
+        directories=directories,
+        filename=TRANSCRIPT_FILENAME,
+        match_mode="exact",
+        deduplicate=False,
+        label="transcript table",
+    )
 
 
 def _find_template_header(input_dir: str | Path) -> str:
@@ -297,11 +283,7 @@ def _write_updated_transcript_table(
     sheets: dict[str, pd.DataFrame],
     samples_sheet_name: str,
     samples_df: pd.DataFrame,
-    source_path: Path,
     output_dir: Path,
-    *,
-    table_index: int,
-    table_count: int,
 ) -> str | None:
     """
     Write a run-output copy of the workbook with derived_file in samples.
@@ -309,11 +291,7 @@ def _write_updated_transcript_table(
     transcript_dir = output_dir / TRANSCRIPT_SUBDIR
     transcript_dir.mkdir(parents=True, exist_ok=True)
 
-    if table_count == 1:
-        output_path = transcript_dir / TRANSCRIPT_FILENAME
-    else:
-        parent_name = _safe_filename_part(source_path.parent.name) or f"table_{table_index + 1}"
-        output_path = transcript_dir / f"{parent_name}_{source_path.stem}.xlsx"
+    output_path = transcript_dir / TRANSCRIPT_FILENAME
 
     try:
         with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
@@ -327,39 +305,6 @@ def _write_updated_transcript_table(
         return None
 
 
-def _deduplicate_across_tables(
-    samples_df: pd.DataFrame,
-    used_filenames: set[str],
-    *,
-    table_index: int,
-) -> pd.DataFrame:
-    """
-    Prevent output filename collisions when more than one table is processed.
-    """
-    samples_df = samples_df.copy()
-    derived_files = []
-
-    for row_index, filename in enumerate(samples_df[DERIVED_FILE_COL].tolist()):
-        candidate = filename
-        if candidate in used_filenames:
-            logger.warning(
-                "Derived CHAT filename %r already exists in this run; appending table and row index.",
-                candidate,
-            )
-            path = Path(candidate)
-            candidate = f"{path.stem}_table{table_index + 1}_{row_index + 1}{path.suffix or '.cha'}"
-
-        while candidate in used_filenames:
-            path = Path(candidate)
-            candidate = f"{path.stem}_{row_index + 1}{path.suffix or '.cha'}"
-
-        used_filenames.add(candidate)
-        derived_files.append(candidate)
-
-    samples_df[DERIVED_FILE_COL] = derived_files
-    return samples_df
-
-
 def detabularize_transcripts(
     input_dir: str | Path,
     output_dir: str | Path,
@@ -371,7 +316,7 @@ def detabularize_transcripts(
     Parameters
     ----------
     input_dir : str or Path
-        Directory containing one or more ``*transcript_tables.xlsx`` files
+        Directory containing one ``transcript_tables.xlsx`` file
         and optionally a ``*template_header.cha`` file.
     output_dir : str or Path
         Run output directory. CHAT files are written to ``chat_files/``.
@@ -386,73 +331,59 @@ def detabularize_transcripts(
     chat_dir = output_dir / CHAT_SUBDIR
     chat_dir.mkdir(parents=True, exist_ok=True)
 
-    transcript_tables = _find_transcript_tables(input_dir, output_dir)
-    if not transcript_tables:
-        return []
+    transcript_table = _find_transcript_tables(input_dir, output_dir)
 
     header_lines = _normalize_template_header(_find_template_header(input_dir))
     written_chats: list[str] = []
-    used_filenames: set[str] = set()
 
-    for table_index, table_path in enumerate(
-        tqdm(transcript_tables, desc="Writing CHAT files from transcript tables")
-    ):
-        try:
-            sheets, samples_sheet_name, utterances_sheet_name = _load_transcript_table(table_path)
-            samples_df = _assign_derived_files(
-                sheets[samples_sheet_name],
-                sample_id_field=sample_id_field,
-            )
-            samples_df = _deduplicate_across_tables(
-                samples_df,
-                used_filenames,
-                table_index=table_index,
-            )
-            utterances_df = sheets[utterances_sheet_name].copy()
+    try:
+        sheets, samples_sheet_name, utterances_sheet_name = _load_transcript_table(transcript_table)
+        samples_df = _assign_derived_files(
+            sheets[samples_sheet_name],
+            sample_id_field=sample_id_field,
+        )
+        utterances_df = sheets[utterances_sheet_name].copy()
 
-            if sample_id_field not in utterances_df.columns:
-                raise ValueError(
-                    f"Utterances sheet must contain a {sample_id_field!r} column."
+        if sample_id_field not in utterances_df.columns:
+            raise ValueError(
+                f"Utterances sheet must contain a {sample_id_field!r} column."
+            )
+
+        samples_df["_sample_key"] = samples_df[sample_id_field].map(_cell_to_text)
+        utterances_df["_sample_key"] = utterances_df[sample_id_field].map(_cell_to_text)
+        utterance_groups: Dict[str, pd.DataFrame] = dict(
+            tuple(utterances_df.groupby("_sample_key", sort=False))
+        )
+
+        samples_for_output = samples_df.drop(columns=["_sample_key"])
+        _write_updated_transcript_table(
+            sheets,
+            samples_sheet_name,
+            samples_for_output,
+            output_dir,
+        )
+
+        for _, sample_row in samples_df.iterrows():
+            sample_key = sample_row["_sample_key"]
+            derived_file = sample_row[DERIVED_FILE_COL]
+            sample_utts = utterance_groups.get(sample_key)
+
+            if sample_utts is None:
+                logger.warning(
+                    "No utterances found for sample_id %r; writing header-only CHAT file.",
+                    sample_row.get(sample_id_field),
                 )
+                sample_utts = utterances_df.iloc[0:0].copy()
 
-            samples_df["_sample_key"] = samples_df[sample_id_field].map(_cell_to_text)
-            utterances_df["_sample_key"] = utterances_df[sample_id_field].map(_cell_to_text)
-            utterance_groups: Dict[str, pd.DataFrame] = dict(
-                tuple(utterances_df.groupby("_sample_key", sort=False))
-            )
+            sample_utts = sample_utts.drop(columns=["_sample_key"], errors="ignore")
+            chat_text = _build_chat_text(header_lines, sample_utts)
+            chat_path = chat_dir / derived_file
+            chat_path.write_text(chat_text, encoding="utf-8")
+            written_chats.append(str(chat_path))
 
-            samples_for_output = samples_df.drop(columns=["_sample_key"])
-            _write_updated_transcript_table(
-                sheets,
-                samples_sheet_name,
-                samples_for_output,
-                table_path,
-                output_dir,
-                table_index=table_index,
-                table_count=len(transcript_tables),
-            )
-
-            for _, sample_row in samples_df.iterrows():
-                sample_key = sample_row["_sample_key"]
-                derived_file = sample_row[DERIVED_FILE_COL]
-                sample_utts = utterance_groups.get(sample_key)
-
-                if sample_utts is None:
-                    logger.warning(
-                        "No utterances found for sample_id %r; writing header-only CHAT file.",
-                        sample_row.get(sample_id_field),
-                    )
-                    sample_utts = utterances_df.iloc[0:0].copy()
-
-                sample_utts = sample_utts.drop(columns=["_sample_key"], errors="ignore")
-                chat_text = _build_chat_text(header_lines, sample_utts)
-                chat_path = chat_dir / derived_file
-                chat_path.write_text(chat_text, encoding="utf-8")
-                written_chats.append(str(chat_path))
-
-        except Exception as e:
-            logger.error("Failed to detabularize %s: %s", get_rel_path(table_path), e)
-            continue
+    except Exception as e:
+        logger.error("Failed to detabularize %s: %s", get_rel_path(transcript_table), e)
+        return []
 
     logger.info("Successfully wrote %s CHAT file(s) to %s.", len(written_chats), get_rel_path(chat_dir))
     return written_chats

@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
+from psair.metadata.discovery import MultipleFilesFoundError
 
 from diaad.transcripts.detabularization import detabularize_transcripts
 
@@ -165,3 +167,33 @@ def test_detabularize_transcripts_accepts_custom_sample_id_field(tmp_path):
     )
     assert "expanded_sample_id" in derived.columns
     assert list(derived["derived_file"]) == ["TU_Post.cha"]
+
+
+def test_detabularize_transcripts_requires_exact_transcript_table_filename(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    table_path = input_dir / "transcript_tables" / "study_transcript_tables.xlsx"
+
+    samples = pd.DataFrame([{"sample_id": "S1"}])
+    utterances = pd.DataFrame(
+        [{"sample_id": "S1", "speaker": "PAR0", "utterance": "not discovered"}]
+    )
+    _write_table(table_path, samples, utterances)
+
+    with pytest.raises(FileNotFoundError):
+        detabularize_transcripts(input_dir=input_dir, output_dir=output_dir)
+
+
+def test_detabularize_transcripts_errors_on_multiple_exact_tables(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    samples = pd.DataFrame([{"sample_id": "S1"}])
+    utterances = pd.DataFrame(
+        [{"sample_id": "S1", "speaker": "PAR0", "utterance": "ambiguous"}]
+    )
+
+    _write_table(input_dir / "site_a" / "transcript_tables.xlsx", samples, utterances)
+    _write_table(output_dir / "site_b" / "transcript_tables.xlsx", samples, utterances)
+
+    with pytest.raises(MultipleFilesFoundError):
+        detabularize_transcripts(input_dir=input_dir, output_dir=output_dir)
