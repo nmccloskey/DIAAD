@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -25,8 +23,17 @@ from diaad.examples.generate import (
     VOCAB_OUTPUT_DIRS,
     WORD_OUTPUT_DIRS,
     WORDS_MODULE_DIR,
-    _scratch_dir,
     generate_example_files,
+)
+from psair.examples import (
+    ExampleAssets,
+    all_workbook_sheet_tables as _all_workbook_sheet_tables,
+    fenced as _fenced,
+    markdown_table as _markdown_table,
+    preview_json as _preview_json,
+    preview_yaml as _preview_yaml,
+    scratch_dir as _scratch_dir,
+    workbook_sheet_tables as _workbook_sheet_tables,
 )
 
 
@@ -35,39 +42,9 @@ DOC_ROOT = ("assets", "rendered_docs", "example_io")
 SPEC_ROOT = ("assets", "spec")
 
 
-def _asset_path(*parts: str):
-    path = resources.files(DOC_PACKAGE)
-    for part in parts:
-        path = path.joinpath(part)
-    return path
-
-
-def _read_yaml_asset(*parts: str) -> dict[str, Any]:
-    with _asset_path(*parts).open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
-    if not isinstance(data, dict):
-        raise TypeError(f"YAML asset {'/'.join(parts)} must contain a mapping.")
-    return data
-
-
-def _write_doc(*parts: str, text: str) -> Path:
-    path = Path(_asset_path(*DOC_ROOT, *parts))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8", newline="\n")
-    return path
-
-
-def _fenced(text: str, language: str = "") -> str:
-    return f"```{language}\n{text.rstrip()}\n```"
-
-
-def _preview_json(data: dict[str, Any]) -> str:
-    return json.dumps(data, indent=2)
-
-
-def _preview_yaml(data: dict[str, Any], keys: list[str]) -> str:
-    subset = {key: data[key] for key in keys if key in data}
-    return yaml.safe_dump(subset, sort_keys=False, allow_unicode=False).rstrip()
+_EXAMPLE_ASSETS = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
+_read_yaml_asset = _EXAMPLE_ASSETS.read_yaml_mapping
+_write_doc = _EXAMPLE_ASSETS.write_rendered_doc
 
 
 def _project_config_snippet(
@@ -80,18 +57,6 @@ def _project_config_snippet(
     if "output_dir" in keys:
         data["output_dir"] = "diaad_data/output"
     return _preview_yaml(data, keys)
-
-
-def _markdown_table(df: pd.DataFrame, *, max_rows: int = 8) -> str:
-    preview = df.head(max_rows).fillna("")
-    headers = [str(col) for col in preview.columns]
-    rows = [[str(value) for value in row] for row in preview.to_numpy()]
-    lines = [
-        "| " + " | ".join(headers) + " |",
-        "| " + " | ".join(["---"] * len(headers)) + " |",
-    ]
-    lines.extend("| " + " | ".join(row) + " |" for row in rows)
-    return "\n".join(lines)
 
 
 RUN_DIR = "diaad_YYMMDD_HHMM"
@@ -532,19 +497,6 @@ def _read_specs() -> dict[str, dict[str, Any]]:
         "vocab_resource": _read_yaml_asset(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
         "turns_sessions": _read_yaml_asset(*SPEC_ROOT, "turns", "sessions.yaml"),
     }
-
-
-def _workbook_sheet_tables(path: Path, sheet_names: list[str]) -> str:
-    sections = []
-    for sheet_name in sheet_names:
-        df = pd.read_excel(path, sheet_name=sheet_name)
-        sections.append(f"### Sheet: {sheet_name}\n\n{_markdown_table(df)}")
-    return "\n\n".join(sections)
-
-
-def _all_workbook_sheet_tables(path: Path) -> str:
-    with pd.ExcelFile(path, engine="openpyxl") as xls:
-        return _workbook_sheet_tables(path, xls.sheet_names)
 
 
 def _blinding_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:

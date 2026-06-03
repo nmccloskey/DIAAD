@@ -1,17 +1,12 @@
 from __future__ import annotations
 
-import json
+import random
 import shutil
-import uuid
-from contextlib import contextmanager
-from importlib import resources
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
-import random
-import yaml
 
 from diaad.blinding.decode import decode_blinding
 from diaad.blinding.encode import encode_blinding
@@ -53,6 +48,16 @@ from diaad.transcripts.transcription_reliability_evaluation import (
 from diaad.transcripts.transcription_reliability_selection import (
     reselect_transcription_reliability_samples,
     select_transcription_reliability_samples,
+)
+from psair.examples import (
+    ExampleAssets,
+    copy_tree_contents as _copy_tree_contents,
+    long_path as _long_path,
+    replace_tree as _replace_tree,
+    scratch_dir as _scratch_dir,
+    write_json as _write_json,
+    write_text as _write_text,
+    write_yaml as _write_yaml,
 )
 from psair.metadata.metadata_fields import MetadataManager
 
@@ -116,46 +121,9 @@ TURNS_OUTPUT_DIRS = {
 }
 
 
-@contextmanager
-def _scratch_dir(parent: Path):
-    path = parent / f"_dx_{uuid.uuid4().hex[:8]}"
-    path.mkdir(parents=True, exist_ok=False)
-    try:
-        yield path
-    finally:
-        shutil.rmtree(path, ignore_errors=True)
-
-
-def _asset_path(*parts: str):
-    path = resources.files(SPEC_PACKAGE)
-    for part in parts:
-        path = path.joinpath(part)
-    return path
-
-
-def _read_yaml_asset(*parts: str) -> dict[str, Any]:
-    with _asset_path(*parts).open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f) or {}
-    if not isinstance(data, dict):
-        raise TypeError(f"YAML asset {'/'.join(parts)} must contain a mapping.")
-    return data
-
-
-def _write_text(path: Path, text: str, *, force: bool) -> None:
-    if path.exists() and not force:
-        raise FileExistsError(f"Refusing to overwrite existing file: {path}")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8", newline="\n")
-
-
-def _write_yaml(path: Path, data: dict[str, Any], *, force: bool) -> None:
-    text = yaml.safe_dump(data, sort_keys=False, allow_unicode=False)
-    _write_text(path, text, force=force)
-
-
-def _write_json(path: Path, data: dict[str, Any], *, force: bool) -> None:
-    text = json.dumps(data, indent=2) + "\n"
-    _write_text(path, text, force=force)
+_EXAMPLE_ASSETS = ExampleAssets(SPEC_PACKAGE)
+_asset_path = _EXAMPLE_ASSETS.path
+_read_yaml_asset = _EXAMPLE_ASSETS.read_yaml_mapping
 
 
 def _validate_chat_spec(chat_spec: dict[str, Any]) -> None:
@@ -354,37 +322,6 @@ def _write_provided_transcript_table(
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(transcript_table, target)
     return target
-
-
-def _replace_tree(source: Path, target: Path, *, force: bool) -> None:
-    source = Path(source)
-    target = Path(target)
-
-    if target.exists():
-        if not force:
-            raise FileExistsError(f"Refusing to overwrite existing directory: {target}")
-        _copy_tree_contents(source, target)
-        return
-    _copy_tree_contents(source, target)
-
-
-def _long_path(path: Path) -> Path:
-    path = Path(path)
-    if not path.is_absolute():
-        path = path.resolve()
-    if not (path.drive and not str(path).startswith("\\\\?\\")):
-        return path
-    return Path(f"\\\\?\\{path}")
-
-
-def _copy_tree_contents(source: Path, target: Path) -> None:
-    for file_path in source.rglob("*"):
-        if not file_path.is_file():
-            continue
-        relative = file_path.relative_to(source)
-        target_path = target / relative
-        _long_path(target_path.parent).mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(_long_path(file_path), _long_path(target_path))
 
 
 def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
