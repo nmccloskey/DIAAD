@@ -51,13 +51,11 @@ from diaad.transcripts.transcription_reliability_selection import (
 )
 from psair.examples import (
     ExampleAssets,
-    copy_tree_contents as _copy_tree_contents,
-    long_path as _long_path,
-    replace_tree as _replace_tree,
-    scratch_dir as _scratch_dir,
-    write_json as _write_json,
-    write_text as _write_text,
-    write_yaml as _write_yaml,
+    replace_tree,
+    scratch_dir,
+    write_json,
+    write_text,
+    write_yaml,
 )
 from psair.metadata.metadata_fields import MetadataManager
 
@@ -121,9 +119,7 @@ TURNS_OUTPUT_DIRS = {
 }
 
 
-_EXAMPLE_ASSETS = ExampleAssets(SPEC_PACKAGE)
-_asset_path = _EXAMPLE_ASSETS.path
-_read_yaml_asset = _EXAMPLE_ASSETS.read_yaml_mapping
+example_assets = ExampleAssets(SPEC_PACKAGE)
 
 
 def _validate_chat_spec(chat_spec: dict[str, Any]) -> None:
@@ -195,18 +191,18 @@ def _validate_expected_tables(
 
 def _read_specs() -> dict[str, dict[str, Any]]:
     specs = {
-        "dataset": _read_yaml_asset(*SPEC_ROOT, "dataset.yaml"),
-        "project_config": _read_yaml_asset(*SPEC_ROOT, "configs", "project.yaml"),
-        "advanced_config": _read_yaml_asset(*SPEC_ROOT, "configs", "advanced.yaml"),
-        "vocab_resource": _read_yaml_asset(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
-        "turns_sessions": _read_yaml_asset(*SPEC_ROOT, "turns", "sessions.yaml"),
-        "chat_files": _read_yaml_asset(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
-        "reliability_chat_files": _read_yaml_asset(
+        "dataset": example_assets.read_yaml_mapping(*SPEC_ROOT, "dataset.yaml"),
+        "project_config": example_assets.read_yaml_mapping(*SPEC_ROOT, "configs", "project.yaml"),
+        "advanced_config": example_assets.read_yaml_mapping(*SPEC_ROOT, "configs", "advanced.yaml"),
+        "vocab_resource": example_assets.read_yaml_mapping(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
+        "turns_sessions": example_assets.read_yaml_mapping(*SPEC_ROOT, "turns", "sessions.yaml"),
+        "chat_files": example_assets.read_yaml_mapping(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
+        "reliability_chat_files": example_assets.read_yaml_mapping(
             *SPEC_ROOT,
             "transcripts",
             "reliability_chat_files.yaml",
         ),
-        "expected_tables": _read_yaml_asset(*SPEC_ROOT, "transcripts", "expected_tables.yaml"),
+        "expected_tables": example_assets.read_yaml_mapping(*SPEC_ROOT, "transcripts", "expected_tables.yaml"),
     }
     _validate_chat_spec(specs["chat_files"])
     _validate_reliability_spec(specs["chat_files"], specs["reliability_chat_files"])
@@ -238,27 +234,27 @@ Key files:
 - `expected_outputs/vocab_module/`: outputs for target-vocabulary commands.
 - `expected_outputs/turns_module/`: outputs for digital conversation-turn commands.
 """
-    _write_text(project_dir / "README.md", text, force=force)
+    write_text(project_dir / "README.md", text, force=force)
 
 
 def _materialize_inputs(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> None:
     _write_readme(project_dir, specs["dataset"], force=force)
-    _write_yaml(project_dir / "config" / "project.yaml", specs["project_config"], force=force)
-    _write_yaml(project_dir / "config" / "advanced.yaml", specs["advanced_config"], force=force)
+    write_yaml(project_dir / "config" / "project.yaml", specs["project_config"], force=force)
+    write_yaml(project_dir / "config" / "advanced.yaml", specs["advanced_config"], force=force)
 
     obsolete_advanced_project = project_dir / "config" / "advanced_project.yaml"
     if force and obsolete_advanced_project.exists():
         obsolete_advanced_project.unlink()
 
     for chat in specs["chat_files"]["chat_files"]:
-        _write_text(
+        write_text(
             project_dir / "input" / "chat" / chat["filename"],
             chat["content"].rstrip() + "\n",
             force=force,
         )
 
     for chat in specs["reliability_chat_files"]["reliability_chat_files"]:
-        _write_text(
+        write_text(
             project_dir / "input" / "chat" / "reliability" / chat["filename"],
             chat["content"].rstrip() + "\n",
             force=force,
@@ -292,7 +288,7 @@ def _write_expected_transcript_table(project_dir: Path, specs: dict[str, dict[st
         exclude_dirnames=[specs["advanced_config"].get("reliability_dirname", "reliability")],
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         written = tabularize_transcripts(
             metadata_fields=metadata_fields,
             chats=chats,
@@ -383,7 +379,7 @@ def _write_expected_selection(project_dir: Path, specs: dict[str, dict[str, Any]
     }
 
     random.seed(specs["project_config"].get("random_seed", 99))
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         select_transcription_reliability_samples(
             metadata_fields=metadata_fields,
             chats=chats,
@@ -392,7 +388,7 @@ def _write_expected_selection(project_dir: Path, specs: dict[str, dict[str, Any]
             input_dir=input_dir,
         )
         source = tmpdir / "transcription_reliability_selection"
-        _replace_tree(source, expected_dir, force=force)
+        replace_tree(source, expected_dir, force=force)
 
         reselect_input = (
             project_dir
@@ -417,7 +413,7 @@ def _write_expected_evaluation(project_dir: Path, specs: dict[str, dict[str, Any
     )
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         eval_input_dir = tmpdir / "input"
         shutil.copytree(project_dir / specs["project_config"].get("input_dir", "input"), eval_input_dir)
 
@@ -433,7 +429,7 @@ def _write_expected_evaluation(project_dir: Path, specs: dict[str, dict[str, Any
             reliability_dirname=specs["advanced_config"].get("reliability_dirname", "reliability"),
         )
         source = tmpdir / "transcription_reliability_evaluation"
-        _replace_tree(source, expected_dir, force=force)
+        replace_tree(source, expected_dir, force=force)
 
     return expected_dir
 
@@ -447,7 +443,7 @@ def _write_expected_reselection(project_dir: Path, specs: dict[str, dict[str, An
     )
 
     np.random.seed(specs["project_config"].get("random_seed", 99))
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         reselect_transcription_reliability_samples(
             input_dir=(
                 project_dir
@@ -458,7 +454,7 @@ def _write_expected_reselection(project_dir: Path, specs: dict[str, dict[str, An
             frac=specs["project_config"].get("reliability_fraction", 0.34),
         )
         source = tmpdir / "reselected_transcription_reliability"
-        _replace_tree(source, expected_dir / "reselected_transcription_reliability", force=force)
+        replace_tree(source, expected_dir / "reselected_transcription_reliability", force=force)
 
     return expected_dir
 
@@ -495,7 +491,7 @@ def _write_expected_utterance_templates(
         / EXPECTED_WORKBOOK
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_template_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -509,7 +505,7 @@ def _write_expected_utterance_templates(
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+        replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
     return expected_dir
 
@@ -534,7 +530,7 @@ def _write_expected_sample_templates(
         / EXPECTED_WORKBOOK
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_template_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -549,7 +545,7 @@ def _write_expected_sample_templates(
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+        replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
     return expected_dir
 
@@ -574,7 +570,7 @@ def _write_expected_time_templates(
         / EXPECTED_WORKBOOK
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_template_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -582,7 +578,7 @@ def _write_expected_time_templates(
             input_dir=input_dir,
             output_dir=output_dir,
         )
-        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+        replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
     return expected_dir
 
@@ -614,7 +610,7 @@ def _write_expected_blinding_encode(
         / "powers_coding.xlsx"
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = tmpdir / "input" / "powers_coding"
         input_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, input_dir / source.name)
@@ -624,7 +620,7 @@ def _write_expected_blinding_encode(
             blinding_config=_blinding_command_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(tmpdir / "blinding", expected_dir, force=force)
+        replace_tree(tmpdir / "blinding", expected_dir, force=force)
 
     return expected_dir
 
@@ -645,7 +641,7 @@ def _write_expected_blinding_decode(
     source = input_root / "cu_coding" / "cu_coding.xlsx"
     codebook = input_root / "cu_coding" / "cu_blind_codebook.xlsx"
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = tmpdir / "input" / "cu_coding"
         input_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, input_dir / source.name)
@@ -655,7 +651,7 @@ def _write_expected_blinding_decode(
             output_dir=tmpdir,
             blinding_config=_blinding_command_config(specs),
         )
-        _replace_tree(tmpdir / "blinding", expected_dir, force=force)
+        replace_tree(tmpdir / "blinding", expected_dir, force=force)
 
     return expected_dir
 
@@ -716,7 +712,7 @@ def _write_expected_cu_files(
     )
 
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_cu_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -733,7 +729,7 @@ def _write_expected_cu_files(
             blinding_config=_cu_blinding_config(specs),
         )
         source = output_dir / "cu_coding"
-        _replace_tree(source, expected_dir, force=force)
+        replace_tree(source, expected_dir, force=force)
 
     cu_file = expected_dir / "cu_coding.xlsx"
     rel_file = expected_dir / "cu_reliability_coding.xlsx"
@@ -744,7 +740,7 @@ def _write_expected_cu_files(
     input_cu_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
     if input_cu_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {input_cu_dir}")
-    _replace_tree(expected_dir, input_cu_dir, force=force)
+    replace_tree(expected_dir, input_cu_dir, force=force)
     return expected_dir
 
 
@@ -758,13 +754,13 @@ def _write_expected_cu_evaluation(
         project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["evaluate"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         evaluate_cu_reliability(
             input_dir=input_dir,
             output_dir=tmpdir,
             cu_paradigms=specs["advanced_config"].get("cu_paradigms", []),
         )
-        _replace_tree(tmpdir / "cu_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "cu_reliability", expected_dir, force=force)
     return expected_dir
 
 
@@ -779,7 +775,7 @@ def _write_expected_cu_reselection(
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         reselect_cu_rel(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
@@ -787,7 +783,7 @@ def _write_expected_cu_reselection(
             frac=specs["project_config"].get("reliability_fraction", 0.34),
             random_seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(tmpdir / "reselected_cu_coding_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "reselected_cu_coding_reliability", expected_dir, force=force)
     return expected_dir
 
 
@@ -801,14 +797,14 @@ def _write_expected_cu_analysis(
         project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["analyze"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "cu_coding"
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         analyze_cu_coding(
             input_dir=input_dir,
             output_dir=tmpdir,
             cu_paradigms=specs["advanced_config"].get("cu_paradigms") or None,
             blinding_config=_cu_blinding_config(specs),
         )
-        _replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
+        replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
 
     analysis_input_dir = (
         project_dir
@@ -817,7 +813,7 @@ def _write_expected_cu_analysis(
     )
     if analysis_input_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
-    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    replace_tree(expected_dir, analysis_input_dir, force=force)
     return expected_dir
 
 
@@ -861,7 +857,7 @@ def _write_expected_cu_rates(
             times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
         times_df.to_excel(time_input, index=False)
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         calculate_cu_rates(
             input_dir=input_dir,
             output_dir=tmpdir,
@@ -878,7 +874,7 @@ def _write_expected_cu_rates(
                 "speaking_time",
             ),
         )
-        _replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
+        replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
     return expected_dir
 
 
@@ -928,7 +924,7 @@ def _write_expected_word_files(
         / EXPECTED_WORKBOOK
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_word_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -941,7 +937,7 @@ def _write_expected_word_files(
             exclude_participants=specs["project_config"].get("exclude_participants", []),
             blinding_config=_word_blinding_config(specs),
         )
-        _replace_tree(output_dir / "word_counts", expected_dir, force=force)
+        replace_tree(output_dir / "word_counts", expected_dir, force=force)
 
     rel_file = expected_dir / "word_count_reliability.xlsx"
     if rel_file.exists():
@@ -950,7 +946,7 @@ def _write_expected_word_files(
     input_word_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
     if input_word_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {input_word_dir}")
-    _replace_tree(expected_dir, input_word_dir, force=force)
+    replace_tree(expected_dir, input_word_dir, force=force)
     return expected_dir
 
 
@@ -964,9 +960,9 @@ def _write_expected_word_evaluation(
         project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["evaluate"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         evaluate_word_count_reliability(input_dir=input_dir, output_dir=tmpdir)
-        _replace_tree(tmpdir / "word_count_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "word_count_reliability", expected_dir, force=force)
     return expected_dir
 
 
@@ -981,7 +977,7 @@ def _write_expected_word_reselection(
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         reselect_wc_rel(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
@@ -989,7 +985,7 @@ def _write_expected_word_reselection(
             frac=specs["project_config"].get("reliability_fraction", 0.34),
             random_seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(tmpdir / "reselected_word_count_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "reselected_word_count_reliability", expected_dir, force=force)
     return expected_dir
 
 
@@ -1003,7 +999,7 @@ def _write_expected_word_analysis(
         project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["analyze"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "word_counts"
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         analyze_word_counts(
             input_dir=input_dir,
             output_dir=tmpdir,
@@ -1011,7 +1007,7 @@ def _write_expected_word_analysis(
             word_count_field=specs["advanced_config"].get("word_count_column", "word_count"),
             blinding_config=_word_blinding_config(specs),
         )
-        _replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
+        replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
 
     analysis_input_dir = (
         project_dir
@@ -1020,7 +1016,7 @@ def _write_expected_word_analysis(
     )
     if analysis_input_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
-    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    replace_tree(expected_dir, analysis_input_dir, force=force)
     return expected_dir
 
 
@@ -1074,7 +1070,7 @@ def _write_expected_word_rates(
             times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
         times_df.to_excel(time_input, index=False)
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         calculate_word_count_rates(
             input_dir=input_dir,
             output_dir=tmpdir,
@@ -1091,7 +1087,7 @@ def _write_expected_word_rates(
                 "speaking_time",
             ),
         )
-        _replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
+        replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
     return expected_dir
 
 
@@ -1201,7 +1197,7 @@ def _write_expected_powers_files(
         / EXPECTED_WORKBOOK
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_powers_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -1216,7 +1212,7 @@ def _write_expected_powers_files(
             automate_powers=specs["project_config"].get("automate_powers", False),
             blinding_config=_powers_blinding_config(specs),
         )
-        _replace_tree(output_dir / "powers_coding", expected_dir, force=force)
+        replace_tree(output_dir / "powers_coding", expected_dir, force=force)
 
     coding_file = next(expected_dir.rglob("powers_coding.xlsx"), None)
     reliability_file = next(expected_dir.rglob("powers_reliability_coding.xlsx"), None)
@@ -1228,7 +1224,7 @@ def _write_expected_powers_files(
     input_powers_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
     if input_powers_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {input_powers_dir}")
-    _replace_tree(expected_dir, input_powers_dir, force=force)
+    replace_tree(expected_dir, input_powers_dir, force=force)
     return expected_dir
 
 
@@ -1242,9 +1238,9 @@ def _write_expected_powers_evaluation(
         project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["evaluate"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         evaluate_powers_reliability(input_dir=input_dir, output_dir=tmpdir)
-        _replace_tree(tmpdir / "powers_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "powers_reliability", expected_dir, force=force)
     return expected_dir
 
 
@@ -1259,7 +1255,7 @@ def _write_expected_powers_reselection(
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         reselect_powers_rel(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
@@ -1268,7 +1264,7 @@ def _write_expected_powers_reselection(
             random_seed=specs["project_config"].get("random_seed", 99),
             automate_powers=specs["project_config"].get("automate_powers", False),
         )
-        _replace_tree(tmpdir / "reselected_powers_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "reselected_powers_reliability", expected_dir, force=force)
     return expected_dir
 
 
@@ -1282,13 +1278,13 @@ def _write_expected_powers_analysis(
         project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["analyze"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input") / "powers_coding"
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         analyze_powers_coding(
             input_dir=input_dir,
             output_dir=tmpdir,
             blinding_config=_powers_blinding_config(specs),
         )
-        _replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
+        replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
 
     analysis_input_dir = (
         project_dir
@@ -1297,7 +1293,7 @@ def _write_expected_powers_analysis(
     )
     if analysis_input_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
-    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    replace_tree(expected_dir, analysis_input_dir, force=force)
     return expected_dir
 
 
@@ -1337,7 +1333,7 @@ def _write_expected_powers_rates(
             times_df["speaking_time"] = [95, 88, 102][: len(times_df)]
         times_df.to_excel(time_input, index=False)
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         calculate_powers_rates(
             input_dir=input_dir,
             output_dir=tmpdir,
@@ -1350,7 +1346,7 @@ def _write_expected_powers_rates(
                 "speaking_time",
             ),
         )
-        _replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
+        replace_tree(tmpdir / "powers_coding_analysis", expected_dir, force=force)
     return expected_dir
 
 
@@ -1368,7 +1364,7 @@ def _vocab_resource_path(project_dir: Path, specs: dict[str, dict[str, Any]]) ->
 def _write_vocab_resource(project_dir: Path, specs: dict[str, dict[str, Any]], *, force: bool) -> Path:
     resource_path = _vocab_resource_path(project_dir, specs)
     if not resource_path.exists() or force:
-        _write_json(resource_path, specs["vocab_resource"], force=force)
+        write_json(resource_path, specs["vocab_resource"], force=force)
     return resource_path
 
 
@@ -1456,9 +1452,9 @@ def _write_expected_vocab_file(
     expected_dir = (
         project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["file"]
     )
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         make_target_vocab_file(input_dir=tmpdir / "input", output_dir=tmpdir)
-        _replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
+        replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
     return expected_dir
 
 
@@ -1473,9 +1469,9 @@ def _write_expected_vocab_check(
     )
     resource_path = _write_vocab_resource(project_dir, specs, force=force)
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         check_target_vocab_resources(resource_path=resource_path, output_dir=tmpdir)
-        _replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
+        replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
 
     return expected_dir
 
@@ -1498,7 +1494,7 @@ def _write_expected_vocab_analysis(
     input_dir = project_dir / specs["project_config"].get("input_dir", "input")
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         run_target_vocab(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
@@ -1513,12 +1509,12 @@ def _write_expected_vocab_analysis(
             raise FileNotFoundError("Target vocabulary analysis did not produce a workbook.")
         stable = _stable_target_vocab_analysis_name(generated[0])
         generated[0].replace(stable)
-        _replace_tree(output_dir, expected_dir, force=force)
+        replace_tree(output_dir, expected_dir, force=force)
 
     analysis_input_dir = input_dir / "target_vocab_analysis"
     if analysis_input_dir.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
-    _replace_tree(expected_dir, analysis_input_dir, force=force)
+    replace_tree(expected_dir, analysis_input_dir, force=force)
     return expected_dir
 
 
@@ -1532,9 +1528,9 @@ def _write_expected_vocab_rates(
         project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["rates"]
     )
     input_dir = project_dir / specs["project_config"].get("input_dir", "input")
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         calculate_target_vocab_rates(input_dir=input_dir, output_dir=tmpdir)
-        _replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
+        replace_tree(tmpdir / "target_vocab", expected_dir, force=force)
     return expected_dir
 
 
@@ -1595,7 +1591,7 @@ def _write_expected_turn_files(
         / EXPECTED_WORKBOOK
     )
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = _prepare_template_input(tmpdir, transcript_table)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -1609,7 +1605,7 @@ def _write_expected_turn_files(
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+        replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
     return expected_dir
 
@@ -1626,13 +1622,13 @@ def _write_expected_turn_evaluation(
     input_dir = _write_turns_coding_inputs(project_dir, specs, force=force)
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         evaluate_digital_convo_turns_reliability(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
             output_dir=tmpdir,
         )
-        _replace_tree(tmpdir / "turns_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "turns_reliability", expected_dir, force=force)
 
     return expected_dir
 
@@ -1649,7 +1645,7 @@ def _write_expected_turn_reselection(
     input_dir = _turns_input_dir(project_dir, specs)
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         reselect_digital_convo_turns_rel(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
@@ -1657,7 +1653,7 @@ def _write_expected_turn_reselection(
             frac=specs["project_config"].get("reliability_fraction", 0.34),
             random_seed=specs["project_config"].get("random_seed", 99),
         )
-        _replace_tree(tmpdir / "reselected_turns_reliability", expected_dir, force=force)
+        replace_tree(tmpdir / "reselected_turns_reliability", expected_dir, force=force)
 
     return expected_dir
 
@@ -1673,14 +1669,14 @@ def _write_expected_turn_analysis(
     )
     primary_path = _turns_input_dir(project_dir, specs) / "conversation_turns_template.xlsx"
 
-    with _scratch_dir(project_dir) as tmpdir:
+    with scratch_dir(project_dir) as tmpdir:
         input_dir = tmpdir / "input" / "conversation_turns"
         input_dir.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(primary_path, input_dir / primary_path.name)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         analyze_digital_convo_turns(input_dir=input_dir, output_dir=output_dir)
-        _replace_tree(output_dir, expected_dir, force=force)
+        replace_tree(output_dir, expected_dir, force=force)
 
     return expected_dir
 

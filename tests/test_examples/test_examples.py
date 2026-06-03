@@ -3,12 +3,13 @@ from __future__ import annotations
 import pandas as pd
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
-from diaad.examples.generate import _long_path, generate_example_files
+from diaad.examples.generate import generate_example_files
 from diaad.examples.render_docs import render_example_docs
+from psair.examples import long_path
 
 
 def _exists(path):
-    return _long_path(path).exists()
+    return long_path(path).exists()
 
 
 def test_generate_synthetic_project(tmp_path):
@@ -38,7 +39,7 @@ def test_generate_synthetic_project(tmp_path):
     )
     assert _exists(workbook)
 
-    with pd.ExcelFile(_long_path(workbook), engine="openpyxl") as xls:
+    with pd.ExcelFile(long_path(workbook), engine="openpyxl") as xls:
         assert {"samples", "utterances"} <= set(xls.sheet_names)
 
     assert _exists(
@@ -252,7 +253,7 @@ def test_generate_synthetic_project(tmp_path):
         / "target_vocab_data_260101_0000.xlsx"
     )
     assert _exists(vocab_workbook)
-    with pd.ExcelFile(_long_path(vocab_workbook), engine="openpyxl") as xls:
+    with pd.ExcelFile(long_path(vocab_workbook), engine="openpyxl") as xls:
         assert {"summary", "details"} <= set(xls.sheet_names)
     assert _exists(
         project_dir
@@ -288,7 +289,7 @@ def test_generate_synthetic_project(tmp_path):
         / "conversation_turns_reliability_results.xlsx"
     )
     assert _exists(turns_reliability)
-    with pd.ExcelFile(_long_path(turns_reliability), engine="openpyxl") as xls:
+    with pd.ExcelFile(long_path(turns_reliability), engine="openpyxl") as xls:
         assert {"counts", "sequences", "samples"} <= set(xls.sheet_names)
     assert _exists(
         project_dir

@@ -27,13 +27,13 @@ from diaad.examples.generate import (
 )
 from psair.examples import (
     ExampleAssets,
-    all_workbook_sheet_tables as _all_workbook_sheet_tables,
-    fenced as _fenced,
-    markdown_table as _markdown_table,
-    preview_json as _preview_json,
-    preview_yaml as _preview_yaml,
-    scratch_dir as _scratch_dir,
-    workbook_sheet_tables as _workbook_sheet_tables,
+    all_workbook_sheet_tables,
+    fenced,
+    markdown_table,
+    preview_json,
+    preview_yaml,
+    scratch_dir,
+    workbook_sheet_tables,
 )
 
 
@@ -42,9 +42,7 @@ DOC_ROOT = ("assets", "rendered_docs", "example_io")
 SPEC_ROOT = ("assets", "spec")
 
 
-_EXAMPLE_ASSETS = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
-_read_yaml_asset = _EXAMPLE_ASSETS.read_yaml_mapping
-_write_doc = _EXAMPLE_ASSETS.write_rendered_doc
+example_assets = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
 
 
 def _project_config_snippet(
@@ -56,7 +54,7 @@ def _project_config_snippet(
         data["input_dir"] = "diaad_data/input"
     if "output_dir" in keys:
         data["output_dir"] = "diaad_data/output"
-    return _preview_yaml(data, keys)
+    return preview_yaml(data, keys)
 
 
 RUN_DIR = "diaad_YYMMDD_HHMM"
@@ -480,22 +478,22 @@ All example data are synthetic. They are not human-subjects data, participant re
 
 ## Generated Example Files
 
-{_fenced(_example_files_tree())}
+{fenced(_example_files_tree())}
 """
 
 
 def _read_specs() -> dict[str, dict[str, Any]]:
     return {
-        "project_config": _read_yaml_asset(*SPEC_ROOT, "configs", "project.yaml"),
-        "advanced_config": _read_yaml_asset(*SPEC_ROOT, "configs", "advanced.yaml"),
-        "chat_files": _read_yaml_asset(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
-        "reliability_chat_files": _read_yaml_asset(
+        "project_config": example_assets.read_yaml_mapping(*SPEC_ROOT, "configs", "project.yaml"),
+        "advanced_config": example_assets.read_yaml_mapping(*SPEC_ROOT, "configs", "advanced.yaml"),
+        "chat_files": example_assets.read_yaml_mapping(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
+        "reliability_chat_files": example_assets.read_yaml_mapping(
             *SPEC_ROOT,
             "transcripts",
             "reliability_chat_files.yaml",
         ),
-        "vocab_resource": _read_yaml_asset(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
-        "turns_sessions": _read_yaml_asset(*SPEC_ROOT, "turns", "sessions.yaml"),
+        "vocab_resource": example_assets.read_yaml_mapping(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
+        "turns_sessions": example_assets.read_yaml_mapping(*SPEC_ROOT, "turns", "sessions.yaml"),
     }
 
 
@@ -503,7 +501,7 @@ def _blinding_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
     data = specs["advanced_config"].copy()
     data["auto_blind"] = True
     data["blind_columns"] = ["sample_id"]
-    return _preview_yaml(data, ["auto_blind", "blind_columns"])
+    return preview_yaml(data, ["auto_blind", "blind_columns"])
 
 
 def _blinding_encode_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
@@ -521,39 +519,39 @@ This example demonstrates how `diaad blinding encode` blinds `sample_id` in a st
 
 ## Command
 
-{_fenced("diaad blinding encode --config config", "bash")}
+{fenced("diaad blinding encode --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("blinding_encode"))}
+{fenced(_project_tree("blinding_encode"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "random_seed"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "random_seed"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_blinding_advanced_snippet(specs), "yaml")}
+{fenced(_blinding_advanced_snippet(specs), "yaml")}
 
 ## Input Snippet
 
 `diaad_data/input/powers_coding/powers_coding.xlsx`
 
-{_markdown_table(pd.read_excel(input_path))}
+{markdown_table(pd.read_excel(input_path))}
 
 ## Output Preview
 
 `expected_outputs/blinding_module/blinding_encode/powers_coding_blinded.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "powers_coding_blinded.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "powers_coding_blinded.xlsx"))}
 
 `expected_outputs/blinding_module/blinding_encode/blind_codebook.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "blind_codebook.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "blind_codebook.xlsx"))}
 
 `expected_outputs/blinding_module/blinding_encode/powers_coding_blinding_diagnostics.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "powers_coding_blinding_diagnostics.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "powers_coding_blinding_diagnostics.xlsx"))}
 
 ## Notes
 
@@ -577,31 +575,31 @@ This example demonstrates how `diaad blinding decode` restores blinded identifie
 
 ## Command
 
-{_fenced("diaad blinding decode --config config", "bash")}
+{fenced("diaad blinding decode --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("blinding_decode"))}
+{fenced(_project_tree("blinding_decode"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Input Snippet
 
 `diaad_data/input/cu_coding/cu_coding.xlsx`
 
-{_markdown_table(pd.read_excel(input_path))}
+{markdown_table(pd.read_excel(input_path))}
 
 `diaad_data/input/cu_coding/cu_blind_codebook.xlsx`
 
-{_markdown_table(pd.read_excel(codebook_path))}
+{markdown_table(pd.read_excel(codebook_path))}
 
 ## Output Preview
 
 `expected_outputs/blinding_module/blinding_decode/cu_coding_decoded.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_coding_decoded.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_coding_decoded.xlsx"))}
 
 ## Notes
 
@@ -631,27 +629,27 @@ This example demonstrates how `diaad transcripts tabularize` converts tiny synth
 
 ## Command
 
-{_fenced("diaad transcripts tabularize --config config", "bash")}
+{fenced("diaad transcripts tabularize --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("tabularize"))}
+{fenced(_project_tree("tabularize"))}
 
 ## Basic Config
 
-{_fenced(project_snippet, "yaml")}
+{fenced(project_snippet, "yaml")}
 
 ## Input Snippet
 
 `diaad_data/input/chat/{chat["filename"]}`
 
-{_fenced(chat_excerpt, "text")}
+{fenced(chat_excerpt, "text")}
 
 ## Output Preview
 
 `expected_outputs/transcripts_module/transcripts_tabularize/transcript_table.xlsx`
 
-{_workbook_sheet_tables(workbook, ["samples", "utterances"])}
+{workbook_sheet_tables(workbook, ["samples", "utterances"])}
 
 ## Notes
 
@@ -679,27 +677,27 @@ This example demonstrates how `diaad transcripts select` selects synthetic CHAT 
 
 ## Command
 
-{_fenced("diaad transcripts select --config config", "bash")}
+{fenced("diaad transcripts select --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("select"))}
+{fenced(_project_tree("select"))}
 
 ## Basic Config
 
-{_fenced(project_snippet, "yaml")}
+{fenced(project_snippet, "yaml")}
 
 ## Input Snippet
 
 The command uses the synthetic CHAT files in `diaad_data/input/chat/`.
 
-{_fenced(chat_excerpt, "text")}
+{fenced(chat_excerpt, "text")}
 
 ## Output Preview
 
 `expected_outputs/transcripts_module/transcripts_select/transcription_reliability_samples.xlsx`
 
-{_workbook_sheet_tables(workbook, ["reliability_selection", "all_transcripts"])}
+{workbook_sheet_tables(workbook, ["reliability_selection", "all_transcripts"])}
 
 ## Notes
 
@@ -725,8 +723,8 @@ def _evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     reliability_chat = specs["reliability_chat_files"]["reliability_chat_files"][0]
     chat_excerpt = "\n".join(reliability_chat["content"].splitlines()[:12])
     report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:10])
+    report_excerpt = report_excerpt.replace("Ã¢â‚¬Â¢", "-")
     report_excerpt = report_excerpt.replace("â€¢", "-")
-    report_excerpt = report_excerpt.replace("•", "-")
 
     return f"""# Transcription Reliability Evaluation Example
 
@@ -734,35 +732,35 @@ This example demonstrates how `diaad transcripts evaluate` compares original CHA
 
 ## Command
 
-{_fenced("diaad transcripts evaluate --config config", "bash")}
+{fenced("diaad transcripts evaluate --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("evaluate"))}
+{fenced(_project_tree("evaluate"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["reliability_tag", "reliability_dirname"]), "yaml")}
+{fenced(preview_yaml(specs["advanced_config"], ["reliability_tag", "reliability_dirname"]), "yaml")}
 
 ## Input Snippet
 
 `diaad_data/input/chat/reliability/{reliability_chat["filename"]}`
 
-{_fenced(chat_excerpt, "text")}
+{fenced(chat_excerpt, "text")}
 
 ## Output Preview
 
 `expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_evaluation.xlsx`
 
-{_markdown_table(pd.read_excel(workbook))}
+{markdown_table(pd.read_excel(workbook))}
 
 `expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_report.txt`
 
-{_fenced(report_excerpt, "text")}
+{fenced(report_excerpt, "text")}
 
 ## Notes
 
@@ -786,15 +784,15 @@ This example demonstrates how `diaad transcripts reselect` chooses replacement r
 
 ## Command
 
-{_fenced("diaad transcripts reselect --config config", "bash")}
+{fenced("diaad transcripts reselect --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("reselect"))}
+{fenced(_project_tree("reselect"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction"]), "yaml")}
 
 ## Input Snippet
 
@@ -806,7 +804,7 @@ The reselection command reads the prior selection workbook:
 
 `expected_outputs/transcripts_module/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
 
-{_workbook_sheet_tables(workbook, ["reselected_reliability"])}
+{workbook_sheet_tables(workbook, ["reselected_reliability"])}
 
 ## Notes
 
@@ -829,7 +827,7 @@ def _template_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _template_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
-    return _preview_yaml(
+    return preview_yaml(
         specs["advanced_config"],
         ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"],
     )
@@ -852,19 +850,19 @@ This example demonstrates how `diaad templates utterances` creates blank utteran
 
 ## Command
 
-{_fenced("diaad templates utterances --config config", "bash")}
+{fenced("diaad templates utterances --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("templates_utterances"))}
+{fenced(_project_tree("templates_utterances"))}
 
 ## Basic Config
 
-{_fenced(_template_config_snippet(specs), "yaml")}
+{fenced(_template_config_snippet(specs), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_template_advanced_snippet(specs), "yaml")}
+{fenced(_template_advanced_snippet(specs), "yaml")}
 
 ## Input Snippet
 
@@ -874,15 +872,15 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. Th
 
 `expected_outputs/templates_module/templates_utterances/utterance_coding_template.xlsx`
 
-{_all_workbook_sheet_tables(primary)}
+{all_workbook_sheet_tables(primary)}
 
 `expected_outputs/templates_module/templates_utterances/utterance_reliability_template.xlsx`
 
-{_all_workbook_sheet_tables(reliability)}
+{all_workbook_sheet_tables(reliability)}
 
 `expected_outputs/templates_module/templates_utterances/utterance_template_codebook.xlsx`
 
-{_all_workbook_sheet_tables(codebook)}
+{all_workbook_sheet_tables(codebook)}
 
 ## Notes
 
@@ -907,33 +905,33 @@ This example demonstrates how `diaad templates samples` creates blank sample-lev
 
 ## Command
 
-{_fenced("diaad templates samples --config config", "bash")}
+{fenced("diaad templates samples --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("templates_samples"))}
+{fenced(_project_tree("templates_samples"))}
 
 ## Basic Config
 
-{_fenced(_template_config_snippet(specs), "yaml")}
+{fenced(_template_config_snippet(specs), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_template_advanced_snippet(specs), "yaml")}
+{fenced(_template_advanced_snippet(specs), "yaml")}
 
 ## Output Preview
 
 `expected_outputs/templates_module/templates_samples/sample_coding_template.xlsx`
 
-{_all_workbook_sheet_tables(primary)}
+{all_workbook_sheet_tables(primary)}
 
 `expected_outputs/templates_module/templates_samples/sample_reliability_template.xlsx`
 
-{_all_workbook_sheet_tables(reliability)}
+{all_workbook_sheet_tables(reliability)}
 
 `expected_outputs/templates_module/templates_samples/sample_template_codebook.xlsx`
 
-{_all_workbook_sheet_tables(codebook)}
+{all_workbook_sheet_tables(codebook)}
 
 ## Notes
 
@@ -956,21 +954,21 @@ This example demonstrates how `diaad templates times` creates a blank sample-lev
 
 ## Command
 
-{_fenced("diaad templates times --config config", "bash")}
+{fenced("diaad templates times --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("templates_times"))}
+{fenced(_project_tree("templates_times"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Output Preview
 
 `expected_outputs/templates_module/templates_times/speaking_times.xlsx`
 
-{_all_workbook_sheet_tables(workbook)}
+{all_workbook_sheet_tables(workbook)}
 
 ## Notes
 
@@ -993,7 +991,7 @@ def _cu_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _cu_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
-    return _preview_yaml(
+    return preview_yaml(
         specs["advanced_config"],
         ["cu_paradigms", "auto_blind", "blind_columns", "metadata_source", "codebook_filename"],
     )
@@ -1008,19 +1006,19 @@ This example demonstrates how `diaad cus files` creates complete-utterance codin
 
 ## Command
 
-{_fenced("diaad cus files --config config", "bash")}
+{fenced("diaad cus files --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("cus_files"))}
+{fenced(_project_tree("cus_files"))}
 
 ## Basic Config
 
-{_fenced(_cu_config_snippet(specs), "yaml")}
+{fenced(_cu_config_snippet(specs), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_cu_advanced_snippet(specs), "yaml")}
+{fenced(_cu_advanced_snippet(specs), "yaml")}
 
 ## Input Snippet
 
@@ -1030,15 +1028,15 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 `expected_outputs/cus_module/cus_files/cu_coding.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_coding.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_coding.xlsx"))}
 
 `expected_outputs/cus_module/cus_files/cu_reliability_coding.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_reliability_coding.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_reliability_coding.xlsx"))}
 
 `expected_outputs/cus_module/cus_files/cu_blind_codebook.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_blind_codebook.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_blind_codebook.xlsx"))}
 
 ## Notes
 
@@ -1058,15 +1056,15 @@ This example demonstrates how `diaad cus evaluate` compares primary CU coding wi
 
 ## Command
 
-{_fenced("diaad cus evaluate --config config", "bash")}
+{fenced("diaad cus evaluate --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("cus_evaluate"))}
+{fenced(_project_tree("cus_evaluate"))}
 
 ## Basic Config
 
-{_fenced("input_dir: diaad_data/input\noutput_dir: diaad_data/output", "yaml")}
+{fenced("input_dir: diaad_data/input\noutput_dir: diaad_data/output", "yaml")}
 
 ## Input Snippet
 
@@ -1076,15 +1074,15 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx` and `diaad_data/in
 
 `expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_by_utterance.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_utterance.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_utterance.xlsx"))}
 
 `expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_by_sample.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_sample.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_sample.xlsx"))}
 
 `expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_report.txt`
 
-{_fenced(report_excerpt, "text")}
+{fenced(report_excerpt, "text")}
 
 ## Notes
 
@@ -1101,15 +1099,15 @@ This example demonstrates how `diaad cus reselect` selects replacement CU reliab
 
 ## Command
 
-{_fenced("diaad cus reselect --config config", "bash")}
+{fenced("diaad cus reselect --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("cus_reselect"))}
+{fenced(_project_tree("cus_reselect"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields"]), "yaml")}
 
 ## Input Snippet
 
@@ -1119,7 +1117,7 @@ The command reads prior CU coding and reliability workbooks from `diaad_data/inp
 
 `expected_outputs/cus_module/cus_reselect/reselected_cu_reliability_coding.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "reselected_cu_reliability_coding.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "reselected_cu_reliability_coding.xlsx"))}
 
 ## Notes
 
@@ -1136,19 +1134,19 @@ This example demonstrates how `diaad cus analyze` summarizes filled complete-utt
 
 ## Command
 
-{_fenced("diaad cus analyze --config config", "bash")}
+{fenced("diaad cus analyze --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("cus_analyze"))}
+{fenced(_project_tree("cus_analyze"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
+{fenced(preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1158,15 +1156,15 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codeboo
 
 `expected_outputs/cus_module/cus_analyze/cu_coding_by_utterance.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_coding_by_utterance.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_coding_by_utterance.xlsx"))}
 
 `expected_outputs/cus_module/cus_analyze/cu_coding_by_sample_long.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample_long.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample_long.xlsx"))}
 
 `expected_outputs/cus_module/cus_analyze/cu_coding_by_sample.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample.xlsx"))}
 
 ## Notes
 
@@ -1183,19 +1181,19 @@ This example demonstrates how `diaad cus rates` combines CU sample summaries wit
 
 ## Command
 
-{_fenced("diaad cus rates --config config", "bash")}
+{fenced("diaad cus rates --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("cus_rates"))}
+{fenced(_project_tree("cus_rates"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["cu_samples_filename", "speaking_time_filename", "speaking_time_column"]), "yaml")}
+{fenced(preview_yaml(specs["advanced_config"], ["cu_samples_filename", "speaking_time_filename", "speaking_time_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1205,7 +1203,7 @@ The command reads `diaad_data/input/cu_coding_analysis/cu_coding_by_sample_long.
 
 `expected_outputs/cus_module/cus_rates/cu_coding_rates.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "cu_coding_rates.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "cu_coding_rates.xlsx"))}
 
 ## Notes
 
@@ -1228,7 +1226,7 @@ def _word_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _word_advanced_snippet(specs: dict[str, dict[str, Any]], keys: list[str] | None = None) -> str:
-    return _preview_yaml(
+    return preview_yaml(
         specs["advanced_config"],
         keys
         or [
@@ -1250,19 +1248,19 @@ This example demonstrates how `diaad words files` creates word-count coding and 
 
 ## Command
 
-{_fenced("diaad words files --config config", "bash")}
+{fenced("diaad words files --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("words_files"))}
+{fenced(_project_tree("words_files"))}
 
 ## Basic Config
 
-{_fenced(_word_config_snippet(specs), "yaml")}
+{fenced(_word_config_snippet(specs), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs), "yaml")}
+{fenced(_word_advanced_snippet(specs), "yaml")}
 
 ## Input Snippet
 
@@ -1272,15 +1270,15 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 `expected_outputs/words_module/words_files/word_counting.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_counting.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_counting.xlsx"))}
 
 `expected_outputs/words_module/words_files/word_count_reliability.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_count_reliability.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_count_reliability.xlsx"))}
 
 `expected_outputs/words_module/words_files/word_count_blind_codebook.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_count_blind_codebook.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_count_blind_codebook.xlsx"))}
 
 ## Notes
 
@@ -1299,19 +1297,19 @@ This example demonstrates how `diaad words evaluate` compares primary word count
 
 ## Command
 
-{_fenced("diaad words evaluate --config config", "bash")}
+{fenced("diaad words evaluate --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("words_evaluate"))}
+{fenced(_project_tree("words_evaluate"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["word_count_filename", "word_count_column"]), "yaml")}
+{fenced(_word_advanced_snippet(specs, ["word_count_filename", "word_count_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1321,11 +1319,11 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx` and `diaad_d
 
 `expected_outputs/words_module/words_evaluate/word_count_reliability_results.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_count_reliability_results.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_count_reliability_results.xlsx"))}
 
 `expected_outputs/words_module/words_evaluate/word_count_reliability_report.txt`
 
-{_fenced(report_excerpt, "text")}
+{fenced(report_excerpt, "text")}
 
 ## Notes
 
@@ -1342,15 +1340,15 @@ This example demonstrates how `diaad words reselect` selects replacement word-co
 
 ## Command
 
-{_fenced("diaad words reselect --config config", "bash")}
+{fenced("diaad words reselect --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("words_reselect"))}
+{fenced(_project_tree("words_reselect"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields"]), "yaml")}
 
 ## Input Snippet
 
@@ -1360,7 +1358,7 @@ The command reads prior word-count coding and reliability workbooks from `diaad_
 
 `expected_outputs/words_module/words_reselect/reselected_word_count_reliability.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "reselected_word_count_reliability.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "reselected_word_count_reliability.xlsx"))}
 
 ## Notes
 
@@ -1377,19 +1375,19 @@ This example demonstrates how `diaad words analyze` summarizes filled word-count
 
 ## Command
 
-{_fenced("diaad words analyze --config config", "bash")}
+{fenced("diaad words analyze --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("words_analyze"))}
+{fenced(_project_tree("words_analyze"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["word_count_filename", "word_count_column", "auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
+{fenced(_word_advanced_snippet(specs, ["word_count_filename", "word_count_column", "auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1399,11 +1397,11 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind c
 
 `expected_outputs/words_module/words_analyze/word_counting_by_utterance.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_counting_by_utterance.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_counting_by_utterance.xlsx"))}
 
 `expected_outputs/words_module/words_analyze/word_counting_by_sample.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_counting_by_sample.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_counting_by_sample.xlsx"))}
 
 ## Notes
 
@@ -1420,19 +1418,19 @@ This example demonstrates how `diaad words rates` combines word-count sample sum
 
 ## Command
 
-{_fenced("diaad words rates --config config", "bash")}
+{fenced("diaad words rates --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("words_rates"))}
+{fenced(_project_tree("words_rates"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_word_advanced_snippet(specs, ["wc_samples_filename", "speaking_time_filename", "speaking_time_column"]), "yaml")}
+{fenced(_word_advanced_snippet(specs, ["wc_samples_filename", "speaking_time_filename", "speaking_time_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1442,7 +1440,7 @@ The command reads `diaad_data/input/word_count_analysis/word_counting_by_sample.
 
 `expected_outputs/words_module/words_rates/word_counting_rates.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "word_counting_rates.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "word_counting_rates.xlsx"))}
 
 ## Notes
 
@@ -1474,15 +1472,15 @@ This example demonstrates how `diaad powers files` creates POWERS coding and rel
 
 ## Command
 
-{_fenced("diaad powers files --config config", "bash")}
+{fenced("diaad powers files --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("powers_files"))}
+{fenced(_project_tree("powers_files"))}
 
 ## Basic Config
 
-{_fenced(_powers_config_snippet(specs), "yaml")}
+{fenced(_powers_config_snippet(specs), "yaml")}
 
 ## Input Snippet
 
@@ -1492,15 +1490,15 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 `expected_outputs/powers_module/powers_files/powers_coding.xlsx`
 
-{_all_workbook_sheet_tables(output_dir / "powers_coding.xlsx")}
+{all_workbook_sheet_tables(output_dir / "powers_coding.xlsx")}
 
 `expected_outputs/powers_module/powers_files/powers_reliability_coding.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "powers_reliability_coding.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "powers_reliability_coding.xlsx"))}
 
 `expected_outputs/powers_module/powers_files/powers_blind_codebook.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "powers_blind_codebook.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "powers_blind_codebook.xlsx"))}
 
 ## Notes
 
@@ -1519,15 +1517,15 @@ This example demonstrates how `diaad powers evaluate` compares primary POWERS co
 
 ## Command
 
-{_fenced("diaad powers evaluate --config config", "bash")}
+{fenced("diaad powers evaluate --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("powers_evaluate"))}
+{fenced(_project_tree("powers_evaluate"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Input Snippet
 
@@ -1537,11 +1535,11 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx` and `diaad
 
 `expected_outputs/powers_module/powers_evaluate/powers_reliability_results.xlsx`
 
-{_all_workbook_sheet_tables(output_dir / "powers_reliability_results.xlsx")}
+{all_workbook_sheet_tables(output_dir / "powers_reliability_results.xlsx")}
 
 `expected_outputs/powers_module/powers_evaluate/powers_reliability_report.txt`
 
-{_fenced(report_excerpt, "text")}
+{fenced(report_excerpt, "text")}
 
 ## Notes
 
@@ -1558,15 +1556,15 @@ This example demonstrates how `diaad powers reselect` selects replacement POWERS
 
 ## Command
 
-{_fenced("diaad powers reselect --config config", "bash")}
+{fenced("diaad powers reselect --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("powers_reselect"))}
+{fenced(_project_tree("powers_reselect"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields", "automate_powers"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "metadata_fields", "automate_powers"]), "yaml")}
 
 ## Input Snippet
 
@@ -1576,7 +1574,7 @@ The command reads prior POWERS coding and reliability workbooks from `diaad_data
 
 `expected_outputs/powers_module/powers_reselect/reselected_powers_reliability_coding.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "reselected_powers_reliability_coding.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "reselected_powers_reliability_coding.xlsx"))}
 
 ## Notes
 
@@ -1593,15 +1591,15 @@ This example demonstrates how `diaad powers analyze` summarizes filled POWERS co
 
 ## Command
 
-{_fenced("diaad powers analyze --config config", "bash")}
+{fenced("diaad powers analyze --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("powers_analyze"))}
+{fenced(_project_tree("powers_analyze"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Input Snippet
 
@@ -1611,7 +1609,7 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx`.
 
 `expected_outputs/powers_module/powers_analyze/powers_analysis.xlsx`
 
-{_all_workbook_sheet_tables(output_dir / "powers_analysis.xlsx")}
+{all_workbook_sheet_tables(output_dir / "powers_analysis.xlsx")}
 
 ## Notes
 
@@ -1628,19 +1626,19 @@ This example demonstrates how `diaad powers rates` combines POWERS dialog summar
 
 ## Command
 
-{_fenced("diaad powers rates --config config", "bash")}
+{fenced("diaad powers rates --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("powers_rates"))}
+{fenced(_project_tree("powers_rates"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["speaking_time_filename", "speaking_time_column"]), "yaml")}
+{fenced(preview_yaml(specs["advanced_config"], ["speaking_time_filename", "speaking_time_column"]), "yaml")}
 
 ## Input Snippet
 
@@ -1650,7 +1648,7 @@ The command reads `diaad_data/input/powers_coding_analysis/powers_analysis.xlsx`
 
 `expected_outputs/powers_module/powers_rates/powers_coding_rates.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "powers_coding_rates.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "powers_coding_rates.xlsx"))}
 
 ## Notes
 
@@ -1669,7 +1667,7 @@ def _vocab_resource_snippet(specs: dict[str, dict[str, Any]]) -> str:
             for key, value in list(resource.get("variant_map", {}).items())[:3]
         },
     }
-    return _preview_json(subset)
+    return preview_json(subset)
 
 
 def _vocab_note() -> str:
@@ -1706,21 +1704,21 @@ This example demonstrates how `diaad vocab file` creates a blank JSON template f
 
 ## Command
 
-{_fenced("diaad vocab file --config config", "bash")}
+{fenced("diaad vocab file --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("vocab_file"))}
+{fenced(_project_tree("vocab_file"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Output Preview
 
 `expected_outputs/vocab_module/vocab_file/target_vocabulary_resource_template.json`
 
-{_fenced(template_text[:1200], "json")}
+{fenced(template_text[:1200], "json")}
 
 ## Notes
 
@@ -1738,31 +1736,31 @@ This example demonstrates how `diaad vocab check` validates the active built-in 
 
 ## Command
 
-{_fenced("diaad vocab check --config config", "bash")}
+{fenced("diaad vocab check --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("vocab_check"))}
+{fenced(_project_tree("vocab_check"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_vocab_advanced_snippet(), "yaml")}
+{fenced(_vocab_advanced_snippet(), "yaml")}
 
 ## Input Snippet
 
 `diaad_data/input/target_vocab/resources/picnic_target_vocab.json`
 
-{_fenced(_vocab_resource_snippet(specs), "json")}
+{fenced(_vocab_resource_snippet(specs), "json")}
 
 ## Output Preview
 
 `expected_outputs/vocab_module/vocab_check/target_vocab_resource_check.txt`
 
-{_fenced(report, "text")}
+{fenced(report, "text")}
 
 ## Notes
 
@@ -1781,35 +1779,35 @@ This example demonstrates how `diaad vocab analyze` calculates target-vocabulary
 
 ## Command
 
-{_fenced("diaad vocab analyze --config config", "bash")}
+{fenced("diaad vocab analyze --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("vocab_analyze"))}
+{fenced(_project_tree("vocab_analyze"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_column", "exclude_participants"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_column", "exclude_participants"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_vocab_advanced_snippet(), "yaml")}
+{fenced(_vocab_advanced_snippet(), "yaml")}
 
 ## Input Snippet
 
 `diaad_data/input/target_vocab/resources/picnic_target_vocab.json`
 
-{_fenced(_vocab_resource_snippet(specs), "json")}
+{fenced(_vocab_resource_snippet(specs), "json")}
 
 `diaad_data/input/target_vocab/unblind_utterance_data.xlsx`
 
-{_markdown_table(pd.read_excel(input_path))}
+{markdown_table(pd.read_excel(input_path))}
 
 ## Output Preview
 
 `expected_outputs/vocab_module/vocab_analyze/target_vocab_data_260101_0000.xlsx`
 
-{_workbook_sheet_tables(workbook, ["summary", "details"])}
+{workbook_sheet_tables(workbook, ["summary", "details"])}
 
 ## Notes
 
@@ -1826,15 +1824,15 @@ This example demonstrates how `diaad vocab rates` converts target-vocabulary ana
 
 ## Command
 
-{_fenced("diaad vocab rates --config config", "bash")}
+{fenced("diaad vocab rates --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("vocab_rates"))}
+{fenced(_project_tree("vocab_rates"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Input Snippet
 
@@ -1844,7 +1842,7 @@ The command reads `diaad_data/input/target_vocab_analysis/target_vocab_data_YYMM
 
 `expected_outputs/vocab_module/vocab_rates/target_vocab_rates.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "target_vocab_rates.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "target_vocab_rates.xlsx"))}
 
 ## Notes
 
@@ -1853,7 +1851,7 @@ The command reads `diaad_data/input/target_vocab_analysis/target_vocab_data_YYMM
 
 
 def _turns_rows_table(specs: dict[str, dict[str, Any]], key: str) -> str:
-    return _markdown_table(pd.DataFrame(specs["turns_sessions"].get(key, [])))
+    return markdown_table(pd.DataFrame(specs["turns_sessions"].get(key, [])))
 
 
 def _turns_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
@@ -1865,19 +1863,19 @@ This example demonstrates how `diaad turns files` creates blank digital conversa
 
 ## Command
 
-{_fenced("diaad turns files --config config", "bash")}
+{fenced("diaad turns files --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("turns_files"))}
+{fenced(_project_tree("turns_files"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "num_bins", "num_coders", "metadata_fields"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "num_bins", "num_coders", "metadata_fields"]), "yaml")}
 
 ## Advanced Config
 
-{_fenced(_preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
+{fenced(preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
 
 ## Input Snippet
 
@@ -1887,11 +1885,11 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx` to 
 
 `expected_outputs/turns_module/turns_files/conversation_turns_template.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "conversation_turns_template.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "conversation_turns_template.xlsx"))}
 
 `expected_outputs/turns_module/turns_files/conversation_turns_reliability_template.xlsx`
 
-{_markdown_table(pd.read_excel(output_dir / "conversation_turns_reliability_template.xlsx"))}
+{markdown_table(pd.read_excel(output_dir / "conversation_turns_reliability_template.xlsx"))}
 
 ## Notes
 
@@ -1910,15 +1908,15 @@ This example demonstrates how `diaad turns evaluate` compares primary and reliab
 
 ## Command
 
-{_fenced("diaad turns evaluate --config config", "bash")}
+{fenced("diaad turns evaluate --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("turns_evaluate"))}
+{fenced(_project_tree("turns_evaluate"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
 
 ## Input Snippet
 
@@ -1934,11 +1932,11 @@ This example demonstrates how `diaad turns evaluate` compares primary and reliab
 
 `expected_outputs/turns_module/turns_evaluate/conversation_turns_reliability_results.xlsx`
 
-{_workbook_sheet_tables(output_dir / "conversation_turns_reliability_results.xlsx", ["counts", "sequences", "samples"])}
+{workbook_sheet_tables(output_dir / "conversation_turns_reliability_results.xlsx", ["counts", "sequences", "samples"])}
 
 `expected_outputs/turns_module/turns_evaluate/conversation_turns_reliability_report.txt`
 
-{_fenced(report_excerpt, "text")}
+{fenced(report_excerpt, "text")}
 
 ## Notes
 
@@ -1956,15 +1954,15 @@ This example demonstrates how `diaad turns reselect` selects replacement samples
 
 ## Command
 
-{_fenced("diaad turns reselect --config config", "bash")}
+{fenced("diaad turns reselect --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("turns_reselect"))}
+{fenced(_project_tree("turns_reselect"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "random_seed", "metadata_fields"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "random_seed", "metadata_fields"]), "yaml")}
 
 ## Input Snippet
 
@@ -1974,7 +1972,7 @@ The primary turns workbook has two synthetic sample IDs. The prior reliability w
 
 `expected_outputs/turns_module/turns_reselect/{workbook.name}`
 
-{_markdown_table(pd.read_excel(workbook))}
+{markdown_table(pd.read_excel(workbook))}
 
 ## Notes
 
@@ -1992,15 +1990,15 @@ This example demonstrates how `diaad turns analyze` summarizes digital conversat
 
 ## Command
 
-{_fenced("diaad turns analyze --config config", "bash")}
+{fenced("diaad turns analyze --config config", "bash")}
 
 ## Project Files
 
-{_fenced(_project_tree("turns_analyze"))}
+{fenced(_project_tree("turns_analyze"))}
 
 ## Basic Config
 
-{_fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
 ## Input Snippet
 
@@ -2012,7 +2010,7 @@ This example demonstrates how `diaad turns analyze` summarizes digital conversat
 
 `expected_outputs/turns_module/turns_analyze/conversation_turns_template_analysis.xlsx`
 
-{_all_workbook_sheet_tables(workbook)}
+{all_workbook_sheet_tables(workbook)}
 
 ## Notes
 
@@ -2023,7 +2021,7 @@ The strings are deliberately tiny but include two sessions, two bins, four speak
 def render_example_docs() -> list[Path]:
     """Create or update packaged example I/O markdown assets."""
     specs = _read_specs()
-    with _scratch_dir(Path.cwd()) as tmpdir:
+    with scratch_dir(Path.cwd()) as tmpdir:
         project_dir = generate_example_files(tmpdir / "synthetic_project", force=True)
         blinding_encode_doc = _blinding_encode_doc(project_dir, specs)
         blinding_decode_doc = _blinding_decode_doc(project_dir, specs)
@@ -2059,37 +2057,37 @@ def render_example_docs() -> list[Path]:
         turns_analyze_doc = _turns_analyze_doc(project_dir, specs)
 
     return [
-        _write_doc("01_overview.md", text=_overview_doc()),
-        _write_doc("blinding", "encode.md", text=blinding_encode_doc),
-        _write_doc("blinding", "decode.md", text=blinding_decode_doc),
-        _write_doc("transcripts", "tabularize.md", text=tabularize_doc),
-        _write_doc("transcripts", "select.md", text=select_doc),
-        _write_doc("transcripts", "evaluate.md", text=evaluate_doc),
-        _write_doc("transcripts", "reselect.md", text=reselect_doc),
-        _write_doc("templates", "utterances.md", text=utterance_templates_doc),
-        _write_doc("templates", "samples.md", text=sample_templates_doc),
-        _write_doc("templates", "times.md", text=time_templates_doc),
-        _write_doc("cus", "files.md", text=cu_files_doc),
-        _write_doc("cus", "evaluate.md", text=cu_evaluate_doc),
-        _write_doc("cus", "reselect.md", text=cu_reselect_doc),
-        _write_doc("cus", "analyze.md", text=cu_analyze_doc),
-        _write_doc("cus", "rates.md", text=cu_rates_doc),
-        _write_doc("words", "files.md", text=word_files_doc),
-        _write_doc("words", "evaluate.md", text=word_evaluate_doc),
-        _write_doc("words", "reselect.md", text=word_reselect_doc),
-        _write_doc("words", "analyze.md", text=word_analyze_doc),
-        _write_doc("words", "rates.md", text=word_rates_doc),
-        _write_doc("powers", "files.md", text=powers_files_doc),
-        _write_doc("powers", "evaluate.md", text=powers_evaluate_doc),
-        _write_doc("powers", "reselect.md", text=powers_reselect_doc),
-        _write_doc("powers", "analyze.md", text=powers_analyze_doc),
-        _write_doc("powers", "rates.md", text=powers_rates_doc),
-        _write_doc("vocab", "file.md", text=vocab_file_doc),
-        _write_doc("vocab", "check.md", text=vocab_check_doc),
-        _write_doc("vocab", "analyze.md", text=vocab_analyze_doc),
-        _write_doc("vocab", "rates.md", text=vocab_rates_doc),
-        _write_doc("turns", "files.md", text=turns_files_doc),
-        _write_doc("turns", "evaluate.md", text=turns_evaluate_doc),
-        _write_doc("turns", "reselect.md", text=turns_reselect_doc),
-        _write_doc("turns", "analyze.md", text=turns_analyze_doc),
+        example_assets.write_rendered_doc("01_overview.md", text=_overview_doc()),
+        example_assets.write_rendered_doc("blinding", "encode.md", text=blinding_encode_doc),
+        example_assets.write_rendered_doc("blinding", "decode.md", text=blinding_decode_doc),
+        example_assets.write_rendered_doc("transcripts", "tabularize.md", text=tabularize_doc),
+        example_assets.write_rendered_doc("transcripts", "select.md", text=select_doc),
+        example_assets.write_rendered_doc("transcripts", "evaluate.md", text=evaluate_doc),
+        example_assets.write_rendered_doc("transcripts", "reselect.md", text=reselect_doc),
+        example_assets.write_rendered_doc("templates", "utterances.md", text=utterance_templates_doc),
+        example_assets.write_rendered_doc("templates", "samples.md", text=sample_templates_doc),
+        example_assets.write_rendered_doc("templates", "times.md", text=time_templates_doc),
+        example_assets.write_rendered_doc("cus", "files.md", text=cu_files_doc),
+        example_assets.write_rendered_doc("cus", "evaluate.md", text=cu_evaluate_doc),
+        example_assets.write_rendered_doc("cus", "reselect.md", text=cu_reselect_doc),
+        example_assets.write_rendered_doc("cus", "analyze.md", text=cu_analyze_doc),
+        example_assets.write_rendered_doc("cus", "rates.md", text=cu_rates_doc),
+        example_assets.write_rendered_doc("words", "files.md", text=word_files_doc),
+        example_assets.write_rendered_doc("words", "evaluate.md", text=word_evaluate_doc),
+        example_assets.write_rendered_doc("words", "reselect.md", text=word_reselect_doc),
+        example_assets.write_rendered_doc("words", "analyze.md", text=word_analyze_doc),
+        example_assets.write_rendered_doc("words", "rates.md", text=word_rates_doc),
+        example_assets.write_rendered_doc("powers", "files.md", text=powers_files_doc),
+        example_assets.write_rendered_doc("powers", "evaluate.md", text=powers_evaluate_doc),
+        example_assets.write_rendered_doc("powers", "reselect.md", text=powers_reselect_doc),
+        example_assets.write_rendered_doc("powers", "analyze.md", text=powers_analyze_doc),
+        example_assets.write_rendered_doc("powers", "rates.md", text=powers_rates_doc),
+        example_assets.write_rendered_doc("vocab", "file.md", text=vocab_file_doc),
+        example_assets.write_rendered_doc("vocab", "check.md", text=vocab_check_doc),
+        example_assets.write_rendered_doc("vocab", "analyze.md", text=vocab_analyze_doc),
+        example_assets.write_rendered_doc("vocab", "rates.md", text=vocab_rates_doc),
+        example_assets.write_rendered_doc("turns", "files.md", text=turns_files_doc),
+        example_assets.write_rendered_doc("turns", "evaluate.md", text=turns_evaluate_doc),
+        example_assets.write_rendered_doc("turns", "reselect.md", text=turns_reselect_doc),
+        example_assets.write_rendered_doc("turns", "analyze.md", text=turns_analyze_doc),
     ]
