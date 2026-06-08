@@ -143,8 +143,11 @@ def test_detabularize_transcripts_regularizes_chat_punctuation(tmp_path):
             {
                 "sample_id": "S1",
                 "speaker": "PAR0",
-                "utterance": "it\u2019s \u201cfine\u201d\u2026 wait \u2013 okay",
-                "comment": "don\u2019t\u2014stop",
+                "utterance": (
+                    "it\u2019s \u201cfine\u201d\u2026 wait \u2013 okay"
+                    "\uff0c yes\uff1f no\uff01 done\u3002"
+                ),
+                "comment": "don\u2019t\u2014stop\u060c okay\uff0e",
             }
         ]
     )
@@ -153,11 +156,15 @@ def test_detabularize_transcripts_regularizes_chat_punctuation(tmp_path):
     detabularize_transcripts(input_dir=input_dir, output_dir=output_dir)
 
     chat_text = (output_dir / "chat_files" / "TU_Pre_Story.cha").read_text(encoding="utf-8")
-    assert "*PAR0:\tit's \"fine\"... wait - okay\n" in chat_text
-    assert "%com:\tdon't-stop\n" in chat_text
+    assert "*PAR0:\tit's \"fine\"... wait - okay, yes? no! done.\n" in chat_text
+    assert "%com:\tdon't-stop, okay.\n" in chat_text
     assert "\u2019" not in chat_text
     assert "\u201c" not in chat_text
     assert "\u201d" not in chat_text
+    assert "\uff0c" not in chat_text
+    assert "\uff1f" not in chat_text
+    assert "\uff01" not in chat_text
+    assert "\u3002" not in chat_text
 
 
 def test_detabularize_transcripts_skips_samples_with_no_utterances(tmp_path, caplog):
