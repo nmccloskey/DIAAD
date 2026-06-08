@@ -38,6 +38,7 @@ class FakeConfigManager:
         self.powers_reliability_filename = "powers_reliability_coding.xlsx"
         self.powers_coding_file = self.powers_coding_filename
         self.powers_reliability_file = self.powers_reliability_filename
+        self.spacy_model_name = "en_core_web_trf"
         self.sample_id_column = "expanded_sample_id"
         self.utterance_id_column = "expanded_utterance_id"
         self.sample_id_field = self.sample_id_column
@@ -55,6 +56,7 @@ class FakeConfigManager:
             target_vocabulary_resource_path="",
             powers_coding_filename="powers_coding.xlsx",
             powers_reliability_filename="powers_reliability_coding.xlsx",
+            spacy_model_name="en_core_web_trf",
             sample_id_column="expanded_sample_id",
             utterance_id_column="expanded_utterance_id",
         )
@@ -271,11 +273,13 @@ def test_run_context_threads_powers_identifier_fields(monkeypatch, tmp_path):
 
     assert ctx.kwargs_make_powers_coding_files()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_make_powers_coding_files()["utterance_id_field"] == "expanded_utterance_id"
+    assert ctx.kwargs_make_powers_coding_files()["spacy_model_name"] == "en_core_web_trf"
     assert ctx.kwargs_analyze_powers_coding()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_powers_rates()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_evaluate_powers_reliability()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_evaluate_powers_reliability()["utterance_id_field"] == "expanded_utterance_id"
     assert ctx.kwargs_reselect_powers_reliability()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_reselect_powers_reliability()["spacy_model_name"] == "en_core_web_trf"
 
 
 def test_run_context_threads_template_identifier_fields(monkeypatch, tmp_path):

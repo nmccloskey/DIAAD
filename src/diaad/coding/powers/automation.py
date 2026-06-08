@@ -160,7 +160,10 @@ def count_content_words_from_doc(doc):
     return total_cw, total_nouns, tagged_utt
 
 
-def run_automation(df: pd.DataFrame) -> pd.DataFrame:
+def run_automation(
+    df: pd.DataFrame,
+    spacy_model_name: str = "en_core_web_sm",
+) -> pd.DataFrame:
     """
     Populate automated POWERS fields on an unprefixed coding dataframe.
 
@@ -170,7 +173,7 @@ def run_automation(df: pd.DataFrame) -> pd.DataFrame:
     returned unchanged.
     """
     try:
-        nlp = get_powers_nlp()
+        nlp = get_powers_nlp(model_name=spacy_model_name)
     except Exception as e:
         logger.error(f"Failed to load NLP model; POWERS automation unavailable: {e}")
         return df

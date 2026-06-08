@@ -61,6 +61,7 @@ def _build_powers_reliability_frame(
     rel_template,
     re_ids,
     automate_powers=True,
+    spacy_model_name="en_core_web_sm",
     sample_id_field="sample_id",
 ):
     """
@@ -83,7 +84,7 @@ def _build_powers_reliability_frame(
 
     if automate_powers:
         try:
-            sub = run_automation(sub)
+            sub = run_automation(sub, spacy_model_name=spacy_model_name)
         except Exception as e:
             logger.error(f"[POWERS] Failed applying automation during reselection: {e}")
 
@@ -102,6 +103,7 @@ def reselect_powers_rel(
     automate_powers=True,
     powers_coding_file="powers_coding.xlsx",
     powers_reliability_file="powers_reliability_coding.xlsx",
+    spacy_model_name="en_core_web_sm",
     sample_id_field="sample_id",
 ):
     """
@@ -156,6 +158,7 @@ def reselect_powers_rel(
                 rel_template=rel_template,
                 re_ids=new_ids,
                 automate_powers=automate_powers,
+                spacy_model_name=spacy_model_name,
                 sample_id_field=sample_id_field,
             )
         except Exception as e:

@@ -36,6 +36,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "codebook_filename": "custom_codebook.xlsx",
             "powers_coding_filename": "custom_powers.xlsx",
             "powers_reliability_filename": "custom_powers_rel.xlsx",
+            "spacy_model_name": "en_core_web_trf",
         },
     )
 
@@ -60,6 +61,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.codebook_filename == "custom_codebook.xlsx"
     assert config.powers_coding_filename == "custom_powers.xlsx"
     assert config.powers_reliability_filename == "custom_powers_rel.xlsx"
+    assert config.spacy_model_name == "en_core_web_trf"
     assert config.config_source["kind"] == "split_dir"
     assert config.config_source["defaults_applied"] is True
 
@@ -179,6 +181,7 @@ def test_packaged_default_config_parses_cleanly():
 
     assert config.to_dict()["project"]["input_dir"] == "diaad_data/input"
     assert config.to_dict()["advanced"]["sample_id_column"] == "sample_id"
+    assert config.to_dict()["advanced"]["spacy_model_name"] == "en_core_web_sm"
     assert config.override_diff == {}
 
 

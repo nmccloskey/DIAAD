@@ -30,6 +30,13 @@ SECTION_C_cols = [
     "filled_pauses",
 ]
 
+SECTION_E_cols = [
+    "type_of_day",
+    "amount_of_enjoyment",
+    "degree_of_difficulty",
+    "other_notes",
+]
+
 POWERS_cols = [
     # Meta
     "POWERS_comment",
@@ -58,13 +65,6 @@ TT_DROP_COLS = [
     "shuffled_order",
     "position",
     "position_sub",
-]
-
-SECTION_E_cols = [
-    "type_of_day",
-    "amount_of_enjoyment",
-    "degree_of_difficulty",
-    "other_notes",
 ]
 
 
@@ -420,6 +420,7 @@ def make_powers_coding_files(
     blinding_config=None,
     powers_coding_file="powers_coding.xlsx",
     powers_reliability_file="powers_reliability_coding.xlsx",
+    spacy_model_name="en_core_web_sm",
     sample_id_field="sample_id",
     utterance_id_field="utterance_id",
 ):
@@ -462,7 +463,7 @@ def make_powers_coding_files(
     )
 
     if automate_powers:
-        pc_df = run_automation(pc_df)
+        pc_df = run_automation(pc_df, spacy_model_name=spacy_model_name)
 
     coder_ids = _resolve_powers_coder_ids(num_coders)
     pc_df, primary_assignment, segments = _assign_primary_coders(

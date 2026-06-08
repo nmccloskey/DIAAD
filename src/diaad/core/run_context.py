@@ -683,6 +683,7 @@ class RunContext:
             "blinding_config": self.config.blinding,
             "powers_coding_file": self.config.powers_coding_filename,
             "powers_reliability_file": self.config.powers_reliability_filename,
+            "spacy_model_name": self.config.spacy_model_name,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
         }
@@ -727,5 +728,6 @@ class RunContext:
             "automate_powers": self.automate_powers,
             "powers_coding_file": self.config.powers_coding_filename,
             "powers_reliability_file": self.config.powers_reliability_filename,
+            "spacy_model_name": self.config.spacy_model_name,
             "sample_id_field": self.config.sample_id_field,
         }

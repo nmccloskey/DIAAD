@@ -89,6 +89,7 @@ class AdvancedConfig:
 
     powers_coding_filename: str = "powers_coding.xlsx"
     powers_reliability_filename: str = "powers_reliability_coding.xlsx"
+    spacy_model_name: str = "en_core_web_sm"
 
     target_vocabulary_resource_path: str = ""
 
@@ -104,8 +105,12 @@ class AdvancedConfig:
             raise ValueError("sample_id_column must be a non-empty string.")
         if not utterance_id_column:
             raise ValueError("utterance_id_column must be a non-empty string.")
+        spacy_model_name = str(self.spacy_model_name).strip()
+        if not spacy_model_name:
+            raise ValueError("spacy_model_name must be a non-empty string.")
         object.__setattr__(self, "sample_id_column", sample_id_column)
         object.__setattr__(self, "utterance_id_column", utterance_id_column)
+        object.__setattr__(self, "spacy_model_name", spacy_model_name)
         object.__setattr__(self, "cu_paradigms", list(self.cu_paradigms or []))
         object.__setattr__(
             self,
@@ -175,6 +180,10 @@ class AdvancedConfig:
     @property
     def powers_reliability_file(self) -> str:
         return self.powers_reliability_filename
+
+    @property
+    def spacy_model(self) -> str:
+        return self.spacy_model_name
 
     @property
     def coding_blind_cols(self) -> list[str]:
@@ -416,6 +425,10 @@ class ConfigManager:
         return self.advanced.powers_reliability_filename
 
     @property
+    def spacy_model_name(self) -> str:
+        return self.advanced.spacy_model_name
+
+    @property
     def metadata_fields_config(self) -> dict[str, Any]:
         """
         Return normalized metadata field definitions in the shape expected
@@ -515,6 +528,7 @@ class ConfigManager:
                 "speaking_time_column": advanced.speaking_time_column,
                 "powers_coding_filename": advanced.powers_coding_filename,
                 "powers_reliability_filename": advanced.powers_reliability_filename,
+                "spacy_model_name": advanced.spacy_model_name,
                 "target_vocabulary_resource_path": (
                     advanced.target_vocabulary_resource_path
                 ),
@@ -666,6 +680,10 @@ class ConfigManager:
             powers_reliability_filename=self._as_str(
                 data.get("powers_reliability_filename"),
                 default="powers_reliability_coding.xlsx",
+            ),
+            spacy_model_name=self._as_str(
+                data.get("spacy_model_name"),
+                default="en_core_web_sm",
             ),
             target_vocabulary_resource_path=self._as_str(
                 data.get("target_vocabulary_resource_path"),

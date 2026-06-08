@@ -41,14 +41,20 @@ def test_content_word_counting_and_be_fallback():
 
 def test_run_automation_adds_columns(monkeypatch):
     df = pd.DataFrame({"utterance": ["Cat runs"]})
+    calls = {}
 
-    monkeypatch.setattr(automation, "get_powers_nlp", lambda model_name="en_core_web_sm": SimpleNamespace(pipe=lambda utterances, **kwargs: [["doc"]]))
+    def fake_get_powers_nlp(model_name="en_core_web_sm"):
+        calls["model_name"] = model_name
+        return SimpleNamespace(pipe=lambda utterances, **kwargs: [["doc"]])
+
+    monkeypatch.setattr(automation, "get_powers_nlp", fake_get_powers_nlp)
     monkeypatch.setattr(automation, "expand_and_process_utterances", lambda utt: utt.lower())
     monkeypatch.setattr(automation, "compute_speech_units", lambda utt: 2)
     monkeypatch.setattr(automation, "count_fillers", lambda utt: 0)
     monkeypatch.setattr(automation, "_automate_content_measures", lambda utterances, nlp: ([3], [1], ["tagged"]))
 
-    out = automation.run_automation(df.copy())
+    out = automation.run_automation(df.copy(), spacy_model_name="en_core_web_trf")
 
     assert list(out.columns) == ["utterance", "tagged_utterance", "speech_units", "filled_pauses", "content_words", "num_nouns"]
     assert out.loc[0, "content_words"] == 3
+    assert calls["model_name"] == "en_core_web_trf"
