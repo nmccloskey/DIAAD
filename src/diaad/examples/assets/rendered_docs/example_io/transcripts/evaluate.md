@@ -92,10 +92,10 @@ Transcription Reliability Report
 Number of samples: 2
 
 Levenshtein similarity score summary stats:
-  - Average: 0.941
-  - Standard Deviation: 0.010
-  - Min: 0.934
-  - Max: 0.947
+  • Average: 0.941
+  • Standard Deviation: 0.010
+  • Min: 0.934
+  • Max: 0.947
 ```
 
 ## Notes

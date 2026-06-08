@@ -29,6 +29,53 @@ DEFAULT_TEMPLATE_HEADER = """@Begin
 @ID:\teng|corpus_name|PAR0|||||Participant|||
 @ID:\teng|corpus_name|INV|||||Investigator|||"""
 
+CHAT_PUNCTUATION_TRANSLATION = str.maketrans(
+    {
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u201a": "'",
+        "\u201b": "'",
+        "\u2032": "'",
+        "\u02bc": "'",
+        "\uff07": "'",
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u201e": '"',
+        "\u201f": '"',
+        "\u2033": '"',
+        "\uff02": '"',
+        "\u00ab": '"',
+        "\u00bb": '"',
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2015": "-",
+        "\u2212": "-",
+        "\u2026": "...",
+        "\u00a0": " ",
+        "\u2007": " ",
+        "\u202f": " ",
+        "\u2028": " ",
+        "\u2029": " ",
+        "\u200b": "",
+        "\u200c": "",
+        "\u200d": "",
+        "\u2060": "",
+    }
+)
+
+MOJIBAKE_PUNCTUATION_REPLACEMENTS = {
+    "\u00e2\u20ac\u02dc": "'",
+    "\u00e2\u20ac\u2122": "'",
+    "\u00e2\u20ac\u0153": '"',
+    "\u00e2\u20ac\u009d": '"',
+    "\u00e2\u20ac\u201c": "-",
+    "\u00e2\u20ac\u201d": "-",
+    "\u00e2\u20ac\u00a6": "...",
+}
+
 
 def _cell_to_text(value: object) -> str:
     """
@@ -48,6 +95,18 @@ def _cell_to_text(value: object) -> str:
         return str(int(value))
 
     return str(value)
+
+
+def _regularize_chat_text(value: object) -> str:
+    """
+    Normalize Unicode punctuation to conservative ASCII for CHAT export.
+    """
+    text = _cell_to_text(value)
+    for source, replacement in MOJIBAKE_PUNCTUATION_REPLACEMENTS.items():
+        text = text.replace(source, replacement)
+    text = text.translate(CHAT_PUNCTUATION_TRANSLATION)
+    text = re.sub(r"[ \t\f\v]+", " ", text)
+    return text.strip()
 
 
 def _safe_filename_part(value: object) -> str:
@@ -250,7 +309,7 @@ def _format_speaker_tier(speaker: str) -> str:
     return speaker
 
 
-def _build_chat_text(header_lines: list[str], utterance_df: pd.DataFrame) -> str:
+def _build_chat_text(header_lines: list[str], utterance_df: pd.DataFrame) -> str | None:
     """
     Build CHAT file text for one sample.
     """
@@ -260,20 +319,25 @@ def _build_chat_text(header_lines: list[str], utterance_df: pd.DataFrame) -> str
         raise ValueError(f"Utterances sheet missing required columns: {missing}")
 
     lines = list(header_lines)
+    utterance_count = 0
 
     for _, row in _sort_utterances(utterance_df).iterrows():
         speaker_tier = _format_speaker_tier(_cell_to_text(row.get("speaker")))
-        utterance = _cell_to_text(row.get("utterance")).strip()
+        utterance = _regularize_chat_text(row.get("utterance"))
 
         if not speaker_tier:
             logger.warning("Skipping utterance row with blank speaker.")
             continue
 
         lines.append(f"{speaker_tier}\t{utterance}")
+        utterance_count += 1
 
-        comment = _cell_to_text(row.get("comment")).strip()
+        comment = _regularize_chat_text(row.get("comment"))
         if comment:
             lines.append(f"%com:\t{comment}")
+
+    if utterance_count == 0:
+        return None
 
     lines.append("@End")
     return "\n".join(lines) + "\n"
@@ -368,15 +432,22 @@ def detabularize_transcripts(
             derived_file = sample_row[DERIVED_FILE_COL]
             sample_utts = utterance_groups.get(sample_key)
 
-            if sample_utts is None:
+            if sample_utts is None or sample_utts.empty:
                 logger.warning(
-                    "No utterances found for sample_id %r; writing header-only CHAT file.",
+                    "No utterances found for sample_id %r; no CHAT file written.",
                     sample_row.get(sample_id_field),
                 )
-                sample_utts = utterances_df.iloc[0:0].copy()
+                continue
 
             sample_utts = sample_utts.drop(columns=["_sample_key"], errors="ignore")
             chat_text = _build_chat_text(header_lines, sample_utts)
+            if chat_text is None:
+                logger.warning(
+                    "No writable utterances found for sample_id %r; no CHAT file written.",
+                    sample_row.get(sample_id_field),
+                )
+                continue
+
             chat_path = chat_dir / derived_file
             chat_path.write_text(chat_text, encoding="utf-8")
             written_chats.append(str(chat_path))

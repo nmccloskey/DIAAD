@@ -130,6 +130,60 @@ def test_detabularize_transcripts_matches_integer_and_float_sample_ids(tmp_path)
     assert "*PAR0:\tmatched\n" in chat_text
 
 
+def test_detabularize_transcripts_regularizes_chat_punctuation(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    table_path = input_dir / "transcript_tables" / "transcript_tables.xlsx"
+
+    samples = pd.DataFrame(
+        [{"sample_id": "S1", "study_id": "TU", "test": "Pre", "narrative": "Story"}]
+    )
+    utterances = pd.DataFrame(
+        [
+            {
+                "sample_id": "S1",
+                "speaker": "PAR0",
+                "utterance": "it\u2019s \u201cfine\u201d\u2026 wait \u2013 okay",
+                "comment": "don\u2019t\u2014stop",
+            }
+        ]
+    )
+    _write_table(table_path, samples, utterances)
+
+    detabularize_transcripts(input_dir=input_dir, output_dir=output_dir)
+
+    chat_text = (output_dir / "chat_files" / "TU_Pre_Story.cha").read_text(encoding="utf-8")
+    assert "*PAR0:\tit's \"fine\"... wait - okay\n" in chat_text
+    assert "%com:\tdon't-stop\n" in chat_text
+    assert "\u2019" not in chat_text
+    assert "\u201c" not in chat_text
+    assert "\u201d" not in chat_text
+
+
+def test_detabularize_transcripts_skips_samples_with_no_utterances(tmp_path, caplog):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    table_path = input_dir / "transcript_tables" / "transcript_tables.xlsx"
+
+    samples = pd.DataFrame(
+        [
+            {"sample_id": "S1", "study_id": "TU", "test": "Pre", "narrative": "Story"},
+            {"sample_id": "S2", "study_id": "TU", "test": "Post", "narrative": "Story"},
+        ]
+    )
+    utterances = pd.DataFrame(
+        [{"sample_id": "S1", "speaker": "PAR0", "utterance": "present", "comment": ""}]
+    )
+    _write_table(table_path, samples, utterances)
+
+    written = detabularize_transcripts(input_dir=input_dir, output_dir=output_dir)
+
+    assert written == [str(output_dir / "chat_files" / "TU_Pre_Story.cha")]
+    assert (output_dir / "chat_files" / "TU_Pre_Story.cha").exists()
+    assert not (output_dir / "chat_files" / "TU_Post_Story.cha").exists()
+    assert "No utterances found for sample_id 'S2'; no CHAT file written." in caplog.text
+
+
 def test_detabularize_transcripts_accepts_custom_sample_id_field(tmp_path):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "output"
