@@ -76,6 +76,11 @@ powers_coding_filename: powers_coding.xlsx
 # DIAAD searches recursively and errors if multiple exact matches exist.
 powers_reliability_filename: powers_reliability_coding.xlsx
 
+# spaCy model name for PSAIR NLPModel, for example:
+# choose en_core_web_sm for speed
+# or en_core_web_trf for accuracy
+spacy_model_name: en_core_web_sm
+
 
 # -------------------------------------------------------------------
 # Rate analysis
