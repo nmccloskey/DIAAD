@@ -2,6 +2,14 @@
 # Most users can leave this file unchanged.
 
 # -------------------------------------------------------------------
+# Tabularized transcripts
+# -------------------------------------------------------------------
+
+# Transcript table file name.
+transcript_table_filename: transcript_tables.xlsx
+
+
+# -------------------------------------------------------------------
 # Unique identifiers
 # -------------------------------------------------------------------
 
@@ -109,7 +117,7 @@ blind_columns:
 # Leave these as-is unless you need custom blinding behavior.
 
 # Source from which metadata may be recovered for blinding / unblinding.
-metadata_source: transcript_tables
+metadata_source: transcript_tables.xlsx
 
 # Join keys used when recovering metadata.
 id_columns:
