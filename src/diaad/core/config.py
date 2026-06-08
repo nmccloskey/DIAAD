@@ -42,7 +42,7 @@ class ProjectConfig:
     strip_clan: bool = True
     prefer_correction: bool = True
     lowercase: bool = True
-    exclude_participants: list[str] | None = None
+    exclude_speakers: list[str] | None = None
 
     auto_tabularize: bool = False
 
@@ -56,8 +56,8 @@ class ProjectConfig:
     def __post_init__(self) -> None:
         object.__setattr__(
             self,
-            "exclude_participants",
-            list(self.exclude_participants or []),
+            "exclude_speakers",
+            list(self.exclude_speakers or []),
         )
         object.__setattr__(
             self,
@@ -293,8 +293,8 @@ class ConfigManager:
         return self.project.lowercase
 
     @property
-    def exclude_participants(self) -> list[str]:
-        return self.project.exclude_participants
+    def exclude_speakers(self) -> list[str]:
+        return self.project.exclude_speakers
 
     @property
     def num_coders(self) -> int:
@@ -505,7 +505,7 @@ class ConfigManager:
                 "strip_clan": project.strip_clan,
                 "prefer_correction": project.prefer_correction,
                 "lowercase": project.lowercase,
-                "exclude_participants": project.exclude_participants,
+                "exclude_speakers": project.exclude_speakers,
                 "auto_tabularize": project.auto_tabularize,
                 "num_bins": project.num_bins,
                 "num_coders": project.num_coders,
@@ -605,8 +605,8 @@ class ConfigManager:
                 default=True,
             ),
             lowercase=self._as_bool(data.get("lowercase"), default=True),
-            exclude_participants=self._as_str_list(
-                data.get("exclude_participants"),
+            exclude_speakers=self._as_str_list(
+                data.get("exclude_speakers"),
                 default=[],
             ),
             auto_tabularize=self._as_bool(data.get("auto_tabularize"), default=False),

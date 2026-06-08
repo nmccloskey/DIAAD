@@ -34,9 +34,10 @@ def test_id_core_words_and_percentiles():
 def test_prepare_target_vocab_inputs_for_unblind_mode(monkeypatch):
     df = pd.DataFrame(
         {
-            "sample_id": ["S1", "S2"],
-            "story": ["StoryA", "Other"],
-            "word_count": [10, 20],
+            "sample_id": ["S1", "S2", "S3"],
+            "speaker": ["PAR", "PAR", "INV"],
+            "story": ["StoryA", "Other", "StoryA"],
+            "word_count": [10, 20, 5],
         }
     )
     monkeypatch.setattr(utils, "find_target_vocab_inputs", lambda *args, **kwargs: ("unblind", df))
@@ -44,12 +45,13 @@ def test_prepare_target_vocab_inputs_for_unblind_mode(monkeypatch):
     utt_df, present = utils.prepare_target_vocab_inputs(
         "input",
         "output",
-        exclude_participants=[],
+        exclude_speakers=["INV"],
         stimulus_field="story",
         resources=_resources(),
     )
 
     assert list(utt_df["narrative"]) == ["StoryA"]
+    assert list(utt_df["speaker"]) == ["PAR"]
     assert present == {"StoryA"}
 
 
@@ -66,7 +68,7 @@ def test_prepare_target_vocab_inputs_accepts_custom_sample_id(monkeypatch):
     utt_df, present = utils.prepare_target_vocab_inputs(
         "input",
         "output",
-        exclude_participants=[],
+        exclude_speakers=[],
         stimulus_field="story",
         resources=_resources(),
         sample_id_field="expanded_sample_id",

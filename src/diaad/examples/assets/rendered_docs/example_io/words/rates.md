@@ -55,9 +55,9 @@ The command reads `diaad_data/input/word_count_analysis/word_counting_by_sample.
 
 | sample_id | no_utt_coded | no_utt_missing | total_words | mean_words_per_utt | sd_words_per_utt | min_words_per_utt | max_words_per_utt | speaking_time | speaking_minutes | total_words_per_min |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S001 | 5 | 2 | 29 | 5.8 | 1.789 | 4 | 8 | 95 | 1.583333333333333 | 18.316 |
-| S003 | 5 | 2 | 22 | 4.4 | 1.673 | 2 | 6 | 102 | 1.7 | 12.941 |
-| S002 | 5 | 2 | 24 | 4.8 | 1.789 | 3 | 7 | 88 | 1.466666666666667 | 16.364 |
+| S001 | 5 | 0 | 29 | 5.8 | 1.789 | 4 | 8 | 95 | 1.583333333333333 | 18.316 |
+| S003 | 5 | 0 | 22 | 4.4 | 1.673 | 2 | 6 | 102 | 1.7 | 12.941 |
+| S002 | 5 | 0 | 24 | 4.8 | 1.789 | 3 | 7 | 88 | 1.466666666666667 | 16.364 |
 
 ## Notes
 

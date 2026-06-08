@@ -192,7 +192,7 @@ coders:
 CU_paradigms:
 - SAE
 - AAE
-exclude_participants:
+exclude_speakers:
 - INV
 strip_clan: true
 prefer_correction: true
@@ -234,7 +234,7 @@ tiers:
 
   - `CU_paradigms` - allows users to accommodate multiple dialects if desired. If at least two paradigms are entered, parallel coding columns will be prepared and processed in all CU functions.
 
-  - `exclude_participants` - speakers appearing in .cha files to exclude from transcription reliability and CU coding (neutral utterances).
+  - `exclude_speakers` - speaker tier labels appearing in .cha files to exclude from transcript-derived analyses.
 
 - Transcription Reliability
 

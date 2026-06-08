@@ -28,7 +28,7 @@ class FakeConfigManager:
         self.cu_paradigms = ["sv"]
         self.stimulus_column = "narrative"
         self.stimulus_field = self.stimulus_column
-        self.exclude_participants = ["INV"]
+        self.exclude_speakers = ["INV"]
         self.strip_clan = True
         self.prefer_correction = False
         self.lowercase = True
@@ -229,6 +229,24 @@ def test_run_context_threads_transcript_identifier_fields(monkeypatch, tmp_path)
     assert detabularize_kwargs["sample_id_field"] == "expanded_sample_id"
 
 
+def test_run_context_threads_excluded_speakers_to_transcription_evaluation(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+
+    kwargs = ctx.kwargs_evaluate_transcription_reliability()
+
+    assert kwargs["exclude_speakers"] == ["INV"]
+
+
 def test_run_context_termination_kwargs(monkeypatch, tmp_path):
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
@@ -313,14 +331,17 @@ def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tm
     )
 
     assert ctx.kwargs_make_cu_coding_files()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_make_cu_coding_files()["exclude_speakers"] == ["INV"]
     assert ctx.kwargs_evaluate_cu_reliability()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_evaluate_cu_reliability()["utterance_id_field"] == "expanded_utterance_id"
     assert ctx.kwargs_reselect_cu_rel()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_cu_analysis()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_cu_analysis()["exclude_speakers"] == ["INV"]
     assert ctx.kwargs_cu_rates()["sample_id_field"] == "expanded_sample_id"
 
     assert ctx.kwargs_make_word_count_files()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_make_word_count_files()["utterance_id_field"] == "expanded_utterance_id"
+    assert ctx.kwargs_make_word_count_files()["exclude_speakers"] == ["INV"]
     assert ctx.kwargs_reselect_wc_rel()["sample_id_field"] == "expanded_sample_id"
     assert (
         ctx.kwargs_evaluate_word_count_reliability()["sample_id_field"]
@@ -331,6 +352,7 @@ def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tm
         == "expanded_utterance_id"
     )
     assert ctx.kwargs_analyze_word_counts()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_analyze_word_counts()["exclude_speakers"] == ["INV"]
     assert ctx.kwargs_wc_rates()["sample_id_field"] == "expanded_sample_id"
 
 
@@ -345,6 +367,7 @@ def test_run_context_threads_target_vocab_and_turn_identifier_fields(monkeypatch
     )
 
     assert ctx.kwargs_target_vocab()["sample_id_field"] == "expanded_sample_id"
+    assert ctx.kwargs_target_vocab()["exclude_speakers"] == ["INV"]
     assert ctx.kwargs_target_vocab_rates()["sample_id_field"] == "expanded_sample_id"
     assert (
         ctx.kwargs_make_digital_convo_turn_files()["sample_id_field"]

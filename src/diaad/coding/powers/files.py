@@ -135,7 +135,7 @@ def _validate_identifier_columns(
 def _prepare_powers_dataframe(
     uttdf: pd.DataFrame,
     metadata_fields,
-    exclude_participants,
+    exclude_speakers,
     sample_id_field: str = "sample_id",
 ) -> pd.DataFrame:
     """
@@ -151,7 +151,7 @@ def _prepare_powers_dataframe(
     df["coder_id"] = ""
     for col in POWERS_cols:
         if col in SECTION_C_cols:
-            df[col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+            df[col] = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
         else:
             df[col] = ""
 
@@ -415,7 +415,7 @@ def make_powers_coding_files(
     num_coders,
     input_dir,
     output_dir,
-    exclude_participants,
+    exclude_speakers,
     automate_powers=True,
     blinding_config=None,
     powers_coding_file="powers_coding.xlsx",
@@ -458,7 +458,7 @@ def make_powers_coding_files(
     pc_df = _prepare_powers_dataframe(
         uttdf,
         metadata_fields,
-        exclude_participants,
+        exclude_speakers,
         sample_id_field=sample_id_field,
     )
 

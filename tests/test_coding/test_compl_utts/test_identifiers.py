@@ -31,7 +31,7 @@ def test_cu_file_helpers_accept_custom_sample_id(monkeypatch):
         coder_ids=[1, 2],
         frac=1.0,
         cu_paradigms=[],
-        exclude_participants=[],
+        exclude_speakers=[],
         sample_id_field="expanded_sample_id",
     )
 
@@ -79,6 +79,26 @@ def test_cu_analysis_and_rates_accept_custom_sample_id():
     )
 
     assert final.columns[0] == "expanded_sample_id"
+
+
+def test_cu_analysis_drops_excluded_speakers_before_summary():
+    cu_df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "speaker": ["PAR", "INV", "PAR"],
+            "sv": [1, 1, 0],
+            "rel": [1, 1, 1],
+        }
+    )
+
+    filtered = analysis._drop_excluded_speaker_rows(cu_df, ["INV"])
+    pair = {"coder_prefix": None, "paradigm": None, "sv_col": "sv", "rel_col": "rel"}
+    summary_long, _, _ = analysis._summarize_pair(filtered, pair)
+
+    s1 = summary_long.loc[summary_long["sample_id"] == "S1"].iloc[0]
+    assert set(filtered["speaker"]) == {"PAR"}
+    assert s1["no_utt"] == 1
+    assert s1["cu"] == 1
 
 
 def test_cu_reliability_accepts_custom_ids():

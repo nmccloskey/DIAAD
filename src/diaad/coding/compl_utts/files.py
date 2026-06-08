@@ -54,12 +54,12 @@ def _resolve_coder_mode(num_coders: int) -> tuple[str, list[int]]:
 def _assign_single_coding_columns(
     df: pd.DataFrame,
     cu_paradigms,
-    exclude_participants,
+    exclude_speakers,
 ) -> pd.DataFrame:
     """Add one unprefixed coding layer."""
     base_cols = ["id", "sv", "rel", "comment"]
     for col in base_cols:
-        df[col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+        df[col] = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
 
     if len(cu_paradigms) < 2:
         return df
@@ -68,7 +68,7 @@ def _assign_single_coding_columns(
         df.drop(columns=[tag], inplace=True, errors="ignore")
         for paradigm in cu_paradigms:
             new_col = f"{tag}_{paradigm}"
-            df[new_col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+            df[new_col] = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
 
     return df
 
@@ -76,7 +76,7 @@ def _assign_single_coding_columns(
 def _assign_three_coding_columns(
     df: pd.DataFrame,
     cu_paradigms,
-    exclude_participants,
+    exclude_speakers,
 ) -> pd.DataFrame:
     """Add c1/c2 coding layers."""
     base_cols = [
@@ -84,7 +84,7 @@ def _assign_three_coding_columns(
         "c2_id", "c2_sv", "c2_rel", "c2_comment",
     ]
     for col in base_cols:
-        df[col] = np.where(df["speaker"].isin(exclude_participants), "NA", "")
+        df[col] = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
 
     if len(cu_paradigms) < 2:
         return df
@@ -95,7 +95,7 @@ def _assign_three_coding_columns(
             for paradigm in cu_paradigms:
                 new_col = f"{prefix}_{tag}_{paradigm}"
                 df[new_col] = np.where(
-                    df["speaker"].isin(exclude_participants),
+                    df["speaker"].isin(exclude_speakers),
                     "NA",
                     "",
                 )
@@ -230,16 +230,16 @@ def _build_cu_assignments(
     coder_ids: list[int],
     frac: float,
     cu_paradigms,
-    exclude_participants,
+    exclude_speakers,
     sample_id_field: str = "sample_id",
 ) -> tuple[pd.DataFrame, Optional[pd.DataFrame]]:
     """
     Populate coder assignment columns and construct the reliability dataframe.
     """
     if mode == "three":
-        cu_df = _assign_three_coding_columns(cu_df, cu_paradigms, exclude_participants)
+        cu_df = _assign_three_coding_columns(cu_df, cu_paradigms, exclude_speakers)
     else:
-        cu_df = _assign_single_coding_columns(cu_df, cu_paradigms, exclude_participants)
+        cu_df = _assign_single_coding_columns(cu_df, cu_paradigms, exclude_speakers)
 
     if sample_id_field not in cu_df.columns:
         raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
@@ -250,7 +250,7 @@ def _build_cu_assignments(
     if mode in {"single", "zero"}:
         coder = coder_ids[0] if coder_ids else ""
         cu_df["id"] = np.where(
-            cu_df["speaker"].isin(exclude_participants),
+            cu_df["speaker"].isin(exclude_speakers),
             "NA",
             coder,
         )
@@ -399,7 +399,7 @@ def make_cu_coding_files(
     input_dir,
     output_dir,
     cu_paradigms,
-    exclude_participants,
+    exclude_speakers,
     stimulus_field,
     blinding_config=None,
     sample_id_field: str = "sample_id",
@@ -467,7 +467,7 @@ def make_cu_coding_files(
             coder_ids=coder_ids,
             frac=frac,
             cu_paradigms=cu_paradigms,
-            exclude_participants=exclude_participants,
+            exclude_speakers=exclude_speakers,
             sample_id_field=sample_id_field,
         )
 

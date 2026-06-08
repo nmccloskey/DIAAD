@@ -182,7 +182,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "If true, lowercase transcript text during processing.",
             },
             {
-                "name": "exclude_participants",
+                "name": "exclude_speakers",
                 "label": "Speakers to exclude",
                 "type": "list",
                 "default": ["INV"],

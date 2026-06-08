@@ -345,15 +345,18 @@ def run_target_vocab(
     metadata_fields,
     input_dir,
     output_dir,
-    exclude_participants=None,
+    exclude_speakers=None,
     stimulus_field="narrative",
     resource_path=None,
     sample_id_field: str = "sample_id",
 ):
     """
     Execute target vocabulary coverage analysis using built-in or custom resources.
+
+    Rows from configured excluded speaker tier labels are removed during input
+    preparation when speaker labels are available.
     """
-    exclude_participants = set(exclude_participants or [])
+    exclude_speakers = set(exclude_speakers or [])
     timestamp = datetime.now().strftime("%y%m%d_%H%M")
     target_vocab_dir = output_dir / "target_vocab"
     target_vocab_dir.mkdir(parents=True, exist_ok=True)
@@ -363,7 +366,7 @@ def run_target_vocab(
     utt_df, present_narratives = prepare_target_vocab_inputs(
         input_dir,
         output_dir,
-        exclude_participants,
+        exclude_speakers,
         stimulus_field=stimulus_field,
         resources=resources,
         sample_id_field=sample_id_field,

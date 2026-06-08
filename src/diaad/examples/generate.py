@@ -421,7 +421,7 @@ def _write_expected_evaluation(project_dir: Path, specs: dict[str, dict[str, Any
             metadata_fields=metadata_fields,
             input_dir=eval_input_dir,
             output_dir=tmpdir,
-            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             strip_clan=specs["project_config"].get("strip_clan", True),
             prefer_correction=specs["project_config"].get("prefer_correction", True),
             lowercase=specs["project_config"].get("lowercase", True),
@@ -724,7 +724,7 @@ def _write_expected_cu_files(
             input_dir=input_dir,
             output_dir=output_dir,
             cu_paradigms=specs["advanced_config"].get("cu_paradigms", []),
-            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_cu_blinding_config(specs),
         )
@@ -803,6 +803,7 @@ def _write_expected_cu_analysis(
             output_dir=tmpdir,
             cu_paradigms=specs["advanced_config"].get("cu_paradigms") or None,
             blinding_config=_cu_blinding_config(specs),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
         )
         replace_tree(tmpdir / "cu_coding_analysis", expected_dir, force=force)
 
@@ -934,7 +935,7 @@ def _write_expected_word_files(
             num_coders=specs["project_config"].get("num_coders", 0),
             input_dir=input_dir,
             output_dir=output_dir,
-            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             blinding_config=_word_blinding_config(specs),
         )
         replace_tree(output_dir / "word_counts", expected_dir, force=force)
@@ -1006,6 +1007,7 @@ def _write_expected_word_analysis(
             word_count_file=specs["advanced_config"].get("word_count_filename", "word_counting.xlsx"),
             word_count_field=specs["advanced_config"].get("word_count_column", "word_count"),
             blinding_config=_word_blinding_config(specs),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
         )
         replace_tree(tmpdir / "word_count_analysis", expected_dir, force=force)
 
@@ -1208,7 +1210,7 @@ def _write_expected_powers_files(
             num_coders=specs["project_config"].get("num_coders", 0),
             input_dir=input_dir,
             output_dir=output_dir,
-            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             automate_powers=specs["project_config"].get("automate_powers", False),
             blinding_config=_powers_blinding_config(specs),
         )
@@ -1394,7 +1396,7 @@ def _write_vocab_unblind_input(
             on="sample_id",
             how="left",
         )
-    exclude = set(specs["project_config"].get("exclude_participants", []))
+    exclude = set(specs["project_config"].get("exclude_speakers", []))
     if "speaker" in utt_df.columns and exclude:
         utt_df = utt_df[~utt_df["speaker"].isin(exclude)].copy()
 
@@ -1499,7 +1501,7 @@ def _write_expected_vocab_analysis(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
             output_dir=tmpdir,
-            exclude_participants=specs["project_config"].get("exclude_participants", []),
+            exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             stimulus_field=specs["project_config"].get("stimulus_column", "stimulus"),
             resource_path=resource_path,
         )

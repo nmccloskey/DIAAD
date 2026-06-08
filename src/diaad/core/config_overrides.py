@@ -16,7 +16,7 @@ PROJECT_KEYS = {
     "strip_clan",
     "prefer_correction",
     "lowercase",
-    "exclude_participants",
+    "exclude_speakers",
     "auto_tabularize",
     "num_bins",
     "num_coders",

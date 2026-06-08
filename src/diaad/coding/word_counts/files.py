@@ -292,7 +292,7 @@ def _ensure_required_columns(
 def _prepare_wc_df(
     df: pd.DataFrame,
     source_type: str,
-    exclude_participants: list[str] | None = None,
+    exclude_speakers: list[str] | None = None,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
 ) -> pd.DataFrame:
@@ -301,7 +301,7 @@ def _prepare_wc_df(
 
     Rules
     -----
-    - If speaker is in exclude_participants -> word_count = 'NA'
+    - If speaker is in exclude_speakers -> word_count = 'NA'
     - Else if source_type == 'cu' and all CU columns are neutral -> word_count = 'NA'
     - Else compute automated first-pass count from utterance text
     """
@@ -312,7 +312,7 @@ def _prepare_wc_df(
         utterance_id_field=utterance_id_field,
     )
 
-    exclude_set = {str(x).strip().lower() for x in (exclude_participants or [])}
+    exclude_set = {str(x).strip().lower() for x in (exclude_speakers or [])}
     cu_cols = _get_cu_columns(df) if source_type == "cu" else []
 
     def compute_wc(row):
@@ -548,7 +548,7 @@ def make_word_count_files(
     num_coders,
     input_dir,
     output_dir,
-    exclude_participants: list[str] | None = None,
+    exclude_speakers: list[str] | None = None,
     blinding_config=None,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
@@ -565,7 +565,7 @@ def make_word_count_files(
     - If multiple exact candidate input files are found, DIAAD raises an error.
     - Output columns are restricted to:
         sample_id, utterance_id, speaker, utterance, comment, id, word_count, wc_comment
-    - Any utterance from exclude_participants gets word_count = 'NA'.
+    - Any utterance from exclude_speakers gets word_count = 'NA'.
     - For CU files, if all CU columns for an utterance are neutral, word_count = 'NA'.
 
     Reliability behavior
@@ -586,7 +586,7 @@ def make_word_count_files(
     num_coders : int
     input_dir : Path | str
     output_dir : Path | str
-    exclude_participants : list[str] | None
+    exclude_speakers : list[str] | None
         Speakers whose utterances should be explicitly marked neutral ('NA').
     blinding_config
         Optional normalized blinding configuration.
@@ -610,7 +610,7 @@ def make_word_count_files(
         wc_df = _prepare_wc_df(
             df=df,
             source_type=source_type,
-            exclude_participants=exclude_participants,
+            exclude_speakers=exclude_speakers,
             sample_id_field=sample_id_field,
             utterance_id_field=utterance_id_field,
         )

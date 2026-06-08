@@ -24,7 +24,7 @@ def test_powers_generation_helpers_accept_custom_sample_id(monkeypatch):
     prepared = files._prepare_powers_dataframe(
         df,
         metadata_fields={},
-        exclude_participants=["INV"],
+        exclude_speakers=["INV"],
         sample_id_field="expanded_sample_id",
     )
     assigned, primary_map, segments = files._assign_primary_coders(

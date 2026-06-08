@@ -43,7 +43,7 @@ metadata_fields:
   - pre
   - post
 stimulus_column: stimulus
-exclude_participants:
+exclude_speakers:
 - INV
 ```
 

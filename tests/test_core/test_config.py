@@ -22,7 +22,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "random_seed": "7",
             "reliability_fraction": "0.5",
             "shuffle_samples": "false",
-            "exclude_participants": ["INV"],
+            "exclude_speakers": ["INV"],
             "auto_tabularize": "true",
             "num_bins": 3.0,
             "num_coders": "2",
@@ -47,7 +47,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.random_seed == 7
     assert config.reliability_fraction == 0.5
     assert config.shuffle_samples is False
-    assert config.exclude_participants == ["INV"]
+    assert config.exclude_speakers == ["INV"]
     assert config.auto_tabularize is True
     assert config.num_bins == 3
     assert config.num_coders == 2

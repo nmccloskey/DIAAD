@@ -22,7 +22,7 @@ def test_word_count_file_helpers_accept_custom_ids(monkeypatch):
     prepared = files._prepare_wc_df(
         df,
         source_type="cu",
-        exclude_participants=["INV"],
+        exclude_speakers=["INV"],
         sample_id_field="expanded_sample_id",
         utterance_id_field="expanded_utterance_id",
     )
@@ -86,6 +86,24 @@ def test_word_count_analysis_and_rates_accept_custom_sample_id():
     )
 
     assert final.columns[0] == "expanded_sample_id"
+
+
+def test_word_count_analysis_drops_excluded_speakers_before_summary():
+    wc_df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "speaker": ["PAR", "INV", "PAR"],
+            "word_count": [2, 99, 5],
+        }
+    )
+
+    filtered = analysis._drop_excluded_speaker_rows(wc_df, ["INV"])
+    summary = analysis._summarize_word_counts(filtered, word_count_field="word_count")
+
+    s1 = summary.loc[summary["sample_id"] == "S1"].iloc[0]
+    assert set(filtered["speaker"]) == {"PAR"}
+    assert s1["no_utt_coded"] == 1
+    assert s1["total_words"] == 2
 
 
 def test_word_count_reliability_output_uses_custom_utterance_id(monkeypatch, tmp_path):

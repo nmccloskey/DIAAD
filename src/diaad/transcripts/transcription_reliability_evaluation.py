@@ -87,7 +87,7 @@ def process_corrections(text: str, prefer_correction: bool = True) -> str:
 
 def extract_cha_text(
     source: Union[str, pylangacq.Reader],
-    exclude_participants: List[str] = None,
+    exclude_speakers: List[str] = None,
 ) -> str:
     """
     Extract utterance text only when a pylangacq.Reader is provided.
@@ -101,16 +101,16 @@ def extract_cha_text(
     source : str or pylangacq.Reader
         - pylangacq.Reader → extract utterances
         - str → returned unchanged (already plain text)
-    exclude_participants : list[str], optional
-        Participant codes to exclude (e.g., ['INV']).
+    exclude_speakers : list[str], optional
+        CHAT speaker tier labels to exclude (e.g., ['INV']).
     """
-    exclude_participants = exclude_participants or []
+    exclude_speakers = exclude_speakers or []
 
     try:
         if isinstance(source, pylangacq.Reader):
             parts = []
             for line in source.utterances():
-                if line.participant in exclude_participants:
+                if line.participant in exclude_speakers:
                     continue
                 utterance = line.tiers.get(line.participant, "")
                 utterance = re.sub(r"\s+(?=[.!?])", "", utterance)
@@ -134,7 +134,7 @@ def extract_cha_text(
 def process_utterances(
     chat_data: Union[str, pylangacq.Reader],
     *,
-    exclude_participants: List[str] = None,
+    exclude_speakers: List[str] = None,
     strip_clan: bool = True,
     prefer_correction: bool = True,
     lowercase: bool = True,
@@ -153,8 +153,8 @@ def process_utterances(
     ----------
     chat_data : str or pylangacq.Reader
         CHAT text (string) or Reader object.
-    exclude_participants : list[str], optional
-        Participants to omit (used only for Reader input).
+    exclude_speakers : list[str], optional
+        CHAT speaker tier labels to omit (used only for Reader input).
     strip_clan : bool
         If True, scrub CLAN markup.
     prefer_correction : bool
@@ -163,7 +163,7 @@ def process_utterances(
         Lowercase final output.
     """
     # 1. Extract text (Reader → concatenated utterances; str → unchanged)
-    text = extract_cha_text(chat_data, exclude_participants)
+    text = extract_cha_text(chat_data, exclude_speakers)
     if not text:
         return ""
 
@@ -597,7 +597,7 @@ def _analyze_reliability_pairs(
     matched_pairs: list[tuple[tuple, Path, Path]],
     metadata_fields,
     transc_rel_dir: Path,
-    exclude_participants: list[str],
+    exclude_speakers: list[str],
     strip_clan: bool,
     prefer_correction: bool,
     lowercase: bool,
@@ -614,8 +614,8 @@ def _analyze_reliability_pairs(
         MetadataField objects used to populate metadata columns.
     transc_rel_dir : Path
         Output directory for reliability evaluation artifacts.
-    exclude_participants : list[str]
-        Participant codes to exclude.
+    exclude_speakers : list[str]
+        CHAT speaker tier labels to exclude.
     strip_clan : bool
         Whether to remove CLAN markup.
     prefer_correction : bool
@@ -642,14 +642,14 @@ def _analyze_reliability_pairs(
 
             org_text = process_utterances(
                 org_chat_data,
-                exclude_participants=exclude_participants,
+                exclude_speakers=exclude_speakers,
                 strip_clan=strip_clan,
                 prefer_correction=prefer_correction,
                 lowercase=lowercase,
             )
             rel_text = process_utterances(
                 rel_chat_data,
-                exclude_participants=exclude_participants,
+                exclude_speakers=exclude_speakers,
                 strip_clan=strip_clan,
                 prefer_correction=prefer_correction,
                 lowercase=lowercase,
@@ -727,7 +727,7 @@ def evaluate_transcription_reliability(
     metadata_fields,
     input_dir,
     output_dir,
-    exclude_participants=None,
+    exclude_speakers=None,
     strip_clan=True,
     prefer_correction=True,
     lowercase=True,
@@ -744,7 +744,7 @@ def evaluate_transcription_reliability(
          in which case renamed copies are created with the reliability tag appended
          so they can be matched to originals by metadata fields.
     """
-    exclude_participants = exclude_participants or []
+    exclude_speakers = exclude_speakers or []
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
 
@@ -799,7 +799,7 @@ def evaluate_transcription_reliability(
         matched_pairs=matched_pairs,
         metadata_fields=metadata_fields,
         transc_rel_dir=transc_rel_dir,
-        exclude_participants=exclude_participants,
+        exclude_speakers=exclude_speakers,
         strip_clan=strip_clan,
         prefer_correction=prefer_correction,
         lowercase=lowercase,

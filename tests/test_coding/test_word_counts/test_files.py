@@ -22,7 +22,7 @@ def test_cu_neutrality_and_word_count_preparation():
         }
     )
 
-    prepared = files._prepare_wc_df(df, source_type="cu", exclude_participants=["INV"])
+    prepared = files._prepare_wc_df(df, source_type="cu", exclude_speakers=["INV"])
 
     assert list(prepared["word_count"]) == [2, "NA"]
     assert files._get_cu_columns(df) == ["c1_cu"]

@@ -113,8 +113,8 @@ class RunContext:
         return self.config.stimulus_field
 
     @property
-    def exclude_participants(self) -> list[str]:
-        return self.config.exclude_participants
+    def exclude_speakers(self) -> list[str]:
+        return self.config.exclude_speakers
 
     @property
     def strip_clan(self) -> bool:
@@ -422,7 +422,7 @@ class RunContext:
             "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "exclude_participants": self.exclude_participants,
+            "exclude_speakers": self.exclude_speakers,
             "strip_clan": self.strip_clan,
             "prefer_correction": self.prefer_correction,
             "lowercase": self.lowercase,
@@ -442,7 +442,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "cu_paradigms": self.cu_paradigms,
-            "exclude_participants": self.exclude_participants,
+            "exclude_speakers": self.exclude_speakers,
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
@@ -480,6 +480,7 @@ class RunContext:
             "cu_paradigms": self.cu_paradigms,
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
+            "exclude_speakers": self.exclude_speakers,
         }
     
     def kwargs_cu_rates(self) -> dict[str, Any]:
@@ -505,7 +506,7 @@ class RunContext:
             "num_coders": self.num_coders,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "exclude_participants": self.exclude_participants,
+            "exclude_speakers": self.exclude_speakers,
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
@@ -539,6 +540,7 @@ class RunContext:
             "word_count_field": self.config.advanced.word_count_column,
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
+            "exclude_speakers": self.exclude_speakers,
         }
 
     def kwargs_wc_rates(self) -> dict[str, Any]:
@@ -563,7 +565,7 @@ class RunContext:
             "metadata_fields": self.metadata_fields,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "exclude_participants": self.exclude_participants,
+            "exclude_speakers": self.exclude_speakers,
             "stimulus_field": self.stimulus_field,
             "resource_path": self.config.advanced.target_vocabulary_resource_path,
             "sample_id_field": self.config.sample_id_field,
@@ -678,7 +680,7 @@ class RunContext:
             "num_coders": self.num_coders,
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
-            "exclude_participants": self.exclude_participants,
+            "exclude_speakers": self.exclude_speakers,
             "automate_powers": self.automate_powers,
             "blinding_config": self.config.blinding,
             "powers_coding_file": self.config.powers_coding_filename,

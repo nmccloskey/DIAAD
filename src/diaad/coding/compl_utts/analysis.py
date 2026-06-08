@@ -186,6 +186,30 @@ def _drop_coder_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _drop_excluded_speaker_rows(
+    df: pd.DataFrame,
+    exclude_speakers=None,
+) -> pd.DataFrame:
+    """Remove rows from speakers excluded from analysis."""
+    if not exclude_speakers or "speaker" not in df.columns:
+        return df
+
+    exclude_set = {str(s).strip().lower() for s in exclude_speakers if str(s).strip()}
+    if not exclude_set:
+        return df
+
+    speaker_labels = df["speaker"].astype(str).str.strip().str.lower()
+    keep_mask = ~speaker_labels.isin(exclude_set)
+    n_excluded = int((~keep_mask).sum())
+
+    if n_excluded:
+        logger.info(
+            f"Excluded {n_excluded} CU coding row(s) from analysis based on speaker label."
+        )
+
+    return df.loc[keep_mask].copy()
+
+
 def _summarize_pair(cu_coding, pair, sample_id_field: str = "sample_id"):
     """
     Summarize one coder/paradigm SV-REL pair at the sample level.
@@ -459,6 +483,7 @@ def analyze_cu_coding(
     blinding_config=None,
     blind_codebook=None,
     sample_id_field: str = "sample_id",
+    exclude_speakers=None,
 ):
     """
     Summarize Complete Utterance (CU) coding by sample across all available
@@ -478,6 +503,8 @@ def analyze_cu_coding(
     --------
     - Finds exactly one CU coding workbook by exact filename.
     - Detects valid coder/paradigm SV-REL pairs.
+    - Drops rows whose speaker label is listed in exclude_speakers when a
+      speaker column is available.
     - Computes CU = 1 if SV == REL == 1,
       0 if both are present but not both 1,
       NaN otherwise.
@@ -509,6 +536,7 @@ def analyze_cu_coding(
         return
 
     cu_coding = _drop_coder_admin_cols(cu_coding)
+    cu_coding = _drop_excluded_speaker_rows(cu_coding, exclude_speakers)
     if sample_id_field not in cu_coding.columns:
         logger.error(
             f"CU coding file is missing required sample identifier column: {sample_id_field}. "

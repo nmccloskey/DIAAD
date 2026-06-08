@@ -985,7 +985,7 @@ def _cu_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "reliability_fraction",
             "num_coders",
             "stimulus_column",
-            "exclude_participants",
+            "exclude_speakers",
         ],
     )
 
@@ -1220,7 +1220,7 @@ def _word_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "reliability_fraction",
             "num_coders",
             "stimulus_column",
-            "exclude_participants",
+            "exclude_speakers",
         ],
     )
 
@@ -1457,7 +1457,7 @@ def _powers_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
             "reliability_fraction",
             "num_coders",
             "stimulus_column",
-            "exclude_participants",
+            "exclude_speakers",
             "automate_powers",
         ],
     )
@@ -1787,7 +1787,7 @@ This example demonstrates how `diaad vocab analyze` calculates target-vocabulary
 
 ## Basic Config
 
-{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_column", "exclude_participants"]), "yaml")}
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields", "stimulus_column", "exclude_speakers"]), "yaml")}
 
 ## Advanced Config
 

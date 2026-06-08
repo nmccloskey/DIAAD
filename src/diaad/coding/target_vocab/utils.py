@@ -93,10 +93,34 @@ def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | Non
     return "transcripts", utt_df
 
 
+def _drop_excluded_speaker_rows(
+    df: pd.DataFrame,
+    exclude_speakers,
+) -> pd.DataFrame:
+    """Remove rows from speakers excluded from target-vocabulary analysis."""
+    if not exclude_speakers or "speaker" not in df.columns:
+        return df
+
+    exclude_set = {str(s).strip().lower() for s in exclude_speakers if str(s).strip()}
+    if not exclude_set:
+        return df
+
+    speaker_labels = df["speaker"].astype(str).str.strip().str.lower()
+    keep_mask = ~speaker_labels.isin(exclude_set)
+    n_excluded = int((~keep_mask).sum())
+
+    if n_excluded:
+        logger.info(
+            f"Excluded {n_excluded} target-vocabulary row(s) from analysis based on speaker label."
+        )
+
+    return df.loc[keep_mask].copy()
+
+
 def prepare_target_vocab_inputs(
     input_dir,
     output_dir,
-    exclude_participants,
+    exclude_speakers,
     stimulus_field="narrative",
     resources: dict | None = None,
     sample_id_field: str = "sample_id",
@@ -105,7 +129,8 @@ def prepare_target_vocab_inputs(
     Load and normalize utterance-level target vocabulary coverage inputs.
 
     The function keeps the existing command path, but filters stimuli using the
-    active target vocabulary resources.
+    active target vocabulary resources and removes excluded speaker rows when
+    speaker labels are available.
     """
     try:
         mode, utt_df = find_target_vocab_inputs(input_dir, output_dir)
@@ -129,6 +154,8 @@ def prepare_target_vocab_inputs(
             utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
             if narr_col != "narrative":
                 utt_df = utt_df.rename(columns={narr_col: "narrative"})
+
+            utt_df = _drop_excluded_speaker_rows(utt_df, exclude_speakers)
 
             cu_col = next((c for c in utt_df.columns if c.startswith("c2_cu")), None)
             wc_col = "word_count" if "word_count" in utt_df.columns else None
@@ -159,8 +186,7 @@ def prepare_target_vocab_inputs(
                 return None, None
 
             utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
-            if "speaker" in utt_df.columns and exclude_participants:
-                utt_df = utt_df[~utt_df["speaker"].isin(exclude_participants)]
+            utt_df = _drop_excluded_speaker_rows(utt_df, exclude_speakers)
 
             present_narratives = set(utt_df[narr_col].dropna().unique())
             utt_df = utt_df.rename(columns={narr_col: "narrative"})

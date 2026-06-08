@@ -33,6 +33,30 @@ def _drop_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def _drop_excluded_speaker_rows(
+    df: pd.DataFrame,
+    exclude_speakers=None,
+) -> pd.DataFrame:
+    """Remove rows from speakers excluded from analysis."""
+    if not exclude_speakers or "speaker" not in df.columns:
+        return df
+
+    exclude_set = {str(s).strip().lower() for s in exclude_speakers if str(s).strip()}
+    if not exclude_set:
+        return df
+
+    speaker_labels = df["speaker"].astype(str).str.strip().str.lower()
+    keep_mask = ~speaker_labels.isin(exclude_set)
+    n_excluded = int((~keep_mask).sum())
+
+    if n_excluded:
+        logger.info(
+            f"Excluded {n_excluded} word-count row(s) from analysis based on speaker label."
+        )
+
+    return df.loc[keep_mask].copy()
+
+
 def _coerce_word_count_series(series: pd.Series) -> pd.Series:
     """
     Coerce a word-count series to numeric.
@@ -266,6 +290,7 @@ def analyze_word_counts(
     blinding_config=None,
     blind_codebook=None,
     sample_id_field: str = "sample_id",
+    exclude_speakers=None,
 ):
     """
     Summarize utterance-level word-count coding by sample.
@@ -281,6 +306,8 @@ def analyze_word_counts(
     - Finds exactly one word-count coding workbook by exact filename.
     - Coerces the configured word-count field to numeric.
     - Treats non-numeric / neutral entries (e.g., 'NA') as missing.
+    - Drops rows whose speaker label is listed in exclude_speakers when a
+      speaker column is available.
     - Writes:
         * utterance-level file with cleaned numeric word-count column
         * sample-level summary with total, mean, SD, min, max
@@ -318,6 +345,7 @@ def analyze_word_counts(
         )
         return
 
+    wc_df = _drop_excluded_speaker_rows(wc_df, exclude_speakers)
     wc_df = _drop_admin_cols(wc_df)
     wc_df[word_count_field] = _coerce_word_count_series(wc_df[word_count_field])
 

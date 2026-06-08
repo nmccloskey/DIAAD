@@ -59,22 +59,22 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind c
 
 | utterance_id | speaker | utterance | word_count | sample_id_blinded |
 | --- | --- | --- | --- | --- |
-| U0001 | INV | Please tell the picnic story again. |  | 1 |
-| U0002 | PAR | The family brought food to the park. | 7.0 | 1 |
-| U0003 | PAR | The little girl [/] the little girl pours juice. | 8.0 | 1 |
-| U0004 | PAR | Then they share sandwiches. | 4.0 | 1 |
-| U0005 | INV | Anything else? |  | 1 |
-| U0006 | PAR | Yes, the dog waits beside them. | 6.0 | 1 |
-| U0007 | PAR | The day is quiet. | 4.0 | 1 |
-| U0001 | INV | What do you notice first? |  | 2 |
+| U0002 | PAR | The family brought food to the park. | 7 | 1 |
+| U0003 | PAR | The little girl [/] the little girl pours juice. | 8 | 1 |
+| U0004 | PAR | Then they share sandwiches. | 4 | 1 |
+| U0006 | PAR | Yes, the dog waits beside them. | 6 | 1 |
+| U0007 | PAR | The day is quiet. | 4 | 1 |
+| U0002 | PAR | A picnic. | 2 | 2 |
+| U0003 | PAR | The dad is opening the basket. | 6 | 2 |
+| U0004 | PAR | The dog wants food! | 4 | 2 |
 
 `expected_outputs/words_module/words_analyze/word_counting_by_sample.xlsx`
 
 | no_utt_coded | no_utt_missing | total_words | mean_words_per_utt | sd_words_per_utt | min_words_per_utt | max_words_per_utt | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 5.0 | 2.0 | 29.0 | 5.8 | 1.789 | 4.0 | 8.0 | 1.0 |
-| 5.0 | 2.0 | 22.0 | 4.4 | 1.673 | 2.0 | 6.0 | 2.0 |
-| 5.0 | 2.0 | 24.0 | 4.8 | 1.789 | 3.0 | 7.0 | 3.0 |
+| 5.0 | 0.0 | 29.0 | 5.8 | 1.789 | 4.0 | 8.0 | 1.0 |
+| 5.0 | 0.0 | 22.0 | 4.4 | 1.673 | 2.0 | 6.0 | 2.0 |
+| 5.0 | 0.0 | 24.0 | 4.8 | 1.789 | 3.0 | 7.0 | 3.0 |
 
 ## Notes
 

@@ -7,7 +7,7 @@ project:
   strip_clan: true
   prefer_correction: true
   lowercase: true
-  exclude_participants: []
+  exclude_speakers: []
   auto_tabularize: false
   num_bins: 4
   num_coders: 0

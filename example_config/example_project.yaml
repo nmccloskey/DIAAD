@@ -40,7 +40,7 @@ prefer_correction: true
 lowercase: true
 
 # Speakers to exclude from transcript-derived analyses.
-exclude_participants: [INV]
+exclude_speakers: [INV]
 
 
 # -------------------------------------------------------------------
