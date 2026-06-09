@@ -389,6 +389,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "help": "Exact metadata workbook file name used for blinding / unblinding recovery.",
             },
             {
+                "name": "id_columns",
+                "label": "ID columns",
+                "type": "list",
+                "default": ["sample_id", "utterance_id"],
+                "help": "Exact join-key columns required in the metadata source when recovering metadata.",
+            },
+            {
                 "name": "codebook_filename",
                 "label": "Codebook filename",
                 "default": "",

@@ -7,7 +7,7 @@ from diaad.core.config import AdvancedConfig
 from diaad.metadata import blinding
 
 
-def test_choose_join_keys_prefers_configured_sample_and_utterance():
+def test_choose_join_keys_requires_exact_configured_columns():
     df = pd.DataFrame(columns=["expanded_sample_id", "expanded_utterance_id"])
     metadata_df = pd.DataFrame(
         columns=["expanded_sample_id", "expanded_utterance_id", "speaker"]
@@ -19,6 +19,14 @@ def test_choose_join_keys_prefers_configured_sample_and_utterance():
         sample_id_field="expanded_sample_id",
         utterance_id_field="expanded_utterance_id",
     ) == ["expanded_sample_id", "expanded_utterance_id"]
+
+
+def test_choose_join_keys_does_not_fallback_when_configured_key_is_missing():
+    df = pd.DataFrame(columns=["sample_id"])
+    metadata_df = pd.DataFrame(columns=["sample_id", "speaker"])
+
+    with pytest.raises(ValueError, match="missing_from_input_df=.*utterance_id"):
+        blinding._choose_join_keys(df, metadata_df)
 
 
 def test_generate_integer_blind_codebook_is_deterministic():
@@ -47,6 +55,7 @@ def test_blind_analysis_dataframe_recovers_metadata_columns():
     config = AdvancedConfig(
         sample_id_column="expanded_sample_id",
         utterance_id_column="expanded_utterance_id",
+        id_columns=["expanded_sample_id"],
         blind_columns=["speaker"],
     )
     df = pd.DataFrame({"expanded_sample_id": ["S1", "S2"], "score": [1, 2]})
@@ -86,6 +95,7 @@ def test_blind_analysis_dataframe_uses_metadata_source_filename(monkeypatch, tmp
     config = AdvancedConfig(
         blind_columns=["speaker"],
         metadata_source="site_metadata.xlsx",
+        id_columns=["sample_id"],
     )
     df = pd.DataFrame({"sample_id": ["S1"], "score": [1]})
 

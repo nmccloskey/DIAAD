@@ -45,7 +45,7 @@ word_count_column: word_count
 auto_blind: true
 blind_columns:
 - sample_id
-metadata_source: transcript_tables
+metadata_source: transcript_tables.xlsx
 codebook_filename: ''
 ```
 

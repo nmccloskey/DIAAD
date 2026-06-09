@@ -36,4 +36,7 @@ advanced:
   blind_columns:
   - sample_id
   metadata_source: transcript_tables.xlsx
+  id_columns:
+  - sample_id
+  - utterance_id
   codebook_filename: ''

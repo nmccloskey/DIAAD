@@ -33,6 +33,7 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "utterance_id_column": "expanded_utterance_id",
             "auto_blind": "true",
             "blind_columns": ["sample_id", "speaker"],
+            "id_columns": ["expanded_sample_id"],
             "codebook_filename": "custom_codebook.xlsx",
             "powers_coding_filename": "custom_powers.xlsx",
             "powers_reliability_filename": "custom_powers_rel.xlsx",
@@ -56,6 +57,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.utterance_id_column == "expanded_utterance_id"
     assert config.auto_blind is True
     assert config.blind_columns == ["sample_id", "speaker"]
+    assert config.id_columns == ["expanded_sample_id"]
+    assert config.id_cols == ["expanded_sample_id"]
     assert config.coding_blind_cols == ["sample_id", "speaker"]
     assert config.analysis_blind_cols == ["sample_id", "speaker"]
     assert config.codebook_filename == "custom_codebook.xlsx"

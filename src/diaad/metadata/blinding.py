@@ -30,36 +30,34 @@ def _has_codebook_discovery_context(
 def _choose_join_keys(
     df: pd.DataFrame,
     metadata_df: pd.DataFrame,
+    id_columns: list[str] | None = None,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
 ) -> list[str]:
     """
-    Choose the most specific usable join keys shared by df and metadata_df.
-
-    Preference:
-    1. configured sample + utterance identifiers if both are shared
-    2. configured sample identifier if shared
-    3. configured utterance identifier if shared
-    4. otherwise error
+    Return configured join keys, requiring exact column matches on both inputs.
     """
-    sample_id_field = str(sample_id_field).strip()
-    utterance_id_field = str(utterance_id_field).strip()
-    requested = list(dict.fromkeys([sample_id_field, utterance_id_field]))
-    shared = [c for c in requested if c in df.columns and c in metadata_df.columns]
-
-    has_sample = sample_id_field in shared
-    has_utterance = utterance_id_field in shared
-    if has_sample and has_utterance and sample_id_field != utterance_id_field:
-        return [sample_id_field, utterance_id_field]
-    if has_sample:
-        return [sample_id_field]
-    if has_utterance:
-        return [utterance_id_field]
-
-    raise ValueError(
-        "Could not determine join keys shared by input dataframe and metadata dataframe. "
-        f"Requested identifier fields={requested}"
+    requested = list(
+        dict.fromkeys(
+            str(col).strip()
+            for col in (id_columns or [sample_id_field, utterance_id_field])
+        )
     )
+    if not requested or any(not col for col in requested):
+        raise ValueError("Configured id_columns must contain non-empty strings.")
+
+    missing_df = [col for col in requested if col not in df.columns]
+    missing_metadata = [col for col in requested if col not in metadata_df.columns]
+    if missing_df or missing_metadata:
+        raise ValueError(
+            "Configured id_columns were not found exactly in the dataframes used "
+            "for metadata recovery. "
+            f"id_columns={requested}; "
+            f"missing_from_input_df={missing_df}; "
+            f"missing_from_metadata_source={missing_metadata}"
+        )
+
+    return requested
 
 
 def _deduplicate_metadata_for_join(
@@ -97,6 +95,7 @@ def _resolve_analysis_source_columns(
     blind_cols: list[str],
     *,
     metadata_df: pd.DataFrame | None = None,
+    id_columns: list[str] | None = None,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
 ) -> tuple[pd.DataFrame, list[str], list[str], list[str]]:
@@ -119,7 +118,7 @@ def _resolve_analysis_source_columns(
     present = present_cols(df, blind_cols)
     missing = [c for c in blind_cols if c not in present]
 
-    id_fields = list(dict.fromkeys([sample_id_field, utterance_id_field]))
+    id_fields = list(dict.fromkeys(id_columns or [sample_id_field, utterance_id_field]))
     present_identifier_cols = [c for c in id_fields if c in df.columns]
 
     if not missing:
@@ -136,6 +135,7 @@ def _resolve_analysis_source_columns(
     join_keys = _choose_join_keys(
         df,
         metadata_df,
+        id_columns=id_columns,
         sample_id_field=sample_id_field,
         utterance_id_field=utterance_id_field,
     )
@@ -434,6 +434,7 @@ def blind_analysis_dataframe(
         df=df,
         blind_cols=blind_cols,
         metadata_df=working_metadata,
+        id_columns=config.id_columns,
         sample_id_field=config.sample_id_field,
         utterance_id_field=config.utterance_id_field,
     )

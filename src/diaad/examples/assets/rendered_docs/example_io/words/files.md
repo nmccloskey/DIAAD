@@ -47,7 +47,7 @@ exclude_speakers:
 ```yaml
 word_count_filename: word_counting.xlsx
 word_count_column: word_count
-metadata_source: transcript_tables
+metadata_source: transcript_tables.xlsx
 auto_blind: true
 blind_columns:
 - sample_id

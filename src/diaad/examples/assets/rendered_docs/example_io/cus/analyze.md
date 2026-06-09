@@ -44,7 +44,7 @@ output_dir: diaad_data/output
 auto_blind: true
 blind_columns:
 - sample_id
-metadata_source: transcript_tables
+metadata_source: transcript_tables.xlsx
 codebook_filename: ''
 ```
 

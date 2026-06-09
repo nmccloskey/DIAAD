@@ -98,6 +98,7 @@ class AdvancedConfig:
     auto_blind: bool = False
     blind_columns: list[str] | None = None
     metadata_source: str = "transcript_tables.xlsx"
+    id_columns: list[str] | None = None
     codebook_filename: str = ""
 
     def __post_init__(self) -> None:
@@ -119,6 +120,12 @@ class AdvancedConfig:
             "blind_columns",
             list(self.blind_columns or ["sample_id"]),
         )
+        id_columns = [str(col).strip() for col in (self.id_columns or [])]
+        if not id_columns:
+            id_columns = ["sample_id", "utterance_id"]
+        if any(not col for col in id_columns):
+            raise ValueError("id_columns must contain non-empty strings.")
+        object.__setattr__(self, "id_columns", list(dict.fromkeys(id_columns)))
 
     @property
     def blinded_suffix(self) -> str:
@@ -150,6 +157,10 @@ class AdvancedConfig:
     @property
     def transcript_table_file(self) -> str:
         return self.transcript_table_filename
+
+    @property
+    def id_cols(self) -> list[str]:
+        return self.id_columns
 
     @property
     def cu_samples_file(self) -> str:
@@ -491,6 +502,14 @@ class ConfigManager:
         return self.advanced.metadata_source
 
     @property
+    def id_columns(self) -> list[str]:
+        return self.advanced.id_columns
+
+    @property
+    def id_cols(self) -> list[str]:
+        return self.advanced.id_columns
+
+    @property
     def codebook_filename(self) -> str:
         return self.advanced.codebook_filename
 
@@ -550,6 +569,7 @@ class ConfigManager:
                 "auto_blind": advanced.auto_blind,
                 "blind_columns": advanced.blind_columns,
                 "metadata_source": advanced.metadata_source,
+                "id_columns": advanced.id_columns,
                 "codebook_filename": advanced.codebook_filename,
             },
         }
@@ -711,6 +731,10 @@ class ConfigManager:
             metadata_source=self._as_str(
                 data.get("metadata_source"),
                 default="transcript_tables.xlsx",
+            ),
+            id_columns=self._as_str_list(
+                data.get("id_columns"),
+                default=["sample_id", "utterance_id"],
             ),
             auto_blind=self._as_bool(data.get("auto_blind"), default=False),
             blind_columns=self._as_optional_str_list(data.get("blind_columns")),

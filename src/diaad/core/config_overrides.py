@@ -43,6 +43,7 @@ ADVANCED_KEYS = {
     "auto_blind",
     "blind_columns",
     "metadata_source",
+    "id_columns",
     "codebook_filename",
     "powers_coding_filename",
     "powers_reliability_filename",
