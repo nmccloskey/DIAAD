@@ -17,6 +17,7 @@ def test_parse_config_overrides_maps_bare_keys_to_sections() -> None:
             "input_dir=data/input/siteA",
             "powers_coding_filename=siteA_powers_coding.xlsx",
             "sample_id_column=expanded_sample_id",
+            "id_columns=sample_id",
             "automate_powers=false",
             "auto_tabularize=true",
         ]
@@ -26,6 +27,7 @@ def test_parse_config_overrides_maps_bare_keys_to_sections() -> None:
         "project.input_dir": "data/input/siteA",
         "advanced.powers_coding_filename": "siteA_powers_coding.xlsx",
         "advanced.sample_id_column": "expanded_sample_id",
+        "advanced.id_columns": "sample_id",
         "project.automate_powers": False,
         "project.auto_tabularize": True,
     }
@@ -78,6 +80,7 @@ def test_apply_config_overrides_returns_copied_config_dicts() -> None:
         {
             "project.input_dir": "input/siteA",
             "advanced.powers_coding_filename": "siteA_powers.xlsx",
+            "advanced.id_columns": ["sample_id", "utterance_id"],
         },
     )
 
@@ -85,3 +88,4 @@ def test_apply_config_overrides_returns_copied_config_dicts() -> None:
     assert advanced["powers_coding_filename"] == "powers_coding.xlsx"
     assert new_project["input_dir"] == "input/siteA"
     assert new_advanced["powers_coding_filename"] == "siteA_powers.xlsx"
+    assert new_advanced["id_columns"] == ["sample_id", "utterance_id"]

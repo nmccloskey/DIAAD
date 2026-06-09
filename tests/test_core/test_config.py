@@ -220,6 +220,7 @@ def test_advanced_config_defaults_do_not_auto_blind():
     assert advanced.sample_id_column == "sample_id"
     assert advanced.utterance_id_column == "utterance_id"
     assert advanced.blind_columns == ["sample_id"]
+    assert advanced.id_columns == ["sample_id", "utterance_id"]
     assert advanced.should_blind("coding") is False
     assert advanced.should_blind("analysis") is False
 
@@ -229,3 +230,14 @@ def test_advanced_config_accepts_blind_columns():
 
     assert advanced.blind_columns == ["sample_id", "speaker"]
     assert advanced.analysis_blind_cols == ["sample_id", "speaker"]
+
+
+def test_advanced_config_normalizes_id_columns():
+    advanced = AdvancedConfig(id_columns=[" sample ", "utterance", "sample"])
+
+    assert advanced.id_columns == ["sample", "utterance"]
+
+
+def test_advanced_config_rejects_empty_id_columns():
+    with pytest.raises(ValueError, match="id_columns"):
+        AdvancedConfig(id_columns=["sample_id", " "])
