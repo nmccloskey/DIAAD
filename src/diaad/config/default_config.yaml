@@ -15,6 +15,7 @@ project:
   automate_powers: true
   metadata_fields: {}
 advanced:
+  transcript_table_filename: transcript_tables.xlsx
   sample_id_column: sample_id
   utterance_id_column: utterance_id
   reliability_tag: _reliability
@@ -34,5 +35,5 @@ advanced:
   auto_blind: false
   blind_columns:
   - sample_id
-  metadata_source: transcript_tables
+  metadata_source: transcript_tables.xlsx
   codebook_filename: ''

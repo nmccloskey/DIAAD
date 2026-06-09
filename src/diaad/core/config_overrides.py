@@ -26,6 +26,7 @@ PROJECT_KEYS = {
 }
 
 ADVANCED_KEYS = {
+    "transcript_table_filename",
     "sample_id_column",
     "utterance_id_column",
     "reliability_tag",

@@ -587,7 +587,10 @@ def _blinding_command_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig
     return AdvancedConfig(
         auto_blind=True,
         blind_columns=["sample_id"],
-        metadata_source=specs["advanced_config"].get("metadata_source", "transcript_tables"),
+        metadata_source=specs["advanced_config"].get(
+            "metadata_source",
+            "transcript_tables.xlsx",
+        ),
     )
 
 

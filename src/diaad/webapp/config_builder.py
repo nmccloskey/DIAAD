@@ -241,6 +241,17 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
 
 ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
     (
+        "Tabularized transcripts",
+        [
+            {
+                "name": "transcript_table_filename",
+                "label": "Transcript table file name",
+                "default": "transcript_tables.xlsx",
+                "help": "Expected transcript table workbook file name.",
+            },
+        ],
+    ),
+    (
         "Unique identifiers",
         [
             {
@@ -374,8 +385,8 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "metadata_source",
                 "label": "Metadata source",
-                "default": "transcript_tables",
-                "help": "Source from which metadata may be recovered for blinding / unblinding.",
+                "default": "transcript_tables.xlsx",
+                "help": "Exact metadata workbook file name used for blinding / unblinding recovery.",
             },
             {
                 "name": "codebook_filename",

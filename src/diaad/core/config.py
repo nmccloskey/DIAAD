@@ -70,6 +70,8 @@ class ProjectConfig:
 class AdvancedConfig:
     """Normalized advanced configuration."""
 
+    transcript_table_filename: str = "transcript_tables.xlsx"
+
     sample_id_column: str = "sample_id"
     utterance_id_column: str = "utterance_id"
 
@@ -95,7 +97,7 @@ class AdvancedConfig:
 
     auto_blind: bool = False
     blind_columns: list[str] | None = None
-    metadata_source: str = "transcript_tables"
+    metadata_source: str = "transcript_tables.xlsx"
     codebook_filename: str = ""
 
     def __post_init__(self) -> None:
@@ -144,6 +146,10 @@ class AdvancedConfig:
     @property
     def blind_cols(self) -> list[str]:
         return self.blind_columns
+
+    @property
+    def transcript_table_file(self) -> str:
+        return self.transcript_table_filename
 
     @property
     def cu_samples_file(self) -> str:
@@ -333,6 +339,14 @@ class ConfigManager:
         return self.advanced.target_vocabulary_resource_path
 
     @property
+    def transcript_table_file(self) -> str:
+        return self.advanced.transcript_table_filename
+
+    @property
+    def transcript_table_filename(self) -> str:
+        return self.advanced.transcript_table_filename
+
+    @property
     def cu_paradigms(self) -> list[str]:
         return self.advanced.cu_paradigms
 
@@ -514,6 +528,7 @@ class ConfigManager:
                 "metadata_fields": project.metadata_fields,
             },
             "advanced": {
+                "transcript_table_filename": advanced.transcript_table_filename,
                 "sample_id_column": advanced.sample_id_column,
                 "utterance_id_column": advanced.utterance_id_column,
                 "reliability_tag": advanced.reliability_tag,
@@ -628,6 +643,10 @@ class ConfigManager:
 
     def _parse_advanced(self, data: dict[str, Any]) -> AdvancedConfig:
         return AdvancedConfig(
+            transcript_table_filename=self._as_str(
+                data.get("transcript_table_filename"),
+                default="transcript_tables.xlsx",
+            ),
             sample_id_column=self._as_str(
                 data.get("sample_id_column"),
                 default="sample_id",
@@ -691,7 +710,7 @@ class ConfigManager:
             ),
             metadata_source=self._as_str(
                 data.get("metadata_source"),
-                default="transcript_tables",
+                default="transcript_tables.xlsx",
             ),
             auto_blind=self._as_bool(data.get("auto_blind"), default=False),
             blind_columns=self._as_optional_str_list(data.get("blind_columns")),
