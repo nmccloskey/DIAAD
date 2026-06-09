@@ -10,7 +10,7 @@ import pandas as pd
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import assign_coders, resolve_stim_cols, segment
 from diaad.coding.utils.sampling import calc_subset_size
-from diaad.metadata.discovery import find_one_matching_file
+from diaad.metadata.discovery import find_transcript_table as find_one_transcript_table
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.metadata.utils import validate_columns
 
@@ -170,10 +170,8 @@ def find_transcript_table(
     """
     Locate the transcript table workbook for template generation.
     """
-    return find_one_matching_file(
+    return find_one_transcript_table(
         directories=[input_dir, output_dir],
-        filename="transcript_tables.xlsx",
-        label="transcript table file",
     )
 
 

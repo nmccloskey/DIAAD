@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
-from psair.metadata.discovery import MultipleFilesFoundError
 
+from diaad.metadata.discovery import MultipleFilesFoundError
 from diaad.transcripts.detabularization import detabularize_transcripts
 
 

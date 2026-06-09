@@ -15,7 +15,7 @@ from diaad.coding.target_vocab.resources import (
 from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
 from psair.core.logger import get_rel_path, logger
 from psair.metadata.discovery import find_matching_files
-from diaad.metadata.discovery import require_one_file
+from diaad.metadata.discovery import find_transcript_table, require_one_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 
@@ -70,26 +70,23 @@ def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | Non
             logger.info(f"Using unblind utterance data: {get_rel_path(p)}")
             return "unblind", df
 
-    transcript_tables = find_matching_files(
+    transcript_table = find_transcript_table(
         directories=[input_dir, output_dir],
-        filename="transcript_tables.xlsx",
-        match_mode="exact",
-        deduplicate=False,
+        required=False,
     )
-    if not transcript_tables:
+    if transcript_table is None:
         logger.error(
             "No target vocabulary coverage input files found "
             "(*unblind_utterance_data*.xlsx or *transcript_tables*.xlsx)."
         )
         return None, None
 
-    utt_frames = [extract_transcript_data(tt) for tt in transcript_tables if tt]
-    if not utt_frames:
+    utt_df = extract_transcript_data(transcript_table)
+    if utt_df is None:
         logger.error("Transcript tables found but none could be loaded.")
         return None, None
 
-    utt_df = pd.concat(utt_frames, ignore_index=True, sort=False)
-    logger.info(f"Loaded and concatenated {len(transcript_tables)} transcript table(s).")
+    logger.info(f"Loaded transcript table {get_rel_path(transcript_table)}.")
     return "transcripts", utt_df
 
 

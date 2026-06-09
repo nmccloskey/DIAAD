@@ -4,8 +4,11 @@ from pathlib import Path
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
-from diaad.metadata.discovery import require_one_file
+from diaad.metadata.discovery import (
+    DEFAULT_TRANSCRIPT_TABLE_FILENAME,
+    find_transcript_table,
+    require_one_file,
+)
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 
@@ -57,12 +60,12 @@ def load_metadata_from_transcript_tables(
     ----------
     transcript_tables : Path | str | list[Path | str] | None
         Explicit transcript table path(s). If None, matching files are discovered
-        with ``find_matching_files(...)`` using exact filename
+        with DIAAD's exact filename discovery using
         ``transcript_tables.xlsx``.
     match_metadata_fields : list[str] | None
-        Metadata values passed to ``find_matching_files`` when ``transcript_tables`` is None.
+        Metadata values used during discovery when ``transcript_tables`` is None.
     directories : Path | str | list[Path | str] | None
-        Directories passed to ``find_matching_files`` when ``transcript_tables`` is None.
+        Directories searched when ``transcript_tables`` is None.
     combine : bool, default True
         If True, load and concatenate all resolved transcript tables.
         If False, require exactly one resolved transcript table.
@@ -80,12 +83,9 @@ def load_metadata_from_transcript_tables(
         If no transcript tables are found.
     """
     if transcript_tables is None:
-        transcript_tables = find_matching_files(
+        transcript_tables = find_transcript_table(
             match_metadata_fields=match_metadata_fields,
             directories=directories,
-            filename="transcript_tables.xlsx",
-            match_mode="exact",
-            deduplicate=False,
         )
 
     transcript_tables = [Path(p) for p in normalize_to_list(transcript_tables)]
@@ -98,7 +98,7 @@ def load_metadata_from_transcript_tables(
             require_one_file(
                 transcript_tables,
                 label="transcript table file",
-                configured_filename="transcript_tables.xlsx",
+                configured_filename=DEFAULT_TRANSCRIPT_TABLE_FILENAME,
                 directories=directories,
             )
         ]

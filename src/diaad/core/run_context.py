@@ -9,11 +9,11 @@ import random
 import numpy as np
 
 from diaad import __version__
-from psair.metadata.discovery import find_matching_files
 from psair.metadata.metadata_fields import MetadataManager
 from psair.core.logger import logger
 
 from diaad.core.config import ConfigManager
+from diaad.metadata.discovery import find_transcript_table
 
 
 @dataclass
@@ -235,14 +235,11 @@ class RunContext:
         Return transcript tables present in the input directory or current run
         output directory.
         """
-        return list(
-            find_matching_files(
-                directories=[self.input_dir, self.out_dir],
-                filename="transcript_tables.xlsx",
-                match_mode="exact",
-                deduplicate=False,
-            )
+        transcript_table = find_transcript_table(
+            directories=[self.input_dir, self.out_dir],
+            required=False,
         )
+        return [transcript_table] if transcript_table is not None else []
 
     def transcript_tables_exist(self) -> bool:
         """

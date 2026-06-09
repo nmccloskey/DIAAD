@@ -122,7 +122,7 @@ def test_run_context_uses_packaged_defaults_when_config_omitted_without_project_
 def test_run_context_ensure_transcript_tables_generates_when_missing(monkeypatch, tmp_path):
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
-    monkeypatch.setattr(run_context_module, "find_matching_files", lambda **kwargs: [])
+    monkeypatch.setattr(run_context_module, "find_transcript_table", lambda **kwargs: None)
 
     calls = {}
 
@@ -155,7 +155,7 @@ def test_run_context_ensure_transcript_tables_errors_when_auto_disabled(
 ):
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
-    monkeypatch.setattr(run_context_module, "find_matching_files", lambda **kwargs: [])
+    monkeypatch.setattr(run_context_module, "find_transcript_table", lambda **kwargs: None)
 
     ctx = run_context_module.RunContext(
         config_dir=tmp_path / "config",
@@ -177,8 +177,8 @@ def test_run_context_ensure_transcript_tables_uses_existing_tables(
     table_path = tmp_path / "input" / "transcript_tables" / "transcript_tables.xlsx"
     monkeypatch.setattr(
         run_context_module,
-        "find_matching_files",
-        lambda **kwargs: [table_path],
+        "find_transcript_table",
+        lambda **kwargs: table_path,
     )
 
     ctx = run_context_module.RunContext(

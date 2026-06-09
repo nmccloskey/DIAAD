@@ -9,7 +9,7 @@ from pathlib import Path
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils.sampling import calc_subset_size
 from psair.metadata.discovery import find_matching_files
-from diaad.metadata.discovery import require_one_file
+from diaad.metadata.discovery import find_transcript_table, require_one_file
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
@@ -135,23 +135,16 @@ def _find_input_file(input_dir, output_dir):
             directories=[input_dir, output_dir],
         )
 
-    transcript_tables = find_matching_files(
+    transcript_table = find_transcript_table(
         directories=[input_dir, output_dir],
-        filename="transcript_tables.xlsx",
-        match_mode="exact",
-        deduplicate=False,
+        required=False,
     )
 
-    if transcript_tables:
+    if transcript_table is not None:
         logger.info(
             "No CU coding file found. Found transcript table file for automated first-pass word-count prep."
         )
-        return "transcript", require_one_file(
-            transcript_tables,
-            label="transcript table file",
-            configured_filename="transcript_tables.xlsx",
-            directories=[input_dir, output_dir],
-        )
+        return "transcript", transcript_table
 
     return None, None
 

@@ -8,6 +8,7 @@ from psair.metadata.discovery import find_matching_files as psair_find_matching_
 
 
 MatchMode = Literal["exact", "contains"]
+DEFAULT_TRANSCRIPT_TABLE_FILENAME = "transcript_tables.xlsx"
 
 
 class MultipleFilesFoundError(RuntimeError):
@@ -122,3 +123,32 @@ def find_one_matching_file(
         configured_filename=configured_filename,
         directories=directories,
     )
+
+
+def find_transcript_table(
+    *,
+    directories: Path | str | Iterable[Path | str] | None = None,
+    filename: str | Path = DEFAULT_TRANSCRIPT_TABLE_FILENAME,
+    required: bool = True,
+    match_metadata_fields: Iterable[str] | None = None,
+    label: str = "transcript table file",
+) -> Path | None:
+    """
+    Find one transcript table using DIAAD's exact-filename discovery policy.
+
+    Recursive discovery must resolve to at most one exact filename match. When
+    ``required`` is false, a missing table returns None, but multiple matches
+    still raise an actionable error.
+    """
+    try:
+        return find_one_matching_file(
+            directories=directories,
+            filename=filename,
+            match_mode="exact",
+            match_metadata_fields=match_metadata_fields,
+            label=label,
+        )
+    except FileNotFoundError:
+        if required:
+            raise
+        return None

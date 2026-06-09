@@ -8,7 +8,7 @@ from pathlib import Path
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import segment
 from diaad.coding.utils.sampling import calc_subset_size
-from diaad.metadata.discovery import find_one_matching_file
+from diaad.metadata.discovery import find_transcript_table
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.coding.powers.automation import run_automation
@@ -76,10 +76,8 @@ def _get_transcript_table(input_dir, output_dir) -> Path | None:
     """
     Locate the transcript table used to generate POWERS files.
     """
-    return find_one_matching_file(
+    return find_transcript_table(
         directories=[input_dir, output_dir],
-        filename="transcript_tables.xlsx",
-        label="transcript table file",
     )
 
 

@@ -8,8 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_matching_files
-from diaad.metadata.discovery import require_one_file
+from diaad.metadata.discovery import find_transcript_table
 from diaad.coding.utils.sampling import calc_subset_size
 from diaad.transcripts.transcript_tables import (
     extract_transcript_data,
@@ -61,23 +60,14 @@ def _load_samples_df_from_transcript_tables(
     - If no transcript tables are found, returns None.
     - If multiple transcript tables are found, raises an error.
     """
-    transcript_tables = find_matching_files(
+    transcript_table_path = find_transcript_table(
         directories=[input_dir, output_dir],
-        filename="transcript_tables.xlsx",
-        match_mode="exact",
-        deduplicate=False,
+        required=False,
     )
 
-    if not transcript_tables:
+    if transcript_table_path is None:
         logger.info("No transcript tables found.")
         return None
-
-    transcript_table_path = require_one_file(
-        transcript_tables,
-        label="transcript table file",
-        configured_filename="transcript_tables.xlsx",
-        directories=[input_dir, output_dir],
-    )
 
     try:
         samples_df = extract_transcript_data(

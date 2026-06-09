@@ -8,7 +8,7 @@ from typing import Dict, List
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
-from psair.metadata.discovery import find_one_matching_file
+from diaad.metadata.discovery import find_transcript_table
 
 
 CHAT_SUBDIR = "chat_files"
@@ -245,12 +245,10 @@ def _find_transcript_tables(
         if output_path not in directories:
             directories.append(output_path)
 
-    return find_one_matching_file(
+    return find_transcript_table(
         directories=directories,
         filename=TRANSCRIPT_FILENAME,
-        match_mode="exact",
-        deduplicate=False,
-        label="transcript table",
+        label="transcript table file",
     )
 
 

@@ -6,7 +6,7 @@ from typing import Optional
 
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils.sampling import calc_subset_size
-from diaad.metadata.discovery import find_one_matching_file
+from diaad.metadata.discovery import find_transcript_table
 from diaad.transcripts.transcript_tables import extract_transcript_data
 from diaad.coding.utils import segment, assign_coders, resolve_stim_cols
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
@@ -445,10 +445,8 @@ def make_cu_coding_files(
     if frac == 0:
         logger.info("frac=0 detected; no reliability subset will be generated.")
 
-    transcript_table = find_one_matching_file(
+    transcript_table = find_transcript_table(
         directories=[input_dir, output_dir],
-        filename="transcript_tables.xlsx",
-        label="transcript table file",
     )
 
     try:

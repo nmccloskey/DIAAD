@@ -5,6 +5,7 @@ import pytest
 from diaad.metadata.discovery import (
     MultipleFilesFoundError,
     find_one_matching_file,
+    find_transcript_table,
 )
 
 
@@ -75,3 +76,26 @@ def test_find_one_matching_file_raises_with_actionable_multiple_match_error(tmp_
     assert "input" in message
     assert "output" in message
     assert "Please remove duplicates, rename files" in message
+
+
+def test_find_transcript_table_returns_none_when_optional_and_missing(tmp_path):
+    root = tmp_path / "input"
+    root.mkdir()
+
+    found = find_transcript_table(directories=root, required=False)
+
+    assert found is None
+
+
+def test_find_transcript_table_raises_on_multiple_exact_matches(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    first = input_dir / "transcript_tables.xlsx"
+    second = output_dir / "transcript_tables.xlsx"
+    first.parent.mkdir(parents=True)
+    second.parent.mkdir(parents=True)
+    first.touch()
+    second.touch()
+
+    with pytest.raises(MultipleFilesFoundError):
+        find_transcript_table(directories=[input_dir, output_dir])
