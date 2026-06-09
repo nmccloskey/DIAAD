@@ -50,6 +50,7 @@ def load_metadata_from_transcript_tables(
     match_metadata_fields=None,
     directories=None,
     *,
+    transcript_table_filename: str = DEFAULT_TRANSCRIPT_TABLE_FILENAME,
     combine: bool = True,
     include_source_file: bool = True,
 ) -> pd.DataFrame:
@@ -61,7 +62,7 @@ def load_metadata_from_transcript_tables(
     transcript_tables : Path | str | list[Path | str] | None
         Explicit transcript table path(s). If None, matching files are discovered
         with DIAAD's exact filename discovery using
-        ``transcript_tables.xlsx``.
+        ``transcript_table_filename``.
     match_metadata_fields : list[str] | None
         Metadata values used during discovery when ``transcript_tables`` is None.
     directories : Path | str | list[Path | str] | None
@@ -86,6 +87,7 @@ def load_metadata_from_transcript_tables(
         transcript_tables = find_transcript_table(
             match_metadata_fields=match_metadata_fields,
             directories=directories,
+            filename=transcript_table_filename,
         )
 
     transcript_tables = [Path(p) for p in normalize_to_list(transcript_tables)]
@@ -98,7 +100,7 @@ def load_metadata_from_transcript_tables(
             require_one_file(
                 transcript_tables,
                 label="transcript table file",
-                configured_filename=DEFAULT_TRANSCRIPT_TABLE_FILENAME,
+                configured_filename=transcript_table_filename,
                 directories=directories,
             )
         ]

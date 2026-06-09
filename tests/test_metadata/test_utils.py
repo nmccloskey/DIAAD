@@ -43,3 +43,30 @@ def test_load_metadata_from_transcript_tables_combines_sources(monkeypatch, tmp_
 def test_load_metadata_from_transcript_tables_requires_a_match():
     with pytest.raises(FileNotFoundError, match="No transcript tables found"):
         metadata_utils.load_metadata_from_transcript_tables(transcript_tables=[])
+
+
+def test_load_metadata_from_transcript_tables_uses_configured_filename(
+    monkeypatch,
+    tmp_path,
+):
+    table = tmp_path / "site_metadata.xlsx"
+    calls = {}
+
+    def fake_find_transcript_table(**kwargs):
+        calls.update(kwargs)
+        return table
+
+    monkeypatch.setattr(metadata_utils, "find_transcript_table", fake_find_transcript_table)
+    monkeypatch.setattr(
+        metadata_utils,
+        "extract_transcript_data",
+        lambda path, kind="joined": pd.DataFrame({"sample_id": ["S1"]}),
+    )
+
+    df = metadata_utils.load_metadata_from_transcript_tables(
+        directories=tmp_path,
+        transcript_table_filename="site_metadata.xlsx",
+    )
+
+    assert calls["filename"] == "site_metadata.xlsx"
+    assert list(df["sample_id"]) == ["S1"]

@@ -59,3 +59,28 @@ def test_maybe_unblind_dataframe_returns_original_without_codebook(monkeypatch):
 
     assert out.equals(df)
     assert codebook is None
+
+
+def test_resolve_unblinding_resources_uses_metadata_source_filename(monkeypatch, tmp_path):
+    calls = {}
+
+    monkeypatch.setattr(unblinding, "_load_blind_codebook", lambda **kwargs: None)
+
+    def fake_load_metadata_from_transcript_tables(**kwargs):
+        calls.update(kwargs)
+        return pd.DataFrame({"sample_id": ["S1"]})
+
+    monkeypatch.setattr(
+        unblinding,
+        "load_metadata_from_transcript_tables",
+        fake_load_metadata_from_transcript_tables,
+    )
+    config = AdvancedConfig(metadata_source="site_metadata.xlsx")
+
+    _, metadata_df = unblinding.resolve_unblinding_resources(
+        directories=tmp_path,
+        config=config,
+    )
+
+    assert calls["transcript_table_filename"] == "site_metadata.xlsx"
+    assert list(metadata_df["sample_id"]) == ["S1"]

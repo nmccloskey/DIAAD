@@ -414,26 +414,20 @@ def blind_analysis_dataframe(
         if isinstance(working_metadata, pd.DataFrame):
             pass
         elif working_metadata is None:
-            if config.metadata_source != "transcript_tables":
-                raise ValueError(
-                    f"Unsupported metadata_source: {config.metadata_source}"
-                )
             working_metadata = load_metadata_from_transcript_tables(
                 transcript_tables=None,
                 match_metadata_fields=match_metadata_fields,
                 directories=directories,
-                combine=True
+                transcript_table_filename=config.metadata_source,
+                combine=True,
             )
         else:
-            if config.metadata_source != "transcript_tables":
-                raise ValueError(
-                    f"Unsupported metadata_source: {config.metadata_source}"
-                )
             working_metadata = load_metadata_from_transcript_tables(
                 transcript_tables=working_metadata,
                 match_metadata_fields=match_metadata_fields,
                 directories=directories,
-                combine=True
+                transcript_table_filename=config.metadata_source,
+                combine=True,
             )
 
     working_df, resolved_cols, recovered_cols, join_keys = _resolve_analysis_source_columns(

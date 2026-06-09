@@ -71,6 +71,34 @@ def test_blind_analysis_dataframe_recovers_metadata_columns():
     assert not codebook_df.empty
 
 
+def test_blind_analysis_dataframe_uses_metadata_source_filename(monkeypatch, tmp_path):
+    calls = {}
+
+    def fake_load_metadata_from_transcript_tables(**kwargs):
+        calls.update(kwargs)
+        return pd.DataFrame({"sample_id": ["S1"], "speaker": ["A"]})
+
+    monkeypatch.setattr(
+        blinding,
+        "load_metadata_from_transcript_tables",
+        fake_load_metadata_from_transcript_tables,
+    )
+    config = AdvancedConfig(
+        blind_columns=["speaker"],
+        metadata_source="site_metadata.xlsx",
+    )
+    df = pd.DataFrame({"sample_id": ["S1"], "score": [1]})
+
+    blinding.blind_analysis_dataframe(
+        df,
+        config,
+        directories=tmp_path,
+        discover_existing_codebook=False,
+    )
+
+    assert calls["transcript_table_filename"] == "site_metadata.xlsx"
+
+
 def test_blind_file_identifiers_replaces_original_values():
     config = AdvancedConfig(blind_columns=["sample_id"])
     df = pd.DataFrame({"sample_id": ["S1", "S2"], "value": [10, 20]})

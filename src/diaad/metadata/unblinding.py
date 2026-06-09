@@ -177,6 +177,7 @@ def _load_metadata_df(
     metadata_df=None,
     match_metadata_fields=None,
     directories=None,
+    metadata_source: str = "transcript_tables.xlsx",
 ) -> pd.DataFrame | None:
     """
     Load metadata_df from a dataframe, explicit transcript-table path(s), or discovery.
@@ -186,6 +187,7 @@ def _load_metadata_df(
             transcript_tables=None,
             match_metadata_fields=match_metadata_fields,
             directories=directories,
+            transcript_table_filename=metadata_source,
             combine=False,
         )
 
@@ -197,6 +199,7 @@ def _load_metadata_df(
         transcript_tables=metadata_df,
         match_metadata_fields=match_metadata_fields,
         directories=directories,
+        transcript_table_filename=metadata_source,
         combine=False,
     )
 
@@ -464,6 +467,9 @@ def resolve_unblinding_resources(
             metadata_df=metadata_df,
             match_metadata_fields=match_metadata_fields,
             directories=directories,
+            metadata_source=(
+                config.metadata_source if config is not None else "transcript_tables.xlsx"
+            ),
         )
     except FileNotFoundError:
         if require_metadata:
