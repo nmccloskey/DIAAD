@@ -166,12 +166,14 @@ def apply_optional_identifier_blinding(
 def find_transcript_table(
     input_dir: str | Path,
     output_dir: str | Path,
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ) -> Path | None:
     """
     Locate the transcript table workbook for template generation.
     """
     return find_one_transcript_table(
         directories=[input_dir, output_dir],
+        filename=transcript_table_filename,
     )
 
 

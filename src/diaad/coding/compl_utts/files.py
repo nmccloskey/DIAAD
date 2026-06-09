@@ -403,6 +403,7 @@ def make_cu_coding_files(
     stimulus_field,
     blinding_config=None,
     sample_id_field: str = "sample_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ):
     """
     Build CU coding and reliability workbooks from an utterance table.
@@ -447,6 +448,7 @@ def make_cu_coding_files(
 
     transcript_table = find_transcript_table(
         directories=[input_dir, output_dir],
+        filename=transcript_table_filename,
     )
 
     try:

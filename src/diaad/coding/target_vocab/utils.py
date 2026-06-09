@@ -42,7 +42,11 @@ def _col(df, candidates):
     return None
 
 
-def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | None, pd.DataFrame | None]:
+def find_target_vocab_inputs(
+    input_dir: str,
+    output_dir: str,
+    transcript_table_filename: str = "transcript_tables.xlsx",
+) -> tuple[str | None, pd.DataFrame | None]:
     """
     Locate valid target vocabulary coverage input files in priority order.
 
@@ -72,6 +76,7 @@ def find_target_vocab_inputs(input_dir: str, output_dir: str) -> tuple[str | Non
 
     transcript_table = find_transcript_table(
         directories=[input_dir, output_dir],
+        filename=transcript_table_filename,
         required=False,
     )
     if transcript_table is None:
@@ -121,6 +126,7 @@ def prepare_target_vocab_inputs(
     stimulus_field="narrative",
     resources: dict | None = None,
     sample_id_field: str = "sample_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ):
     """
     Load and normalize utterance-level target vocabulary coverage inputs.
@@ -130,7 +136,11 @@ def prepare_target_vocab_inputs(
     speaker labels are available.
     """
     try:
-        mode, utt_df = find_target_vocab_inputs(input_dir, output_dir)
+        mode, utt_df = find_target_vocab_inputs(
+            input_dir,
+            output_dir,
+            transcript_table_filename=transcript_table_filename,
+        )
         if utt_df is None:
             return None, None
         if sample_id_field not in utt_df.columns:

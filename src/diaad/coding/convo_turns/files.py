@@ -85,11 +85,16 @@ def make_digital_convo_turn_files(
     blinding_config=None,
     seed: int = 99,
     sample_id_field: str = "sample_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ) -> Path | None:
     """
     Create primary and reliability coding templates for digital conversation turns.
     """
-    transcript_table = find_transcript_table(input_dir, output_dir)
+    transcript_table = find_transcript_table(
+        input_dir,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
     if transcript_table is None:
         return None
 

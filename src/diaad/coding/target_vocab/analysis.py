@@ -349,6 +349,7 @@ def run_target_vocab(
     stimulus_field="narrative",
     resource_path=None,
     sample_id_field: str = "sample_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ):
     """
     Execute target vocabulary coverage analysis using built-in or custom resources.
@@ -370,6 +371,7 @@ def run_target_vocab(
         stimulus_field=stimulus_field,
         resources=resources,
         sample_id_field=sample_id_field,
+        transcript_table_filename=transcript_table_filename,
     )
     if utt_df is None:
         return

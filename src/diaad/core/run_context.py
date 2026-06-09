@@ -407,6 +407,7 @@ class RunContext:
             "frac": self.reliability_fraction,
             "output_dir": self.out_dir,
             "input_dir": self.input_dir,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_reselect_transcription_reliability_samples(self) -> dict[str, Any]:
@@ -447,6 +448,7 @@ class RunContext:
             "stimulus_field": self.stimulus_field,
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
     
     def kwargs_evaluate_cu_reliability(self) -> dict[str, Any]:
@@ -511,6 +513,7 @@ class RunContext:
             "blinding_config": self.config.blinding,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_reselect_wc_rel(self) -> dict[str, Any]:
@@ -570,6 +573,7 @@ class RunContext:
             "stimulus_field": self.stimulus_field,
             "resource_path": self.config.advanced.target_vocabulary_resource_path,
             "sample_id_field": self.config.sample_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_target_vocab_check(self) -> dict[str, Any]:
@@ -604,6 +608,7 @@ class RunContext:
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
             "sample_id_field": self.config.sample_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_digital_convo_turns_reliability(self) -> dict[str, Any]:
@@ -646,6 +651,7 @@ class RunContext:
             "seed": self.random_seed,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_make_sample_templates(self) -> dict[str, Any]:
@@ -660,6 +666,7 @@ class RunContext:
             "blinding_config": self.config.blinding,
             "seed": self.random_seed,
             "sample_id_field": self.config.sample_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_make_speaking_time_templates(self) -> dict[str, Any]:
@@ -668,6 +675,7 @@ class RunContext:
             "input_dir": self.input_dir,
             "output_dir": self.out_dir,
             "sample_id_field": self.config.sample_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     # ------------------------------------------------------------------
@@ -689,6 +697,7 @@ class RunContext:
             "spacy_model_name": self.config.spacy_model_name,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_analyze_powers_coding(self) -> dict[str, Any]:

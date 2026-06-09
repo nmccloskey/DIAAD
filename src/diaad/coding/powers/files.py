@@ -72,12 +72,17 @@ TT_DROP_COLS = [
 # POWERS file generation helpers
 # ---------------------------------------------------------------------
 
-def _get_transcript_table(input_dir, output_dir) -> Path | None:
+def _get_transcript_table(
+    input_dir,
+    output_dir,
+    transcript_table_filename: str = "transcript_tables.xlsx",
+) -> Path | None:
     """
     Locate the transcript table used to generate POWERS files.
     """
     return find_transcript_table(
         directories=[input_dir, output_dir],
+        filename=transcript_table_filename,
     )
 
 
@@ -421,6 +426,7 @@ def make_powers_coding_files(
     spacy_model_name="en_core_web_sm",
     sample_id_field="sample_id",
     utterance_id_field="utterance_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ):
     """
     Build POWERS coding and reliability workbooks from an utterance table.
@@ -436,7 +442,11 @@ def make_powers_coding_files(
     powers_dir = Path(output_dir) / "powers_coding"
     powers_dir.mkdir(parents=True, exist_ok=True)
 
-    transcript_table = _get_transcript_table(input_dir, output_dir)
+    transcript_table = _get_transcript_table(
+        input_dir,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
     if transcript_table is None:
         return
 

@@ -47,6 +47,8 @@ def _build_samples_df_from_chats(metadata_fields, chats) -> pd.DataFrame:
 def _load_samples_df_from_transcript_tables(
     input_dir: Path,
     output_dir: Path,
+    *,
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ) -> pd.DataFrame | None:
     """
     Attempt to load sample-level data from a transcript table Excel file.
@@ -62,6 +64,7 @@ def _load_samples_df_from_transcript_tables(
     """
     transcript_table_path = find_transcript_table(
         directories=[input_dir, output_dir],
+        filename=transcript_table_filename,
         required=False,
     )
 
@@ -194,6 +197,7 @@ def select_transcription_reliability_samples(
     frac,
     output_dir,
     input_dir=None,
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ):
     """
     Select random transcripts for transcription reliability and save both sampled
@@ -218,6 +222,7 @@ def select_transcription_reliability_samples(
     samples_df = _load_samples_df_from_transcript_tables(
         input_dir=input_dir,
         output_dir=output_dir,
+        transcript_table_filename=transcript_table_filename,
     )
 
     used_transcript_tables = samples_df is not None

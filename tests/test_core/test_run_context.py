@@ -222,6 +222,25 @@ def test_run_context_kwargs_tabularize_requires_chats(monkeypatch, tmp_path):
         ctx.kwargs_tabularize_transcripts()
 
 
+def test_run_context_threads_transcription_reliability_transcript_filename(
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
+    monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
+
+    ctx = run_context_module.RunContext(
+        config_dir=tmp_path / "config",
+        project_root=tmp_path,
+        start_time=datetime(2026, 4, 25, 12, 30),
+    )
+    ctx.chats = {"sample.cha": object()}
+
+    kwargs = ctx.kwargs_select_transcription_reliability_samples()
+
+    assert kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
+
+
 def test_run_context_threads_transcript_identifier_fields(monkeypatch, tmp_path):
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
@@ -306,6 +325,10 @@ def test_run_context_threads_powers_identifier_fields(monkeypatch, tmp_path):
     assert ctx.kwargs_make_powers_coding_files()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_make_powers_coding_files()["utterance_id_field"] == "expanded_utterance_id"
     assert ctx.kwargs_make_powers_coding_files()["spacy_model_name"] == "en_core_web_trf"
+    assert (
+        ctx.kwargs_make_powers_coding_files()["transcript_table_filename"]
+        == "site_transcript_tables.xlsx"
+    )
     assert ctx.kwargs_analyze_powers_coding()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_powers_rates()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_evaluate_powers_reliability()["sample_id_field"] == "expanded_sample_id"
@@ -330,8 +353,11 @@ def test_run_context_threads_template_identifier_fields(monkeypatch, tmp_path):
 
     assert utterance_kwargs["sample_id_field"] == "expanded_sample_id"
     assert utterance_kwargs["utterance_id_field"] == "expanded_utterance_id"
+    assert utterance_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
     assert sample_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert sample_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
     assert time_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert time_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
 
 
 def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tmp_path):
@@ -346,6 +372,10 @@ def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tm
 
     assert ctx.kwargs_make_cu_coding_files()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_make_cu_coding_files()["exclude_speakers"] == ["INV"]
+    assert (
+        ctx.kwargs_make_cu_coding_files()["transcript_table_filename"]
+        == "site_transcript_tables.xlsx"
+    )
     assert ctx.kwargs_evaluate_cu_reliability()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_evaluate_cu_reliability()["utterance_id_field"] == "expanded_utterance_id"
     assert ctx.kwargs_reselect_cu_rel()["sample_id_field"] == "expanded_sample_id"
@@ -356,6 +386,10 @@ def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tm
     assert ctx.kwargs_make_word_count_files()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_make_word_count_files()["utterance_id_field"] == "expanded_utterance_id"
     assert ctx.kwargs_make_word_count_files()["exclude_speakers"] == ["INV"]
+    assert (
+        ctx.kwargs_make_word_count_files()["transcript_table_filename"]
+        == "site_transcript_tables.xlsx"
+    )
     assert ctx.kwargs_reselect_wc_rel()["sample_id_field"] == "expanded_sample_id"
     assert (
         ctx.kwargs_evaluate_word_count_reliability()["sample_id_field"]
@@ -382,10 +416,15 @@ def test_run_context_threads_target_vocab_and_turn_identifier_fields(monkeypatch
 
     assert ctx.kwargs_target_vocab()["sample_id_field"] == "expanded_sample_id"
     assert ctx.kwargs_target_vocab()["exclude_speakers"] == ["INV"]
+    assert ctx.kwargs_target_vocab()["transcript_table_filename"] == "site_transcript_tables.xlsx"
     assert ctx.kwargs_target_vocab_rates()["sample_id_field"] == "expanded_sample_id"
     assert (
         ctx.kwargs_make_digital_convo_turn_files()["sample_id_field"]
         == "expanded_sample_id"
+    )
+    assert (
+        ctx.kwargs_make_digital_convo_turn_files()["transcript_table_filename"]
+        == "site_transcript_tables.xlsx"
     )
     assert (
         ctx.kwargs_digital_convo_turns_reliability()["sample_id_field"]

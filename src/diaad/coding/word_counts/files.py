@@ -113,7 +113,11 @@ def _shuffle_by_sample(
     return pd.concat(subdfs, ignore_index=True) if subdfs else df.copy()
 
 
-def _find_input_file(input_dir, output_dir):
+def _find_input_file(
+    input_dir,
+    output_dir,
+    transcript_table_filename: str = "transcript_tables.xlsx",
+):
     """
     Prefer CU coding files. If none are found, fall back to transcript tables.
 
@@ -137,6 +141,7 @@ def _find_input_file(input_dir, output_dir):
 
     transcript_table = find_transcript_table(
         directories=[input_dir, output_dir],
+        filename=transcript_table_filename,
         required=False,
     )
 
@@ -545,6 +550,7 @@ def make_word_count_files(
     blinding_config=None,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ):
     """
     Create blinded word-count coding and reliability workbooks from either:
@@ -587,7 +593,11 @@ def make_word_count_files(
     word_count_dir = Path(output_dir) / "word_counts"
     word_count_dir.mkdir(parents=True, exist_ok=True)
 
-    source_type, file = _find_input_file(input_dir, output_dir)
+    source_type, file = _find_input_file(
+        input_dir,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
 
     if file is None:
         logger.warning("No CU coding files or transcript tables were found for word-count prep.")

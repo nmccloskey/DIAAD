@@ -177,11 +177,16 @@ def make_utterance_template_files(
     seed: int = 99,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ) -> Path | None:
     """
     Create utterance-level primary and reliability template workbooks.
     """
-    transcript_table = find_transcript_table(input_dir, output_dir)
+    transcript_table = find_transcript_table(
+        input_dir,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
     if transcript_table is None:
         return None
 

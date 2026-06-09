@@ -59,11 +59,16 @@ def make_speaking_time_template_files(
     input_dir: str | Path,
     output_dir: str | Path,
     sample_id_field: str = "sample_id",
+    transcript_table_filename: str = "transcript_tables.xlsx",
 ) -> Path | None:
     """
     Create a speaking-time template workbook keyed by sample_id.
     """
-    transcript_table = find_transcript_table(input_dir, output_dir)
+    transcript_table = find_transcript_table(
+        input_dir,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
     if transcript_table is None:
         return None
 
