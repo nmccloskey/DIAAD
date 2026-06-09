@@ -159,10 +159,6 @@ class AdvancedConfig:
         return self.transcript_table_filename
 
     @property
-    def id_cols(self) -> list[str]:
-        return self.id_columns
-
-    @property
     def cu_samples_file(self) -> str:
         return self.cu_samples_filename
 
@@ -503,10 +499,6 @@ class ConfigManager:
 
     @property
     def id_columns(self) -> list[str]:
-        return self.advanced.id_columns
-
-    @property
-    def id_cols(self) -> list[str]:
         return self.advanced.id_columns
 
     @property

@@ -58,7 +58,6 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.auto_blind is True
     assert config.blind_columns == ["sample_id", "speaker"]
     assert config.id_columns == ["expanded_sample_id"]
-    assert config.id_cols == ["expanded_sample_id"]
     assert config.coding_blind_cols == ["sample_id", "speaker"]
     assert config.analysis_blind_cols == ["sample_id", "speaker"]
     assert config.codebook_filename == "custom_codebook.xlsx"
