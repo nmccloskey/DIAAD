@@ -88,6 +88,28 @@ def test_tabularize_transcripts_accepts_custom_identifier_fields(tmp_path):
     assert list(joined["expanded_sample_id"]) == ["S001"]
 
 
+def test_tabularize_transcripts_accepts_custom_transcript_table_filename(tmp_path):
+    chats = {
+        "group1/sample1.cha": SimpleNamespace(
+            utterances=lambda: [
+                SimpleNamespace(participant="PAR", tiers={"PAR": "custom file"}),
+            ]
+        )
+    }
+
+    written = transcript_tables.tabularize_transcripts(
+        metadata_fields={},
+        chats=chats,
+        output_dir=tmp_path,
+        transcript_table_filename="site_transcript_tables.xlsx",
+    )
+
+    expected = tmp_path / "transcript_tables" / "site_transcript_tables.xlsx"
+    assert written == [str(expected)]
+    assert expected.exists()
+    assert not (tmp_path / "transcript_tables" / "transcript_tables.xlsx").exists()
+
+
 def test_extract_transcript_data_rejects_bad_kind(tmp_path):
     path = tmp_path / "empty.xlsx"
     pd.DataFrame({"sample_id": ["S1"]}).to_excel(path, index=False)

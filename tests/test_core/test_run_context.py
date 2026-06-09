@@ -38,6 +38,8 @@ class FakeConfigManager:
         self.powers_reliability_filename = "powers_reliability_coding.xlsx"
         self.powers_coding_file = self.powers_coding_filename
         self.powers_reliability_file = self.powers_reliability_filename
+        self.transcript_table_filename = "site_transcript_tables.xlsx"
+        self.transcript_table_file = self.transcript_table_filename
         self.spacy_model_name = "en_core_web_trf"
         self.sample_id_column = "expanded_sample_id"
         self.utterance_id_column = "expanded_utterance_id"
@@ -56,6 +58,7 @@ class FakeConfigManager:
             target_vocabulary_resource_path="",
             powers_coding_filename="powers_coding.xlsx",
             powers_reliability_filename="powers_reliability_coding.xlsx",
+            transcript_table_filename="site_transcript_tables.xlsx",
             spacy_model_name="en_core_web_trf",
             sample_id_column="expanded_sample_id",
             utterance_id_column="expanded_utterance_id",
@@ -147,6 +150,7 @@ def test_run_context_ensure_transcript_tables_generates_when_missing(monkeypatch
     assert calls["chats"] is chats
     assert calls["shuffle"] is True
     assert calls["random_seed"] == 13
+    assert calls["transcript_table_filename"] == "site_transcript_tables.xlsx"
 
 
 def test_run_context_ensure_transcript_tables_errors_when_auto_disabled(
@@ -175,10 +179,16 @@ def test_run_context_ensure_transcript_tables_uses_existing_tables(
     monkeypatch.setattr(run_context_module, "ConfigManager", FakeConfigManager)
     monkeypatch.setattr(run_context_module, "MetadataManager", FakeMetadataManager)
     table_path = tmp_path / "input" / "transcript_tables" / "transcript_tables.xlsx"
+    discovery_calls = {}
+
+    def fake_find_transcript_table(**kwargs):
+        discovery_calls.update(kwargs)
+        return table_path
+
     monkeypatch.setattr(
         run_context_module,
         "find_transcript_table",
-        lambda **kwargs: table_path,
+        fake_find_transcript_table,
     )
 
     ctx = run_context_module.RunContext(
@@ -194,6 +204,8 @@ def test_run_context_ensure_transcript_tables_uses_existing_tables(
     )
 
     ctx.ensure_transcript_tables()
+
+    assert discovery_calls["filename"] == "site_transcript_tables.xlsx"
 
 
 def test_run_context_kwargs_tabularize_requires_chats(monkeypatch, tmp_path):
@@ -226,7 +238,9 @@ def test_run_context_threads_transcript_identifier_fields(monkeypatch, tmp_path)
 
     assert tabularize_kwargs["sample_id_field"] == "expanded_sample_id"
     assert tabularize_kwargs["utterance_id_field"] == "expanded_utterance_id"
+    assert tabularize_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
     assert detabularize_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert detabularize_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
 
 
 def test_run_context_threads_excluded_speakers_to_transcription_evaluation(

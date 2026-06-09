@@ -235,6 +235,8 @@ def _assign_derived_files(
 def _find_transcript_tables(
     input_dir: str | Path,
     output_dir: str | Path | None = None,
+    *,
+    transcript_table_filename: str = TRANSCRIPT_FILENAME,
 ) -> Path:
     """
     Find the one exact transcript table workbook for this detabularization run.
@@ -247,7 +249,7 @@ def _find_transcript_tables(
 
     return find_transcript_table(
         directories=directories,
-        filename=TRANSCRIPT_FILENAME,
+        filename=transcript_table_filename,
         label="transcript table file",
     )
 
@@ -367,6 +369,8 @@ def _write_updated_transcript_table(
     samples_sheet_name: str,
     samples_df: pd.DataFrame,
     output_dir: Path,
+    *,
+    transcript_table_filename: str = TRANSCRIPT_FILENAME,
 ) -> str | None:
     """
     Write a run-output copy of the workbook with derived_file in samples.
@@ -374,7 +378,7 @@ def _write_updated_transcript_table(
     transcript_dir = output_dir / TRANSCRIPT_SUBDIR
     transcript_dir.mkdir(parents=True, exist_ok=True)
 
-    output_path = transcript_dir / TRANSCRIPT_FILENAME
+    output_path = transcript_dir / transcript_table_filename
 
     try:
         with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
@@ -392,6 +396,7 @@ def detabularize_transcripts(
     input_dir: str | Path,
     output_dir: str | Path,
     sample_id_field: str = "sample_id",
+    transcript_table_filename: str = TRANSCRIPT_FILENAME,
 ) -> List[str]:
     """
     Convert transcript tables into CHAT (.cha) files.
@@ -399,8 +404,8 @@ def detabularize_transcripts(
     Parameters
     ----------
     input_dir : str or Path
-        Directory containing one ``transcript_tables.xlsx`` file
-        and optionally a ``*template_header.cha`` file.
+        Directory containing one transcript table workbook and optionally a
+        ``*template_header.cha`` file.
     output_dir : str or Path
         Run output directory. CHAT files are written to ``chat_files/``.
 
@@ -414,7 +419,11 @@ def detabularize_transcripts(
     chat_dir = output_dir / CHAT_SUBDIR
     chat_dir.mkdir(parents=True, exist_ok=True)
 
-    transcript_table = _find_transcript_tables(input_dir, output_dir)
+    transcript_table = _find_transcript_tables(
+        input_dir,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
 
     header_lines = _normalize_template_header(_find_template_header(input_dir))
     written_chats: list[str] = []
@@ -444,6 +453,7 @@ def detabularize_transcripts(
             samples_sheet_name,
             samples_for_output,
             output_dir,
+            transcript_table_filename=transcript_table_filename,
         )
 
         for _, sample_row in samples_df.iterrows():

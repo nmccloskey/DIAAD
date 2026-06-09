@@ -237,6 +237,7 @@ class RunContext:
         """
         transcript_table = find_transcript_table(
             directories=[self.input_dir, self.out_dir],
+            filename=self.config.transcript_table_filename,
             required=False,
         )
         return [transcript_table] if transcript_table is not None else []
@@ -294,6 +295,7 @@ class RunContext:
             random_seed=self.random_seed,
             sample_id_field=self.config.sample_id_field,
             utterance_id_field=self.config.utterance_id_field,
+            transcript_table_filename=self.config.transcript_table_filename,
         )
         if written:
             logger.info(
@@ -384,6 +386,7 @@ class RunContext:
             "random_seed": self.random_seed,
             "sample_id_field": self.config.sample_id_field,
             "utterance_id_field": self.config.utterance_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_detabularize_transcripts(self) -> dict[str, Any]:
@@ -391,6 +394,7 @@ class RunContext:
         return {
             **self.kwargs_io(),
             "sample_id_field": self.config.sample_id_field,
+            "transcript_table_filename": self.config.transcript_table_filename,
         }
 
     def kwargs_select_transcription_reliability_samples(self) -> dict[str, Any]:

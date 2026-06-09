@@ -126,6 +126,8 @@ def _write_transcript_tables(
     sample_df: pd.DataFrame,
     utt_df: pd.DataFrame,
     output_dir: Path,
+    *,
+    transcript_table_filename: str = TRANSCRIPT_FILENAME,
 ) -> str | None:
     """
     Write transcript sample- and utterance-level tables to Excel.
@@ -147,7 +149,7 @@ def _write_transcript_tables(
     transcript_dir = output_dir / TRANSCRIPT_SUBDIR
     transcript_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = transcript_dir / TRANSCRIPT_FILENAME
+    filename = transcript_dir / transcript_table_filename
 
     try:
         with pd.ExcelWriter(filename, engine="openpyxl") as writer:
@@ -169,6 +171,7 @@ def tabularize_transcripts(
     random_seed: int | None = 99,
     sample_id_field: str = "sample_id",
     utterance_id_field: str = "utterance_id",
+    transcript_table_filename: str = TRANSCRIPT_FILENAME,
 ) -> List[str]:
     """
     Create and write transcript tables (samples + utterances) to Excel.
@@ -277,7 +280,12 @@ def tabularize_transcripts(
     sample_df = pd.DataFrame(sample_rows, columns=sample_cols)
     utt_df = pd.DataFrame(utt_rows, columns=utt_cols)
 
-    written_file = _write_transcript_tables(sample_df, utt_df, output_dir)
+    written_file = _write_transcript_tables(
+        sample_df,
+        utt_df,
+        output_dir,
+        transcript_table_filename=transcript_table_filename,
+    )
 
     written = [written_file] if written_file else []
     logger.info(f"Successfully wrote {len(written)} transcript table(s).")

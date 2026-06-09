@@ -230,6 +230,43 @@ def test_detabularize_transcripts_accepts_custom_sample_id_field(tmp_path):
     assert list(derived["derived_file"]) == ["TU_Post.cha"]
 
 
+def test_detabularize_transcripts_accepts_custom_transcript_table_filename(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    table_path = input_dir / "transcript_tables" / "site_transcript_tables.xlsx"
+
+    samples = pd.DataFrame(
+        [{"sample_id": "S1", "study_id": "TU", "test": "Post"}]
+    )
+    utterances = pd.DataFrame(
+        [
+            {
+                "sample_id": "S1",
+                "speaker": "PAR0",
+                "utterance": "custom workbook matched",
+                "comment": "",
+            }
+        ]
+    )
+    _write_table(table_path, samples, utterances)
+
+    written = detabularize_transcripts(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        transcript_table_filename="site_transcript_tables.xlsx",
+    )
+
+    assert written == [str(output_dir / "chat_files" / "TU_Post.cha")]
+    assert (
+        "*PAR0:\tcustom workbook matched\n"
+        in (output_dir / "chat_files" / "TU_Post.cha").read_text(encoding="utf-8")
+    )
+    assert (
+        output_dir / "transcript_tables" / "site_transcript_tables.xlsx"
+    ).exists()
+    assert not (output_dir / "transcript_tables" / "transcript_tables.xlsx").exists()
+
+
 def test_detabularize_transcripts_requires_exact_transcript_table_filename(tmp_path):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "output"
