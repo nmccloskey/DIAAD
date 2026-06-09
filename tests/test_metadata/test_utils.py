@@ -70,3 +70,21 @@ def test_load_metadata_from_transcript_tables_uses_configured_filename(
 
     assert calls["filename"] == "site_metadata.xlsx"
     assert list(df["sample_id"]) == ["S1"]
+
+
+def test_load_metadata_from_transcript_tables_errors_on_duplicate_configured_source(
+    tmp_path,
+):
+    first = tmp_path / "site_a" / "site_metadata.xlsx"
+    second = tmp_path / "site_b" / "site_metadata.xlsx"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    first.write_bytes(b"")
+    second.write_bytes(b"")
+
+    with pytest.raises(RuntimeError, match="multiple transcript table files"):
+        metadata_utils.load_metadata_from_transcript_tables(
+            directories=tmp_path,
+            transcript_table_filename="site_metadata.xlsx",
+            combine=False,
+        )

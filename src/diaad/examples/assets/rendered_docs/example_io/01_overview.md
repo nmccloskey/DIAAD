@@ -70,7 +70,7 @@ example_files/
           cu_coding_decoded.xlsx
       transcripts_module/
         transcripts_tabularize/
-          transcript_table.xlsx
+          transcript_tables.xlsx
         transcripts_select/
           transcription_reliability_samples.xlsx
         transcripts_evaluate/

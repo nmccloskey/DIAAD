@@ -62,7 +62,8 @@ from psair.metadata.metadata_fields import MetadataManager
 
 SPEC_PACKAGE = "diaad.examples"
 SPEC_ROOT = ("assets", "spec")
-EXPECTED_WORKBOOK = "transcript_table.xlsx"
+DEFAULT_TRANSCRIPT_TABLE_FILENAME = "transcript_tables.xlsx"
+EXPECTED_WORKBOOK = DEFAULT_TRANSCRIPT_TABLE_FILENAME
 TRANSCRIPTS_MODULE_DIR = "transcripts_module"
 BLINDING_MODULE_DIR = "blinding_module"
 TEMPLATES_MODULE_DIR = "templates_module"
@@ -117,6 +118,30 @@ TURNS_OUTPUT_DIRS = {
     "reselect": "turns_reselect",
     "analyze": "turns_analyze",
 }
+
+
+def _transcript_table_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get(
+        "transcript_table_filename",
+        DEFAULT_TRANSCRIPT_TABLE_FILENAME,
+    )
+
+
+def _metadata_source_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get(
+        "metadata_source",
+        DEFAULT_TRANSCRIPT_TABLE_FILENAME,
+    )
+
+
+def _expected_transcript_workbook(project_dir: Path, specs: dict[str, dict[str, Any]]) -> Path:
+    return (
+        project_dir
+        / "expected_outputs"
+        / TRANSCRIPTS_MODULE_DIR
+        / TABULARIZE_OUTPUT_DIR
+        / _transcript_table_filename(specs)
+    )
 
 
 example_assets = ExampleAssets(SPEC_PACKAGE)
@@ -276,7 +301,8 @@ def _write_expected_transcript_table(project_dir: Path, specs: dict[str, dict[st
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
     )
-    target = expected_dir / EXPECTED_WORKBOOK
+    transcript_table_filename = _transcript_table_filename(specs)
+    target = expected_dir / transcript_table_filename
     if target.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing file: {target}")
 
@@ -295,6 +321,7 @@ def _write_expected_transcript_table(project_dir: Path, specs: dict[str, dict[st
             output_dir=tmpdir,
             shuffle=False,
             random_seed=specs["project_config"].get("random_seed", 99),
+            transcript_table_filename=transcript_table_filename,
         )
         if not written:
             raise RuntimeError("Synthetic transcript tabularization did not write a workbook.")
@@ -312,11 +339,16 @@ def _write_provided_transcript_table(
     force: bool,
 ) -> Path:
     input_dir = project_dir / specs["project_config"].get("input_dir", "input")
-    target = input_dir / "transcript_tables" / "transcript_tables.xlsx"
+    target = input_dir / "transcript_tables" / _transcript_table_filename(specs)
     if target.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing file: {target}")
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(transcript_table, target)
+    metadata_source = input_dir / "transcript_tables" / _metadata_source_filename(specs)
+    if metadata_source != target:
+        if metadata_source.exists() and not force:
+            raise FileExistsError(f"Refusing to overwrite existing file: {metadata_source}")
+        shutil.copyfile(transcript_table, metadata_source)
     return target
 
 
@@ -386,6 +418,7 @@ def _write_expected_selection(project_dir: Path, specs: dict[str, dict[str, Any]
             frac=specs["project_config"].get("reliability_fraction", 0.34),
             output_dir=tmpdir,
             input_dir=input_dir,
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         source = tmpdir / "transcription_reliability_selection"
         replace_tree(source, expected_dir, force=force)
@@ -459,11 +492,15 @@ def _write_expected_reselection(project_dir: Path, specs: dict[str, dict[str, An
     return expected_dir
 
 
-def _prepare_template_input(tmpdir: Path, transcript_table: Path) -> Path:
+def _prepare_template_input(
+    tmpdir: Path,
+    transcript_table: Path,
+    transcript_table_filename: str,
+) -> Path:
     input_dir = tmpdir / "input"
     table_dir = input_dir / "transcript_tables"
     table_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    shutil.copyfile(transcript_table, table_dir / transcript_table_filename)
     return input_dir
 
 
@@ -488,11 +525,15 @@ def _write_expected_utterance_templates(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        input_dir = _prepare_template_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         random.seed(specs["project_config"].get("random_seed", 99))
@@ -504,6 +545,7 @@ def _write_expected_utterance_templates(
             stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
@@ -527,11 +569,15 @@ def _write_expected_sample_templates(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        input_dir = _prepare_template_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         random.seed(specs["project_config"].get("random_seed", 99))
@@ -544,6 +590,7 @@ def _write_expected_sample_templates(
             stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
@@ -567,16 +614,21 @@ def _write_expected_time_templates(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        input_dir = _prepare_template_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         make_speaking_time_template_files(
             input_dir=input_dir,
             output_dir=output_dir,
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
@@ -587,10 +639,8 @@ def _blinding_command_config(specs: dict[str, dict[str, Any]]) -> AdvancedConfig
     return AdvancedConfig(
         auto_blind=True,
         blind_columns=["sample_id"],
-        metadata_source=specs["advanced_config"].get(
-            "metadata_source",
-            "transcript_tables.xlsx",
-        ),
+        metadata_source=_metadata_source_filename(specs),
+        id_columns=specs["advanced_config"].get("id_columns"),
     )
 
 
@@ -659,11 +709,15 @@ def _write_expected_blinding_decode(
     return expected_dir
 
 
-def _prepare_cu_input(tmpdir: Path, transcript_table: Path) -> Path:
+def _prepare_cu_input(
+    tmpdir: Path,
+    transcript_table: Path,
+    transcript_table_filename: str,
+) -> Path:
     input_dir = tmpdir / "input"
     table_dir = input_dir / "transcript_tables"
     table_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    shutil.copyfile(transcript_table, table_dir / transcript_table_filename)
     return input_dir
 
 
@@ -711,12 +765,16 @@ def _write_expected_cu_files(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     metadata_fields = _metadata_fields(project_dir, specs["project_config"])
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_cu_input(tmpdir, transcript_table)
+        input_dir = _prepare_cu_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         random.seed(specs["project_config"].get("random_seed", 99))
@@ -730,6 +788,7 @@ def _write_expected_cu_files(
             exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             stimulus_field=specs["project_config"].get("stimulus_column", ""),
             blinding_config=_cu_blinding_config(specs),
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         source = output_dir / "cu_coding"
         replace_tree(source, expected_dir, force=force)
@@ -882,11 +941,15 @@ def _write_expected_cu_rates(
     return expected_dir
 
 
-def _prepare_word_input(tmpdir: Path, transcript_table: Path) -> Path:
+def _prepare_word_input(
+    tmpdir: Path,
+    transcript_table: Path,
+    transcript_table_filename: str,
+) -> Path:
     input_dir = tmpdir / "input"
     table_dir = input_dir / "transcript_tables"
     table_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    shutil.copyfile(transcript_table, table_dir / transcript_table_filename)
     return input_dir
 
 
@@ -925,11 +988,15 @@ def _write_expected_word_files(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_word_input(tmpdir, transcript_table)
+        input_dir = _prepare_word_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         random.seed(specs["project_config"].get("random_seed", 99))
@@ -940,6 +1007,7 @@ def _write_expected_word_files(
             output_dir=output_dir,
             exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             blinding_config=_word_blinding_config(specs),
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         replace_tree(output_dir / "word_counts", expected_dir, force=force)
 
@@ -1096,11 +1164,15 @@ def _write_expected_word_rates(
     return expected_dir
 
 
-def _prepare_powers_input(tmpdir: Path, transcript_table: Path) -> Path:
+def _prepare_powers_input(
+    tmpdir: Path,
+    transcript_table: Path,
+    transcript_table_filename: str,
+) -> Path:
     input_dir = tmpdir / "input"
     table_dir = input_dir / "transcript_tables"
     table_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(transcript_table, table_dir / "transcript_tables.xlsx")
+    shutil.copyfile(transcript_table, table_dir / transcript_table_filename)
     return input_dir
 
 
@@ -1199,11 +1271,15 @@ def _write_expected_powers_files(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_powers_input(tmpdir, transcript_table)
+        input_dir = _prepare_powers_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         random.seed(specs["project_config"].get("random_seed", 99))
@@ -1216,6 +1292,7 @@ def _write_expected_powers_files(
             exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             automate_powers=specs["project_config"].get("automate_powers", False),
             blinding_config=_powers_blinding_config(specs),
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         replace_tree(output_dir / "powers_coding", expected_dir, force=force)
 
@@ -1379,13 +1456,7 @@ def _write_vocab_unblind_input(
     *,
     force: bool,
 ) -> Path:
-    workbook = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
-    )
+    workbook = _expected_transcript_workbook(project_dir, specs)
     utt_df = pd.read_excel(workbook, sheet_name="utterances")
     samples_df = pd.read_excel(workbook, sheet_name="samples")
     sample_metadata_cols = [
@@ -1507,6 +1578,7 @@ def _write_expected_vocab_analysis(
             exclude_speakers=specs["project_config"].get("exclude_speakers", []),
             stimulus_field=specs["project_config"].get("stimulus_column", "stimulus"),
             resource_path=resource_path,
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         output_dir = tmpdir / "target_vocab"
         generated = sorted(output_dir.glob("target_vocab_data_*.xlsx"))
@@ -1593,11 +1665,15 @@ def _write_expected_turn_files(
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / TABULARIZE_OUTPUT_DIR
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_template_input(tmpdir, transcript_table)
+        input_dir = _prepare_template_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(specs),
+        )
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
         random.seed(specs["project_config"].get("random_seed", 99))
@@ -1609,6 +1685,7 @@ def _write_expected_turn_files(
             num_coders=specs["project_config"].get("num_coders", 0),
             blinding_config=_template_blinding_config(specs),
             seed=specs["project_config"].get("random_seed", 99),
+            transcript_table_filename=_transcript_table_filename(specs),
         )
         replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 

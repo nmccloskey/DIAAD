@@ -45,6 +45,14 @@ SPEC_ROOT = ("assets", "spec")
 example_assets = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
 
 
+def _transcript_table_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get("transcript_table_filename", EXPECTED_WORKBOOK)
+
+
+def _transcript_table_input_path(specs: dict[str, dict[str, Any]]) -> str:
+    return f"diaad_data/input/transcript_tables/{_transcript_table_filename(specs)}"
+
+
 def _project_config_snippet(
     specs: dict[str, dict[str, Any]],
     keys: list[str],
@@ -78,14 +86,18 @@ def _output_tree(contents: str) -> str:
 {_logs_tree()}"""
 
 
-def _project_tree(command: str = "all") -> str:
+def _project_tree(
+    command: str = "all",
+    *,
+    transcript_table_filename: str = EXPECTED_WORKBOOK,
+) -> str:
     if command == "tabularize":
         input_files = """      chat/
         P1_picnic_pre.cha
         P2_picnic_pre.cha
         P1_picnic_post.cha"""
-        outputs = """        transcript_tables/
-          transcript_tables.xlsx"""
+        outputs = f"""        transcript_tables/
+          {transcript_table_filename}"""
     elif command == "blinding_encode":
         input_files = """      powers_coding/
         powers_coding.xlsx"""
@@ -126,8 +138,8 @@ def _project_tree(command: str = "all") -> str:
         outputs = """        reselected_transcription_reliability/
           reselected_transcription_reliability_samples.xlsx"""
     elif command in {"templates_utterances", "templates_samples", "templates_times"}:
-        input_files = """      transcript_tables/
-        transcript_tables.xlsx"""
+        input_files = f"""      transcript_tables/
+        {transcript_table_filename}"""
         if command == "templates_utterances":
             outputs = """        coding_templates/
           utterance_coding_template.xlsx
@@ -142,8 +154,8 @@ def _project_tree(command: str = "all") -> str:
             outputs = """        coding_templates/
           speaking_times.xlsx"""
     elif command == "cus_files":
-        input_files = """      transcript_tables/
-        transcript_tables.xlsx"""
+        input_files = f"""      transcript_tables/
+        {transcript_table_filename}"""
         outputs = """        cu_coding/
           cu_coding.xlsx
           cu_reliability_coding.xlsx
@@ -178,8 +190,8 @@ def _project_tree(command: str = "all") -> str:
         outputs = """        cu_coding_analysis/
           cu_coding_rates.xlsx"""
     elif command == "words_files":
-        input_files = """      transcript_tables/
-        transcript_tables.xlsx"""
+        input_files = f"""      transcript_tables/
+        {transcript_table_filename}"""
         outputs = """        word_counts/
           word_counting.xlsx
           word_count_reliability.xlsx
@@ -212,8 +224,8 @@ def _project_tree(command: str = "all") -> str:
         outputs = """        word_count_analysis/
           word_counting_rates.xlsx"""
     elif command == "powers_files":
-        input_files = """      transcript_tables/
-        transcript_tables.xlsx"""
+        input_files = f"""      transcript_tables/
+        {transcript_table_filename}"""
         outputs = """        powers_coding/
           powers_coding.xlsx
           powers_reliability_coding.xlsx
@@ -267,8 +279,8 @@ def _project_tree(command: str = "all") -> str:
         outputs = """        target_vocab/
           target_vocab_rates.xlsx"""
     elif command == "turns_files":
-        input_files = """      transcript_tables/
-        transcript_tables.xlsx"""
+        input_files = f"""      transcript_tables/
+        {transcript_table_filename}"""
         outputs = """        coding_templates/
           conversation_turns_template.xlsx
           conversation_turns_reliability_template.xlsx
@@ -296,8 +308,8 @@ def _project_tree(command: str = "all") -> str:
         P1_picnic_pre.cha
         P2_picnic_pre.cha
         P1_picnic_post.cha"""
-        outputs = """        transcript_tables/
-          transcript_tables.xlsx"""
+        outputs = f"""        transcript_tables/
+          {transcript_table_filename}"""
 
     return f"""your_project/
   config/
@@ -366,7 +378,7 @@ def _example_files_tree() -> str:
           cu_coding_decoded.xlsx
       transcripts_module/
         transcripts_tabularize/
-          transcript_table.xlsx
+          transcript_tables.xlsx
         transcripts_select/
           transcription_reliability_samples.xlsx
         transcripts_evaluate/
@@ -614,7 +626,7 @@ def _tabularize_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
         / "expected_outputs"
         / TRANSCRIPTS_MODULE_DIR
         / "transcripts_tabularize"
-        / EXPECTED_WORKBOOK
+        / _transcript_table_filename(specs)
     )
 
     project_snippet = _project_config_snippet(
@@ -633,7 +645,7 @@ This example demonstrates how `diaad transcripts tabularize` converts tiny synth
 
 ## Project Files
 
-{fenced(_project_tree("tabularize"))}
+{fenced(_project_tree("tabularize", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -647,7 +659,7 @@ This example demonstrates how `diaad transcripts tabularize` converts tiny synth
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_tabularize/transcript_table.xlsx`
+`expected_outputs/transcripts_module/transcripts_tabularize/{_transcript_table_filename(specs)}`
 
 {workbook_sheet_tables(workbook, ["samples", "utterances"])}
 
@@ -854,7 +866,7 @@ This example demonstrates how `diaad templates utterances` creates blank utteran
 
 ## Project Files
 
-{fenced(_project_tree("templates_utterances"))}
+{fenced(_project_tree("templates_utterances", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -866,7 +878,7 @@ This example demonstrates how `diaad templates utterances` creates blank utteran
 
 ## Input Snippet
 
-The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. The preview below is from the generated utterance coding template.
+The command uses `{_transcript_table_input_path(specs)}`. The preview below is from the generated utterance coding template.
 
 ## Output Preview
 
@@ -909,7 +921,7 @@ This example demonstrates how `diaad templates samples` creates blank sample-lev
 
 ## Project Files
 
-{fenced(_project_tree("templates_samples"))}
+{fenced(_project_tree("templates_samples", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -958,7 +970,7 @@ This example demonstrates how `diaad templates times` creates a blank sample-lev
 
 ## Project Files
 
-{fenced(_project_tree("templates_times"))}
+{fenced(_project_tree("templates_times", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -1010,7 +1022,7 @@ This example demonstrates how `diaad cus files` creates complete-utterance codin
 
 ## Project Files
 
-{fenced(_project_tree("cus_files"))}
+{fenced(_project_tree("cus_files", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -1022,7 +1034,7 @@ This example demonstrates how `diaad cus files` creates complete-utterance codin
 
 ## Input Snippet
 
-The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
+The command uses `{_transcript_table_input_path(specs)}`.
 
 ## Output Preview
 
@@ -1252,7 +1264,7 @@ This example demonstrates how `diaad words files` creates word-count coding and 
 
 ## Project Files
 
-{fenced(_project_tree("words_files"))}
+{fenced(_project_tree("words_files", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -1264,7 +1276,7 @@ This example demonstrates how `diaad words files` creates word-count coding and 
 
 ## Input Snippet
 
-The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
+The command uses `{_transcript_table_input_path(specs)}`.
 
 ## Output Preview
 
@@ -1476,7 +1488,7 @@ This example demonstrates how `diaad powers files` creates POWERS coding and rel
 
 ## Project Files
 
-{fenced(_project_tree("powers_files"))}
+{fenced(_project_tree("powers_files", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -1484,7 +1496,7 @@ This example demonstrates how `diaad powers files` creates POWERS coding and rel
 
 ## Input Snippet
 
-The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
+The command uses `{_transcript_table_input_path(specs)}`.
 
 ## Output Preview
 
@@ -1867,7 +1879,7 @@ This example demonstrates how `diaad turns files` creates blank digital conversa
 
 ## Project Files
 
-{fenced(_project_tree("turns_files"))}
+{fenced(_project_tree("turns_files", transcript_table_filename=_transcript_table_filename(specs)))}
 
 ## Basic Config
 
@@ -1879,7 +1891,7 @@ This example demonstrates how `diaad turns files` creates blank digital conversa
 
 ## Input Snippet
 
-The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx` to create one row per sample and bin.
+The command uses `{_transcript_table_input_path(specs)}` to create one row per sample and bin.
 
 ## Output Preview
 

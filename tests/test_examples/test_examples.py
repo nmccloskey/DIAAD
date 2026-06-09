@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from copy import deepcopy
+
 import pandas as pd
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
+from diaad.examples import generate as generate_module
 from diaad.examples.generate import generate_example_files
 from diaad.examples.render_docs import render_example_docs
 from psair.examples import long_path
@@ -35,7 +38,7 @@ def test_generate_synthetic_project(tmp_path):
         / "expected_outputs"
         / "transcripts_module"
         / "transcripts_tabularize"
-        / "transcript_table.xlsx"
+        / "transcript_tables.xlsx"
     )
     assert _exists(workbook)
 
@@ -338,6 +341,42 @@ def test_render_example_docs():
     assert any(path.name == "reselect.md" and path.parent.name == "turns" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "turns" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
+
+
+def test_generate_synthetic_project_uses_custom_transcript_table_filename(
+    monkeypatch,
+    tmp_path,
+):
+    specs = generate_module._read_specs()
+    custom = "site_transcript_tables.xlsx"
+    specs["advanced_config"] = deepcopy(specs["advanced_config"])
+    specs["advanced_config"]["transcript_table_filename"] = custom
+    specs["advanced_config"]["metadata_source"] = custom
+
+    monkeypatch.setattr(generate_module, "_read_specs", lambda: deepcopy(specs))
+
+    project_dir = generate_module.generate_example_files(
+        tmp_path / "custom_transcript_table_project"
+    )
+
+    assert (project_dir / "input" / "transcript_tables" / custom).exists()
+    assert not (
+        project_dir / "input" / "transcript_tables" / "transcript_tables.xlsx"
+    ).exists()
+    assert (
+        project_dir
+        / "expected_outputs"
+        / "transcripts_module"
+        / "transcripts_tabularize"
+        / custom
+    ).exists()
+    assert (
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_utterances"
+        / "utterance_coding_template.xlsx"
+    ).exists()
     assert (get_example_io_docs_path() / "blinding" / "encode.md").exists()
     assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
     assert (get_example_io_docs_path() / "cus" / "files.md").exists()

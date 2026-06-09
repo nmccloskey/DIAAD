@@ -1,5 +1,5 @@
 transcripts_tabularize:
-  workbook: expected_outputs/transcripts_module/transcripts_tabularize/transcript_table.xlsx
+  workbook: expected_outputs/transcripts_module/transcripts_tabularize/transcript_tables.xlsx
   sheets:
     - samples
     - utterances
