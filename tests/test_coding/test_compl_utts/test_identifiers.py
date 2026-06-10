@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from diaad.coding.compl_utts import analysis, files, rates, rel_evaluation
+from diaad.coding.utils.transcript import drop_excluded_speaker_rows
 
 
 def test_cu_file_helpers_accept_custom_sample_id(monkeypatch):
@@ -91,7 +92,7 @@ def test_cu_analysis_drops_excluded_speakers_before_summary():
         }
     )
 
-    filtered = analysis._drop_excluded_speaker_rows(cu_df, ["INV"])
+    filtered = drop_excluded_speaker_rows(cu_df, ["INV"])
     pair = {"coder_prefix": None, "paradigm": None, "sv_col": "sv", "rel_col": "rel"}
     summary_long, _, _ = analysis._summarize_pair(filtered, pair)
 

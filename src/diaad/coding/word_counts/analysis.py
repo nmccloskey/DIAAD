@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 
 from psair.core.logger import logger, get_rel_path
+from diaad.coding.utils.transcript import drop_excluded_speaker_rows
 from diaad.metadata.discovery import find_one_matching_file
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
@@ -31,30 +32,6 @@ def _drop_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
         errors="ignore",
     )
     return df
-
-
-def _drop_excluded_speaker_rows(
-    df: pd.DataFrame,
-    exclude_speakers=None,
-) -> pd.DataFrame:
-    """Remove rows from speakers excluded from analysis."""
-    if not exclude_speakers or "speaker" not in df.columns:
-        return df
-
-    exclude_set = {str(s).strip().lower() for s in exclude_speakers if str(s).strip()}
-    if not exclude_set:
-        return df
-
-    speaker_labels = df["speaker"].astype(str).str.strip().str.lower()
-    keep_mask = ~speaker_labels.isin(exclude_set)
-    n_excluded = int((~keep_mask).sum())
-
-    if n_excluded:
-        logger.info(
-            f"Excluded {n_excluded} word-count row(s) from analysis based on speaker label."
-        )
-
-    return df.loc[keep_mask].copy()
 
 
 def _coerce_word_count_series(series: pd.Series) -> pd.Series:
@@ -345,7 +322,11 @@ def analyze_word_counts(
         )
         return
 
-    wc_df = _drop_excluded_speaker_rows(wc_df, exclude_speakers)
+    wc_df = drop_excluded_speaker_rows(
+        wc_df,
+        exclude_speakers,
+        label="word-count",
+    )
     wc_df = _drop_admin_cols(wc_df)
     wc_df[word_count_field] = _coerce_word_count_series(wc_df[word_count_field])
 

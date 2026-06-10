@@ -12,7 +12,11 @@ from diaad.coding.target_vocab.resources import (
     get_resource_ids,
     load_builtin_resources,
 )
-from diaad.coding.utils import UNINTELLIGIBLE, resolve_stim_cols
+from diaad.coding.utils.transcript import (
+    UNINTELLIGIBLE,
+    drop_excluded_speaker_rows,
+    resolve_stim_cols,
+)
 from psair.core.logger import get_rel_path, logger
 from psair.metadata.discovery import find_matching_files
 from diaad.metadata.discovery import find_transcript_table, require_one_file
@@ -95,30 +99,6 @@ def find_target_vocab_inputs(
     return "transcripts", utt_df
 
 
-def _drop_excluded_speaker_rows(
-    df: pd.DataFrame,
-    exclude_speakers,
-) -> pd.DataFrame:
-    """Remove rows from speakers excluded from target-vocabulary analysis."""
-    if not exclude_speakers or "speaker" not in df.columns:
-        return df
-
-    exclude_set = {str(s).strip().lower() for s in exclude_speakers if str(s).strip()}
-    if not exclude_set:
-        return df
-
-    speaker_labels = df["speaker"].astype(str).str.strip().str.lower()
-    keep_mask = ~speaker_labels.isin(exclude_set)
-    n_excluded = int((~keep_mask).sum())
-
-    if n_excluded:
-        logger.info(
-            f"Excluded {n_excluded} target-vocabulary row(s) from analysis based on speaker label."
-        )
-
-    return df.loc[keep_mask].copy()
-
-
 def prepare_target_vocab_inputs(
     input_dir,
     output_dir,
@@ -162,7 +142,11 @@ def prepare_target_vocab_inputs(
             if narr_col != "narrative":
                 utt_df = utt_df.rename(columns={narr_col: "narrative"})
 
-            utt_df = _drop_excluded_speaker_rows(utt_df, exclude_speakers)
+            utt_df = drop_excluded_speaker_rows(
+                utt_df,
+                exclude_speakers,
+                label="target-vocabulary",
+            )
 
             cu_col = next((c for c in utt_df.columns if c.startswith("c2_cu")), None)
             wc_col = "word_count" if "word_count" in utt_df.columns else None
@@ -193,7 +177,11 @@ def prepare_target_vocab_inputs(
                 return None, None
 
             utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
-            utt_df = _drop_excluded_speaker_rows(utt_df, exclude_speakers)
+            utt_df = drop_excluded_speaker_rows(
+                utt_df,
+                exclude_speakers,
+                label="target-vocabulary",
+            )
 
             present_narratives = set(utt_df[narr_col].dropna().unique())
             utt_df = utt_df.rename(columns={narr_col: "narrative"})

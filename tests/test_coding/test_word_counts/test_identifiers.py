@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from diaad.coding.word_counts import analysis, files, rates, rel_evaluation
+from diaad.coding.utils.transcript import drop_excluded_speaker_rows
 
 
 def test_word_count_file_helpers_accept_custom_ids(monkeypatch):
@@ -97,7 +98,7 @@ def test_word_count_analysis_drops_excluded_speakers_before_summary():
         }
     )
 
-    filtered = analysis._drop_excluded_speaker_rows(wc_df, ["INV"])
+    filtered = drop_excluded_speaker_rows(wc_df, ["INV"])
     summary = analysis._summarize_word_counts(filtered, word_count_field="word_count")
 
     s1 = summary.loc[summary["sample_id"] == "S1"].iloc[0]

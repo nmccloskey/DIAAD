@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
+from diaad.coding.utils.transcript import drop_excluded_speaker_rows
 from diaad.metadata.discovery import find_one_matching_file
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
@@ -231,30 +232,6 @@ def _drop_coder_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
         errors="ignore",
     )
     return df
-
-
-def _drop_excluded_speaker_rows(
-    df: pd.DataFrame,
-    exclude_speakers=None,
-) -> pd.DataFrame:
-    """Remove rows from speakers excluded from analysis."""
-    if not exclude_speakers or "speaker" not in df.columns:
-        return df
-
-    exclude_set = {str(s).strip().lower() for s in exclude_speakers if str(s).strip()}
-    if not exclude_set:
-        return df
-
-    speaker_labels = df["speaker"].astype(str).str.strip().str.lower()
-    keep_mask = ~speaker_labels.isin(exclude_set)
-    n_excluded = int((~keep_mask).sum())
-
-    if n_excluded:
-        logger.info(
-            f"Excluded {n_excluded} CU coding row(s) from analysis based on speaker label."
-        )
-
-    return df.loc[keep_mask].copy()
 
 
 def _summarize_pair(cu_coding, pair, sample_id_field: str = "sample_id"):
@@ -583,7 +560,11 @@ def analyze_cu_coding(
         return
 
     cu_coding = _drop_coder_admin_cols(cu_coding)
-    cu_coding = _drop_excluded_speaker_rows(cu_coding, exclude_speakers)
+    cu_coding = drop_excluded_speaker_rows(
+        cu_coding,
+        exclude_speakers,
+        label="CU coding",
+    )
     if sample_id_field not in cu_coding.columns:
         logger.error(
             f"CU coding file is missing required sample identifier column: {sample_id_field}. "
