@@ -8,7 +8,8 @@ from sklearn.metrics import cohen_kappa_score
 
 from psair.core.logger import logger, get_rel_path
 from diaad.metadata.discovery import find_one_matching_file
-from diaad.coding.utils import utt_ct, ptotal, ag_check, compute_cu_column
+from diaad.coding.utils import utt_ct, ptotal, ag_check
+from diaad.coding.compl_utts.analysis import compute_cu_column
 from diaad.coding.utils.rel_eval_utils import (
     coverage_summary,
     variance_pair_stats,

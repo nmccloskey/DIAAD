@@ -5,9 +5,48 @@ from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
 from diaad.metadata.discovery import find_one_matching_file
-from diaad.coding.utils import utt_ct, ptotal, compute_cu_column
+from diaad.coding.utils import utt_ct, ptotal
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
+
+
+# ---------------------------------------------------------------------
+# CU coding util
+# ---------------------------------------------------------------------
+
+def compute_cu_column(row):
+    """
+    Compute a single coder's CU value from paired SV/REL fields.
+
+    Input
+    -----
+    row : pd.Series
+        A two-element series ordered as [SV_col, REL_col] containing values {1, 0, NaN}.
+
+    Returns
+    -------
+    int | float
+        1 if SV == 1 and REL == 1 (coder marked the utterance as a CU on both dimensions)
+        0 if both are present and at least one is not 1
+        NaN if both entries are missing
+        log error + NaN if only one is missing
+
+    Notes
+    -----
+    - If exactly one of (SV, REL) is NaN while the other is not, an error is logged
+      (neutrality inconsistency) and NaN is returned.
+    """
+    sv, rel = row.iloc[0], row.iloc[1]
+
+    if (pd.isna(sv) and not pd.isna(rel)) or (pd.isna(rel) and not pd.isna(sv)):
+        logger.error(f"Neutrality inconsistency in CU computation: SV={sv}, REL={rel}")
+        return np.nan
+    elif pd.isna(sv) and pd.isna(rel):
+        return np.nan
+    elif sv == rel == 1:
+        return 1
+    else:
+        return 0
 
 
 # ---------------------------------------------------------------------
