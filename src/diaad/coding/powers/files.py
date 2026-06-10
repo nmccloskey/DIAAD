@@ -9,7 +9,10 @@ from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils import segment
 from diaad.coding.utils.sampling import calc_subset_size
 from diaad.metadata.discovery import find_transcript_table
-from diaad.transcripts.transcript_tables import extract_transcript_data
+from diaad.transcripts.transcript_tables import (
+    METADATA_MISMATCH_COL,
+    extract_transcript_data,
+)
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 from diaad.coding.powers.automation import run_automation
 
@@ -63,6 +66,7 @@ TT_DROP_COLS = [
     "file_dir",
     "input_order",
     "shuffled_order",
+    METADATA_MISMATCH_COL,
     "position",
     "position_sub",
 ]

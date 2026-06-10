@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import logging
 from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 
 from diaad.transcripts import transcript_tables
+from psair.metadata.metadata_fields import MetadataManager
 
 
 class FakeMetadataField:
@@ -52,10 +54,56 @@ def test_tabularize_transcripts_writes_excel_and_extracts_joined(tmp_path):
 
     joined = transcript_tables.extract_transcript_data(written[0], kind="joined")
     samples = transcript_tables.extract_transcript_data(written[0], kind="sample")
+    mismatches = pd.read_excel(
+        written[0],
+        sheet_name=transcript_tables.METADATA_MISMATCH_SHEET,
+    )
 
     assert list(samples["group"]) == ["g:group1"]
+    assert list(samples["metadata_mismatch"]) == [0]
+    assert mismatches.empty
     assert list(joined["sample_id"]) == ["S001", "S001"]
     assert list(joined["utterance"]) == ["hello there", "second"]
+
+
+def test_tabularize_transcripts_marks_and_logs_metadata_mismatches(
+    tmp_path,
+    caplog,
+):
+    chats = {
+        "RU35_PreTx_BrokenWindow.cha": SimpleNamespace(
+            utterances=lambda: [
+                SimpleNamespace(participant="PAR", tiers={"PAR": "broken window"}),
+            ]
+        )
+    }
+    metadata_fields = MetadataManager(
+        {"tiers": {"site": ["AC", "BU", "TU"], "timepoint": ["PreTx"]}}
+    ).metadata_fields
+
+    with caplog.at_level(logging.WARNING, logger="RunLogger"):
+        written = transcript_tables.tabularize_transcripts(
+            metadata_fields=metadata_fields,
+            chats=chats,
+            output_dir=tmp_path,
+        )
+
+    samples = transcript_tables.extract_transcript_data(written[0], kind="sample")
+    mismatches = pd.read_excel(
+        written[0],
+        sheet_name=transcript_tables.METADATA_MISMATCH_SHEET,
+    )
+
+    assert pd.isna(samples.loc[0, "site"])
+    assert samples.loc[0, "timepoint"] == "PreTx"
+    assert samples.loc[0, "metadata_mismatch"] == 1
+    assert list(mismatches["metadata_field"]) == ["site"]
+    assert list(mismatches["source_path"]) == ["RU35_PreTx_BrokenWindow.cha"]
+    assert list(mismatches["reason"]) == ["no_match"]
+    assert pd.isna(mismatches.loc[0, "written_value"])
+    assert "Metadata mismatch while tabularizing transcript" in caplog.text
+    assert "RU35_PreTx_BrokenWindow.cha" in caplog.text
+    assert "site" in caplog.text
 
 
 def test_tabularize_transcripts_accepts_custom_identifier_fields(tmp_path):

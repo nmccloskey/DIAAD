@@ -7,7 +7,10 @@ from typing import Optional
 from psair.core.logger import logger, get_rel_path
 from diaad.coding.utils.sampling import calc_subset_size
 from diaad.metadata.discovery import find_transcript_table
-from diaad.transcripts.transcript_tables import extract_transcript_data
+from diaad.transcripts.transcript_tables import (
+    METADATA_MISMATCH_COL,
+    extract_transcript_data,
+)
 from diaad.coding.utils import segment, assign_coders, resolve_stim_cols
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
@@ -210,7 +213,7 @@ def _prepare_cu_base_dataframe(
     drop_cols = [
         col
         for col in (
-            ["file", "file_ext", "file_dir", "speaking_time"]
+            ["file", "file_ext", "file_dir", "speaking_time", METADATA_MISMATCH_COL]
             + [
                 field_name
                 for field_name in metadata_fields

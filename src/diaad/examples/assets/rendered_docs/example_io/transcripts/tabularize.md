@@ -71,11 +71,11 @@ metadata_fields:
 
 ### Sheet: samples
 
-| sample_id | file | file_ext | file_dir | input_order | shuffled_order | participant_id | stimulus | timepoint |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S001 | P1_picnic_post | .cha | input/chat | 1 |  | P1 | picnic | post |
-| S002 | P1_picnic_pre | .cha | input/chat | 2 |  | P1 | picnic | pre |
-| S003 | P2_picnic_pre | .cha | input/chat | 3 |  | P2 | picnic | pre |
+| sample_id | file | file_ext | file_dir | input_order | shuffled_order | participant_id | stimulus | timepoint | metadata_mismatch |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S001 | P1_picnic_post | .cha | input/chat | 1 |  | P1 | picnic | post | 0 |
+| S002 | P1_picnic_pre | .cha | input/chat | 2 |  | P1 | picnic | pre | 0 |
+| S003 | P2_picnic_pre | .cha | input/chat | 3 |  | P2 | picnic | pre | 0 |
 
 ### Sheet: utterances
 

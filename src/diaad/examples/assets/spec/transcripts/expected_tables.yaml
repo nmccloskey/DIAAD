@@ -3,6 +3,7 @@ transcripts_tabularize:
   sheets:
     - samples
     - utterances
+    - metadata_mismatches
   expected_samples:
     - file: P1_picnic_post
       participant_id: P1
