@@ -5,14 +5,22 @@ from pathlib import Path
 
 from psair.core.logger import logger, get_rel_path
 from diaad.metadata.discovery import find_one_matching_file
-from diaad.coding.utils import utt_ct, ptotal
 from diaad.metadata.blinding import blind_analysis_dataframe, write_blind_codebook
 from diaad.metadata.unblinding import maybe_unblind_dataframe
 
 
 # ---------------------------------------------------------------------
-# CU coding util
+# CU coding utils
 # ---------------------------------------------------------------------
+
+def utt_ct(x):
+    """Count number of utterances."""
+    no_utt = len(x.dropna())
+    return no_utt if no_utt > 0 else np.nan
+
+def ptotal(x):
+    """Count number of positive scores."""
+    return sum(x.dropna()) if len(x.dropna()) > 0 else np.nan
 
 def compute_cu_column(row):
     """

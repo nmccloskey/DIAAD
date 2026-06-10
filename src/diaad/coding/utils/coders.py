@@ -69,22 +69,3 @@ def normalize_coders(coders):
     if len(coders) == 1:
         return "single", coders
     return "zero", []
-
-
-# for aggregation.
-def utt_ct(x):
-    """Count number of utterances."""
-    no_utt = len(x.dropna())
-    return no_utt if no_utt > 0 else np.nan
-
-def ptotal(x):
-    """Count number of positive scores."""
-    return sum(x.dropna()) if len(x.dropna()) > 0 else np.nan
-
-def ag_check(x):
-    """Check agreement: at least 80% is in agreement."""
-    total_cus = len(x.dropna())
-    if total_cus > 0:
-        return 1 if (sum(x == 1) / total_cus) >= 0.8 else 0
-    else:
-        return np.nan

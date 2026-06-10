@@ -8,8 +8,11 @@ from sklearn.metrics import cohen_kappa_score
 
 from psair.core.logger import logger, get_rel_path
 from diaad.metadata.discovery import find_one_matching_file
-from diaad.coding.utils import utt_ct, ptotal, ag_check
-from diaad.coding.compl_utts.analysis import compute_cu_column
+from diaad.coding.compl_utts.analysis import (
+    compute_cu_column,
+    utt_ct,
+    ptotal,
+)
 from diaad.coding.utils.rel_eval_utils import (
     coverage_summary,
     variance_pair_stats,
@@ -24,6 +27,15 @@ from diaad.coding.utils.rel_eval_utils import (
 def _paired_nonmissing(df, col1, col2):
     """Return rows where both columns are non-missing."""
     return df[df[col1].notna() & df[col2].notna()].copy()
+
+
+def _ag_check(x):
+    """Check agreement: at least 80% is in agreement."""
+    total_cus = len(x.dropna())
+    if total_cus > 0:
+        return 1 if (sum(x == 1) / total_cus) >= 0.8 else 0
+    else:
+        return np.nan
 
 
 def _raw_agreement(x, y):
@@ -302,9 +314,9 @@ def summarize_cu_reliability(
             total_agmt_cu=("agmt_cu", ptotal),
             perc_agmt_cu=("agmt_cu", lambda x: round((ptotal(x) / utt_ct(x)) * 100, 3) if utt_ct(x) > 0 else np.nan),
 
-            sample_agmt_sv=("agmt_sv", ag_check),
-            sample_agmt_rel=("agmt_rel", ag_check),
-            sample_agmt_cu=("agmt_cu", ag_check),
+            sample_agmt_sv=("agmt_sv", _ag_check),
+            sample_agmt_rel=("agmt_rel", _ag_check),
+            sample_agmt_cu=("agmt_cu", _ag_check),
         ).reset_index()
 
         overall_stats = {
