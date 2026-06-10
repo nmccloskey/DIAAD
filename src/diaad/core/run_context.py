@@ -678,6 +678,16 @@ class RunContext:
             "transcript_table_filename": self.config.transcript_table_filename,
         }
 
+    def kwargs_make_sample_subset(self) -> dict[str, Any]:
+        """Return kwargs for generalized sample subset generation."""
+        return {
+            "input_dir": self.input_dir,
+            "output_dir": self.out_dir,
+            "frac": self.reliability_fraction,
+            "sample_id_field": self.config.sample_id_field,
+            "seed": self.random_seed,
+        }
+
     # ------------------------------------------------------------------
     # POWERS coding workflow
     # ------------------------------------------------------------------

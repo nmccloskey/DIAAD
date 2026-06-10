@@ -5,6 +5,10 @@ from diaad.coding.templates.samples import (
     make_sample_coding_template,
     make_sample_template_files,
 )
+from diaad.coding.templates.subset import (
+    SAMPLE_SUBSET_FILENAME,
+    make_sample_subset_file,
+)
 from diaad.coding.templates.times import (
     build_speaking_time_template,
     make_speaking_time_template,
@@ -26,6 +30,7 @@ from diaad.coding.templates.utils import (
 __all__ = [
     "DEFAULT_NUM_BINS",
     "DEFAULT_STIMULUS_FIELD",
+    "SAMPLE_SUBSET_FILENAME",
     "TEMPLATE_SUBDIR",
     "SampleTemplateConfig",
     "UtteranceTemplateConfig",
@@ -34,6 +39,7 @@ __all__ = [
     "build_speaking_time_template",
     "build_utterance_coding_template",
     "make_sample_coding_template",
+    "make_sample_subset_file",
     "make_sample_template_files",
     "make_speaking_time_template",
     "make_speaking_time_template_files",

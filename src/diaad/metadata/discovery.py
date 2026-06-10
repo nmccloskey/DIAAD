@@ -125,6 +125,42 @@ def find_one_matching_file(
     )
 
 
+def find_one_file_by_extension(
+    *,
+    directories: Path | str | Iterable[Path | str] | None = None,
+    search_ext: str = ".xlsx",
+    label: str = "file",
+) -> Path:
+    """
+    Find exactly one file by extension across one or more directories.
+
+    This supports workflows that intentionally accept any filename with a
+    specific extension, while preserving DIAAD's strict one-file policy.
+    """
+    ext = str(search_ext)
+    if not ext.startswith("."):
+        ext = f".{ext}"
+
+    searched_dirs = _coerce_directories(directories)
+    matches: list[Path] = []
+
+    for directory in searched_dirs:
+        if not directory.exists() or not directory.is_dir():
+            continue
+        matches.extend(
+            path
+            for path in directory.rglob(f"*{ext}")
+            if path.is_file() and not path.name.startswith("~$")
+        )
+
+    return require_one_file(
+        matches,
+        label=label,
+        configured_filename=f"*{ext}",
+        directories=searched_dirs,
+    )
+
+
 def find_transcript_table(
     *,
     directories: Path | str | Iterable[Path | str] | None = None,

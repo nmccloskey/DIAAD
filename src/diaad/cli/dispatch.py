@@ -23,6 +23,7 @@ from diaad.core.run_wrappers import (
     run_make_cu_coding_files,
     run_detabularize_transcripts,
     run_make_sample_templates,
+    run_make_sample_subset,
     run_make_speaking_time_templates,
     run_make_utterance_templates,
     run_make_powers_coding_files,
@@ -152,6 +153,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         "templates utterances": lambda: run_make_utterance_templates(ctx),
         "templates samples": lambda: run_make_sample_templates(ctx),
         "templates times": lambda: run_make_speaking_time_templates(ctx),
+        "templates subset": lambda: run_make_sample_subset(ctx),
 
         # --------------------------------------------------------------
         # POWERS coding workflow

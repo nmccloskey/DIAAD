@@ -237,6 +237,13 @@ def run_make_sample_templates(ctx):
     return make_sample_template_files(**ctx.kwargs_make_sample_templates())
 
 
+def run_make_sample_subset(ctx):
+    """Create a randomized sample subset workbook."""
+    from diaad.coding.templates.subset import make_sample_subset_file
+
+    return make_sample_subset_file(**ctx.kwargs_make_sample_subset())
+
+
 # ------------------------------------------------------------------
 # POWERS coding workflow
 # ------------------------------------------------------------------

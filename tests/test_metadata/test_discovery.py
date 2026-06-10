@@ -4,6 +4,7 @@ import pytest
 
 from diaad.metadata.discovery import (
     MultipleFilesFoundError,
+    find_one_file_by_extension,
     find_one_matching_file,
     find_transcript_table,
 )
@@ -76,6 +77,24 @@ def test_find_one_matching_file_raises_with_actionable_multiple_match_error(tmp_
     assert "input" in message
     assert "output" in message
     assert "Please remove duplicates, rename files" in message
+
+
+def test_find_one_file_by_extension_searches_recursively_and_skips_excel_temp_files(tmp_path):
+    root = tmp_path / "input"
+    expected = root / "nested" / "source.xlsx"
+    temp_file = root / "~$source.xlsx"
+    expected.parent.mkdir(parents=True)
+    expected.touch()
+    temp_file.parent.mkdir(parents=True, exist_ok=True)
+    temp_file.touch()
+
+    found = find_one_file_by_extension(
+        directories=root,
+        search_ext=".xlsx",
+        label="sample subset input workbook",
+    )
+
+    assert found == expected
 
 
 def test_find_transcript_table_returns_none_when_optional_and_missing(tmp_path):

@@ -56,6 +56,7 @@ DISPATCHED_COMMANDS = {
     "templates utterances",
     "templates samples",
     "templates times",
+    "templates subset",
     "powers files",
     "powers analyze",
     "powers rates",

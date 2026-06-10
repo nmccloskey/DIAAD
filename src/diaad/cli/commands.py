@@ -27,6 +27,7 @@ MODULE_COMMANDS = {
         "templates utterances",
         "templates samples",
         "templates times",
+        "templates subset",
     ],
 
     "cus": [

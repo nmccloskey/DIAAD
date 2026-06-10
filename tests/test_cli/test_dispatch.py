@@ -9,6 +9,7 @@ def test_command_requirement_helpers():
     assert dispatch_module.commands_require_chats(["transcripts tabularize"])
     assert not dispatch_module.commands_require_chats(["cus analyze"])
     assert dispatch_module.commands_require_transcript_tables(["templates samples"])
+    assert not dispatch_module.commands_require_transcript_tables(["templates subset"])
     assert not dispatch_module.commands_require_transcript_tables(["words evaluate"])
 
 
@@ -64,3 +65,18 @@ def test_build_dispatch_includes_blinding_commands(monkeypatch):
     dispatch["blinding decode"]()
 
     assert seen == [("encode", ctx), ("decode", ctx)]
+
+
+def test_build_dispatch_includes_template_subset(monkeypatch):
+    ctx = object()
+    seen = []
+    monkeypatch.setattr(
+        dispatch_module,
+        "run_make_sample_subset",
+        lambda value: seen.append(value),
+    )
+
+    dispatch = dispatch_module.build_dispatch(ctx)
+    dispatch["templates subset"]()
+
+    assert seen == [ctx]

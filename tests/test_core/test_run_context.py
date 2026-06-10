@@ -350,6 +350,7 @@ def test_run_context_threads_template_identifier_fields(monkeypatch, tmp_path):
     utterance_kwargs = ctx.kwargs_make_utterance_templates()
     sample_kwargs = ctx.kwargs_make_sample_templates()
     time_kwargs = ctx.kwargs_make_speaking_time_templates()
+    subset_kwargs = ctx.kwargs_make_sample_subset()
 
     assert utterance_kwargs["sample_id_field"] == "expanded_sample_id"
     assert utterance_kwargs["utterance_id_field"] == "expanded_utterance_id"
@@ -358,6 +359,9 @@ def test_run_context_threads_template_identifier_fields(monkeypatch, tmp_path):
     assert sample_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
     assert time_kwargs["sample_id_field"] == "expanded_sample_id"
     assert time_kwargs["transcript_table_filename"] == "site_transcript_tables.xlsx"
+    assert subset_kwargs["sample_id_field"] == "expanded_sample_id"
+    assert subset_kwargs["frac"] == 0.25
+    assert subset_kwargs["seed"] == 13
 
 
 def test_run_context_threads_cu_and_word_count_identifier_fields(monkeypatch, tmp_path):
