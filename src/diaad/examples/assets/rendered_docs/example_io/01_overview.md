@@ -60,6 +60,10 @@ example_files/
         conversation_turns_reliability_template.xlsx
       speaking_times/
         speaking_times.xlsx
+      sample_subset/
+        sample_subset_input.xlsx
+      sample_resubset/
+        sample_resubset_input.xlsx
     expected_outputs/
       blinding_module/
         blinding_encode/
@@ -90,6 +94,10 @@ example_files/
           sample_template_codebook.xlsx
         templates_times/
           speaking_times.xlsx
+        templates_subset/
+          sample_subset.xlsx
+        templates_resubset/
+          sample_subset.xlsx
       cus_module/
         cus_files/
           cu_coding.xlsx

@@ -31,6 +31,7 @@ from diaad.coding.target_vocab.files import (
 )
 from diaad.coding.target_vocab.rates import calculate_target_vocab_rates
 from diaad.coding.templates.samples import make_sample_template_files
+from diaad.coding.templates.subset import make_sample_subset_file
 from diaad.coding.templates.times import make_speaking_time_template_files
 from diaad.coding.templates.utterances import make_utterance_template_files
 from diaad.coding.word_counts.analysis import analyze_word_counts
@@ -84,6 +85,12 @@ TEMPLATE_OUTPUT_DIRS = {
     "utterances": "templates_utterances",
     "samples": "templates_samples",
     "times": "templates_times",
+    "subset": "templates_subset",
+    "resubset": "templates_resubset",
+}
+TEMPLATE_SUBSET_INPUT_DIRS = {
+    "subset": "sample_subset",
+    "resubset": "sample_resubset",
 }
 CU_OUTPUT_DIRS = {
     "files": "cus_files",
@@ -220,6 +227,11 @@ def _read_specs() -> dict[str, dict[str, Any]]:
         "project_config": example_assets.read_yaml_mapping(*SPEC_ROOT, "configs", "project.yaml"),
         "advanced_config": example_assets.read_yaml_mapping(*SPEC_ROOT, "configs", "advanced.yaml"),
         "vocab_resource": example_assets.read_yaml_mapping(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
+        "template_subsets": example_assets.read_yaml_mapping(
+            *SPEC_ROOT,
+            "templates",
+            "sample_subsets.yaml",
+        ),
         "turns_sessions": example_assets.read_yaml_mapping(*SPEC_ROOT, "turns", "sessions.yaml"),
         "chat_files": example_assets.read_yaml_mapping(*SPEC_ROOT, "transcripts", "chat_files.yaml"),
         "reliability_chat_files": example_assets.read_yaml_mapping(
@@ -284,6 +296,8 @@ def _materialize_inputs(project_dir: Path, specs: dict[str, dict[str, Any]], *, 
             chat["content"].rstrip() + "\n",
             force=force,
         )
+
+    _write_sample_subset_inputs(project_dir, specs, force=force)
 
 
 def _metadata_fields(project_dir: Path, project_config: dict[str, Any]) -> dict[str, Any]:
@@ -350,6 +364,59 @@ def _write_provided_transcript_table(
             raise FileExistsError(f"Refusing to overwrite existing file: {metadata_source}")
         shutil.copyfile(transcript_table, metadata_source)
     return target
+
+
+def _sample_subset_input_dir(project_dir: Path, specs: dict[str, dict[str, Any]], mode: str) -> Path:
+    return (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / TEMPLATE_SUBSET_INPUT_DIRS[mode]
+    )
+
+
+def _sample_subset_input_filename(specs: dict[str, dict[str, Any]], mode: str) -> str:
+    return specs["template_subsets"][mode].get(
+        "filename",
+        f"sample_{mode}_input.xlsx",
+    )
+
+
+def _sample_subset_dataframe(specs: dict[str, dict[str, Any]], mode: str) -> pd.DataFrame:
+    rows = specs["template_subsets"][mode].get("rows", [])
+    df = pd.DataFrame(rows)
+    if df.empty:
+        raise ValueError(f"Template sample subset spec for {mode!r} has no rows.")
+    return df
+
+
+def _write_sample_subset_input_workbook(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    mode: str,
+    *,
+    force: bool,
+) -> Path:
+    input_dir = _sample_subset_input_dir(project_dir, specs, mode)
+    path = input_dir / _sample_subset_input_filename(specs, mode)
+    if path.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {path}")
+    input_dir.mkdir(parents=True, exist_ok=True)
+    _sample_subset_dataframe(specs, mode).to_excel(
+        path,
+        sheet_name="samples",
+        index=False,
+    )
+    return path
+
+
+def _write_sample_subset_inputs(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> None:
+    for mode in ("subset", "resubset"):
+        _write_sample_subset_input_workbook(project_dir, specs, mode, force=force)
 
 
 def _cleanup_obsolete_expected_dirs(project_dir: Path, *, force: bool) -> None:
@@ -629,6 +696,42 @@ def _write_expected_time_templates(
             input_dir=input_dir,
             output_dir=output_dir,
             transcript_table_filename=_transcript_table_filename(specs),
+        )
+        replace_tree(output_dir / "coding_templates", expected_dir, force=force)
+
+    return expected_dir
+
+
+def _write_expected_sample_subset(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+    mode: str,
+) -> Path:
+    expected_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS[mode]
+    )
+
+    with scratch_dir(project_dir) as tmpdir:
+        input_dir = tmpdir / "input"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        _sample_subset_dataframe(specs, mode).to_excel(
+            input_dir / _sample_subset_input_filename(specs, mode),
+            sheet_name="samples",
+            index=False,
+        )
+        output_dir = tmpdir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        make_sample_subset_file(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            frac=specs["project_config"].get("reliability_fraction", 0.34),
+            sample_id_field=specs["advanced_config"].get("sample_id_column", "sample_id"),
+            seed=specs["project_config"].get("random_seed", 99),
         )
         replace_tree(output_dir / "coding_templates", expected_dir, force=force)
 
@@ -1792,6 +1895,8 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_utterance_templates(project_dir, specs, force=force)
     _write_expected_sample_templates(project_dir, specs, force=force)
     _write_expected_time_templates(project_dir, specs, force=force)
+    _write_expected_sample_subset(project_dir, specs, force=force, mode="subset")
+    _write_expected_sample_subset(project_dir, specs, force=force, mode="resubset")
     _write_expected_cu_files(project_dir, specs, force=force)
     _write_expected_cu_evaluation(project_dir, specs, force=force)
     _write_expected_cu_reselection(project_dir, specs, force=force)

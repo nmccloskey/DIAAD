@@ -15,6 +15,7 @@ from diaad.examples.generate import (
     POWERS_MODULE_DIR,
     POWERS_OUTPUT_DIRS,
     TEMPLATE_OUTPUT_DIRS,
+    TEMPLATE_SUBSET_INPUT_DIRS,
     TEMPLATES_MODULE_DIR,
     TRANSCRIPTS_MODULE_DIR,
     TURNS_MODULE_DIR,
@@ -153,6 +154,17 @@ def _project_tree(
         else:
             outputs = """        coding_templates/
           speaking_times.xlsx"""
+    elif command in {"templates_subset", "templates_resubset"}:
+        mode = "subset" if command == "templates_subset" else "resubset"
+        filename = (
+            "sample_subset_input.xlsx"
+            if mode == "subset"
+            else "sample_resubset_input.xlsx"
+        )
+        input_files = f"""      {TEMPLATE_SUBSET_INPUT_DIRS[mode]}/
+        {filename}"""
+        outputs = """        coding_templates/
+          sample_subset.xlsx"""
     elif command == "cus_files":
         input_files = f"""      transcript_tables/
         {transcript_table_filename}"""
@@ -368,6 +380,10 @@ def _example_files_tree() -> str:
         conversation_turns_reliability_template.xlsx
       speaking_times/
         speaking_times.xlsx
+      sample_subset/
+        sample_subset_input.xlsx
+      sample_resubset/
+        sample_resubset_input.xlsx
     expected_outputs/
       blinding_module/
         blinding_encode/
@@ -397,7 +413,11 @@ def _example_files_tree() -> str:
           sample_reliability_template.xlsx
           sample_template_codebook.xlsx
         templates_times/
-          speaking_times.xlsx"""
+          speaking_times.xlsx
+        templates_subset/
+          sample_subset.xlsx
+        templates_resubset/
+          sample_subset.xlsx"""
         + """
       cus_module/
         cus_files/
@@ -505,6 +525,11 @@ def _read_specs() -> dict[str, dict[str, Any]]:
             "reliability_chat_files.yaml",
         ),
         "vocab_resource": example_assets.read_yaml_mapping(*SPEC_ROOT, "vocab", "picnic_resource.yaml"),
+        "template_subsets": example_assets.read_yaml_mapping(
+            *SPEC_ROOT,
+            "templates",
+            "sample_subsets.yaml",
+        ),
         "turns_sessions": example_assets.read_yaml_mapping(*SPEC_ROOT, "turns", "sessions.yaml"),
     }
 
@@ -985,6 +1010,139 @@ This example demonstrates how `diaad templates times` creates a blank sample-lev
 ## Notes
 
 The `speaking_time` column is intentionally blank. It is a template for project-specific duration values used later by rate calculations.
+"""
+
+
+def _sample_subset_input_filename(specs: dict[str, dict[str, Any]], mode: str) -> str:
+    return specs["template_subsets"][mode].get(
+        "filename",
+        f"sample_{mode}_input.xlsx",
+    )
+
+
+def _sample_subset_input_path(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    mode: str,
+) -> Path:
+    return (
+        project_dir
+        / "input"
+        / TEMPLATE_SUBSET_INPUT_DIRS[mode]
+        / _sample_subset_input_filename(specs, mode)
+    )
+
+
+def _sample_subset_config_snippet(specs: dict[str, dict[str, Any]], mode: str) -> str:
+    project = specs["project_config"]
+    return yaml.safe_dump(
+        {
+            "input_dir": f"diaad_data/input/{TEMPLATE_SUBSET_INPUT_DIRS[mode]}",
+            "output_dir": "diaad_data/output",
+            "random_seed": project.get("random_seed", 99),
+            "reliability_fraction": project.get("reliability_fraction", 0.34),
+        },
+        sort_keys=False,
+        allow_unicode=False,
+    ).rstrip()
+
+
+def _sample_subset_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
+    return yaml.safe_dump(
+        {
+            "sample_id_column": specs["advanced_config"].get(
+                "sample_id_column",
+                "sample_id",
+            )
+        },
+        sort_keys=False,
+        allow_unicode=False,
+    ).rstrip()
+
+
+def _sample_subset_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    subset_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["subset"]
+    )
+    resubset_dir = (
+        project_dir
+        / "expected_outputs"
+        / TEMPLATES_MODULE_DIR
+        / TEMPLATE_OUTPUT_DIRS["resubset"]
+    )
+    subset_input = _sample_subset_input_path(project_dir, specs, "subset")
+    resubset_input = _sample_subset_input_path(project_dir, specs, "resubset")
+    subset_output = subset_dir / "sample_subset.xlsx"
+    resubset_output = resubset_dir / "sample_subset.xlsx"
+
+    return f"""# Sample Subset Example
+
+This example demonstrates how `diaad templates subset` creates a randomized sample subset workbook from a general sample list.
+
+The command has one user-facing command name. If the input `samples` sheet has only the configured sample identifier column, DIAAD runs plain subset mode. If the sheet also has a binary `exclude` column, DIAAD runs re-subset mode: it calculates the target size from all samples but selects only from samples marked `exclude == 0`.
+
+## Plain Subset Mode
+
+### Command
+
+{fenced("diaad templates subset --config config", "bash")}
+
+### Project Files
+
+{fenced(_project_tree("templates_subset"))}
+
+### Basic Config
+
+{fenced(_sample_subset_config_snippet(specs, "subset"), "yaml")}
+
+### Advanced Config
+
+{fenced(_sample_subset_advanced_snippet(specs), "yaml")}
+
+### Input Snippet
+
+`diaad_data/input/{TEMPLATE_SUBSET_INPUT_DIRS["subset"]}/{subset_input.name}`
+
+{markdown_table(pd.read_excel(subset_input, sheet_name="samples"))}
+
+### Output Preview
+
+`expected_outputs/templates_module/templates_subset/sample_subset.xlsx`
+
+{all_workbook_sheet_tables(subset_output)}
+
+## Re-Subset Mode
+
+### Command
+
+{fenced("diaad templates subset --config config", "bash")}
+
+### Project Files
+
+{fenced(_project_tree("templates_resubset"))}
+
+### Basic Config
+
+{fenced(_sample_subset_config_snippet(specs, "resubset"), "yaml")}
+
+### Input Snippet
+
+`diaad_data/input/{TEMPLATE_SUBSET_INPUT_DIRS["resubset"]}/{resubset_input.name}`
+
+{markdown_table(pd.read_excel(resubset_input, sheet_name="samples"))}
+
+### Output Preview
+
+`expected_outputs/templates_module/templates_resubset/sample_subset.xlsx`
+
+{all_workbook_sheet_tables(resubset_output)}
+
+## Notes
+
+Each `templates subset` run should point `input_dir` at a folder containing exactly one `.xlsx` workbook. The output workbook always contains `samples` and `subset` sheets. The `samples` sheet records all unique sample IDs with program-generated `selected` and `excluded` columns; the `subset` sheet contains only rows where `selected == 1`.
 """
 
 
@@ -2044,6 +2202,7 @@ def render_example_docs() -> list[Path]:
         utterance_templates_doc = _utterance_templates_doc(project_dir, specs)
         sample_templates_doc = _sample_templates_doc(project_dir, specs)
         time_templates_doc = _time_templates_doc(project_dir, specs)
+        sample_subset_doc = _sample_subset_doc(project_dir, specs)
         cu_files_doc = _cu_files_doc(project_dir, specs)
         cu_evaluate_doc = _cu_evaluate_doc(project_dir, specs)
         cu_reselect_doc = _cu_reselect_doc(project_dir, specs)
@@ -2079,6 +2238,7 @@ def render_example_docs() -> list[Path]:
         example_assets.write_rendered_doc("templates", "utterances.md", text=utterance_templates_doc),
         example_assets.write_rendered_doc("templates", "samples.md", text=sample_templates_doc),
         example_assets.write_rendered_doc("templates", "times.md", text=time_templates_doc),
+        example_assets.write_rendered_doc("templates", "subset.md", text=sample_subset_doc),
         example_assets.write_rendered_doc("cus", "files.md", text=cu_files_doc),
         example_assets.write_rendered_doc("cus", "evaluate.md", text=cu_evaluate_doc),
         example_assets.write_rendered_doc("cus", "reselect.md", text=cu_reselect_doc),

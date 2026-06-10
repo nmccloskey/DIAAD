@@ -111,6 +111,40 @@ def test_generate_synthetic_project(tmp_path):
     )
     assert _exists(
         project_dir
+        / "input"
+        / "sample_subset"
+        / "sample_subset_input.xlsx"
+    )
+    assert _exists(
+        project_dir
+        / "input"
+        / "sample_resubset"
+        / "sample_resubset_input.xlsx"
+    )
+    subset_workbook = (
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_subset"
+        / "sample_subset.xlsx"
+    )
+    resubset_workbook = (
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_resubset"
+        / "sample_subset.xlsx"
+    )
+    assert _exists(subset_workbook)
+    assert _exists(resubset_workbook)
+    with pd.ExcelFile(long_path(subset_workbook), engine="openpyxl") as xls:
+        assert {"samples", "subset"} <= set(xls.sheet_names)
+    resubset_samples = pd.read_excel(long_path(resubset_workbook), sheet_name="samples")
+    resubset_subset = pd.read_excel(long_path(resubset_workbook), sheet_name="subset")
+    assert {"selected", "excluded"} <= set(resubset_samples.columns)
+    assert not resubset_subset["excluded"].any()
+    assert _exists(
+        project_dir
         / "expected_outputs"
         / "cus_module"
         / "cus_files"
@@ -323,6 +357,7 @@ def test_render_example_docs():
     assert any(path.name == "utterances.md" for path in paths)
     assert any(path.name == "samples.md" for path in paths)
     assert any(path.name == "times.md" for path in paths)
+    assert any(path.name == "subset.md" and path.parent.name == "templates" for path in paths)
     assert any(path.name == "files.md" and path.parent.name == "cus" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "cus" for path in paths)
     assert any(path.name == "rates.md" and path.parent.name == "cus" for path in paths)
@@ -379,6 +414,7 @@ def test_generate_synthetic_project_uses_custom_transcript_table_filename(
     ).exists()
     assert (get_example_io_docs_path() / "blinding" / "encode.md").exists()
     assert (get_example_io_docs_path() / "templates" / "utterances.md").exists()
+    assert (get_example_io_docs_path() / "templates" / "subset.md").exists()
     assert (get_example_io_docs_path() / "cus" / "files.md").exists()
     assert (get_example_io_docs_path() / "words" / "files.md").exists()
     assert (get_example_io_docs_path() / "powers" / "files.md").exists()

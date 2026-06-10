@@ -59,6 +59,20 @@ templates_times:
   directory: expected_outputs/templates_module/templates_times
   files:
     - speaking_times.xlsx
+templates_subset:
+  directory: expected_outputs/templates_module/templates_subset
+  files:
+    - sample_subset.xlsx
+  sheets:
+    - samples
+    - subset
+templates_resubset:
+  directory: expected_outputs/templates_module/templates_resubset
+  files:
+    - sample_subset.xlsx
+  sheets:
+    - samples
+    - subset
 cus_files:
   directory: expected_outputs/cus_module/cus_files
   files:

@@ -1,0 +1,36 @@
+subset:
+  filename: sample_subset_input.xlsx
+  rows:
+    - sample_id: P1_picnic_pre
+      bin: 1
+    - sample_id: P1_picnic_pre
+      bin: 2
+    - sample_id: P1_picnic_post
+      bin: 1
+    - sample_id: P2_picnic_pre
+      bin: 1
+    - sample_id: P3_picnic_pre
+      bin: 1
+    - sample_id: P3_picnic_post
+      bin: 1
+resubset:
+  filename: sample_resubset_input.xlsx
+  rows:
+    - sample_id: P1_picnic_pre
+      bin: 1
+      exclude: 1
+    - sample_id: P1_picnic_pre
+      bin: 2
+      exclude: 1
+    - sample_id: P1_picnic_post
+      bin: 1
+      exclude: 0
+    - sample_id: P2_picnic_pre
+      bin: 1
+      exclude: 0
+    - sample_id: P3_picnic_pre
+      bin: 1
+      exclude: 1
+    - sample_id: P3_picnic_post
+      bin: 1
+      exclude: 0

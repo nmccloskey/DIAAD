@@ -23,6 +23,7 @@
 │   └── reselect.md — POWERS Reliability Reselection Example
 ├── templates/
 │   ├── samples.md — Sample Template Example
+│   ├── subset.md — Sample Subset Example
 │   ├── times.md — Speaking-Time Template Example
 │   └── utterances.md — Utterance Template Example
 ├── transcripts/
@@ -69,6 +70,7 @@
 
 ### templates/
 - [samples.md — Sample Template Example](templates/samples.md)
+- [subset.md — Sample Subset Example](templates/subset.md)
 - [times.md — Speaking-Time Template Example](templates/times.md)
 - [utterances.md — Utterance Template Example](templates/utterances.md)
 
