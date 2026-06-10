@@ -49,3 +49,27 @@ def test_analyze_convo_turns_file_returns_expected_levels():
     assert "group_level" in result
     assert "session_level" in result
     assert "participation_level" in result
+
+
+def test_bin_level_turns_are_sorted_by_grouping_and_speaker():
+    df = pd.DataFrame(
+        {
+            "group": ["G1", "G1"],
+            "session": ["A", "A"],
+            "bin": ["bin_2", "bin_1"],
+            "turns": ["3.2.1.0", "3.2.1.0"],
+        }
+    )
+
+    result = analysis._analyze_convo_turns_file(df)
+
+    assert result["bin_level"][["bin", "speaker"]].to_dict("records") == [
+        {"bin": "bin_1", "speaker": "0"},
+        {"bin": "bin_1", "speaker": "1"},
+        {"bin": "bin_1", "speaker": "2"},
+        {"bin": "bin_1", "speaker": "3"},
+        {"bin": "bin_2", "speaker": "0"},
+        {"bin": "bin_2", "speaker": "1"},
+        {"bin": "bin_2", "speaker": "2"},
+        {"bin": "bin_2", "speaker": "3"},
+    ]

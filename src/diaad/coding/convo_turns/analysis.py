@@ -219,7 +219,8 @@ def compute_bin_level(df, grouping_cols):
         bin_totals_mark2 = df.groupby(grouping_cols)['mark2'].transform('sum').replace(0, pd.NA)
         bin_level['proportion_of_bin_mark2'] = bin_level['mark2'] / bin_totals_mark2
 
-    return bin_level
+    sort_cols = [col for col in [*grouping_cols, 'speaker'] if col in bin_level.columns]
+    return bin_level.sort_values(sort_cols, kind='mergesort').reset_index(drop=True)
 
 def compute_session_level(turn_totals):
     """
@@ -464,7 +465,7 @@ def _analyze_convo_turns_file(
             continue
         row_dict = row.to_dict()
         turn_counts, mark1_counts, mark2_counts = extract_turn_stats(row_dict.get('turns', ''))
-        speakers = set(turn_counts) | set(mark1_counts) | set(mark2_counts)
+        speakers = sorted(set(turn_counts) | set(mark1_counts) | set(mark2_counts))
         for speaker in speakers:
             rows.append({
                 'group': row_dict.get('group'),
