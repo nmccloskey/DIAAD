@@ -59,6 +59,7 @@ htmlcov/
 *.swp
 .devcontainer/
 .devcontainer.json
+.codex-local/
 
 # Example files
 example_files/
