@@ -446,8 +446,9 @@ def _write_powers_rel_outputs(
                 cat_summary.to_excel(writer, sheet_name="categorical_summary", index=False)
         logger.info(f"Wrote POWERS reliability results: {get_rel_path(results_path)}")
     except Exception as e:
-        logger.error(f"Failed writing reliability results {get_rel_path(results_path)}: {e}")
-        return
+        raise RuntimeError(
+            f"Failed writing reliability results {get_rel_path(results_path)}: {e}"
+        ) from e
 
     report_path = out_dir / "powers_reliability_report.txt"
     try:
@@ -518,7 +519,9 @@ def _write_powers_rel_outputs(
 
         logger.info(f"Successfully wrote reliability report to {get_rel_path(report_path)}")
     except Exception as e:
-        logger.error(f"Failed writing reliability report {get_rel_path(report_path)}: {e}")
+        raise RuntimeError(
+            f"Failed writing reliability report {get_rel_path(report_path)}: {e}"
+        ) from e
 
 
 def evaluate_powers_reliability(
