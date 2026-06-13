@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: words.rates
+canonical_command: words rates
+module_id: words
+view: example_io
+title: Word Count Rate Calculation Example
+slot: examples
+---
+
 # Word Count Rate Calculation Example
 
 This example demonstrates how `diaad words rates` combines word-count sample summaries with speaking times to calculate rates per minute.

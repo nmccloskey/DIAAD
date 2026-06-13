@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: turns.reselect
+canonical_command: turns reselect
+module_id: turns
+view: example_io
+title: Conversation Turns Reliability Reselection Example
+slot: examples
+---
+
 # Conversation Turns Reliability Reselection Example
 
 This example demonstrates how `diaad turns reselect` selects replacement samples for digital conversation-turn reliability coding.

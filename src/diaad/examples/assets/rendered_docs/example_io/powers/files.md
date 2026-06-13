@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: powers.files
+canonical_command: powers files
+module_id: powers
+view: example_io
+title: POWERS Coding File Example
+slot: examples
+---
+
 # POWERS Coding File Example
 
 This example demonstrates how `diaad powers files` creates POWERS coding and reliability workbooks from transcript tables.

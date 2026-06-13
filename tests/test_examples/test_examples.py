@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import pandas as pd
 import pytest
+import yaml
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
 from diaad.examples import generate as generate_module
@@ -18,6 +19,13 @@ def _exists(path):
 
 def _assert_no_scratch_artifacts(path):
     assert not any(item.name.startswith("_dx_") for item in path.rglob("*"))
+
+
+def _read_front_matter(path):
+    text = path.read_text(encoding="utf-8")
+    assert text.startswith("---")
+    _opening, front_matter, _body = text.split("---", 2)
+    return yaml.safe_load(front_matter)
 
 
 def test_generate_synthetic_project(tmp_path):
@@ -595,11 +603,26 @@ def test_all_non_examples_commands_have_example_plans():
     assert unsupported == []
 
 
+def test_example_command_identity_helpers():
+    assert generate_module.canonical_command_to_command_id("cus files") == "cus.files"
+    assert generate_module.command_id_to_slug("cus.files") == "cus_files"
+    assert generate_module.command_id_parts("transcripts.tabularize") == (
+        "transcripts",
+        "tabularize",
+    )
+    assert generate_module.rendered_doc_path_for_command("blinding decode") == (
+        "blinding",
+        "decode.md",
+    )
+    assert generate_module.EXAMPLE_COMMAND_PLANS["cus files"].command_id == "cus.files"
+
+
 def test_render_example_docs():
     paths = render_example_docs()
 
     assert any(path.name == "01_overview.md" for path in paths)
     assert any(path.name == "tabularize.md" for path in paths)
+    assert any(path.name == "chats.md" for path in paths)
     assert any(path.name == "select.md" for path in paths)
     assert any(path.name == "evaluate.md" for path in paths)
     assert any(path.name == "reselect.md" for path in paths)
@@ -627,6 +650,36 @@ def test_render_example_docs():
     assert any(path.name == "reselect.md" and path.parent.name == "turns" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "turns" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
+
+
+def test_rendered_example_docs_have_composable_front_matter():
+    render_example_docs()
+    docs_root = get_example_io_docs_path()
+
+    overview = _read_front_matter(docs_root / "01_overview.md")
+    assert overview["object_type"] == "workflow"
+    assert overview["object_types"] == ["workflow", "command"]
+    assert overview["workflow_id"] == "full_example_dataset"
+    assert overview["command_id"] == "examples"
+    assert overview["canonical_command"] == "examples"
+    assert overview["command_subtype"] == "omnibus"
+    assert overview["view"] == "example_io"
+
+    for command, plan in generate_module.EXAMPLE_COMMAND_PLANS.items():
+        doc_path = docs_root.joinpath(
+            *generate_module.rendered_doc_path_for_command(command)
+        )
+        assert doc_path.exists(), command
+        metadata = _read_front_matter(doc_path)
+        module_id, _action_id = generate_module.command_id_parts(plan.command_id)
+        assert metadata["object_type"] == "command"
+        assert metadata["object_types"] == ["command"]
+        assert metadata["command_id"] == plan.command_id
+        assert metadata["canonical_command"] == command
+        assert metadata["module_id"] == module_id
+        assert metadata["view"] == "example_io"
+        assert metadata["slot"] == "examples"
+        assert metadata["title"]
 
 
 def test_generate_synthetic_project_uses_custom_transcript_table_filename(

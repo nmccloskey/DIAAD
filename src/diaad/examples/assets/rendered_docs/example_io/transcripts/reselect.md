@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: transcripts.reselect
+canonical_command: transcripts reselect
+module_id: transcripts
+view: example_io
+title: Transcription Reliability Reselection Example
+slot: examples
+---
+
 # Transcription Reliability Reselection Example
 
 This example demonstrates how `diaad transcripts reselect` chooses replacement reliability samples after an earlier selection has already been used.

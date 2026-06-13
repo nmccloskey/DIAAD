@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: words.evaluate
+canonical_command: words evaluate
+module_id: words
+view: example_io
+title: Word Count Reliability Evaluation Example
+slot: examples
+---
+
 # Word Count Reliability Evaluation Example
 
 This example demonstrates how `diaad words evaluate` compares primary word counts with a synthetic reliability workbook.

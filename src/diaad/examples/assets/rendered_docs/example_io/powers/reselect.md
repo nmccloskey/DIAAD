@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: powers.reselect
+canonical_command: powers reselect
+module_id: powers
+view: example_io
+title: POWERS Reliability Reselection Example
+slot: examples
+---
+
 # POWERS Reliability Reselection Example
 
 This example demonstrates how `diaad powers reselect` selects replacement POWERS reliability rows after an earlier reliability workbook has already been used.

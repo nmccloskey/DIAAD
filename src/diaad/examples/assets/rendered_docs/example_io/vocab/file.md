@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: vocab.file
+canonical_command: vocab file
+module_id: vocab
+view: example_io
+title: Target Vocabulary Resource Template Example
+slot: examples
+---
+
 # Target Vocabulary Resource Template Example
 
 This example demonstrates how `diaad vocab file` creates a blank JSON template for a custom target-vocabulary resource.

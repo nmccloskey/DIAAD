@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: cus.rates
+canonical_command: cus rates
+module_id: cus
+view: example_io
+title: CU Rate Calculation Example
+slot: examples
+---
+
 # CU Rate Calculation Example
 
 This example demonstrates how `diaad cus rates` combines CU sample summaries with speaking times to calculate rates per minute.

@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: templates.subset
+canonical_command: templates subset
+module_id: templates
+view: example_io
+title: Sample Subset Example
+slot: examples
+---
+
 # Sample Subset Example
 
 This example demonstrates how `diaad templates subset` creates a randomized sample subset workbook from a general sample list.

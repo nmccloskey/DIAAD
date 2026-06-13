@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: words.files
+canonical_command: words files
+module_id: words
+view: example_io
+title: Word Count File Example
+slot: examples
+---
+
 # Word Count File Example
 
 This example demonstrates how `diaad words files` creates word-count coding and reliability workbooks from transcript tables.

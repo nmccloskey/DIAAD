@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: turns.evaluate
+canonical_command: turns evaluate
+module_id: turns
+view: example_io
+title: Conversation Turns Reliability Evaluation Example
+slot: examples
+---
+
 # Conversation Turns Reliability Evaluation Example
 
 This example demonstrates how `diaad turns evaluate` compares primary and reliability-coded digital conversation turns.

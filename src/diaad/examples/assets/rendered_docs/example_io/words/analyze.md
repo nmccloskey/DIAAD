@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: words.analyze
+canonical_command: words analyze
+module_id: words
+view: example_io
+title: Word Count Analysis Example
+slot: examples
+---
+
 # Word Count Analysis Example
 
 This example demonstrates how `diaad words analyze` summarizes filled word-count coding by utterance and by sample.

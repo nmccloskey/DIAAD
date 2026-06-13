@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: blinding.decode
+canonical_command: blinding decode
+module_id: blinding
+view: example_io
+title: Blinding Decode Example
+slot: examples
+---
+
 # Blinding Decode Example
 
 This example demonstrates how `diaad blinding decode` restores blinded identifiers in a standalone workbook using a blind codebook.

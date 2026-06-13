@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: templates.times
+canonical_command: templates times
+module_id: templates
+view: example_io
+title: Speaking-Time Template Example
+slot: examples
+---
+
 # Speaking-Time Template Example
 
 This example demonstrates how `diaad templates times` creates a blank sample-level speaking-time workbook.

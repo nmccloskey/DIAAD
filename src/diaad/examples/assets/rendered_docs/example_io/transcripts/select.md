@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: transcripts.select
+canonical_command: transcripts select
+module_id: transcripts
+view: example_io
+title: Transcription Reliability Selection Example
+slot: examples
+---
+
 # Transcription Reliability Selection Example
 
 This example demonstrates how `diaad transcripts select` selects synthetic CHAT files for secondary transcription and writes blank reliability templates.

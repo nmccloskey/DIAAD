@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: blinding.encode
+canonical_command: blinding encode
+module_id: blinding
+view: example_io
+title: Blinding Encode Example
+slot: examples
+---
+
 # Blinding Encode Example
 
 This example demonstrates how `diaad blinding encode` blinds `sample_id` in a standalone workbook and writes a reusable codebook.

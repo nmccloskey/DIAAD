@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: transcripts.tabularize
+canonical_command: transcripts tabularize
+module_id: transcripts
+view: example_io
+title: Transcript Tabularization Example
+slot: examples
+---
+
 # Transcript Tabularization Example
 
 This example demonstrates how `diaad transcripts tabularize` converts tiny synthetic CHAT files into sample- and utterance-level workbook sheets.

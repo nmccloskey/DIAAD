@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: vocab.check
+canonical_command: vocab check
+module_id: vocab
+view: example_io
+title: Target Vocabulary Resource Check Example
+slot: examples
+---
+
 # Target Vocabulary Resource Check Example
 
 This example demonstrates how `diaad vocab check` validates the active built-in and custom target-vocabulary resources.

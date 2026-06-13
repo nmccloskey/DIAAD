@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: powers.rates
+canonical_command: powers rates
+module_id: powers
+view: example_io
+title: POWERS Rate Calculation Example
+slot: examples
+---
+
 # POWERS Rate Calculation Example
 
 This example demonstrates how `diaad powers rates` combines POWERS dialog summaries with speaking times to calculate rates per minute.

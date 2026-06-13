@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: words.reselect
+canonical_command: words reselect
+module_id: words
+view: example_io
+title: Word Count Reliability Reselection Example
+slot: examples
+---
+
 # Word Count Reliability Reselection Example
 
 This example demonstrates how `diaad words reselect` selects replacement word-count reliability rows after an earlier reliability workbook has already been used.

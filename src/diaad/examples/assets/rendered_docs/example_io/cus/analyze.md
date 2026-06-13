@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: cus.analyze
+canonical_command: cus analyze
+module_id: cus
+view: example_io
+title: CU Coding Analysis Example
+slot: examples
+---
+
 # CU Coding Analysis Example
 
 This example demonstrates how `diaad cus analyze` summarizes filled complete-utterance coding by utterance and by sample.

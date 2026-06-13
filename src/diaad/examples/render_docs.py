@@ -12,6 +12,8 @@ from diaad.examples.generate import (
     CU_OUTPUT_DIRS,
     CUS_MODULE_DIR,
     EXPECTED_WORKBOOK,
+    EXAMPLES_COMMAND_ID,
+    FULL_DATASET_WORKFLOW_ID,
     POWERS_MODULE_DIR,
     POWERS_OUTPUT_DIRS,
     TEMPLATE_OUTPUT_DIRS,
@@ -24,7 +26,10 @@ from diaad.examples.generate import (
     VOCAB_OUTPUT_DIRS,
     WORD_OUTPUT_DIRS,
     WORDS_MODULE_DIR,
+    canonical_command_to_command_id,
+    command_id_parts,
     generate_example_files,
+    rendered_doc_path_for_command,
 )
 from psair.examples import (
     ExampleAssets,
@@ -44,6 +49,56 @@ SPEC_ROOT = ("assets", "spec")
 
 
 example_assets = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
+
+
+def _title_from_markdown(text: str) -> str:
+    for line in text.splitlines():
+        if line.startswith("# "):
+            return line.removeprefix("# ").strip()
+    return "Example I/O"
+
+
+def _front_matter(data: dict[str, Any]) -> str:
+    return "---\n" + yaml.safe_dump(data, sort_keys=False).strip() + "\n---\n\n"
+
+
+def _with_command_front_matter(command: str, text: str) -> str:
+    command_id = canonical_command_to_command_id(command)
+    module_id, _action_id = command_id_parts(command_id)
+    metadata = {
+        "object_type": "command",
+        "object_types": ["command"],
+        "command_id": command_id,
+        "canonical_command": command,
+        "module_id": module_id,
+        "view": "example_io",
+        "title": _title_from_markdown(text),
+        "slot": "examples",
+    }
+    return _front_matter(metadata) + text
+
+
+def _with_overview_front_matter(text: str) -> str:
+    metadata = {
+        "object_type": "workflow",
+        "object_types": ["workflow", "command"],
+        "workflow_id": FULL_DATASET_WORKFLOW_ID,
+        "command_id": EXAMPLES_COMMAND_ID,
+        "canonical_command": "examples",
+        "command_subtype": "omnibus",
+        "typology": "omnibus_command_workflow",
+        "view": "example_io",
+        "title": _title_from_markdown(text),
+        "slot": "examples",
+    }
+    return _front_matter(metadata) + text
+
+
+def _write_command_doc(command: str, text: str) -> Path:
+    return example_assets.write_rendered_doc(
+        *rendered_doc_path_for_command(command),
+        text=_with_command_front_matter(command, text),
+    )
 
 
 def _transcript_table_filename(specs: dict[str, dict[str, Any]]) -> str:
@@ -99,6 +154,13 @@ def _project_tree(
         P1_picnic_post.cha"""
         outputs = f"""        transcript_tables/
           {transcript_table_filename}"""
+    elif command == "chats":
+        input_files = f"""      transcript_tables/
+        {transcript_table_filename}"""
+        outputs = """        chat_files/
+          P1_picnic_pre_cha_source_input_chat_P1_picnic_pre_0.cha
+          P2_picnic_pre_cha_source_input_chat_P2_picnic_pre_0.cha
+          P1_picnic_post_cha_source_input_chat_P1_picnic_post_0.cha"""
     elif command == "blinding_encode":
         input_files = """      powers_coding/
         powers_coding.xlsx"""
@@ -694,6 +756,48 @@ These files are fully synthetic and regenerated from packaged YAML specs. The ma
 """
 
 
+def _chats_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    package_dir = generate_example_files(
+        project_dir.parent / "transcripts_chats_command_example",
+        commands=["transcripts chats"],
+        force=True,
+    )
+    output_dir = package_dir / "example_output" / "chat_files"
+    chat_file = next(output_dir.glob("*.cha"))
+    chat_excerpt = "\n".join(chat_file.read_text(encoding="utf-8").splitlines()[:14])
+
+    return f"""# Transcript CHAT File Export Example
+
+This example demonstrates how `diaad transcripts chats` converts transcript table rows back into CHAT-style transcript files.
+
+## Command
+
+{fenced("diaad transcripts chats --config config", "bash")}
+
+## Project Files
+
+{fenced(_project_tree("chats", transcript_table_filename=_transcript_table_filename(specs)))}
+
+## Basic Config
+
+{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
+
+## Input Snippet
+
+The command uses `diaad_data/input/transcript_tables/{_transcript_table_filename(specs)}`.
+
+## Output Preview
+
+`example_output/chat_files/{chat_file.name}`
+
+{fenced(chat_excerpt, "text")}
+
+## Notes
+
+The synthetic filenames include the source workbook and sample identifiers so exported CHAT files can be traced back to their table rows.
+"""
+
+
 def _select_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     workbook = (
         project_dir
@@ -1219,6 +1323,7 @@ def _cu_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str
     output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["evaluate"]
     report = output_dir / "cu_reliability_coding_report.txt"
     report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:10])
+    config_snippet = "input_dir: diaad_data/input\noutput_dir: diaad_data/output"
 
     return f"""# CU Reliability Evaluation Example
 
@@ -1234,7 +1339,7 @@ This example demonstrates how `diaad cus evaluate` compares primary CU coding wi
 
 ## Basic Config
 
-{fenced("input_dir: diaad_data/input\noutput_dir: diaad_data/output", "yaml")}
+{fenced(config_snippet, "yaml")}
 
 ## Input Snippet
 
@@ -2196,6 +2301,7 @@ def render_example_docs() -> list[Path]:
         blinding_encode_doc = _blinding_encode_doc(project_dir, specs)
         blinding_decode_doc = _blinding_decode_doc(project_dir, specs)
         tabularize_doc = _tabularize_doc(project_dir, specs)
+        chats_doc = _chats_doc(project_dir, specs)
         select_doc = _select_doc(project_dir, specs)
         evaluate_doc = _evaluate_doc(project_dir, specs)
         reselect_doc = _reselect_doc(project_dir, specs)
@@ -2228,38 +2334,42 @@ def render_example_docs() -> list[Path]:
         turns_analyze_doc = _turns_analyze_doc(project_dir, specs)
 
     return [
-        example_assets.write_rendered_doc("01_overview.md", text=_overview_doc()),
-        example_assets.write_rendered_doc("blinding", "encode.md", text=blinding_encode_doc),
-        example_assets.write_rendered_doc("blinding", "decode.md", text=blinding_decode_doc),
-        example_assets.write_rendered_doc("transcripts", "tabularize.md", text=tabularize_doc),
-        example_assets.write_rendered_doc("transcripts", "select.md", text=select_doc),
-        example_assets.write_rendered_doc("transcripts", "evaluate.md", text=evaluate_doc),
-        example_assets.write_rendered_doc("transcripts", "reselect.md", text=reselect_doc),
-        example_assets.write_rendered_doc("templates", "utterances.md", text=utterance_templates_doc),
-        example_assets.write_rendered_doc("templates", "samples.md", text=sample_templates_doc),
-        example_assets.write_rendered_doc("templates", "times.md", text=time_templates_doc),
-        example_assets.write_rendered_doc("templates", "subset.md", text=sample_subset_doc),
-        example_assets.write_rendered_doc("cus", "files.md", text=cu_files_doc),
-        example_assets.write_rendered_doc("cus", "evaluate.md", text=cu_evaluate_doc),
-        example_assets.write_rendered_doc("cus", "reselect.md", text=cu_reselect_doc),
-        example_assets.write_rendered_doc("cus", "analyze.md", text=cu_analyze_doc),
-        example_assets.write_rendered_doc("cus", "rates.md", text=cu_rates_doc),
-        example_assets.write_rendered_doc("words", "files.md", text=word_files_doc),
-        example_assets.write_rendered_doc("words", "evaluate.md", text=word_evaluate_doc),
-        example_assets.write_rendered_doc("words", "reselect.md", text=word_reselect_doc),
-        example_assets.write_rendered_doc("words", "analyze.md", text=word_analyze_doc),
-        example_assets.write_rendered_doc("words", "rates.md", text=word_rates_doc),
-        example_assets.write_rendered_doc("powers", "files.md", text=powers_files_doc),
-        example_assets.write_rendered_doc("powers", "evaluate.md", text=powers_evaluate_doc),
-        example_assets.write_rendered_doc("powers", "reselect.md", text=powers_reselect_doc),
-        example_assets.write_rendered_doc("powers", "analyze.md", text=powers_analyze_doc),
-        example_assets.write_rendered_doc("powers", "rates.md", text=powers_rates_doc),
-        example_assets.write_rendered_doc("vocab", "file.md", text=vocab_file_doc),
-        example_assets.write_rendered_doc("vocab", "check.md", text=vocab_check_doc),
-        example_assets.write_rendered_doc("vocab", "analyze.md", text=vocab_analyze_doc),
-        example_assets.write_rendered_doc("vocab", "rates.md", text=vocab_rates_doc),
-        example_assets.write_rendered_doc("turns", "files.md", text=turns_files_doc),
-        example_assets.write_rendered_doc("turns", "evaluate.md", text=turns_evaluate_doc),
-        example_assets.write_rendered_doc("turns", "reselect.md", text=turns_reselect_doc),
-        example_assets.write_rendered_doc("turns", "analyze.md", text=turns_analyze_doc),
+        example_assets.write_rendered_doc(
+            "01_overview.md",
+            text=_with_overview_front_matter(_overview_doc()),
+        ),
+        _write_command_doc("blinding encode", blinding_encode_doc),
+        _write_command_doc("blinding decode", blinding_decode_doc),
+        _write_command_doc("transcripts tabularize", tabularize_doc),
+        _write_command_doc("transcripts chats", chats_doc),
+        _write_command_doc("transcripts select", select_doc),
+        _write_command_doc("transcripts evaluate", evaluate_doc),
+        _write_command_doc("transcripts reselect", reselect_doc),
+        _write_command_doc("templates utterances", utterance_templates_doc),
+        _write_command_doc("templates samples", sample_templates_doc),
+        _write_command_doc("templates times", time_templates_doc),
+        _write_command_doc("templates subset", sample_subset_doc),
+        _write_command_doc("cus files", cu_files_doc),
+        _write_command_doc("cus evaluate", cu_evaluate_doc),
+        _write_command_doc("cus reselect", cu_reselect_doc),
+        _write_command_doc("cus analyze", cu_analyze_doc),
+        _write_command_doc("cus rates", cu_rates_doc),
+        _write_command_doc("words files", word_files_doc),
+        _write_command_doc("words evaluate", word_evaluate_doc),
+        _write_command_doc("words reselect", word_reselect_doc),
+        _write_command_doc("words analyze", word_analyze_doc),
+        _write_command_doc("words rates", word_rates_doc),
+        _write_command_doc("powers files", powers_files_doc),
+        _write_command_doc("powers evaluate", powers_evaluate_doc),
+        _write_command_doc("powers reselect", powers_reselect_doc),
+        _write_command_doc("powers analyze", powers_analyze_doc),
+        _write_command_doc("powers rates", powers_rates_doc),
+        _write_command_doc("vocab file", vocab_file_doc),
+        _write_command_doc("vocab check", vocab_check_doc),
+        _write_command_doc("vocab analyze", vocab_analyze_doc),
+        _write_command_doc("vocab rates", vocab_rates_doc),
+        _write_command_doc("turns files", turns_files_doc),
+        _write_command_doc("turns evaluate", turns_evaluate_doc),
+        _write_command_doc("turns reselect", turns_reselect_doc),
+        _write_command_doc("turns analyze", turns_analyze_doc),
     ]

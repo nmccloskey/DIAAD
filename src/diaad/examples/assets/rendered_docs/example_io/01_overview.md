@@ -1,3 +1,18 @@
+---
+object_type: workflow
+object_types:
+- workflow
+- command
+workflow_id: full_example_dataset
+command_id: examples
+canonical_command: examples
+command_subtype: omnibus
+typology: omnibus_command_workflow
+view: example_io
+title: DIAAD Example I/O Manual
+slot: examples
+---
+
 # DIAAD Example I/O Manual
 
 The example I/O manual shows small, runnable DIAAD workflows alongside their inputs and outputs.

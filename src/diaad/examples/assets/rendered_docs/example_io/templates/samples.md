@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: templates.samples
+canonical_command: templates samples
+module_id: templates
+view: example_io
+title: Sample Template Example
+slot: examples
+---
+
 # Sample Template Example
 
 This example demonstrates how `diaad templates samples` creates blank sample-level coding workbooks with bins, coder assignment, and reliability rows.

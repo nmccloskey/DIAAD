@@ -133,6 +133,32 @@ TURNS_OUTPUT_DIRS = {
 }
 EXAMPLE_PACKAGE_PREFIX = "example_files_"
 FULL_DATASET_SLUG = "full_dataset"
+EXAMPLES_COMMAND_ID = "examples"
+FULL_DATASET_WORKFLOW_ID = "full_example_dataset"
+
+
+def canonical_command_to_command_id(command: str) -> str:
+    """Return the stable documentation ID for a canonical DIAAD command."""
+    return command.strip().lower().replace(" ", ".")
+
+
+def command_id_to_slug(command_id: str) -> str:
+    """Return a file/package-safe slug for a command ID."""
+    return command_id.strip().lower().replace(".", "_")
+
+
+def command_id_parts(command_id: str) -> tuple[str, str]:
+    """Split a command ID into module and action parts."""
+    module_id, sep, action_id = command_id.strip().lower().partition(".")
+    if not sep or not module_id or not action_id:
+        raise ValueError(f"Command ID must use '<module>.<action>': {command_id!r}")
+    return module_id, action_id
+
+
+def rendered_doc_path_for_command(command: str) -> tuple[str, str]:
+    """Return rendered Example I/O markdown path parts for a command."""
+    module_id, action_id = command_id_parts(canonical_command_to_command_id(command))
+    return module_id, f"{action_id}.md"
 
 
 @dataclass(frozen=True)
@@ -151,6 +177,10 @@ class ExampleCommandPlan:
     required_capabilities: tuple[str, ...]
     build_output: Callable[["ExampleBuildContext"], None]
     output_capabilities: tuple[str, ...] = ()
+
+    @property
+    def command_id(self) -> str:
+        return canonical_command_to_command_id(self.command)
 
 
 @dataclass
@@ -381,7 +411,10 @@ def example_package_slug(commands: Iterable[str] | str | None = None) -> str:
     normalized = _normalize_example_commands(commands)
     if not normalized:
         return FULL_DATASET_SLUG
-    return "_".join(command.replace(" ", "_") for command in normalized)
+    return "_".join(
+        command_id_to_slug(canonical_command_to_command_id(command))
+        for command in normalized
+    )
 
 
 def example_package_name(commands: Iterable[str] | str | None = None) -> str:

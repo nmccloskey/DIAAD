@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: cus.reselect
+canonical_command: cus reselect
+module_id: cus
+view: example_io
+title: CU Reliability Reselection Example
+slot: examples
+---
+
 # CU Reliability Reselection Example
 
 This example demonstrates how `diaad cus reselect` selects replacement CU reliability rows after an earlier reliability workbook has already been used.

@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: vocab.analyze
+canonical_command: vocab analyze
+module_id: vocab
+view: example_io
+title: Target Vocabulary Analysis Example
+slot: examples
+---
+
 # Target Vocabulary Analysis Example
 
 This example demonstrates how `diaad vocab analyze` calculates target-vocabulary coverage for synthetic picnic samples.

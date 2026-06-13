@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: cus.files
+canonical_command: cus files
+module_id: cus
+view: example_io
+title: CU Coding File Example
+slot: examples
+---
+
 # CU Coding File Example
 
 This example demonstrates how `diaad cus files` creates complete-utterance coding and reliability workbooks from transcript tables.

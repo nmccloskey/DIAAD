@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: turns.files
+canonical_command: turns files
+module_id: turns
+view: example_io
+title: Conversation Turns File Example
+slot: examples
+---
+
 # Conversation Turns File Example
 
 This example demonstrates how `diaad turns files` creates blank digital conversation-turn coding and reliability workbooks.

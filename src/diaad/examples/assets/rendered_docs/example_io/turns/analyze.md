@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: turns.analyze
+canonical_command: turns analyze
+module_id: turns
+view: example_io
+title: Conversation Turns Analysis Example
+slot: examples
+---
+
 # Conversation Turns Analysis Example
 
 This example demonstrates how `diaad turns analyze` summarizes digital conversation-turn strings across speakers, bins, sessions, and groups.

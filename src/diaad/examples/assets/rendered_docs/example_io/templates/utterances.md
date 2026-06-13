@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: templates.utterances
+canonical_command: templates utterances
+module_id: templates
+view: example_io
+title: Utterance Template Example
+slot: examples
+---
+
 # Utterance Template Example
 
 This example demonstrates how `diaad templates utterances` creates blank utterance-level coding workbooks from transcript tables.

@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: cus.evaluate
+canonical_command: cus evaluate
+module_id: cus
+view: example_io
+title: CU Reliability Evaluation Example
+slot: examples
+---
+
 # CU Reliability Evaluation Example
 
 This example demonstrates how `diaad cus evaluate` compares primary CU coding with a synthetic reliability workbook.

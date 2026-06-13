@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: transcripts.evaluate
+canonical_command: transcripts evaluate
+module_id: transcripts
+view: example_io
+title: Transcription Reliability Evaluation Example
+slot: examples
+---
+
 # Transcription Reliability Evaluation Example
 
 This example demonstrates how `diaad transcripts evaluate` compares original CHAT files with synthetic reliability transcriptions.

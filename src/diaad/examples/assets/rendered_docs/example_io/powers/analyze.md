@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: powers.analyze
+canonical_command: powers analyze
+module_id: powers
+view: example_io
+title: POWERS Coding Analysis Example
+slot: examples
+---
+
 # POWERS Coding Analysis Example
 
 This example demonstrates how `diaad powers analyze` summarizes filled POWERS coding by utterance, turn, speaker, and dialog.

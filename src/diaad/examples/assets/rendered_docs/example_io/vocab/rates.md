@@ -1,3 +1,15 @@
+---
+object_type: command
+object_types:
+- command
+command_id: vocab.rates
+canonical_command: vocab rates
+module_id: vocab
+view: example_io
+title: Target Vocabulary Rate Calculation Example
+slot: examples
+---
+
 # Target Vocabulary Rate Calculation Example
 
 This example demonstrates how `diaad vocab rates` converts target-vocabulary analysis counts into per-minute rates.
