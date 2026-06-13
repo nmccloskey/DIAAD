@@ -4,7 +4,7 @@ import tempfile
 import zipfile
 from datetime import datetime
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import streamlit as st
 import yaml
@@ -14,7 +14,10 @@ from diaad.cli.commands import MODULE_COMMANDS
 from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
 from psair.core.logger import initialize_logger, logger, set_root, terminate_logger
 from diaad.core.run_context import RunContext
-from diaad.webapp.config_builder import build_config_ui
+from diaad.webapp.config_builder import (
+    build_config_ui,
+    restore_default_config_ui_state,
+)
 
 
 try:
@@ -121,9 +124,25 @@ def _write_config_dir(config_dir: Path, configs: dict[str, dict]) -> None:
 def _save_uploaded_inputs(input_dir: Path, uploaded_files) -> None:
     input_dir.mkdir(parents=True, exist_ok=True)
     for uploaded in uploaded_files:
-        file_path = input_dir / Path(uploaded.name).name
+        file_path = input_dir / _safe_uploaded_relative_path(uploaded.name)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
         with file_path.open("wb") as f:
             f.write(uploaded.getbuffer())
+
+
+def _safe_uploaded_relative_path(uploaded_name: str) -> Path:
+    normalized_name = uploaded_name.replace("\\", "/")
+    upload_path = PurePosixPath(normalized_name)
+    parts = [part for part in upload_path.parts if part not in ("", ".")]
+
+    if (
+        upload_path.is_absolute()
+        or not parts
+        or any(part == ".." or ":" in part for part in parts)
+    ):
+        raise ValueError(f"Unsafe uploaded file path: {uploaded_name}")
+
+    return Path(*parts)
 
 
 def _dispatched_commands() -> set[str]:
@@ -160,6 +179,11 @@ def _command_checkbox_key(command: str) -> str:
 
 def _command_module_key(module: str) -> str:
     return f"diaad_command_module_{module}_expanded"
+
+
+def _clear_command_selection() -> None:
+    for command in _command_options():
+        st.session_state[_command_checkbox_key(command)] = False
 
 
 def _render_command_menu() -> list[str]:
@@ -202,6 +226,61 @@ def _render_command_menu() -> list[str]:
         st.caption("No DIAAD commands selected.")
 
     return selected
+
+
+def _request_restore_config_defaults() -> None:
+    st.session_state.restore_config_defaults_requested = True
+
+
+def _cancel_restore_config_defaults() -> None:
+    st.session_state.restore_config_defaults_requested = False
+
+
+def _restore_config_defaults() -> None:
+    restore_default_config_ui_state()
+    st.session_state.confirmed_config = False
+    st.session_state.built_configs = None
+    st.session_state.restore_config_defaults_requested = False
+
+
+def _render_restore_defaults_controls() -> None:
+    if "restore_config_defaults_requested" not in st.session_state:
+        st.session_state.restore_config_defaults_requested = False
+
+    st.button("Restore defaults", on_click=_request_restore_config_defaults)
+
+    if not st.session_state.restore_config_defaults_requested:
+        return
+
+    st.warning(
+        "Restore the config builder to DIAAD's default values? "
+        "This will clear the current built config."
+    )
+    col_yes, col_no = st.columns(2)
+    col_yes.button(
+        "Yes, restore defaults",
+        type="primary",
+        on_click=_restore_config_defaults,
+    )
+    col_no.button("No, keep current", on_click=_cancel_restore_config_defaults)
+
+
+def _render_overview() -> None:
+    with st.expander("Overview", expanded=True):
+        st.markdown(
+            """
+Welcome to the DIAAD web app.
+
+Use this page to build or upload configuration files, upload your DIAAD input
+files, choose one or more DIAAD commands, and download the resulting output ZIP.
+
+The manual and example menus below provide command-specific guidance and example
+input/output files. DIAAD runs in a temporary workspace for each web run, so
+uploaded inputs are processed only within that run.
+
+Source code: [nmccloskey/DIAAD](https://github.com/nmccloskey/DIAAD)
+            """.strip()
+        )
 
 
 def _render_manual() -> None:
@@ -295,13 +374,7 @@ def render_app() -> None:
         st.session_state.built_configs = None
 
     st.header("Part 0: Instructions")
-    with st.expander("Overview", expanded=True):
-        st.markdown(
-            "Welcome to the DIAAD webapp!\n\n" \
-            "Use the below Manual Menu to find detailed instructions.\n\n"
-            "Find source code here: https://github.com/nmccloskey/DIAAD\n\n"
-            "Click the 'Overview' tab above to collapse this message."
-            )
+    _render_overview()
     _render_manual()
     
 
@@ -329,14 +402,19 @@ def render_app() -> None:
             st.session_state.built_configs = built_configs
             st.session_state.confirmed_config = True
             st.success("Built config confirmed.")
+        _render_restore_defaults_controls()
         if st.session_state.confirmed_config:
             configs = st.session_state.built_configs
 
     st.header("Part 2: Input Files")
     uploaded_inputs = st.file_uploader(
-        "Upload input files",
+        "Upload input files or a folder",
         type=["cha", "xlsx", "csv", "json"],
-        accept_multiple_files=True,
+        accept_multiple_files="directory",
+        help=(
+            "Upload individual files or choose a directory. Nested folders are "
+            "preserved under DIAAD's web input directory."
+        ),
     )
 
     st.header("Part 3: Commands")
@@ -392,6 +470,9 @@ def render_app() -> None:
                 "An unexpected error occurred while running DIAAD. "
                 "Please check the logs in the downloaded ZIP if one was created."
             )
+
+    if commands:
+        st.button("Clear selection", on_click=_clear_command_selection)
 
 
 def _running_under_streamlit() -> bool:

@@ -29,6 +29,51 @@ def _config_zip(configs: dict[str, dict]) -> BytesIO:
     return buffer
 
 
+def _field_widget_keys() -> list[str]:
+    return [
+        f"{config_name}_{field['name']}"
+        for config_name, sections in (
+            ("project", PROJECT_SECTIONS),
+            ("advanced", ADVANCED_SECTIONS),
+        )
+        for _, fields in sections
+        for field in fields
+    ]
+
+
+def _section_state_keys() -> list[str]:
+    keys: list[str] = []
+    for config_name, sections in (
+        ("project", PROJECT_SECTIONS),
+        ("advanced", ADVANCED_SECTIONS),
+    ):
+        for section_name, _ in sections:
+            section_key = re.sub(
+                r"\W+",
+                "_",
+                f"{config_name}_{section_name}",
+            ).strip("_").lower()
+            keys.append(f"show_{section_key}_expanded")
+
+    keys.append("show_project_metadata_fields_expanded")
+    return keys
+
+
+def restore_default_config_ui_state() -> None:
+    """Reset config-builder widgets to their declared defaults on the next rerun."""
+    exact_keys = set(_field_widget_keys())
+    exact_keys.update(_section_state_keys())
+    exact_keys.add("metadata_field_rows")
+
+    for key in list(st.session_state.keys()):
+        if (
+            key in exact_keys
+            or key.startswith("metadata_field_label_")
+            or key.startswith("metadata_field_values_")
+        ):
+            del st.session_state[key]
+
+
 def _section_toggle(label: str, *, key: str, expanded: bool = False) -> bool:
     state_key = f"{key}_expanded"
     button_key = f"{key}_button"
