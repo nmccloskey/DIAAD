@@ -217,6 +217,7 @@ def _render_manual() -> None:
         ui_key="diaad_manual",
     )
 
+    # Convenient for development, but will be threaded into the user manual.
     render_manual_ui(
         repo_root=repo_root,
         manual_rel_dir="src/diaad/examples/assets/rendered_docs/example_io",
@@ -287,12 +288,22 @@ def _run_examples_web() -> BytesIO:
 def render_app() -> None:
     st.title("DIAAD Web App")
     st.subheader("Database-oriented, Integrative Architecture for Analyzing Discourse")
-    _render_manual()
 
     if "confirmed_config" not in st.session_state:
         st.session_state.confirmed_config = False
     if "built_configs" not in st.session_state:
         st.session_state.built_configs = None
+
+    st.header("Part 0: Instructions")
+    with st.expander("Overview", expanded=True):
+        st.markdown(
+            "Welcome to the DIAAD webapp!\n\n" \
+            "Use the below Manual Menu to find detailed instructions.\n\n"
+            "Find source code here: https://github.com/nmccloskey/DIAAD\n\n"
+            "Click the 'Overview' tab above to collapse this message."
+            )
+    _render_manual()
+    
 
     st.header("Part 1: Configuration")
     uploaded_config_files = st.file_uploader(
