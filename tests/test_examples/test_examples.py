@@ -356,6 +356,15 @@ def test_command_example_capability_union_deduplicates_shared_inputs():
     ) == ("cu_coding_workbooks",)
 
 
+def test_command_example_capability_union_uses_prior_outputs():
+    assert generate_module._required_capabilities_for_commands(
+        ["transcripts tabularize", "templates utterances"]
+    ) == ("synthetic_chat_files",)
+    assert generate_module._required_capabilities_for_commands(
+        ["cus analyze", "cus rates"]
+    ) == ("cu_coding_workbooks", "cu_coding_analysis", "speaking_time_workbook")
+
+
 def test_generate_transcripts_tabularize_command_example(tmp_path):
     package_dir = generate_example_files(
         tmp_path / "command_examples",
@@ -408,14 +417,111 @@ def test_generate_combined_cu_command_example_reuses_shared_inputs(tmp_path):
     assert not (package_dir / "expected_outputs").exists()
 
 
+def test_generate_combined_command_example_uses_prior_outputs(tmp_path):
+    transcript_package = generate_example_files(
+        tmp_path / "command_examples",
+        commands=["transcripts tabularize", "templates utterances"],
+    )
+
+    assert not (transcript_package / "example_input" / "transcript_tables").exists()
+    assert _exists(
+        transcript_package
+        / "example_output"
+        / "transcript_tables"
+        / "transcript_tables.xlsx"
+    )
+    assert _exists(
+        transcript_package
+        / "example_output"
+        / "coding_templates"
+        / "utterance_coding_template.xlsx"
+    )
+
+
 def test_generate_command_example_rejects_valid_but_unsupported_command(tmp_path):
     with pytest.raises(ValueError, match="not yet available"):
-        generate_example_files(tmp_path / "command_examples", commands=["words evaluate"])
+        generate_example_files(tmp_path / "command_examples", commands=["powers evaluate"])
 
 
 def test_generate_command_example_rejects_unknown_command(tmp_path):
     with pytest.raises(ValueError, match="Unknown DIAAD command"):
         generate_example_files(tmp_path / "command_examples", commands=["not a command"])
+
+
+def test_generate_templates_subset_must_be_individual(tmp_path):
+    with pytest.raises(ValueError, match="templates subset"):
+        generate_example_files(
+            tmp_path / "command_examples",
+            commands=["templates subset", "templates times"],
+        )
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_rel_path"),
+    [
+        (
+            "transcripts chats",
+            "example_output/chat_files/P1_picnic_pre_cha_source_input_chat_P1_picnic_pre_0.cha",
+        ),
+        (
+            "transcripts select",
+            "example_output/transcription_reliability_selection/transcription_reliability_samples.xlsx",
+        ),
+        (
+            "transcripts reselect",
+            "example_output/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx",
+        ),
+        (
+            "transcripts evaluate",
+            "example_output/transcription_reliability_evaluation/transcription_reliability_evaluation.xlsx",
+        ),
+        (
+            "templates utterances",
+            "example_output/coding_templates/utterance_coding_template.xlsx",
+        ),
+        (
+            "templates samples",
+            "example_output/coding_templates/sample_coding_template.xlsx",
+        ),
+        ("templates times", "example_output/coding_templates/speaking_times.xlsx"),
+        ("templates subset", "example_output/coding_templates/sample_subset.xlsx"),
+        ("cus files", "example_output/cu_coding/cu_coding.xlsx"),
+        (
+            "cus reselect",
+            "example_output/reselected_cu_coding_reliability/reselected_cu_reliability_coding.xlsx",
+        ),
+        ("cus rates", "example_output/cu_coding_analysis/cu_coding_rates.xlsx"),
+        ("words files", "example_output/word_counts/word_counting.xlsx"),
+        (
+            "words reselect",
+            "example_output/reselected_word_count_reliability/reselected_word_count_reliability.xlsx",
+        ),
+        (
+            "words evaluate",
+            "example_output/word_count_reliability/word_count_reliability_results.xlsx",
+        ),
+        (
+            "words analyze",
+            "example_output/word_count_analysis/word_counting_by_sample.xlsx",
+        ),
+        (
+            "words rates",
+            "example_output/word_count_analysis/word_counting_rates.xlsx",
+        ),
+    ],
+)
+def test_generate_pass_4_1_command_examples(tmp_path, command, expected_rel_path):
+    package_dir = generate_example_files(
+        tmp_path / "command_examples",
+        commands=[command],
+    )
+
+    assert package_dir.name == f"example_files_{command.replace(' ', '_')}"
+    _assert_no_scratch_artifacts(package_dir)
+    assert (package_dir / "README.md").exists()
+    assert (package_dir / "example_config" / "project.yaml").exists()
+    assert _exists(package_dir / expected_rel_path)
+    assert not (package_dir / "expected_outputs").exists()
 
 
 def test_render_example_docs():
