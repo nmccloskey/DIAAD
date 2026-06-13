@@ -413,6 +413,11 @@ def test_generate_command_example_rejects_valid_but_unsupported_command(tmp_path
         generate_example_files(tmp_path / "command_examples", commands=["words evaluate"])
 
 
+def test_generate_command_example_rejects_unknown_command(tmp_path):
+    with pytest.raises(ValueError, match="Unknown DIAAD command"):
+        generate_example_files(tmp_path / "command_examples", commands=["not a command"])
+
+
 def test_render_example_docs():
     paths = render_example_docs()
 

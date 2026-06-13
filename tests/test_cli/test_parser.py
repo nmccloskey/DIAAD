@@ -50,3 +50,20 @@ def test_parser_rejects_removed_examples_files_option() -> None:
 
     with pytest.raises(SystemExit):
         parser.parse_args(["examples", "--files", "diaad_data/output"])
+
+
+def test_parser_accepts_repeatable_examples_for_command_option() -> None:
+    parser = build_arg_parser()
+
+    args = parser.parse_args(
+        [
+            "examples",
+            "--for-command",
+            "cus analyze",
+            "--for-command",
+            "cus evaluate",
+        ]
+    )
+
+    assert args.command == ["examples"]
+    assert args.example_commands == ["cus analyze", "cus evaluate"]

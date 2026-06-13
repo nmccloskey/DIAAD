@@ -31,12 +31,14 @@ def _is_examples_command(args) -> bool:
 def _has_examples_options(args) -> bool:
     return bool(
         getattr(args, "render_docs", False)
+        or getattr(args, "example_commands", None)
         or getattr(args, "force", False)
     )
 
 
 def _run_examples_command(args) -> None:
     render_docs = getattr(args, "render_docs", False)
+    example_commands = getattr(args, "example_commands", None)
     if render_docs:
         from diaad.examples.render_docs import render_example_docs
 
@@ -77,11 +79,19 @@ def _run_examples_command(args) -> None:
 
         from diaad.examples.generate import generate_example_files
 
-        destination = ctx.out_dir / "example_files_full_dataset"
-        project_dir = generate_example_files(
-            destination,
-            force=getattr(args, "force", False),
-        )
+        if example_commands:
+            destination = ctx.out_dir
+            project_dir = generate_example_files(
+                destination,
+                force=getattr(args, "force", False),
+                commands=example_commands,
+            )
+        else:
+            destination = ctx.out_dir / "example_files_full_dataset"
+            project_dir = generate_example_files(
+                destination,
+                force=getattr(args, "force", False),
+            )
         logger.info("Generated DIAAD example files: %s", project_dir)
         print(f"Generated DIAAD example files: {project_dir}")
 
@@ -105,7 +115,10 @@ def main(args) -> None:
             _run_examples_command(args)
             return
         if _has_examples_options(args):
-            raise ValueError("--render-docs and --force are only valid with 'diaad examples'.")
+            raise ValueError(
+                "--render-docs, --for-command, and --force are only valid with "
+                "'diaad examples'."
+            )
 
         start_time = datetime.now()
         project_root = Path.cwd().resolve()

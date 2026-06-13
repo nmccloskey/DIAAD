@@ -89,6 +89,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--for-command",
+        dest="example_commands",
+        action="append",
+        default=None,
+        metavar="COMMAND",
+        help=(
+            "For 'diaad examples': generate example files for a canonical DIAAD "
+            "command. May be repeated."
+        ),
+    )
+
+    parser.add_argument(
         "--force",
         action="store_true",
         help="For 'diaad examples': overwrite existing generated example files.",

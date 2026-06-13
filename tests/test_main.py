@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 import diaad.main as main_module
 from diaad.examples import generate as generate_module
 
@@ -257,3 +259,64 @@ def test_examples_command_honors_output_dir_override(monkeypatch, tmp_path):
             True,
         )
     ]
+
+
+def test_examples_command_passes_requested_example_commands(monkeypatch, tmp_path):
+    events = []
+
+    class FakeContext:
+        def __init__(self, config_dir, project_root, start_time, **kwargs):
+            self.out_dir = tmp_path / "run-output"
+
+        def set_commands(self, commands):
+            self.commands = list(commands)
+
+        def termination_kwargs(self):
+            return {"output_dir": self.out_dir}
+
+    def fake_generate(destination, *, force=False, commands=None):
+        events.append(("generate", Path(destination), force, commands))
+        return Path(destination) / "example_files_cus_analyze_cus_evaluate"
+
+    monkeypatch.setattr(main_module, "RunContext", FakeContext)
+    monkeypatch.setattr(main_module, "set_root", lambda path: None)
+    monkeypatch.setattr(main_module, "build_cli_config_overrides", lambda args: {})
+    monkeypatch.setattr(main_module, "initialize_logger", lambda *a, **k: None)
+    monkeypatch.setattr(main_module, "add_finalization_hook", lambda hook: None)
+    monkeypatch.setattr(main_module, "write_start_artifacts", lambda ctx, args: None)
+    monkeypatch.setattr(main_module, "terminate_logger", lambda **k: None)
+    monkeypatch.setattr(generate_module, "generate_example_files", fake_generate)
+
+    args = SimpleNamespace(
+        command=["examples"],
+        config=None,
+        input_dir=None,
+        output_dir=None,
+        set_values=None,
+        render_docs=False,
+        example_commands=["cus analyze", "cus evaluate"],
+        force=True,
+    )
+
+    main_module.main(args)
+
+    assert events == [
+        (
+            "generate",
+            tmp_path / "run-output",
+            True,
+            ["cus analyze", "cus evaluate"],
+        )
+    ]
+
+
+def test_examples_options_are_rejected_for_non_examples_commands():
+    args = SimpleNamespace(
+        command=["cus", "analyze"],
+        render_docs=False,
+        example_commands=["cus analyze"],
+        force=False,
+    )
+
+    with pytest.raises(ValueError, match="--for-command"):
+        main_module.main(args)
