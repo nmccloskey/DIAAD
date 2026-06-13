@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+from pathlib import PurePosixPath
 import random
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -135,6 +137,8 @@ EXAMPLE_PACKAGE_PREFIX = "example_files_"
 FULL_DATASET_SLUG = "full_dataset"
 EXAMPLES_COMMAND_ID = "examples"
 FULL_DATASET_WORKFLOW_ID = "full_example_dataset"
+MANIFEST_FILENAME = "example_manifest.json"
+RUN_DIR = "diaad_YYMMDD_HHMM"
 
 
 def canonical_command_to_command_id(command: str) -> str:
@@ -159,6 +163,196 @@ def rendered_doc_path_for_command(command: str) -> tuple[str, str]:
     """Return rendered Example I/O markdown path parts for a command."""
     module_id, action_id = command_id_parts(canonical_command_to_command_id(command))
     return module_id, f"{action_id}.md"
+
+
+@dataclass(frozen=True)
+class ExamplePreviewArtifact:
+    """Preview file shown in docs under package, runtime, and atlas paths."""
+
+    label: str
+    command_id: str
+    package_preview_path: str
+    runtime_display_path: str
+    full_dataset_path: str
+    preview_kind: str
+
+
+def posix_join(*parts: str) -> str:
+    """Join path fragments with POSIX separators for manifests and docs."""
+    cleaned: list[str] = []
+    for part in parts:
+        value = str(part).replace("\\", "/").strip("/")
+        if value:
+            cleaned.extend(piece for piece in value.split("/") if piece)
+    return "/".join(cleaned)
+
+
+def runtime_output_path(*parts: str) -> str:
+    """Return the display path for a normal DIAAD timestamped output file."""
+    return posix_join("diaad_data/output", RUN_DIR, *parts)
+
+
+def example_output_path(*parts: str) -> str:
+    """Return the command-specific package preview path."""
+    return posix_join("example_output", *parts)
+
+
+EXPECTED_OUTPUT_RUNTIME_ROOTS: dict[str, tuple[str, ...]] = {
+    f"expected_outputs/{BLINDING_MODULE_DIR}/{BLINDING_OUTPUT_DIRS['encode']}": ("blinding",),
+    f"expected_outputs/{BLINDING_MODULE_DIR}/{BLINDING_OUTPUT_DIRS['decode']}": ("blinding",),
+    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{TABULARIZE_OUTPUT_DIR}": ("transcript_tables",),
+    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{SELECT_OUTPUT_DIR}": (
+        "transcription_reliability_selection",
+    ),
+    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{EVALUATE_OUTPUT_DIR}": (
+        "transcription_reliability_evaluation",
+    ),
+    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{RESELECT_OUTPUT_DIR}": (),
+    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['utterances']}": (
+        "coding_templates",
+    ),
+    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['samples']}": (
+        "coding_templates",
+    ),
+    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['times']}": (
+        "coding_templates",
+    ),
+    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['subset']}": (
+        "coding_templates",
+    ),
+    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['resubset']}": (
+        "coding_templates",
+    ),
+    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['files']}": ("cu_coding",),
+    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['evaluate']}": (
+        "cu_reliability",
+    ),
+    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['reselect']}": (
+        "reselected_cu_coding_reliability",
+    ),
+    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['analyze']}": (
+        "cu_coding_analysis",
+    ),
+    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['rates']}": (
+        "cu_coding_analysis",
+    ),
+    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['files']}": (
+        "word_counts",
+    ),
+    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['evaluate']}": (
+        "word_count_reliability",
+    ),
+    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['reselect']}": (
+        "reselected_word_count_reliability",
+    ),
+    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['analyze']}": (
+        "word_count_analysis",
+    ),
+    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['rates']}": (
+        "word_count_analysis",
+    ),
+    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['files']}": (
+        "powers_coding",
+    ),
+    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['evaluate']}": (
+        "powers_reliability",
+    ),
+    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['reselect']}": (
+        "reselected_powers_reliability",
+    ),
+    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['analyze']}": (
+        "powers_coding_analysis",
+    ),
+    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['rates']}": (
+        "powers_coding_analysis",
+    ),
+    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['file']}": ("target_vocab",),
+    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['check']}": (
+        "target_vocab",
+    ),
+    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['analyze']}": (
+        "target_vocab",
+    ),
+    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['rates']}": (
+        "target_vocab",
+    ),
+    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['files']}": (
+        "coding_templates",
+    ),
+    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['evaluate']}": (
+        "turns_reliability",
+    ),
+    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['reselect']}": (
+        "reselected_turns_reliability",
+    ),
+    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['analyze']}": (),
+}
+
+EXPECTED_OUTPUT_LINK_RE = re.compile(r"`(expected_outputs/[^`]+)`")
+
+
+def preview_kind_for_path(path: str) -> str:
+    """Return a simple artifact kind from a path suffix."""
+    suffix = PurePosixPath(path).suffix.lower()
+    if suffix == ".xlsx":
+        return "workbook"
+    if suffix == ".txt":
+        return "text"
+    if suffix == ".json":
+        return "json"
+    if suffix in {".yaml", ".yml"}:
+        return "yaml"
+    return "directory" if not suffix else "file"
+
+
+def preview_artifact_from_full_dataset_path(
+    command: str,
+    full_dataset_path: str,
+) -> ExamplePreviewArtifact:
+    """Describe one full-dataset atlas path in all example contexts."""
+    normalized = full_dataset_path.replace("\\", "/").strip("/")
+    for prefix, runtime_root in sorted(
+        EXPECTED_OUTPUT_RUNTIME_ROOTS.items(),
+        key=lambda item: len(item[0]),
+        reverse=True,
+    ):
+        if normalized == prefix:
+            remainder_parts: tuple[str, ...] = ()
+        elif normalized.startswith(prefix + "/"):
+            remainder_parts = PurePosixPath(normalized[len(prefix) + 1 :]).parts
+        else:
+            continue
+
+        runtime_parts = (*runtime_root, *remainder_parts)
+        return ExamplePreviewArtifact(
+            label=PurePosixPath(normalized).name,
+            command_id=canonical_command_to_command_id(command),
+            package_preview_path=example_output_path(*runtime_parts),
+            runtime_display_path=runtime_output_path(*runtime_parts),
+            full_dataset_path=normalized,
+            preview_kind=preview_kind_for_path(normalized),
+        )
+
+    raise ValueError(f"No runtime output mapping for preview path: {full_dataset_path}")
+
+
+def preview_artifacts_for_text(command: str, text: str) -> list[ExamplePreviewArtifact]:
+    """Return preview artifacts referenced by expected-output links in markdown."""
+    paths = dict.fromkeys(EXPECTED_OUTPUT_LINK_RE.findall(text))
+    return [
+        preview_artifact_from_full_dataset_path(command, path)
+        for path in paths
+    ]
+
+
+def render_runtime_preview_paths(command: str, text: str) -> str:
+    """Replace full-dataset atlas links with normal runtime output links."""
+    for artifact in preview_artifacts_for_text(command, text):
+        text = text.replace(
+            f"`{artifact.full_dataset_path}`",
+            f"`{artifact.runtime_display_path}`",
+        )
+    return text
 
 
 @dataclass(frozen=True)
@@ -507,6 +701,7 @@ Key folders:
 - `example_input/`: synthetic files needed to run the command(s).
 - `example_output/`: representative output produced by the command(s).
 - `example_logs/`: illustrative log output for this example package.
+- `{MANIFEST_FILENAME}`: machine-readable command, capability, and artifact index.
 """
     write_text(ctx.package_dir / "README.md", text, force=ctx.force)
 
@@ -535,6 +730,17 @@ This runnable project is generated from packaged DIAAD YAML specs.
 The CHAT files are fully synthetic and intentionally tiny. They are meant to
 demonstrate DIAAD transcript commands, not to represent human-subjects data or
 a clinical record.
+
+This package is the full example dataset. It is generated by the omnibus
+`diaad examples` command and organized as an atlas of command examples.
+`expected_outputs/` is not the exact path layout of a normal DIAAD run; it is
+grouped by module and command so the complete example collection is navigable.
+In command-specific packages and ordinary user runs, the same files appear under
+functional output folders inside a timestamped output directory, such as
+`diaad_data/output/{RUN_DIR}/cu_coding/cu_coding.xlsx`.
+
+See `{MANIFEST_FILENAME}` for command IDs, expected-output atlas paths,
+command-package preview paths, and normal runtime display paths.
 
 Key files:
 
@@ -3523,6 +3729,168 @@ EXAMPLE_COMMAND_PLANS: dict[str, ExampleCommandPlan] = {
 }
 
 
+def _relative_posix(path: Path, root: Path) -> str:
+    return path.relative_to(root).as_posix()
+
+
+def _iter_package_files(root: Path) -> list[Path]:
+    if not root.exists():
+        return []
+    return sorted(path for path in root.rglob("*") if path.is_file())
+
+
+def _file_artifact(path: Path, root: Path) -> dict[str, str]:
+    relative = _relative_posix(path, root)
+    return {
+        "path": relative,
+        "preview_kind": preview_kind_for_path(relative),
+    }
+
+
+def _command_metadata(command: str) -> dict[str, Any]:
+    plan = EXAMPLE_COMMAND_PLANS[command]
+    module_id, action_id = command_id_parts(plan.command_id)
+    return {
+        "canonical_command": command,
+        "command_id": plan.command_id,
+        "module_id": module_id,
+        "action_id": action_id,
+        "required_capabilities": list(plan.required_capabilities),
+        "output_capabilities": list(plan.output_capabilities),
+    }
+
+
+def _full_dataset_command_for_output_path(full_dataset_path: str) -> str:
+    parts = PurePosixPath(full_dataset_path).parts
+    if len(parts) < 3 or parts[0] != "expected_outputs":
+        raise ValueError(f"Expected a full-dataset output path: {full_dataset_path}")
+
+    module_dir = parts[1]
+    output_dir = parts[2]
+
+    module_id = module_dir.removesuffix("_module")
+    if module_id == "templates" and output_dir == TEMPLATE_OUTPUT_DIRS["resubset"]:
+        command = "templates subset"
+    else:
+        prefix = f"{module_id}_"
+        action_id = output_dir.removeprefix(prefix).replace("_", " ")
+        command = f"{module_id} {action_id}"
+
+    if command not in EXAMPLE_COMMAND_PLANS:
+        raise ValueError(
+            f"No example command plan maps to full-dataset output path: {full_dataset_path}"
+        )
+    return command
+
+
+def _full_dataset_expected_artifacts(project_dir: Path) -> list[dict[str, Any]]:
+    expected_root = project_dir / "expected_outputs"
+    artifacts: list[dict[str, Any]] = []
+    for path in _iter_package_files(expected_root):
+        full_dataset_path = _relative_posix(path, project_dir)
+        command = _full_dataset_command_for_output_path(full_dataset_path)
+        artifact = asdict(
+            preview_artifact_from_full_dataset_path(command, full_dataset_path)
+        )
+        artifact["canonical_command"] = command
+        artifact["path"] = full_dataset_path
+        artifacts.append(artifact)
+    return artifacts
+
+
+def _command_output_artifacts(ctx: ExampleBuildContext) -> list[dict[str, str]]:
+    artifacts: list[dict[str, str]] = []
+    for path in _iter_package_files(ctx.example_output_dir):
+        package_path = _relative_posix(path, ctx.package_dir)
+        output_path = _relative_posix(path, ctx.example_output_dir)
+        artifacts.append(
+            {
+                "path": package_path,
+                "package_preview_path": package_path,
+                "runtime_display_path": runtime_output_path(
+                    *PurePosixPath(output_path).parts
+                ),
+                "preview_kind": preview_kind_for_path(package_path),
+            }
+        )
+    return artifacts
+
+
+def _write_full_example_manifest(project_dir: Path, *, force: bool) -> None:
+    commands = sorted(EXAMPLE_COMMAND_PLANS)
+    manifest = {
+        "manifest_version": 1,
+        "package_kind": "full_dataset",
+        "package_name": project_dir.name,
+        "package_slug": FULL_DATASET_SLUG,
+        "workflow_id": FULL_DATASET_WORKFLOW_ID,
+        "command_id": EXAMPLES_COMMAND_ID,
+        "command_subtype": "omnibus",
+        "typology": "omnibus_command_workflow",
+        "covered_commands": [_command_metadata(command) for command in commands],
+        "command_ids": [EXAMPLE_COMMAND_PLANS[command].command_id for command in commands],
+        "directories": {
+            "config": "config",
+            "input": "input",
+            "expected_outputs": "expected_outputs",
+        },
+        "config_artifacts": [
+            _file_artifact(path, project_dir)
+            for path in _iter_package_files(project_dir / "config")
+        ],
+        "input_artifacts": [
+            _file_artifact(path, project_dir)
+            for path in _iter_package_files(project_dir / "input")
+        ],
+        "expected_output_artifacts": _full_dataset_expected_artifacts(project_dir),
+        "notes": [
+            "`expected_outputs/` is a full-dataset atlas, not the normal DIAAD "
+            "run output root.",
+            "Use `runtime_display_path` to see where the same artifact appears "
+            "in a normal timestamped DIAAD run.",
+            "Some coding workbooks include synthetic filled-in values so "
+            "downstream examples can be demonstrated.",
+        ],
+    }
+    write_json(project_dir / MANIFEST_FILENAME, manifest, force=force)
+
+
+def _write_command_example_manifest(
+    ctx: ExampleBuildContext,
+    commands: tuple[str, ...],
+) -> None:
+    manifest = {
+        "manifest_version": 1,
+        "package_kind": "command_specific",
+        "package_name": ctx.package_dir.name,
+        "package_slug": example_package_slug(commands),
+        "commands": [_command_metadata(command) for command in commands],
+        "command_ids": [EXAMPLE_COMMAND_PLANS[command].command_id for command in commands],
+        "required_capabilities": list(_required_capabilities_for_commands(commands)),
+        "suggested_invocation": f"diaad {', '.join(commands)} --config example_config",
+        "directories": {
+            "config": "example_config",
+            "input": "example_input",
+            "output": "example_output",
+            "logs": "example_logs",
+        },
+        "config_artifacts": [
+            _file_artifact(path, ctx.package_dir)
+            for path in _iter_package_files(ctx.example_config_dir)
+        ],
+        "input_artifacts": [
+            _file_artifact(path, ctx.package_dir)
+            for path in _iter_package_files(ctx.example_input_dir)
+        ],
+        "output_artifacts": _command_output_artifacts(ctx),
+        "log_artifacts": [
+            _file_artifact(path, ctx.package_dir)
+            for path in _iter_package_files(ctx.example_logs_dir)
+        ],
+    }
+    write_json(ctx.package_dir / MANIFEST_FILENAME, manifest, force=ctx.force)
+
+
 def _generate_full_example_files(destination: str | Path, *, force: bool) -> Path:
     project_dir = Path(destination).expanduser().resolve()
     _ensure_writable_package(project_dir, force=force)
@@ -3566,6 +3934,7 @@ def _generate_full_example_files(destination: str | Path, *, force: bool) -> Pat
     _write_expected_turn_evaluation(project_dir, specs, force=force)
     _write_expected_turn_reselection(project_dir, specs, force=force)
     _write_expected_turn_analysis(project_dir, specs, force=force)
+    _write_full_example_manifest(project_dir, force=force)
     return project_dir
 
 
@@ -3593,6 +3962,7 @@ def _generate_command_example_files(
         EXAMPLE_COMMAND_PLANS[command].build_output(ctx)
 
     _write_command_example_logs(ctx, normalized)
+    _write_command_example_manifest(ctx, normalized)
     return package_dir
 
 

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
-from pathlib import PurePosixPath
-import re
 from typing import Any
 
 import pandas as pd
@@ -19,13 +16,9 @@ from diaad.examples.generate import (
     FULL_DATASET_WORKFLOW_ID,
     POWERS_MODULE_DIR,
     POWERS_OUTPUT_DIRS,
-    EVALUATE_OUTPUT_DIR,
-    RESELECT_OUTPUT_DIR,
-    SELECT_OUTPUT_DIR,
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATE_SUBSET_INPUT_DIRS,
     TEMPLATES_MODULE_DIR,
-    TABULARIZE_OUTPUT_DIR,
     TRANSCRIPTS_MODULE_DIR,
     TURNS_MODULE_DIR,
     TURNS_OUTPUT_DIRS,
@@ -36,7 +29,10 @@ from diaad.examples.generate import (
     canonical_command_to_command_id,
     command_id_parts,
     generate_example_files,
+    render_runtime_preview_paths,
     rendered_doc_path_for_command,
+    runtime_output_path,
+    RUN_DIR,
 )
 from psair.examples import (
     ExampleAssets,
@@ -58,192 +54,6 @@ SPEC_ROOT = ("assets", "spec")
 example_assets = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
 
 
-RUN_DIR = "diaad_YYMMDD_HHMM"
-
-
-@dataclass(frozen=True)
-class ExamplePreviewArtifact:
-    """Preview file shown in docs under package, runtime, and atlas paths."""
-
-    label: str
-    command_id: str
-    package_preview_path: str
-    runtime_display_path: str
-    full_dataset_path: str
-    preview_kind: str
-
-
-def _posix_join(*parts: str) -> str:
-    cleaned: list[str] = []
-    for part in parts:
-        value = str(part).replace("\\", "/").strip("/")
-        if value:
-            cleaned.extend(piece for piece in value.split("/") if piece)
-    return "/".join(cleaned)
-
-
-def _runtime_output_path(*parts: str) -> str:
-    return _posix_join("diaad_data/output", RUN_DIR, *parts)
-
-
-def _example_output_path(*parts: str) -> str:
-    return _posix_join("example_output", *parts)
-
-
-_EXPECTED_OUTPUT_RUNTIME_ROOTS: dict[str, tuple[str, ...]] = {
-    f"expected_outputs/{BLINDING_MODULE_DIR}/{BLINDING_OUTPUT_DIRS['encode']}": ("blinding",),
-    f"expected_outputs/{BLINDING_MODULE_DIR}/{BLINDING_OUTPUT_DIRS['decode']}": ("blinding",),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{TABULARIZE_OUTPUT_DIR}": ("transcript_tables",),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{SELECT_OUTPUT_DIR}": (
-        "transcription_reliability_selection",
-    ),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{EVALUATE_OUTPUT_DIR}": (
-        "transcription_reliability_evaluation",
-    ),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{RESELECT_OUTPUT_DIR}": (),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['utterances']}": (
-        "coding_templates",
-    ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['samples']}": (
-        "coding_templates",
-    ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['times']}": (
-        "coding_templates",
-    ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['subset']}": (
-        "coding_templates",
-    ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['resubset']}": (
-        "coding_templates",
-    ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['files']}": ("cu_coding",),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['evaluate']}": (
-        "cu_reliability",
-    ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['reselect']}": (
-        "reselected_cu_coding_reliability",
-    ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['analyze']}": (
-        "cu_coding_analysis",
-    ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['rates']}": (
-        "cu_coding_analysis",
-    ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['files']}": (
-        "word_counts",
-    ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['evaluate']}": (
-        "word_count_reliability",
-    ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['reselect']}": (
-        "reselected_word_count_reliability",
-    ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['analyze']}": (
-        "word_count_analysis",
-    ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['rates']}": (
-        "word_count_analysis",
-    ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['files']}": (
-        "powers_coding",
-    ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['evaluate']}": (
-        "powers_reliability",
-    ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['reselect']}": (
-        "reselected_powers_reliability",
-    ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['analyze']}": (
-        "powers_coding_analysis",
-    ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['rates']}": (
-        "powers_coding_analysis",
-    ),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['file']}": ("target_vocab",),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['check']}": (
-        "target_vocab",
-    ),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['analyze']}": (
-        "target_vocab",
-    ),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['rates']}": (
-        "target_vocab",
-    ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['files']}": (
-        "coding_templates",
-    ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['evaluate']}": (
-        "turns_reliability",
-    ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['reselect']}": (
-        "reselected_turns_reliability",
-    ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['analyze']}": (),
-}
-
-_EXPECTED_OUTPUT_LINK_RE = re.compile(r"`(expected_outputs/[^`]+)`")
-
-
-def _preview_kind_for_path(path: str) -> str:
-    suffix = PurePosixPath(path).suffix.lower()
-    if suffix == ".xlsx":
-        return "workbook"
-    if suffix == ".txt":
-        return "text"
-    if suffix == ".json":
-        return "json"
-    if suffix in {".yaml", ".yml"}:
-        return "yaml"
-    return "directory" if not suffix else "file"
-
-
-def _preview_artifact_from_full_dataset_path(
-    command: str,
-    full_dataset_path: str,
-) -> ExamplePreviewArtifact:
-    normalized = full_dataset_path.replace("\\", "/").strip("/")
-    for prefix, runtime_root in sorted(
-        _EXPECTED_OUTPUT_RUNTIME_ROOTS.items(),
-        key=lambda item: len(item[0]),
-        reverse=True,
-    ):
-        if normalized == prefix:
-            remainder_parts: tuple[str, ...] = ()
-        elif normalized.startswith(prefix + "/"):
-            remainder_parts = PurePosixPath(normalized[len(prefix) + 1 :]).parts
-        else:
-            continue
-
-        runtime_parts = (*runtime_root, *remainder_parts)
-        return ExamplePreviewArtifact(
-            label=PurePosixPath(normalized).name,
-            command_id=canonical_command_to_command_id(command),
-            package_preview_path=_example_output_path(*runtime_parts),
-            runtime_display_path=_runtime_output_path(*runtime_parts),
-            full_dataset_path=normalized,
-            preview_kind=_preview_kind_for_path(normalized),
-        )
-
-    raise ValueError(f"No runtime output mapping for preview path: {full_dataset_path}")
-
-
-def _preview_artifacts_for_text(command: str, text: str) -> list[ExamplePreviewArtifact]:
-    paths = dict.fromkeys(_EXPECTED_OUTPUT_LINK_RE.findall(text))
-    return [
-        _preview_artifact_from_full_dataset_path(command, path)
-        for path in paths
-    ]
-
-
-def _render_runtime_preview_paths(command: str, text: str) -> str:
-    for artifact in _preview_artifacts_for_text(command, text):
-        text = text.replace(
-            f"`{artifact.full_dataset_path}`",
-            f"`{artifact.runtime_display_path}`",
-        )
-    return text
-
-
 def _title_from_markdown(text: str) -> str:
     for line in text.splitlines():
         if line.startswith("# "):
@@ -256,7 +66,7 @@ def _front_matter(data: dict[str, Any]) -> str:
 
 
 def _with_command_front_matter(command: str, text: str) -> str:
-    text = _render_runtime_preview_paths(command, text)
+    text = render_runtime_preview_paths(command, text)
     command_id = canonical_command_to_command_id(command)
     module_id, _action_id = command_id_parts(command_id)
     metadata = {
@@ -979,7 +789,7 @@ The command uses `diaad_data/input/transcript_tables/{_transcript_table_filename
 
 ## Output Preview
 
-`{_runtime_output_path("chat_files", chat_file.name)}`
+`{runtime_output_path("chat_files", chat_file.name)}`
 
 {fenced(chat_excerpt, "text")}
 

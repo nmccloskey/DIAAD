@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import json
 
 import pandas as pd
 import pytest
@@ -8,7 +9,6 @@ import yaml
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
 from diaad.examples import generate as generate_module
-from diaad.examples import render_docs as render_docs_module
 from diaad.examples.generate import generate_example_files
 from diaad.examples.render_docs import render_example_docs
 from psair.examples import long_path
@@ -20,6 +20,10 @@ def _exists(path):
 
 def _assert_no_scratch_artifacts(path):
     assert not any(item.name.startswith("_dx_") for item in path.rglob("*"))
+
+
+def _read_json(path):
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _read_front_matter(path):
@@ -358,6 +362,37 @@ def test_generate_synthetic_project(tmp_path):
         / "conversation_turns_template_analysis.xlsx"
     )
 
+    manifest = _read_json(project_dir / "example_manifest.json")
+    assert manifest["package_kind"] == "full_dataset"
+    assert manifest["workflow_id"] == "full_example_dataset"
+    assert manifest["command_id"] == "examples"
+    assert manifest["command_subtype"] == "omnibus"
+    assert "cus.files" in manifest["command_ids"]
+    assert "transcripts.chats" in manifest["command_ids"]
+
+    for group in ("config_artifacts", "input_artifacts", "expected_output_artifacts"):
+        for artifact in manifest[group]:
+            assert _exists(project_dir / artifact["path"])
+
+    cu_file = next(
+        artifact
+        for artifact in manifest["expected_output_artifacts"]
+        if artifact["full_dataset_path"].endswith("cus_files/cu_coding.xlsx")
+    )
+    assert cu_file["canonical_command"] == "cus files"
+    assert cu_file["command_id"] == "cus.files"
+    assert cu_file["runtime_display_path"] == (
+        "diaad_data/output/diaad_YYMMDD_HHMM/cu_coding/cu_coding.xlsx"
+    )
+    assert cu_file["package_preview_path"] == (
+        "example_output/cu_coding/cu_coding.xlsx"
+    )
+
+    readme = (project_dir / "README.md").read_text(encoding="utf-8")
+    assert "expected_outputs/" in readme
+    assert "atlas" in readme
+    assert "example_manifest.json" in readme
+
 
 def test_command_example_capability_union_deduplicates_shared_inputs():
     assert generate_module._required_capabilities_for_commands(
@@ -424,6 +459,33 @@ def test_generate_combined_cu_command_example_reuses_shared_inputs(tmp_path):
         / "cu_reliability_coding_by_sample.xlsx"
     ).exists()
     assert not (package_dir / "expected_outputs").exists()
+
+    manifest = _read_json(package_dir / "example_manifest.json")
+    assert manifest["package_kind"] == "command_specific"
+    assert manifest["package_slug"] == "cus_analyze_cus_evaluate"
+    assert manifest["command_ids"] == ["cus.analyze", "cus.evaluate"]
+    assert manifest["required_capabilities"] == ["cu_coding_workbooks"]
+    assert manifest["suggested_invocation"] == (
+        "diaad cus analyze, cus evaluate --config example_config"
+    )
+    assert manifest["directories"]["output"] == "example_output"
+
+    for group in ("config_artifacts", "input_artifacts", "output_artifacts", "log_artifacts"):
+        for artifact in manifest[group]:
+            assert _exists(package_dir / artifact["path"])
+            assert "expected_outputs/" not in artifact["path"]
+
+    output_paths = {artifact["path"] for artifact in manifest["output_artifacts"]}
+    assert "example_output/cu_coding_analysis/cu_coding_by_sample.xlsx" in output_paths
+    reliability_artifact = next(
+        artifact
+        for artifact in manifest["output_artifacts"]
+        if artifact["path"].endswith("cu_reliability_coding_by_sample.xlsx")
+    )
+    assert reliability_artifact["runtime_display_path"] == (
+        "diaad_data/output/diaad_YYMMDD_HHMM/cu_reliability/"
+        "cu_reliability_coding_by_sample.xlsx"
+    )
 
 
 def test_generate_combined_command_example_uses_prior_outputs(tmp_path):
@@ -599,7 +661,11 @@ def test_generate_pass_4_2_command_examples(tmp_path, command, expected_rel_path
 
 
 def test_all_non_examples_commands_have_example_plans():
-    unsupported = sorted(generate_module.VALID_COMMANDS - {"examples"} - set(generate_module.EXAMPLE_COMMAND_PLANS))
+    unsupported = sorted(
+        generate_module.VALID_COMMANDS
+        - {"examples"}
+        - set(generate_module.EXAMPLE_COMMAND_PLANS)
+    )
 
     assert unsupported == []
 
@@ -619,7 +685,7 @@ def test_example_command_identity_helpers():
 
 
 def test_preview_artifact_maps_atlas_path_to_runtime_and_package_paths():
-    artifact = render_docs_module._preview_artifact_from_full_dataset_path(
+    artifact = generate_module.preview_artifact_from_full_dataset_path(
         "cus files",
         "expected_outputs/cus_module/cus_files/cu_coding.xlsx",
     )
