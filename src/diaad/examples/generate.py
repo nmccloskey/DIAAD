@@ -197,95 +197,244 @@ def example_output_path(*parts: str) -> str:
     return posix_join("example_output", *parts)
 
 
+def expected_output_root(module_dir: str, output_dir: str) -> str:
+    """Return a full-dataset atlas output root."""
+    return posix_join("expected_outputs", module_dir, output_dir)
+
+
+def expected_output_path(module_dir: str, output_dir: str, *parts: str) -> str:
+    """Return a full-dataset atlas output path."""
+    return posix_join(expected_output_root(module_dir, output_dir), *parts)
+
+
+EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID: dict[str, str] = {
+    "blinding.encode": expected_output_root(
+        BLINDING_MODULE_DIR,
+        BLINDING_OUTPUT_DIRS["encode"],
+    ),
+    "blinding.decode": expected_output_root(
+        BLINDING_MODULE_DIR,
+        BLINDING_OUTPUT_DIRS["decode"],
+    ),
+    "transcripts.tabularize": expected_output_root(
+        TRANSCRIPTS_MODULE_DIR,
+        TABULARIZE_OUTPUT_DIR,
+    ),
+    "transcripts.select": expected_output_root(
+        TRANSCRIPTS_MODULE_DIR,
+        SELECT_OUTPUT_DIR,
+    ),
+    "transcripts.evaluate": expected_output_root(
+        TRANSCRIPTS_MODULE_DIR,
+        EVALUATE_OUTPUT_DIR,
+    ),
+    "transcripts.reselect": expected_output_root(
+        TRANSCRIPTS_MODULE_DIR,
+        RESELECT_OUTPUT_DIR,
+    ),
+    "templates.utterances": expected_output_root(
+        TEMPLATES_MODULE_DIR,
+        TEMPLATE_OUTPUT_DIRS["utterances"],
+    ),
+    "templates.samples": expected_output_root(
+        TEMPLATES_MODULE_DIR,
+        TEMPLATE_OUTPUT_DIRS["samples"],
+    ),
+    "templates.times": expected_output_root(
+        TEMPLATES_MODULE_DIR,
+        TEMPLATE_OUTPUT_DIRS["times"],
+    ),
+    "templates.subset": expected_output_root(
+        TEMPLATES_MODULE_DIR,
+        TEMPLATE_OUTPUT_DIRS["subset"],
+    ),
+    "cus.files": expected_output_root(CUS_MODULE_DIR, CU_OUTPUT_DIRS["files"]),
+    "cus.evaluate": expected_output_root(CUS_MODULE_DIR, CU_OUTPUT_DIRS["evaluate"]),
+    "cus.reselect": expected_output_root(CUS_MODULE_DIR, CU_OUTPUT_DIRS["reselect"]),
+    "cus.analyze": expected_output_root(CUS_MODULE_DIR, CU_OUTPUT_DIRS["analyze"]),
+    "cus.rates": expected_output_root(CUS_MODULE_DIR, CU_OUTPUT_DIRS["rates"]),
+    "words.files": expected_output_root(WORDS_MODULE_DIR, WORD_OUTPUT_DIRS["files"]),
+    "words.evaluate": expected_output_root(
+        WORDS_MODULE_DIR,
+        WORD_OUTPUT_DIRS["evaluate"],
+    ),
+    "words.reselect": expected_output_root(
+        WORDS_MODULE_DIR,
+        WORD_OUTPUT_DIRS["reselect"],
+    ),
+    "words.analyze": expected_output_root(
+        WORDS_MODULE_DIR,
+        WORD_OUTPUT_DIRS["analyze"],
+    ),
+    "words.rates": expected_output_root(WORDS_MODULE_DIR, WORD_OUTPUT_DIRS["rates"]),
+    "powers.files": expected_output_root(
+        POWERS_MODULE_DIR,
+        POWERS_OUTPUT_DIRS["files"],
+    ),
+    "powers.evaluate": expected_output_root(
+        POWERS_MODULE_DIR,
+        POWERS_OUTPUT_DIRS["evaluate"],
+    ),
+    "powers.reselect": expected_output_root(
+        POWERS_MODULE_DIR,
+        POWERS_OUTPUT_DIRS["reselect"],
+    ),
+    "powers.analyze": expected_output_root(
+        POWERS_MODULE_DIR,
+        POWERS_OUTPUT_DIRS["analyze"],
+    ),
+    "powers.rates": expected_output_root(
+        POWERS_MODULE_DIR,
+        POWERS_OUTPUT_DIRS["rates"],
+    ),
+    "vocab.file": expected_output_root(VOCAB_MODULE_DIR, VOCAB_OUTPUT_DIRS["file"]),
+    "vocab.check": expected_output_root(VOCAB_MODULE_DIR, VOCAB_OUTPUT_DIRS["check"]),
+    "vocab.analyze": expected_output_root(
+        VOCAB_MODULE_DIR,
+        VOCAB_OUTPUT_DIRS["analyze"],
+    ),
+    "vocab.rates": expected_output_root(VOCAB_MODULE_DIR, VOCAB_OUTPUT_DIRS["rates"]),
+    "turns.files": expected_output_root(TURNS_MODULE_DIR, TURNS_OUTPUT_DIRS["files"]),
+    "turns.evaluate": expected_output_root(
+        TURNS_MODULE_DIR,
+        TURNS_OUTPUT_DIRS["evaluate"],
+    ),
+    "turns.reselect": expected_output_root(
+        TURNS_MODULE_DIR,
+        TURNS_OUTPUT_DIRS["reselect"],
+    ),
+    "turns.analyze": expected_output_root(
+        TURNS_MODULE_DIR,
+        TURNS_OUTPUT_DIRS["analyze"],
+    ),
+}
+
+
+def expected_output_root_for_command(command: str) -> str:
+    """Return the full-dataset atlas root for a canonical command."""
+    command_id = canonical_command_to_command_id(command)
+    try:
+        return EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID[command_id]
+    except KeyError as exc:
+        raise ValueError(
+            f"No full-dataset expected-output root is registered for: {command}"
+        ) from exc
+
+
+def expected_output_path_for_command(command: str, *parts: str) -> str:
+    """Return a full-dataset atlas path for a canonical command artifact."""
+    return posix_join(expected_output_root_for_command(command), *parts)
+
+
+def expected_output_dir_for_command(project_dir: Path, command: str) -> Path:
+    """Return a local full-dataset atlas directory for a canonical command."""
+    return project_dir.joinpath(
+        *PurePosixPath(expected_output_root_for_command(command)).parts
+    )
+
+
+def expected_output_file_for_command(
+    project_dir: Path,
+    command: str,
+    *parts: str,
+) -> Path:
+    """Return a local full-dataset atlas file path for a canonical command."""
+    return project_dir.joinpath(
+        *PurePosixPath(expected_output_path_for_command(command, *parts)).parts
+    )
+
+
 EXPECTED_OUTPUT_RUNTIME_ROOTS: dict[str, tuple[str, ...]] = {
-    f"expected_outputs/{BLINDING_MODULE_DIR}/{BLINDING_OUTPUT_DIRS['encode']}": ("blinding",),
-    f"expected_outputs/{BLINDING_MODULE_DIR}/{BLINDING_OUTPUT_DIRS['decode']}": ("blinding",),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{TABULARIZE_OUTPUT_DIR}": ("transcript_tables",),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{SELECT_OUTPUT_DIR}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["blinding.encode"]: ("blinding",),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["blinding.decode"]: ("blinding",),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["transcripts.tabularize"]: (
+        "transcript_tables",
+    ),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["transcripts.select"]: (
         "transcription_reliability_selection",
     ),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{EVALUATE_OUTPUT_DIR}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["transcripts.evaluate"]: (
         "transcription_reliability_evaluation",
     ),
-    f"expected_outputs/{TRANSCRIPTS_MODULE_DIR}/{RESELECT_OUTPUT_DIR}": (),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['utterances']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["transcripts.reselect"]: (),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["templates.utterances"]: (
         "coding_templates",
     ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['samples']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["templates.samples"]: (
         "coding_templates",
     ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['times']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["templates.times"]: (
         "coding_templates",
     ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['subset']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["templates.subset"]: (
         "coding_templates",
     ),
-    f"expected_outputs/{TEMPLATES_MODULE_DIR}/{TEMPLATE_OUTPUT_DIRS['resubset']}": (
+    expected_output_root(TEMPLATES_MODULE_DIR, TEMPLATE_OUTPUT_DIRS["resubset"]): (
         "coding_templates",
     ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['files']}": ("cu_coding",),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['evaluate']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["cus.files"]: ("cu_coding",),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["cus.evaluate"]: (
         "cu_reliability",
     ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['reselect']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["cus.reselect"]: (
         "reselected_cu_coding_reliability",
     ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['analyze']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["cus.analyze"]: (
         "cu_coding_analysis",
     ),
-    f"expected_outputs/{CUS_MODULE_DIR}/{CU_OUTPUT_DIRS['rates']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["cus.rates"]: (
         "cu_coding_analysis",
     ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['files']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["words.files"]: (
         "word_counts",
     ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['evaluate']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["words.evaluate"]: (
         "word_count_reliability",
     ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['reselect']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["words.reselect"]: (
         "reselected_word_count_reliability",
     ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['analyze']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["words.analyze"]: (
         "word_count_analysis",
     ),
-    f"expected_outputs/{WORDS_MODULE_DIR}/{WORD_OUTPUT_DIRS['rates']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["words.rates"]: (
         "word_count_analysis",
     ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['files']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["powers.files"]: (
         "powers_coding",
     ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['evaluate']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["powers.evaluate"]: (
         "powers_reliability",
     ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['reselect']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["powers.reselect"]: (
         "reselected_powers_reliability",
     ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['analyze']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["powers.analyze"]: (
         "powers_coding_analysis",
     ),
-    f"expected_outputs/{POWERS_MODULE_DIR}/{POWERS_OUTPUT_DIRS['rates']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["powers.rates"]: (
         "powers_coding_analysis",
     ),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['file']}": ("target_vocab",),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['check']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["vocab.file"]: ("target_vocab",),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["vocab.check"]: (
         "target_vocab",
     ),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['analyze']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["vocab.analyze"]: (
         "target_vocab",
     ),
-    f"expected_outputs/{VOCAB_MODULE_DIR}/{VOCAB_OUTPUT_DIRS['rates']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["vocab.rates"]: (
         "target_vocab",
     ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['files']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.files"]: (
         "coding_templates",
     ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['evaluate']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.evaluate"]: (
         "turns_reliability",
     ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['reselect']}": (
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.reselect"]: (
         "reselected_turns_reliability",
     ),
-    f"expected_outputs/{TURNS_MODULE_DIR}/{TURNS_OUTPUT_DIRS['analyze']}": (),
+    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.analyze"]: (),
 }
 
 EXPECTED_OUTPUT_LINK_RE = re.compile(r"`(expected_outputs/[^`]+)`")

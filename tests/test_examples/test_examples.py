@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -9,6 +10,7 @@ import yaml
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
 from diaad.examples import generate as generate_module
+from diaad.examples import render_docs as render_docs_module
 from diaad.examples.generate import generate_example_files
 from diaad.examples.render_docs import render_example_docs
 from psair.examples import long_path
@@ -670,6 +672,35 @@ def test_all_non_examples_commands_have_example_plans():
     assert unsupported == []
 
 
+def test_render_doc_builder_registry_matches_example_plans():
+    commands = [
+        command
+        for command, _builder in render_docs_module.COMMAND_DOC_BUILDERS
+    ]
+
+    assert len(commands) == len(set(commands))
+    assert set(commands) == set(generate_module.EXAMPLE_COMMAND_PLANS)
+
+
+def test_expected_output_root_registry_covers_full_dataset_commands():
+    command_ids_with_full_dataset_atlas = {
+        plan.command_id
+        for command, plan in generate_module.EXAMPLE_COMMAND_PLANS.items()
+        if command != "transcripts chats"
+    }
+
+    assert set(generate_module.EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID) == (
+        command_ids_with_full_dataset_atlas
+    )
+
+
+def test_render_docs_source_uses_expected_output_helpers():
+    source = Path(render_docs_module.__file__).read_text(encoding="utf-8")
+
+    assert "`expected_outputs/" not in source
+    assert "_output_ref(" in source
+
+
 def test_example_command_identity_helpers():
     assert generate_module.canonical_command_to_command_id("cus files") == "cus.files"
     assert generate_module.command_id_to_slug("cus.files") == "cus_files"
@@ -682,6 +713,10 @@ def test_example_command_identity_helpers():
         "decode.md",
     )
     assert generate_module.EXAMPLE_COMMAND_PLANS["cus files"].command_id == "cus.files"
+    assert generate_module.expected_output_path_for_command(
+        "cus files",
+        "cu_coding.xlsx",
+    ) == "expected_outputs/cus_module/cus_files/cu_coding.xlsx"
 
 
 def test_preview_artifact_maps_atlas_path_to_runtime_and_package_paths():

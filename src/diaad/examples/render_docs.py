@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -7,27 +8,19 @@ import pandas as pd
 import yaml
 
 from diaad.examples.generate import (
-    BLINDING_MODULE_DIR,
-    BLINDING_OUTPUT_DIRS,
-    CU_OUTPUT_DIRS,
-    CUS_MODULE_DIR,
     EXPECTED_WORKBOOK,
     EXAMPLES_COMMAND_ID,
     FULL_DATASET_WORKFLOW_ID,
-    POWERS_MODULE_DIR,
-    POWERS_OUTPUT_DIRS,
+    EXAMPLE_COMMAND_PLANS,
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATE_SUBSET_INPUT_DIRS,
     TEMPLATES_MODULE_DIR,
-    TRANSCRIPTS_MODULE_DIR,
-    TURNS_MODULE_DIR,
-    TURNS_OUTPUT_DIRS,
-    VOCAB_MODULE_DIR,
-    VOCAB_OUTPUT_DIRS,
-    WORD_OUTPUT_DIRS,
-    WORDS_MODULE_DIR,
     canonical_command_to_command_id,
     command_id_parts,
+    expected_output_dir_for_command,
+    expected_output_file_for_command,
+    expected_output_path,
+    expected_output_path_for_command,
     generate_example_files,
     render_runtime_preview_paths,
     rendered_doc_path_for_command,
@@ -124,6 +117,33 @@ def _write_command_doc(command: str, text: str) -> Path:
     return example_assets.write_rendered_doc(
         *rendered_doc_path_for_command(command),
         text=_with_command_front_matter(command, text),
+    )
+
+
+def _output_dir(project_dir: Path, command: str) -> Path:
+    return expected_output_dir_for_command(project_dir, command)
+
+
+def _output_file(project_dir: Path, command: str, *parts: str) -> Path:
+    return expected_output_file_for_command(project_dir, command, *parts)
+
+
+def _output_ref(command: str, *parts: str) -> str:
+    return f"`{expected_output_path_for_command(command, *parts)}`"
+
+
+def _atlas_ref(module_dir: str, output_dir: str, *parts: str) -> str:
+    return f"`{expected_output_path(module_dir, output_dir, *parts)}`"
+
+
+def _atlas_file(
+    project_dir: Path,
+    module_dir: str,
+    output_dir: str,
+    *parts: str,
+) -> Path:
+    return project_dir.joinpath(
+        *expected_output_path(module_dir, output_dir, *parts).split("/")
     )
 
 
@@ -627,12 +647,7 @@ def _blinding_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _blinding_encode_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = (
-        project_dir
-        / "expected_outputs"
-        / BLINDING_MODULE_DIR
-        / BLINDING_OUTPUT_DIRS["encode"]
-    )
+    output_dir = _output_dir(project_dir, "blinding encode")
     input_path = project_dir / "input" / "powers_coding" / "powers_coding.xlsx"
 
     return f"""# Blinding Encode Example
@@ -663,15 +678,15 @@ This example demonstrates how `diaad blinding encode` blinds `sample_id` in a st
 
 ## Output Preview
 
-`expected_outputs/blinding_module/blinding_encode/powers_coding_blinded.xlsx`
+{_output_ref("blinding encode", "powers_coding_blinded.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "powers_coding_blinded.xlsx"))}
 
-`expected_outputs/blinding_module/blinding_encode/blind_codebook.xlsx`
+{_output_ref("blinding encode", "blind_codebook.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "blind_codebook.xlsx"))}
 
-`expected_outputs/blinding_module/blinding_encode/powers_coding_blinding_diagnostics.xlsx`
+{_output_ref("blinding encode", "powers_coding_blinding_diagnostics.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "powers_coding_blinding_diagnostics.xlsx"))}
 
@@ -682,12 +697,7 @@ The input is the synthetic POWERS coding workbook from the generated example pro
 
 
 def _blinding_decode_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = (
-        project_dir
-        / "expected_outputs"
-        / BLINDING_MODULE_DIR
-        / BLINDING_OUTPUT_DIRS["decode"]
-    )
+    output_dir = _output_dir(project_dir, "blinding decode")
     input_path = project_dir / "input" / "cu_coding" / "cu_coding.xlsx"
     codebook_path = project_dir / "input" / "cu_coding" / "cu_blind_codebook.xlsx"
 
@@ -719,7 +729,7 @@ This example demonstrates how `diaad blinding decode` restores blinded identifie
 
 ## Output Preview
 
-`expected_outputs/blinding_module/blinding_decode/cu_coding_decoded.xlsx`
+{_output_ref("blinding decode", "cu_coding_decoded.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_coding_decoded.xlsx"))}
 
@@ -731,12 +741,10 @@ The input is the synthetic CU coding workbook and codebook created by the CU exa
 
 def _tabularize_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     chat = specs["chat_files"]["chat_files"][0]
-    workbook = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / "transcripts_tabularize"
-        / _transcript_table_filename(specs)
+    workbook = _output_file(
+        project_dir,
+        "transcripts tabularize",
+        _transcript_table_filename(specs),
     )
 
     project_snippet = _project_config_snippet(
@@ -769,7 +777,7 @@ This example demonstrates how `diaad transcripts tabularize` converts tiny synth
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_tabularize/{_transcript_table_filename(specs)}`
+{_output_ref("transcripts tabularize", _transcript_table_filename(specs))}
 
 {workbook_sheet_tables(workbook, ["samples", "utterances"])}
 
@@ -822,12 +830,10 @@ The synthetic filenames include the source workbook and sample identifiers so ex
 
 
 def _select_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    workbook = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / "transcripts_select"
-        / "transcription_reliability_samples.xlsx"
+    workbook = _output_file(
+        project_dir,
+        "transcripts select",
+        "transcription_reliability_samples.xlsx",
     )
     project_snippet = _project_config_snippet(
         specs,
@@ -859,7 +865,7 @@ The command uses the synthetic CHAT files in `diaad_data/input/chat/`.
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_select/transcription_reliability_samples.xlsx`
+{_output_ref("transcripts select", "transcription_reliability_samples.xlsx")}
 
 {workbook_sheet_tables(workbook, ["reliability_selection", "all_transcripts"])}
 
@@ -870,19 +876,15 @@ The blank reliability `.cha` files contain CHAT headers only. They are generated
 
 
 def _evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    workbook = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / "transcripts_evaluate"
-        / "transcription_reliability_evaluation.xlsx"
+    workbook = _output_file(
+        project_dir,
+        "transcripts evaluate",
+        "transcription_reliability_evaluation.xlsx",
     )
-    report = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / "transcripts_evaluate"
-        / "transcription_reliability_report.txt"
+    report = _output_file(
+        project_dir,
+        "transcripts evaluate",
+        "transcription_reliability_report.txt",
     )
     reliability_chat = specs["reliability_chat_files"]["reliability_chat_files"][0]
     chat_excerpt = "\n".join(reliability_chat["content"].splitlines()[:12])
@@ -918,11 +920,11 @@ This example demonstrates how `diaad transcripts evaluate` compares original CHA
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_evaluation.xlsx`
+{_output_ref("transcripts evaluate", "transcription_reliability_evaluation.xlsx")}
 
 {markdown_table(pd.read_excel(workbook))}
 
-`expected_outputs/transcripts_module/transcripts_evaluate/transcription_reliability_report.txt`
+{_output_ref("transcripts evaluate", "transcription_reliability_report.txt")}
 
 {fenced(report_excerpt, "text")}
 
@@ -933,13 +935,16 @@ Reliability transcripts are believable synthetic variants of the original exampl
 
 
 def _reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    workbook = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / "transcripts_reselect"
-        / "reselected_transcription_reliability"
-        / "reselected_transcription_reliability_samples.xlsx"
+    workbook = _output_file(
+        project_dir,
+        "transcripts reselect",
+        "reselected_transcription_reliability",
+        "reselected_transcription_reliability_samples.xlsx",
+    )
+    workbook_ref = _output_ref(
+        "transcripts reselect",
+        "reselected_transcription_reliability",
+        "reselected_transcription_reliability_samples.xlsx",
     )
 
     return f"""# Transcription Reliability Reselection Example
@@ -966,7 +971,7 @@ The reselection command reads the prior selection workbook:
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
+{workbook_ref}
 
 {workbook_sheet_tables(workbook, ["reselected_reliability"])}
 
@@ -998,12 +1003,7 @@ def _template_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _utterance_templates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    template_dir = (
-        project_dir
-        / "expected_outputs"
-        / TEMPLATES_MODULE_DIR
-        / TEMPLATE_OUTPUT_DIRS["utterances"]
-    )
+    template_dir = _output_dir(project_dir, "templates utterances")
     primary = template_dir / "utterance_coding_template.xlsx"
     reliability = template_dir / "utterance_reliability_template.xlsx"
     codebook = template_dir / "utterance_template_codebook.xlsx"
@@ -1034,15 +1034,15 @@ The command uses `{_transcript_table_input_path(specs)}`. The preview below is f
 
 ## Output Preview
 
-`expected_outputs/templates_module/templates_utterances/utterance_coding_template.xlsx`
+{_output_ref("templates utterances", "utterance_coding_template.xlsx")}
 
 {all_workbook_sheet_tables(primary)}
 
-`expected_outputs/templates_module/templates_utterances/utterance_reliability_template.xlsx`
+{_output_ref("templates utterances", "utterance_reliability_template.xlsx")}
 
 {all_workbook_sheet_tables(reliability)}
 
-`expected_outputs/templates_module/templates_utterances/utterance_template_codebook.xlsx`
+{_output_ref("templates utterances", "utterance_template_codebook.xlsx")}
 
 {all_workbook_sheet_tables(codebook)}
 
@@ -1053,12 +1053,7 @@ The primary and reliability workbooks are synthetic blank coding materials. The 
 
 
 def _sample_templates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    template_dir = (
-        project_dir
-        / "expected_outputs"
-        / TEMPLATES_MODULE_DIR
-        / TEMPLATE_OUTPUT_DIRS["samples"]
-    )
+    template_dir = _output_dir(project_dir, "templates samples")
     primary = template_dir / "sample_coding_template.xlsx"
     reliability = template_dir / "sample_reliability_template.xlsx"
     codebook = template_dir / "sample_template_codebook.xlsx"
@@ -1085,15 +1080,15 @@ This example demonstrates how `diaad templates samples` creates blank sample-lev
 
 ## Output Preview
 
-`expected_outputs/templates_module/templates_samples/sample_coding_template.xlsx`
+{_output_ref("templates samples", "sample_coding_template.xlsx")}
 
 {all_workbook_sheet_tables(primary)}
 
-`expected_outputs/templates_module/templates_samples/sample_reliability_template.xlsx`
+{_output_ref("templates samples", "sample_reliability_template.xlsx")}
 
 {all_workbook_sheet_tables(reliability)}
 
-`expected_outputs/templates_module/templates_samples/sample_template_codebook.xlsx`
+{_output_ref("templates samples", "sample_template_codebook.xlsx")}
 
 {all_workbook_sheet_tables(codebook)}
 
@@ -1104,13 +1099,7 @@ The example uses two bins and two coders so the assignment and reliability-subse
 
 
 def _time_templates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    workbook = (
-        project_dir
-        / "expected_outputs"
-        / TEMPLATES_MODULE_DIR
-        / TEMPLATE_OUTPUT_DIRS["times"]
-        / "speaking_times.xlsx"
-    )
+    workbook = _output_file(project_dir, "templates times", "speaking_times.xlsx")
 
     return f"""# Speaking-Time Template Example
 
@@ -1130,7 +1119,7 @@ This example demonstrates how `diaad templates times` creates a blank sample-lev
 
 ## Output Preview
 
-`expected_outputs/templates_module/templates_times/speaking_times.xlsx`
+{_output_ref("templates times", "speaking_times.xlsx")}
 
 {all_workbook_sheet_tables(workbook)}
 
@@ -1188,22 +1177,21 @@ def _sample_subset_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _sample_subset_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    subset_dir = (
-        project_dir
-        / "expected_outputs"
-        / TEMPLATES_MODULE_DIR
-        / TEMPLATE_OUTPUT_DIRS["subset"]
-    )
-    resubset_dir = (
-        project_dir
-        / "expected_outputs"
-        / TEMPLATES_MODULE_DIR
-        / TEMPLATE_OUTPUT_DIRS["resubset"]
-    )
     subset_input = _sample_subset_input_path(project_dir, specs, "subset")
     resubset_input = _sample_subset_input_path(project_dir, specs, "resubset")
-    subset_output = subset_dir / "sample_subset.xlsx"
-    resubset_output = resubset_dir / "sample_subset.xlsx"
+    subset_output = _output_file(project_dir, "templates subset", "sample_subset.xlsx")
+    resubset_output = _atlas_file(
+        project_dir,
+        TEMPLATES_MODULE_DIR,
+        TEMPLATE_OUTPUT_DIRS["resubset"],
+        "sample_subset.xlsx",
+    )
+    subset_output_ref = _output_ref("templates subset", "sample_subset.xlsx")
+    resubset_output_ref = _atlas_ref(
+        TEMPLATES_MODULE_DIR,
+        TEMPLATE_OUTPUT_DIRS["resubset"],
+        "sample_subset.xlsx",
+    )
 
     return f"""# Sample Subset Example
 
@@ -1237,7 +1225,7 @@ The command has one user-facing command name. If the input `samples` sheet has o
 
 ### Output Preview
 
-`expected_outputs/templates_module/templates_subset/sample_subset.xlsx`
+{subset_output_ref}
 
 {all_workbook_sheet_tables(subset_output)}
 
@@ -1263,7 +1251,7 @@ The command has one user-facing command name. If the input `samples` sheet has o
 
 ### Output Preview
 
-`expected_outputs/templates_module/templates_resubset/sample_subset.xlsx`
+{resubset_output_ref}
 
 {all_workbook_sheet_tables(resubset_output)}
 
@@ -1295,7 +1283,7 @@ def _cu_advanced_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _cu_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["files"]
+    output_dir = _output_dir(project_dir, "cus files")
 
     return f"""# CU Coding File Example
 
@@ -1323,15 +1311,15 @@ The command uses `{_transcript_table_input_path(specs)}`.
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_files/cu_coding.xlsx`
+{_output_ref("cus files", "cu_coding.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_coding.xlsx"))}
 
-`expected_outputs/cus_module/cus_files/cu_reliability_coding.xlsx`
+{_output_ref("cus files", "cu_reliability_coding.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_reliability_coding.xlsx"))}
 
-`expected_outputs/cus_module/cus_files/cu_blind_codebook.xlsx`
+{_output_ref("cus files", "cu_blind_codebook.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_blind_codebook.xlsx"))}
 
@@ -1343,7 +1331,7 @@ The generated local example fills the blank CU fields with synthetic coding valu
 
 def _cu_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     del specs
-    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["evaluate"]
+    output_dir = _output_dir(project_dir, "cus evaluate")
     report = output_dir / "cu_reliability_coding_report.txt"
     report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:10])
     config_snippet = "input_dir: diaad_data/input\noutput_dir: diaad_data/output"
@@ -1370,15 +1358,15 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx` and `diaad_data/in
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_by_utterance.xlsx`
+{_output_ref("cus evaluate", "cu_reliability_coding_by_utterance.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_utterance.xlsx"))}
 
-`expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_by_sample.xlsx`
+{_output_ref("cus evaluate", "cu_reliability_coding_by_sample.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_reliability_coding_by_sample.xlsx"))}
 
-`expected_outputs/cus_module/cus_evaluate/cu_reliability_coding_report.txt`
+{_output_ref("cus evaluate", "cu_reliability_coding_report.txt")}
 
 {fenced(report_excerpt, "text")}
 
@@ -1389,7 +1377,7 @@ The reliability coding values are synthetic and intentionally small. They are me
 
 
 def _cu_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["reselect"]
+    output_dir = _output_dir(project_dir, "cus reselect")
 
     return f"""# CU Reliability Reselection Example
 
@@ -1413,7 +1401,7 @@ The command reads prior CU coding and reliability workbooks from `diaad_data/inp
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_reselect/reselected_cu_reliability_coding.xlsx`
+{_output_ref("cus reselect", "reselected_cu_reliability_coding.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "reselected_cu_reliability_coding.xlsx"))}
 
@@ -1424,7 +1412,7 @@ The synthetic example has only three samples, so the reselected workbook is inte
 
 
 def _cu_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["analyze"]
+    output_dir = _output_dir(project_dir, "cus analyze")
 
     return f"""# CU Coding Analysis Example
 
@@ -1452,15 +1440,15 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codeboo
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_analyze/cu_coding_by_utterance.xlsx`
+{_output_ref("cus analyze", "cu_coding_by_utterance.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_coding_by_utterance.xlsx"))}
 
-`expected_outputs/cus_module/cus_analyze/cu_coding_by_sample_long.xlsx`
+{_output_ref("cus analyze", "cu_coding_by_sample_long.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample_long.xlsx"))}
 
-`expected_outputs/cus_module/cus_analyze/cu_coding_by_sample.xlsx`
+{_output_ref("cus analyze", "cu_coding_by_sample.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_coding_by_sample.xlsx"))}
 
@@ -1471,7 +1459,7 @@ The preview uses synthetic filled coding values generated from the packaged exam
 
 
 def _cu_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / CUS_MODULE_DIR / CU_OUTPUT_DIRS["rates"]
+    output_dir = _output_dir(project_dir, "cus rates")
 
     return f"""# CU Rate Calculation Example
 
@@ -1499,7 +1487,7 @@ The command reads `diaad_data/input/cu_coding_analysis/cu_coding_by_sample_long.
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_rates/cu_coding_rates.xlsx`
+{_output_ref("cus rates", "cu_coding_rates.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "cu_coding_rates.xlsx"))}
 
@@ -1538,7 +1526,7 @@ def _word_advanced_snippet(specs: dict[str, dict[str, Any]], keys: list[str] | N
 
 
 def _word_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["files"]
+    output_dir = _output_dir(project_dir, "words files")
 
     return f"""# Word Count File Example
 
@@ -1566,15 +1554,15 @@ The command uses `{_transcript_table_input_path(specs)}`.
 
 ## Output Preview
 
-`expected_outputs/words_module/words_files/word_counting.xlsx`
+{_output_ref("words files", "word_counting.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_counting.xlsx"))}
 
-`expected_outputs/words_module/words_files/word_count_reliability.xlsx`
+{_output_ref("words files", "word_count_reliability.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_count_reliability.xlsx"))}
 
-`expected_outputs/words_module/words_files/word_count_blind_codebook.xlsx`
+{_output_ref("words files", "word_count_blind_codebook.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_count_blind_codebook.xlsx"))}
 
@@ -1585,7 +1573,7 @@ The generated local example fills synthetic word counts into the blank coding wo
 
 
 def _word_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["evaluate"]
+    output_dir = _output_dir(project_dir, "words evaluate")
     report = output_dir / "word_count_reliability_report.txt"
     report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:10])
 
@@ -1615,11 +1603,11 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx` and `diaad_d
 
 ## Output Preview
 
-`expected_outputs/words_module/words_evaluate/word_count_reliability_results.xlsx`
+{_output_ref("words evaluate", "word_count_reliability_results.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_count_reliability_results.xlsx"))}
 
-`expected_outputs/words_module/words_evaluate/word_count_reliability_report.txt`
+{_output_ref("words evaluate", "word_count_reliability_report.txt")}
 
 {fenced(report_excerpt, "text")}
 
@@ -1630,7 +1618,7 @@ Reliability word counts are synthetic, with small deterministic differences from
 
 
 def _word_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["reselect"]
+    output_dir = _output_dir(project_dir, "words reselect")
 
     return f"""# Word Count Reliability Reselection Example
 
@@ -1654,7 +1642,7 @@ The command reads prior word-count coding and reliability workbooks from `diaad_
 
 ## Output Preview
 
-`expected_outputs/words_module/words_reselect/reselected_word_count_reliability.xlsx`
+{_output_ref("words reselect", "reselected_word_count_reliability.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "reselected_word_count_reliability.xlsx"))}
 
@@ -1665,7 +1653,7 @@ The synthetic example has only three samples, so the reselected workbook is inte
 
 
 def _word_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["analyze"]
+    output_dir = _output_dir(project_dir, "words analyze")
 
     return f"""# Word Count Analysis Example
 
@@ -1693,11 +1681,11 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind c
 
 ## Output Preview
 
-`expected_outputs/words_module/words_analyze/word_counting_by_utterance.xlsx`
+{_output_ref("words analyze", "word_counting_by_utterance.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_counting_by_utterance.xlsx"))}
 
-`expected_outputs/words_module/words_analyze/word_counting_by_sample.xlsx`
+{_output_ref("words analyze", "word_counting_by_sample.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_counting_by_sample.xlsx"))}
 
@@ -1708,7 +1696,7 @@ The preview uses synthetic filled word counts generated from the packaged exampl
 
 
 def _word_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / WORDS_MODULE_DIR / WORD_OUTPUT_DIRS["rates"]
+    output_dir = _output_dir(project_dir, "words rates")
 
     return f"""# Word Count Rate Calculation Example
 
@@ -1736,7 +1724,7 @@ The command reads `diaad_data/input/word_count_analysis/word_counting_by_sample.
 
 ## Output Preview
 
-`expected_outputs/words_module/words_rates/word_counting_rates.xlsx`
+{_output_ref("words rates", "word_counting_rates.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "word_counting_rates.xlsx"))}
 
@@ -1762,7 +1750,7 @@ def _powers_config_snippet(specs: dict[str, dict[str, Any]]) -> str:
 
 
 def _powers_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["files"]
+    output_dir = _output_dir(project_dir, "powers files")
 
     return f"""# POWERS Coding File Example
 
@@ -1786,15 +1774,15 @@ The command uses `{_transcript_table_input_path(specs)}`.
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_files/powers_coding.xlsx`
+{_output_ref("powers files", "powers_coding.xlsx")}
 
 {all_workbook_sheet_tables(output_dir / "powers_coding.xlsx")}
 
-`expected_outputs/powers_module/powers_files/powers_reliability_coding.xlsx`
+{_output_ref("powers files", "powers_reliability_coding.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "powers_reliability_coding.xlsx"))}
 
-`expected_outputs/powers_module/powers_files/powers_blind_codebook.xlsx`
+{_output_ref("powers files", "powers_blind_codebook.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "powers_blind_codebook.xlsx"))}
 
@@ -1805,7 +1793,7 @@ The generated local example fills synthetic POWERS values into the blank coding 
 
 
 def _powers_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["evaluate"]
+    output_dir = _output_dir(project_dir, "powers evaluate")
     report = output_dir / "powers_reliability_report.txt"
     report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:12])
 
@@ -1831,11 +1819,11 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx` and `diaad
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_evaluate/powers_reliability_results.xlsx`
+{_output_ref("powers evaluate", "powers_reliability_results.xlsx")}
 
 {all_workbook_sheet_tables(output_dir / "powers_reliability_results.xlsx")}
 
-`expected_outputs/powers_module/powers_evaluate/powers_reliability_report.txt`
+{_output_ref("powers evaluate", "powers_reliability_report.txt")}
 
 {fenced(report_excerpt, "text")}
 
@@ -1846,7 +1834,7 @@ Reliability POWERS values are synthetic, with small deterministic differences fr
 
 
 def _powers_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["reselect"]
+    output_dir = _output_dir(project_dir, "powers reselect")
 
     return f"""# POWERS Reliability Reselection Example
 
@@ -1870,7 +1858,7 @@ The command reads prior POWERS coding and reliability workbooks from `diaad_data
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_reselect/reselected_powers_reliability_coding.xlsx`
+{_output_ref("powers reselect", "reselected_powers_reliability_coding.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "reselected_powers_reliability_coding.xlsx"))}
 
@@ -1881,7 +1869,7 @@ The synthetic example has only three samples, so the reselected workbook is inte
 
 
 def _powers_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["analyze"]
+    output_dir = _output_dir(project_dir, "powers analyze")
 
     return f"""# POWERS Coding Analysis Example
 
@@ -1905,7 +1893,7 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx`.
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_analyze/powers_analysis.xlsx`
+{_output_ref("powers analyze", "powers_analysis.xlsx")}
 
 {all_workbook_sheet_tables(output_dir / "powers_analysis.xlsx")}
 
@@ -1916,7 +1904,7 @@ The preview uses synthetic filled POWERS values generated from the packaged exam
 
 
 def _powers_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / POWERS_MODULE_DIR / POWERS_OUTPUT_DIRS["rates"]
+    output_dir = _output_dir(project_dir, "powers rates")
 
     return f"""# POWERS Rate Calculation Example
 
@@ -1944,7 +1932,7 @@ The command reads `diaad_data/input/powers_coding_analysis/powers_analysis.xlsx`
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_rates/powers_coding_rates.xlsx`
+{_output_ref("powers rates", "powers_coding_rates.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "powers_coding_rates.xlsx"))}
 
@@ -1991,7 +1979,7 @@ def _vocab_advanced_snippet() -> str:
 
 
 def _vocab_file_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["file"]
+    output_dir = _output_dir(project_dir, "vocab file")
     template_text = (output_dir / "target_vocabulary_resource_template.json").read_text(
         encoding="utf-8"
     )
@@ -2014,7 +2002,7 @@ This example demonstrates how `diaad vocab file` creates a blank JSON template f
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_file/target_vocabulary_resource_template.json`
+{_output_ref("vocab file", "target_vocabulary_resource_template.json")}
 
 {fenced(template_text[:1200], "json")}
 
@@ -2025,7 +2013,7 @@ This example demonstrates how `diaad vocab file` creates a blank JSON template f
 
 
 def _vocab_check_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["check"]
+    output_dir = _output_dir(project_dir, "vocab check")
     report = (output_dir / "target_vocab_resource_check.txt").read_text(encoding="utf-8")
 
     return f"""# Target Vocabulary Resource Check Example
@@ -2056,7 +2044,7 @@ This example demonstrates how `diaad vocab check` validates the active built-in 
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_check/target_vocab_resource_check.txt`
+{_output_ref("vocab check", "target_vocab_resource_check.txt")}
 
 {fenced(report, "text")}
 
@@ -2067,7 +2055,7 @@ This example demonstrates how `diaad vocab check` validates the active built-in 
 
 
 def _vocab_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["analyze"]
+    output_dir = _output_dir(project_dir, "vocab analyze")
     workbook = output_dir / "target_vocab_data_260101_0000.xlsx"
     input_path = project_dir / "input" / "target_vocab" / "unblind_utterance_data.xlsx"
 
@@ -2103,7 +2091,7 @@ This example demonstrates how `diaad vocab analyze` calculates target-vocabulary
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_analyze/target_vocab_data_260101_0000.xlsx`
+{_output_ref("vocab analyze", "target_vocab_data_260101_0000.xlsx")}
 
 {workbook_sheet_tables(workbook, ["summary", "details"])}
 
@@ -2114,7 +2102,7 @@ This example demonstrates how `diaad vocab analyze` calculates target-vocabulary
 
 
 def _vocab_rates_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / VOCAB_MODULE_DIR / VOCAB_OUTPUT_DIRS["rates"]
+    output_dir = _output_dir(project_dir, "vocab rates")
 
     return f"""# Target Vocabulary Rate Calculation Example
 
@@ -2138,7 +2126,7 @@ The command reads `diaad_data/input/target_vocab_analysis/target_vocab_data_YYMM
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_rates/target_vocab_rates.xlsx`
+{_output_ref("vocab rates", "target_vocab_rates.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "target_vocab_rates.xlsx"))}
 
@@ -2153,7 +2141,7 @@ def _turns_rows_table(specs: dict[str, dict[str, Any]], key: str) -> str:
 
 
 def _turns_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["files"]
+    output_dir = _output_dir(project_dir, "turns files")
 
     return f"""# Conversation Turns File Example
 
@@ -2181,11 +2169,11 @@ The command uses `{_transcript_table_input_path(specs)}` to create one row per s
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_files/conversation_turns_template.xlsx`
+{_output_ref("turns files", "conversation_turns_template.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "conversation_turns_template.xlsx"))}
 
-`expected_outputs/turns_module/turns_files/conversation_turns_reliability_template.xlsx`
+{_output_ref("turns files", "conversation_turns_reliability_template.xlsx")}
 
 {markdown_table(pd.read_excel(output_dir / "conversation_turns_reliability_template.xlsx"))}
 
@@ -2196,7 +2184,7 @@ The generated local example fills separate synthetic turn strings into conversat
 
 
 def _turns_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["evaluate"]
+    output_dir = _output_dir(project_dir, "turns evaluate")
     report = output_dir / "conversation_turns_reliability_report.txt"
     report_excerpt = "\n".join(report.read_text(encoding="utf-8").splitlines()[:14])
 
@@ -2228,11 +2216,11 @@ This example demonstrates how `diaad turns evaluate` compares primary and reliab
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_evaluate/conversation_turns_reliability_results.xlsx`
+{_output_ref("turns evaluate", "conversation_turns_reliability_results.xlsx")}
 
 {workbook_sheet_tables(output_dir / "conversation_turns_reliability_results.xlsx", ["counts", "sequences", "samples"])}
 
-`expected_outputs/turns_module/turns_evaluate/conversation_turns_reliability_report.txt`
+{_output_ref("turns evaluate", "conversation_turns_reliability_report.txt")}
 
 {fenced(report_excerpt, "text")}
 
@@ -2243,7 +2231,7 @@ The synthetic turn strings use four speakers (`0`, `1`, `2`, and `3`) and includ
 
 
 def _turns_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["reselect"]
+    output_dir = _output_dir(project_dir, "turns reselect")
     workbook = next(output_dir.glob("*.xlsx"))
 
     return f"""# Conversation Turns Reliability Reselection Example
@@ -2268,7 +2256,7 @@ The primary turns workbook has two synthetic sample IDs. The prior reliability w
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_reselect/{workbook.name}`
+{_output_ref("turns reselect", workbook.name)}
 
 {markdown_table(pd.read_excel(workbook))}
 
@@ -2279,7 +2267,7 @@ Reselected rows keep the session and bin structure while clearing the `turns` ce
 
 
 def _turns_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["analyze"]
+    output_dir = _output_dir(project_dir, "turns analyze")
     workbook = output_dir / "conversation_turns_template_analysis.xlsx"
 
     return f"""# Conversation Turns Analysis Example
@@ -2306,7 +2294,7 @@ This example demonstrates how `diaad turns analyze` summarizes digital conversat
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_analyze/conversation_turns_template_analysis.xlsx`
+{_output_ref("turns analyze", "conversation_turns_template_analysis.xlsx")}
 
 {all_workbook_sheet_tables(workbook)}
 
@@ -2316,83 +2304,89 @@ The strings are deliberately tiny but include two sessions, two bins, four speak
 """
 
 
+DocBuilder = Callable[[Path, dict[str, dict[str, Any]]], str]
+
+
+COMMAND_DOC_BUILDERS: tuple[tuple[str, DocBuilder], ...] = (
+    ("blinding encode", _blinding_encode_doc),
+    ("blinding decode", _blinding_decode_doc),
+    ("transcripts tabularize", _tabularize_doc),
+    ("transcripts chats", _chats_doc),
+    ("transcripts select", _select_doc),
+    ("transcripts evaluate", _evaluate_doc),
+    ("transcripts reselect", _reselect_doc),
+    ("templates utterances", _utterance_templates_doc),
+    ("templates samples", _sample_templates_doc),
+    ("templates times", _time_templates_doc),
+    ("templates subset", _sample_subset_doc),
+    ("cus files", _cu_files_doc),
+    ("cus evaluate", _cu_evaluate_doc),
+    ("cus reselect", _cu_reselect_doc),
+    ("cus analyze", _cu_analyze_doc),
+    ("cus rates", _cu_rates_doc),
+    ("words files", _word_files_doc),
+    ("words evaluate", _word_evaluate_doc),
+    ("words reselect", _word_reselect_doc),
+    ("words analyze", _word_analyze_doc),
+    ("words rates", _word_rates_doc),
+    ("powers files", _powers_files_doc),
+    ("powers evaluate", _powers_evaluate_doc),
+    ("powers reselect", _powers_reselect_doc),
+    ("powers analyze", _powers_analyze_doc),
+    ("powers rates", _powers_rates_doc),
+    ("vocab file", _vocab_file_doc),
+    ("vocab check", _vocab_check_doc),
+    ("vocab analyze", _vocab_analyze_doc),
+    ("vocab rates", _vocab_rates_doc),
+    ("turns files", _turns_files_doc),
+    ("turns evaluate", _turns_evaluate_doc),
+    ("turns reselect", _turns_reselect_doc),
+    ("turns analyze", _turns_analyze_doc),
+)
+
+
+def _render_command_doc_texts(
+    project_dir: Path,
+    specs: dict[str, dict[str, Any]],
+) -> list[tuple[str, str]]:
+    _validate_command_doc_builders()
+    return [
+        (command, builder(project_dir, specs))
+        for command, builder in COMMAND_DOC_BUILDERS
+    ]
+
+
+def _validate_command_doc_builders() -> None:
+    commands = [command for command, _builder in COMMAND_DOC_BUILDERS]
+    duplicates = sorted(
+        command
+        for command in set(commands)
+        if commands.count(command) > 1
+    )
+    missing = sorted(set(EXAMPLE_COMMAND_PLANS) - set(commands))
+    extra = sorted(set(commands) - set(EXAMPLE_COMMAND_PLANS))
+    if duplicates or missing or extra:
+        raise RuntimeError(
+            "Rendered Example I/O builders do not match example command plans: "
+            f"duplicates={duplicates}, missing={missing}, extra={extra}"
+        )
+
+
 def render_example_docs() -> list[Path]:
     """Create or update packaged example I/O markdown assets."""
     specs = _read_specs()
     with scratch_dir(Path.cwd()) as tmpdir:
         project_dir = generate_example_files(tmpdir / "synthetic_project", force=True)
-        blinding_encode_doc = _blinding_encode_doc(project_dir, specs)
-        blinding_decode_doc = _blinding_decode_doc(project_dir, specs)
-        tabularize_doc = _tabularize_doc(project_dir, specs)
-        chats_doc = _chats_doc(project_dir, specs)
-        select_doc = _select_doc(project_dir, specs)
-        evaluate_doc = _evaluate_doc(project_dir, specs)
-        reselect_doc = _reselect_doc(project_dir, specs)
-        utterance_templates_doc = _utterance_templates_doc(project_dir, specs)
-        sample_templates_doc = _sample_templates_doc(project_dir, specs)
-        time_templates_doc = _time_templates_doc(project_dir, specs)
-        sample_subset_doc = _sample_subset_doc(project_dir, specs)
-        cu_files_doc = _cu_files_doc(project_dir, specs)
-        cu_evaluate_doc = _cu_evaluate_doc(project_dir, specs)
-        cu_reselect_doc = _cu_reselect_doc(project_dir, specs)
-        cu_analyze_doc = _cu_analyze_doc(project_dir, specs)
-        cu_rates_doc = _cu_rates_doc(project_dir, specs)
-        word_files_doc = _word_files_doc(project_dir, specs)
-        word_evaluate_doc = _word_evaluate_doc(project_dir, specs)
-        word_reselect_doc = _word_reselect_doc(project_dir, specs)
-        word_analyze_doc = _word_analyze_doc(project_dir, specs)
-        word_rates_doc = _word_rates_doc(project_dir, specs)
-        powers_files_doc = _powers_files_doc(project_dir, specs)
-        powers_evaluate_doc = _powers_evaluate_doc(project_dir, specs)
-        powers_reselect_doc = _powers_reselect_doc(project_dir, specs)
-        powers_analyze_doc = _powers_analyze_doc(project_dir, specs)
-        powers_rates_doc = _powers_rates_doc(project_dir, specs)
-        vocab_file_doc = _vocab_file_doc(project_dir, specs)
-        vocab_check_doc = _vocab_check_doc(project_dir, specs)
-        vocab_analyze_doc = _vocab_analyze_doc(project_dir, specs)
-        vocab_rates_doc = _vocab_rates_doc(project_dir, specs)
-        turns_files_doc = _turns_files_doc(project_dir, specs)
-        turns_evaluate_doc = _turns_evaluate_doc(project_dir, specs)
-        turns_reselect_doc = _turns_reselect_doc(project_dir, specs)
-        turns_analyze_doc = _turns_analyze_doc(project_dir, specs)
+        command_docs = _render_command_doc_texts(project_dir, specs)
 
-    return [
+    written = [
         example_assets.write_rendered_doc(
             "01_overview.md",
             text=_with_overview_front_matter(_overview_doc()),
         ),
-        _write_command_doc("blinding encode", blinding_encode_doc),
-        _write_command_doc("blinding decode", blinding_decode_doc),
-        _write_command_doc("transcripts tabularize", tabularize_doc),
-        _write_command_doc("transcripts chats", chats_doc),
-        _write_command_doc("transcripts select", select_doc),
-        _write_command_doc("transcripts evaluate", evaluate_doc),
-        _write_command_doc("transcripts reselect", reselect_doc),
-        _write_command_doc("templates utterances", utterance_templates_doc),
-        _write_command_doc("templates samples", sample_templates_doc),
-        _write_command_doc("templates times", time_templates_doc),
-        _write_command_doc("templates subset", sample_subset_doc),
-        _write_command_doc("cus files", cu_files_doc),
-        _write_command_doc("cus evaluate", cu_evaluate_doc),
-        _write_command_doc("cus reselect", cu_reselect_doc),
-        _write_command_doc("cus analyze", cu_analyze_doc),
-        _write_command_doc("cus rates", cu_rates_doc),
-        _write_command_doc("words files", word_files_doc),
-        _write_command_doc("words evaluate", word_evaluate_doc),
-        _write_command_doc("words reselect", word_reselect_doc),
-        _write_command_doc("words analyze", word_analyze_doc),
-        _write_command_doc("words rates", word_rates_doc),
-        _write_command_doc("powers files", powers_files_doc),
-        _write_command_doc("powers evaluate", powers_evaluate_doc),
-        _write_command_doc("powers reselect", powers_reselect_doc),
-        _write_command_doc("powers analyze", powers_analyze_doc),
-        _write_command_doc("powers rates", powers_rates_doc),
-        _write_command_doc("vocab file", vocab_file_doc),
-        _write_command_doc("vocab check", vocab_check_doc),
-        _write_command_doc("vocab analyze", vocab_analyze_doc),
-        _write_command_doc("vocab rates", vocab_rates_doc),
-        _write_command_doc("turns files", turns_files_doc),
-        _write_command_doc("turns evaluate", turns_evaluate_doc),
-        _write_command_doc("turns reselect", turns_reselect_doc),
-        _write_command_doc("turns analyze", turns_analyze_doc),
     ]
+    written.extend(
+        _write_command_doc(command, text)
+        for command, text in command_docs
+    )
+    return written
