@@ -49,7 +49,7 @@ output_dir: diaad_data/output
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_file/target_vocabulary_resource_template.json`
+`diaad_data/output/diaad_YYMMDD_HHMM/target_vocab/target_vocabulary_resource_template.json`
 
 ```json
 {

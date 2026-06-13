@@ -56,7 +56,7 @@ The reselection command reads the prior selection workbook:
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_reselect/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/reselected_transcription_reliability/reselected_transcription_reliability_samples.xlsx`
 
 ### Sheet: reselected_reliability
 

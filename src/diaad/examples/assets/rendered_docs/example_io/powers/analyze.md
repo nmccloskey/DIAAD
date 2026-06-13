@@ -53,7 +53,7 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx`.
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_analyze/powers_analysis.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_coding_analysis/powers_analysis.xlsx`
 
 ### Sheet: Utterances
 

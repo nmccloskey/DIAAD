@@ -62,7 +62,7 @@ The command reads prior word-count coding and reliability workbooks from `diaad_
 
 ## Output Preview
 
-`expected_outputs/words_module/words_reselect/reselected_word_count_reliability.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/reselected_word_count_reliability/reselected_word_count_reliability.xlsx`
 
 | sample_id | utterance_id | speaker | utterance | comment | id | word_count | wc_comment |
 | --- | --- | --- | --- | --- | --- | --- | --- |

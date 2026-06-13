@@ -71,7 +71,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 ## Output Preview
 
-`expected_outputs/words_module/words_files/word_counting.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_counts/word_counting.xlsx`
 
 | sample_id | utterance_id | speaker | utterance | comment | id | word_count | wc_comment |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -84,7 +84,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 | 1 | U0007 | PAR | The day is quiet. |  | 1 | 4.0 |  |
 | 2 | U0001 | INV | What do you notice first? |  | 1 |  |  |
 
-`expected_outputs/words_module/words_files/word_count_reliability.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_counts/word_count_reliability.xlsx`
 
 | sample_id | utterance_id | speaker | utterance | comment | id | word_count | wc_comment |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -97,7 +97,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 | 1 | U0007 | PAR | The day is quiet. |  | 2 | 3.0 |  |
 | 3 | U0001 | INV | Tell me what is happening in the picnic picture. |  | 1 |  |  |
 
-`expected_outputs/words_module/words_files/word_count_blind_codebook.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_counts/word_count_blind_codebook.xlsx`
 
 | column | raw_value | blind_code |
 | --- | --- | --- |

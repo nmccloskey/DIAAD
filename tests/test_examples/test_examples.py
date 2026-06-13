@@ -8,6 +8,7 @@ import yaml
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
 from diaad.examples import generate as generate_module
+from diaad.examples import render_docs as render_docs_module
 from diaad.examples.generate import generate_example_files
 from diaad.examples.render_docs import render_example_docs
 from psair.examples import long_path
@@ -617,6 +618,23 @@ def test_example_command_identity_helpers():
     assert generate_module.EXAMPLE_COMMAND_PLANS["cus files"].command_id == "cus.files"
 
 
+def test_preview_artifact_maps_atlas_path_to_runtime_and_package_paths():
+    artifact = render_docs_module._preview_artifact_from_full_dataset_path(
+        "cus files",
+        "expected_outputs/cus_module/cus_files/cu_coding.xlsx",
+    )
+
+    assert artifact.command_id == "cus.files"
+    assert artifact.full_dataset_path == (
+        "expected_outputs/cus_module/cus_files/cu_coding.xlsx"
+    )
+    assert artifact.package_preview_path == "example_output/cu_coding/cu_coding.xlsx"
+    assert artifact.runtime_display_path == (
+        "diaad_data/output/diaad_YYMMDD_HHMM/cu_coding/cu_coding.xlsx"
+    )
+    assert artifact.preview_kind == "workbook"
+
+
 def test_render_example_docs():
     paths = render_example_docs()
 
@@ -680,6 +698,44 @@ def test_rendered_example_docs_have_composable_front_matter():
         assert metadata["view"] == "example_io"
         assert metadata["slot"] == "examples"
         assert metadata["title"]
+
+
+def test_rendered_command_docs_display_runtime_output_paths():
+    render_example_docs()
+    docs_root = get_example_io_docs_path()
+
+    overview_text = (docs_root / "01_overview.md").read_text(encoding="utf-8")
+    assert "expected_outputs/" in overview_text
+
+    spot_checks = {
+        "blinding/decode.md": (
+            "diaad_data/output/diaad_YYMMDD_HHMM/blinding/cu_coding_decoded.xlsx"
+        ),
+        "cus/files.md": (
+            "diaad_data/output/diaad_YYMMDD_HHMM/cu_coding/cu_coding.xlsx"
+        ),
+        "transcripts/tabularize.md": (
+            "diaad_data/output/diaad_YYMMDD_HHMM/transcript_tables/transcript_tables.xlsx"
+        ),
+        "transcripts/chats.md": (
+            "diaad_data/output/diaad_YYMMDD_HHMM/chat_files/"
+        ),
+        "turns/evaluate.md": (
+            "diaad_data/output/diaad_YYMMDD_HHMM/turns_reliability/"
+            "conversation_turns_reliability_results.xlsx"
+        ),
+    }
+
+    for command in generate_module.EXAMPLE_COMMAND_PLANS:
+        doc_path = docs_root.joinpath(
+            *generate_module.rendered_doc_path_for_command(command)
+        )
+        text = doc_path.read_text(encoding="utf-8")
+        assert "expected_outputs/" not in text, command
+
+    for relative_path, expected_display_path in spot_checks.items():
+        text = (docs_root / relative_path).read_text(encoding="utf-8")
+        assert expected_display_path in text
 
 
 def test_generate_synthetic_project_uses_custom_transcript_table_filename(

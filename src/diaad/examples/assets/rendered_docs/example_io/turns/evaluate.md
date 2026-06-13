@@ -81,7 +81,7 @@ metadata_fields:
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_evaluate/conversation_turns_reliability_results.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/turns_reliability/conversation_turns_reliability_results.xlsx`
 
 ### Sheet: counts
 
@@ -114,7 +114,7 @@ metadata_fields:
 | S001 | 93.75 | 0.75 | 0.9333333333333333 |
 | S002 | 0.0 | 10.0 | 0.0 |
 
-`expected_outputs/turns_module/turns_evaluate/conversation_turns_reliability_report.txt`
+`diaad_data/output/diaad_YYMMDD_HHMM/turns_reliability/conversation_turns_reliability_report.txt`
 
 ```text
 Digital Conversation Turns Reliability Report

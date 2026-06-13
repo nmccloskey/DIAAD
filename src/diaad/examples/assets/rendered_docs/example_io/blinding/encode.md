@@ -75,7 +75,7 @@ blind_columns:
 
 ## Output Preview
 
-`expected_outputs/blinding_module/blinding_encode/powers_coding_blinded.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/blinding/powers_coding_blinded.xlsx`
 
 | utterance_id | speaker | utterance | comment | coder_id | POWERS_comment | speech_units | turn_type | content_words | num_nouns | circumlocutions | sem_paras | phon_errs | neologisms | comments | lg_pauses | filled_pauses | collab_repair | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ blind_columns:
 | U0007 | PAR | The day is quiet. |  | 1 |  | 1 | T | 4 | 2 | 1 | 3 | 1 | 2 |  | 1 | 1 |  | 1 |
 | U0001 | INV | What do you notice first? |  | 1 |  | 2 | T | 4 | 2 | 2 | 4 | 2 | 3 |  | 2 | 2 |  | 3 |
 
-`expected_outputs/blinding_module/blinding_encode/blind_codebook.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/blinding/blind_codebook.xlsx`
 
 | column | raw_value | blind_code |
 | --- | --- | --- |
@@ -96,7 +96,7 @@ blind_columns:
 | sample_id | 3 | 2 |
 | sample_id | 2 | 3 |
 
-`expected_outputs/blinding_module/blinding_encode/powers_coding_blinding_diagnostics.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/blinding/powers_coding_blinding_diagnostics.xlsx`
 
 | sample_id | utterance_id | sample_id_blinded |
 | --- | --- | --- |

@@ -65,7 +65,7 @@ codebook_filename: ''
 
 ## Output Preview
 
-`expected_outputs/templates_module/templates_samples/sample_coding_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/sample_coding_template.xlsx`
 
 ### Sheet: coding_template
 
@@ -78,7 +78,7 @@ codebook_filename: ''
 | 3 | 1 | picnic | 1 |
 | 3 | 1 | picnic | 2 |
 
-`expected_outputs/templates_module/templates_samples/sample_reliability_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/sample_reliability_template.xlsx`
 
 ### Sheet: coding_template
 
@@ -89,7 +89,7 @@ codebook_filename: ''
 | 2 | 1 | picnic | 1 |
 | 2 | 1 | picnic | 2 |
 
-`expected_outputs/templates_module/templates_samples/sample_template_codebook.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/sample_template_codebook.xlsx`
 
 ### Sheet: Sheet1
 

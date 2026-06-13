@@ -112,7 +112,7 @@ target_vocabulary_resource_path: diaad_data/input/target_vocab/resources/picnic_
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_analyze/target_vocab_data_260101_0000.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/target_vocab/target_vocab_data_260101_0000.xlsx`
 
 ### Sheet: summary
 

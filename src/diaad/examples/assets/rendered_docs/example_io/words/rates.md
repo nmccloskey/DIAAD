@@ -63,7 +63,7 @@ The command reads `diaad_data/input/word_count_analysis/word_counting_by_sample.
 
 ## Output Preview
 
-`expected_outputs/words_module/words_rates/word_counting_rates.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_count_analysis/word_counting_rates.xlsx`
 
 | sample_id | no_utt_coded | no_utt_missing | total_words | mean_words_per_utt | sd_words_per_utt | min_words_per_utt | max_words_per_utt | speaking_time | speaking_minutes | total_words_per_min |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

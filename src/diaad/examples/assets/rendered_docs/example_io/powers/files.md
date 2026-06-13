@@ -61,7 +61,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_files/powers_coding.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_coding/powers_coding.xlsx`
 
 ### Sheet: utterance_coding
 
@@ -84,7 +84,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 | 2 | weekday | 3 | 2 |  |
 | 3 | weekend | 4 | 1 |  |
 
-`expected_outputs/powers_module/powers_files/powers_reliability_coding.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_coding/powers_reliability_coding.xlsx`
 
 | sample_id | utterance_id | speaker | utterance | comment | coder_id | POWERS_comment | speech_units | turn_type | content_words | num_nouns | circumlocutions | sem_paras | phon_errs | neologisms | comments | lg_pauses | filled_pauses | collab_repair |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -97,7 +97,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 | 1 | U0007 | PAR | The day is quiet. |  | 2 |  | 1 | T | 4 | 2 | 1 | 3 | 1 | 2 |  | 1 | 1 |  |
 | 3 | U0001 | INV | Tell me what is happening in the picnic picture. |  | 1 |  | 2 | T | 8 | 3 | 2 | 4 | 2 | 3 |  | 2 | 2 |  |
 
-`expected_outputs/powers_module/powers_files/powers_blind_codebook.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_coding/powers_blind_codebook.xlsx`
 
 | column | raw_value | blind_code |
 | --- | --- | --- |

@@ -62,7 +62,7 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx` and `diaad_d
 
 ## Output Preview
 
-`expected_outputs/words_module/words_evaluate/word_count_reliability_results.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_count_reliability/word_count_reliability_results.xlsx`
 
 | sample_id | utterance_id | speaker | utterance | comment | id | word_count_org | wc_comment | word_count_rel | abs_diff | perc_diff | perc_sim | agmt |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -75,7 +75,7 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx` and `diaad_d
 | 3 | U0003 | PAR | They have sandwiches, apples, and juice. |  | 2 | 6 |  | 6 | 0 | 0.0 | 100.0 | 1 |
 | 3 | U0005 | PAR | She is pouring a drink. |  | 2 | 5 |  | 5 | 0 | 0.0 | 100.0 | 1 |
 
-`expected_outputs/words_module/words_evaluate/word_count_reliability_report.txt`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_count_reliability/word_count_reliability_report.txt`
 
 ```text
 Word Count Reliability Report

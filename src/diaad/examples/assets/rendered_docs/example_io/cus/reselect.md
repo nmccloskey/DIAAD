@@ -62,7 +62,7 @@ The command reads prior CU coding and reliability workbooks from `diaad_data/inp
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_reselect/reselected_cu_reliability_coding.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/reselected_cu_coding_reliability/reselected_cu_reliability_coding.xlsx`
 
 | sample_id | input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | comment | id | sv | rel |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

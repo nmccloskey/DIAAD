@@ -69,7 +69,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. Th
 
 ## Output Preview
 
-`expected_outputs/templates_module/templates_utterances/utterance_coding_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/utterance_coding_template.xlsx`
 
 ### Sheet: coding_template
 
@@ -84,7 +84,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. Th
 | 1 | U0007 | 1 | picnic | The day is quiet. |
 | 3 | U0001 | 1 | picnic | Tell me what is happening in the picnic picture. |
 
-`expected_outputs/templates_module/templates_utterances/utterance_reliability_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/utterance_reliability_template.xlsx`
 
 ### Sheet: coding_template
 
@@ -99,7 +99,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`. Th
 | 1 | U0007 | 2 | picnic | The day is quiet. |
 | 2 | U0001 | 1 | picnic | What do you notice first? |
 
-`expected_outputs/templates_module/templates_utterances/utterance_template_codebook.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/utterance_template_codebook.xlsx`
 
 ### Sheet: Sheet1
 

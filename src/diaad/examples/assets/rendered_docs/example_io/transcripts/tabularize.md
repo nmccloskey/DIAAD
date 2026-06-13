@@ -79,7 +79,7 @@ metadata_fields:
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_tabularize/transcript_tables.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/transcript_tables/transcript_tables.xlsx`
 
 ### Sheet: samples
 

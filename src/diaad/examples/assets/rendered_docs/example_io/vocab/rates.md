@@ -53,7 +53,7 @@ The command reads `diaad_data/input/target_vocab_analysis/target_vocab_data_YYMM
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_rates/target_vocab_rates.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/target_vocab/target_vocab_rates.xlsx`
 
 | sample_id | narrative | source_file | num_tokens | num_base_forms_produced | num_core_token_matches | speaking_time | speaking_minutes | core_tokens_per_min | num_tokens_per_min | num_base_forms_produced_per_min | num_core_token_matches_per_min | accuracy_pwa_percentile | accuracy_control_percentile | efficiency_pwa_percentile | efficiency_control_percentile |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

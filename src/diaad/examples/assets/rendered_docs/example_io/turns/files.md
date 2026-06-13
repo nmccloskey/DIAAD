@@ -75,7 +75,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx` to 
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_files/conversation_turns_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/conversation_turns_template.xlsx`
 
 | sample_id | coder_id | session | bin | turns |
 | --- | --- | --- | --- | --- |
@@ -86,7 +86,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx` to 
 | 3 | 1 |  | 1 |  |
 | 3 | 1 |  | 2 |  |
 
-`expected_outputs/turns_module/turns_files/conversation_turns_reliability_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/conversation_turns_reliability_template.xlsx`
 
 | sample_id | coder_id | session | bin | turns |
 | --- | --- | --- | --- | --- |

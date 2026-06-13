@@ -63,7 +63,7 @@ The command reads prior POWERS coding and reliability workbooks from `diaad_data
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_reselect/reselected_powers_reliability_coding.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/reselected_powers_reliability/reselected_powers_reliability_coding.xlsx`
 
 | sample_id | utterance_id | speaker | utterance | comment | coder_id | POWERS_comment | speech_units | turn_type | content_words | num_nouns | circumlocutions | sem_paras | phon_errs | neologisms | comments | lg_pauses | filled_pauses | collab_repair |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

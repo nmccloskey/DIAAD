@@ -67,7 +67,7 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind c
 
 ## Output Preview
 
-`expected_outputs/words_module/words_analyze/word_counting_by_utterance.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_count_analysis/word_counting_by_utterance.xlsx`
 
 | utterance_id | speaker | utterance | word_count | sample_id_blinded |
 | --- | --- | --- | --- | --- |
@@ -80,7 +80,7 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx`. The blind c
 | U0003 | PAR | The dad is opening the basket. | 6 | 2 |
 | U0004 | PAR | The dog wants food! | 4 | 2 |
 
-`expected_outputs/words_module/words_analyze/word_counting_by_sample.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/word_count_analysis/word_counting_by_sample.xlsx`
 
 | no_utt_coded | no_utt_missing | total_words | mean_words_per_utt | sd_words_per_utt | min_words_per_utt | max_words_per_utt | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- |

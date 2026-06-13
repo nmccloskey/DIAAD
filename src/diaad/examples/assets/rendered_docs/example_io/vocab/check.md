@@ -88,7 +88,7 @@ target_vocabulary_resource_path: diaad_data/input/target_vocab/resources/picnic_
 
 ## Output Preview
 
-`expected_outputs/vocab_module/vocab_check/target_vocab_resource_check.txt`
+`diaad_data/output/diaad_YYMMDD_HHMM/target_vocab/target_vocab_resource_check.txt`
 
 ```text
 Target vocabulary resource check

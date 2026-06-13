@@ -62,7 +62,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 ## Output Preview
 
-`example_output/chat_files/P1_picnic_post_cha_source_input_chat_P1_picnic_post_0.cha`
+`diaad_data/output/diaad_YYMMDD_HHMM/chat_files/P1_picnic_post_cha_source_input_chat_P1_picnic_post_0.cha`
 
 ```text
 @Begin

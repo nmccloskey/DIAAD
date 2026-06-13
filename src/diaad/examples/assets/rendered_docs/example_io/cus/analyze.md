@@ -66,7 +66,7 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codeboo
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_analyze/cu_coding_by_utterance.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/cu_coding_analysis/cu_coding_by_utterance.xlsx`
 
 | input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | sv | rel | cu | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -79,7 +79,7 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codeboo
 | 3 |  | picnic | U0003 | 3 | 0 | PAR | The dad is opening the basket. | 1 | 0 | 0 | 2 |
 | 3 |  | picnic | U0004 | 4 | 0 | PAR | The dog wants food! | 0 | 0 | 0 | 2 |
 
-`expected_outputs/cus_module/cus_analyze/cu_coding_by_sample_long.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/cu_coding_analysis/cu_coding_by_sample_long.xlsx`
 
 | coder | paradigm | sv_col | rel_col | cu_col | no_utt | p_sv | m_sv | perc_sv | miss_sv | p_rel | m_rel | perc_rel | miss_rel | cu | perc_cu | miss_cu | sv_rel_inconsistent | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -87,7 +87,7 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codeboo
 | primary | base | sv | rel | cu | 5 | 4 | 1 | 80 | 0 | 3 | 2 | 60 | 0 | 3 | 60 | 0 | 0 | 2 |
 | primary | base | sv | rel | cu | 5 | 3 | 2 | 60 | 0 | 2 | 3 | 40 | 0 | 1 | 20 | 0 | 0 | 3 |
 
-`expected_outputs/cus_module/cus_analyze/cu_coding_by_sample.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/cu_coding_analysis/cu_coding_by_sample.xlsx`
 
 | no_utt_primary_base | p_sv_primary_base | m_sv_primary_base | perc_sv_primary_base | miss_sv_primary_base | p_rel_primary_base | m_rel_primary_base | perc_rel_primary_base | miss_rel_primary_base | cu_primary_base | perc_cu_primary_base | miss_cu_primary_base | sv_rel_inconsistent_primary_base | sample_id_blinded |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

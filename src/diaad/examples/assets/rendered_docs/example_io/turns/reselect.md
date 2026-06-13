@@ -63,7 +63,7 @@ The primary turns workbook has two synthetic sample IDs. The prior reliability w
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_reselect/reselected_conversation_turns_reliability_template.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/reselected_turns_reliability/reselected_conversation_turns_reliability_template.xlsx`
 
 | sample_id | session | bin | turns |
 | --- | --- | --- | --- |

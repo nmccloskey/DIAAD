@@ -73,7 +73,7 @@ output_dir: diaad_data/output
 
 ## Output Preview
 
-`expected_outputs/blinding_module/blinding_decode/cu_coding_decoded.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/blinding/cu_coding_decoded.xlsx`
 
 | sample_id | input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | comment | id | sv | rel |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

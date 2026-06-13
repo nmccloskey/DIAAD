@@ -55,7 +55,7 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx` and `diaad
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_evaluate/powers_reliability_results.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_reliability/powers_reliability_results.xlsx`
 
 ### Sheet: merged
 
@@ -90,7 +90,7 @@ The command reads `diaad_data/input/powers_coding/powers_coding.xlsx` and `diaad
 | turn_type | 14 | 57.1 | 0.3333 | 1.3022 | 1.3626 | 1.3324 |
 | collab_repair | 14 | 78.6 | 0.2759 | 0.1813 | 0.1319 | 0.1566 |
 
-`expected_outputs/powers_module/powers_evaluate/powers_reliability_report.txt`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_reliability/powers_reliability_report.txt`
 
 ```text
 POWERS Reliability Report

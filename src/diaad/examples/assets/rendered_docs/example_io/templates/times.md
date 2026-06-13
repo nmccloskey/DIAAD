@@ -49,7 +49,7 @@ output_dir: diaad_data/output
 
 ## Output Preview
 
-`expected_outputs/templates_module/templates_times/speaking_times.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/speaking_times.xlsx`
 
 ### Sheet: coding_template
 

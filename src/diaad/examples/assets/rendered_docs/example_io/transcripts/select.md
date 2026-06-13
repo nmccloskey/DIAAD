@@ -80,7 +80,7 @@ The command uses the synthetic CHAT files in `diaad_data/input/chat/`.
 
 ## Output Preview
 
-`expected_outputs/transcripts_module/transcripts_select/transcription_reliability_samples.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/transcription_reliability_selection/transcription_reliability_samples.xlsx`
 
 ### Sheet: reliability_selection
 

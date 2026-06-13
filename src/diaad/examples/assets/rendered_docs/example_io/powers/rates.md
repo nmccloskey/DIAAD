@@ -62,7 +62,7 @@ The command reads `diaad_data/input/powers_coding_analysis/powers_analysis.xlsx`
 
 ## Output Preview
 
-`expected_outputs/powers_module/powers_rates/powers_coding_rates.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/powers_coding_analysis/powers_coding_rates.xlsx`
 
 | sample_id | source_file | speech_units_sum | content_words_sum | num_nouns_sum | filled_pauses_sum | circumlocutions_sum | sem_paras_sum | phon_errs_sum | neologisms_sum | lg_pauses_sum | num_repairs | speaking_time | speaking_minutes | speech_units_sum_per_min | content_words_sum_per_min | num_nouns_sum_per_min | filled_pauses_sum_per_min | circumlocutions_sum_per_min | sem_paras_sum_per_min | phon_errs_sum_per_min | neologisms_sum_per_min | lg_pauses_sum_per_min | num_repairs_per_min |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

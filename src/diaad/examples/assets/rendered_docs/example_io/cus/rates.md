@@ -63,7 +63,7 @@ The command reads `diaad_data/input/cu_coding_analysis/cu_coding_by_sample_long.
 
 ## Output Preview
 
-`expected_outputs/cus_module/cus_rates/cu_coding_rates.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/cu_coding_analysis/cu_coding_rates.xlsx`
 
 | sample_id | coder | paradigm | sv_col | rel_col | cu_col | speaking_time | speaking_minutes | cu_per_min | p_sv_per_min | p_rel_per_min |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

@@ -61,7 +61,7 @@ output_dir: diaad_data/output
 
 ## Output Preview
 
-`expected_outputs/turns_module/turns_analyze/conversation_turns_template_analysis.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/conversation_turns_template_analysis.xlsx`
 
 ### Sheet: bin_level_turns
 

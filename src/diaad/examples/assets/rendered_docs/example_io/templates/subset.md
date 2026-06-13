@@ -74,7 +74,7 @@ sample_id_column: sample_id
 
 ### Output Preview
 
-`expected_outputs/templates_module/templates_subset/sample_subset.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/sample_subset.xlsx`
 
 ### Sheet: samples
 
@@ -145,7 +145,7 @@ reliability_fraction: 0.34
 
 ### Output Preview
 
-`expected_outputs/templates_module/templates_resubset/sample_subset.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/coding_templates/sample_subset.xlsx`
 
 ### Sheet: samples
 
