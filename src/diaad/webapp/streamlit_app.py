@@ -34,7 +34,6 @@ CONFIG_FILENAMES = {
 }
 
 MODULE_LABELS = {
-    "examples": "Examples / Example I/O",
     "blinding": "Blinding",
     "transcripts": "Transcripts",
     "templates": "Templates",
@@ -44,8 +43,6 @@ MODULE_LABELS = {
     "vocab": "Target Vocabulary Coverage",
     "turns": "Digital Conversational Turns",
 }
-
-SPECIAL_WEB_COMMANDS = {"examples"}
 
 
 def zip_folder(folder_path: Path) -> BytesIO:
@@ -150,7 +147,7 @@ def _dispatched_commands() -> set[str]:
 
 
 def _web_supported_commands() -> set[str]:
-    return _dispatched_commands() | SPECIAL_WEB_COMMANDS
+    return _dispatched_commands()
 
 
 def _command_options_by_module() -> dict[str, list[str]]:
@@ -353,15 +350,58 @@ def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str
         return zip_folder(ctx.out_dir)
 
 
-def _run_examples_web() -> BytesIO:
-    from diaad.examples.generate import generate_example_files
+def _run_examples_web(commands: list[str] | None = None) -> BytesIO:
+    from diaad.examples.generate import example_package_name, generate_example_files
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        project_dir = generate_example_files(
-            Path(tmpdir) / "synthetic_project",
-            force=True,
+        examples_root = Path(tmpdir) / "examples"
+        if commands:
+            generate_example_files(
+                examples_root,
+                force=True,
+                commands=commands,
+            )
+        else:
+            generate_example_files(
+                examples_root / example_package_name(),
+                force=True,
+            )
+        return zip_folder(examples_root)
+
+
+def _examples_zip_filename(
+    commands: list[str] | None = None,
+    *,
+    timestamp: datetime | None = None,
+) -> str:
+    from diaad.examples.generate import example_package_slug
+
+    stamp = (timestamp or datetime.now()).strftime("%y%m%d_%H%M")
+    return f"diaad_example_files_{example_package_slug(commands)}_{stamp}.zip"
+
+
+def _render_examples_download(commands: list[str]) -> None:
+    label = (
+        "Download example files for selected functions"
+        if commands
+        else "Download full example dataset"
+    )
+    if not st.button(label):
+        return
+
+    try:
+        example_commands = commands if commands else None
+        zip_buffer = _run_examples_web(example_commands)
+        st.success("DIAAD example files generated successfully.")
+        st.download_button(
+            label="Download Example Files ZIP",
+            data=zip_buffer,
+            file_name=_examples_zip_filename(example_commands),
+            mime="application/zip",
         )
-        return zip_folder(project_dir)
+    except Exception:
+        logger.exception("Unhandled error while generating DIAAD examples.")
+        st.error("An unexpected error occurred while generating DIAAD examples.")
 
 
 def render_app() -> None:
@@ -420,33 +460,18 @@ def render_app() -> None:
     st.header("Part 3: Commands")
     commands = _render_command_menu()
 
-    if st.button("Run selected commands"):
+    col_run, col_examples = st.columns(2)
+
+    with col_run:
+        run_selected = st.button("Run selected functions")
+    with col_examples:
+        _render_examples_download(commands)
+
+    if run_selected:
         if not commands:
             st.warning("Please select at least one command.")
             st.stop()
 
-        if commands == ["examples"]:
-            try:
-                zip_buffer = _run_examples_web()
-                st.success("DIAAD example files generated successfully.")
-                timestamp = datetime.now().strftime("%y%m%d_%H%M")
-                st.download_button(
-                    label="Download Example Files ZIP",
-                    data=zip_buffer,
-                    file_name=f"diaad_example_files_{timestamp}.zip",
-                    mime="application/zip",
-                )
-            except Exception:
-                logger.exception("Unhandled error while generating DIAAD examples.")
-                st.error("An unexpected error occurred while generating DIAAD examples.")
-            st.stop()
-
-        if "examples" in commands:
-            st.warning(
-                "Please run the examples command by itself. It generates a "
-                "standalone synthetic project ZIP rather than using uploaded inputs."
-            )
-            st.stop()
         if configs is None:
             st.warning("Please upload or build a complete two-file config first.")
             st.stop()
