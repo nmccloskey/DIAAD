@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: blinding.encode
 command_id: blinding.encode
 canonical_command: blinding encode
 module_id: blinding
-view: example_io
 title: Blinding Encode Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Blinding Encode Example

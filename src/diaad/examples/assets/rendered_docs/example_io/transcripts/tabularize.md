@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: transcripts.tabularize
 command_id: transcripts.tabularize
 canonical_command: transcripts tabularize
 module_id: transcripts
-view: example_io
 title: Transcript Tabularization Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Transcript Tabularization Example

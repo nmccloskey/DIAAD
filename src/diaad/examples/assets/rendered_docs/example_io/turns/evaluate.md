@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: turns.evaluate
 command_id: turns.evaluate
 canonical_command: turns evaluate
 module_id: turns
-view: example_io
 title: Conversation Turns Reliability Evaluation Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Conversation Turns Reliability Evaluation Example

@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: transcripts.reselect
 command_id: transcripts.reselect
 canonical_command: transcripts reselect
 module_id: transcripts
-view: example_io
 title: Transcription Reliability Reselection Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Transcription Reliability Reselection Example

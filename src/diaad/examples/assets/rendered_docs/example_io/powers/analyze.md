@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: powers.analyze
 command_id: powers.analyze
 canonical_command: powers analyze
 module_id: powers
-view: example_io
 title: POWERS Coding Analysis Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # POWERS Coding Analysis Example

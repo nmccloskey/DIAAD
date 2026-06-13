@@ -3,14 +3,19 @@ object_type: workflow
 object_types:
 - workflow
 - command
+object_id: full_example_dataset
 workflow_id: full_example_dataset
 command_id: examples
 canonical_command: examples
 command_subtype: omnibus
 typology: omnibus_command_workflow
-view: example_io
 title: DIAAD Example I/O Manual
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # DIAAD Example I/O Manual

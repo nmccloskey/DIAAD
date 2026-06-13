@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: cus.rates
 command_id: cus.rates
 canonical_command: cus rates
 module_id: cus
-view: example_io
 title: CU Rate Calculation Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # CU Rate Calculation Example

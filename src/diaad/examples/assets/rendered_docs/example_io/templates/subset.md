@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: templates.subset
 command_id: templates.subset
 canonical_command: templates subset
 module_id: templates
-view: example_io
 title: Sample Subset Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Sample Subset Example

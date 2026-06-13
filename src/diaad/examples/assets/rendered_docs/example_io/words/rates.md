@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: words.rates
 command_id: words.rates
 canonical_command: words rates
 module_id: words
-view: example_io
 title: Word Count Rate Calculation Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Word Count Rate Calculation Example

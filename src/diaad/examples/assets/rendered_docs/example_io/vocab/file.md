@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: vocab.file
 command_id: vocab.file
 canonical_command: vocab file
 module_id: vocab
-view: example_io
 title: Target Vocabulary Resource Template Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Target Vocabulary Resource Template Example

@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: cus.evaluate
 command_id: cus.evaluate
 canonical_command: cus evaluate
 module_id: cus
-view: example_io
 title: CU Reliability Evaluation Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # CU Reliability Evaluation Example

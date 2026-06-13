@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: transcripts.chats
 command_id: transcripts.chats
 canonical_command: transcripts chats
 module_id: transcripts
-view: example_io
 title: Transcript CHAT File Export Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Transcript CHAT File Export Example

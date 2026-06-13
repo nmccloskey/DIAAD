@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: turns.reselect
 command_id: turns.reselect
 canonical_command: turns reselect
 module_id: turns
-view: example_io
 title: Conversation Turns Reliability Reselection Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Conversation Turns Reliability Reselection Example

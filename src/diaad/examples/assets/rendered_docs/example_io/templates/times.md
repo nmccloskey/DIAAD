@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: templates.times
 command_id: templates.times
 canonical_command: templates times
 module_id: templates
-view: example_io
 title: Speaking-Time Template Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Speaking-Time Template Example

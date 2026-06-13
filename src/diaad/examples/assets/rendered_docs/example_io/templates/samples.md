@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: templates.samples
 command_id: templates.samples
 canonical_command: templates samples
 module_id: templates
-view: example_io
 title: Sample Template Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Sample Template Example

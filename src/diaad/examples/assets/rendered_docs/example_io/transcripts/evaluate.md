@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: transcripts.evaluate
 command_id: transcripts.evaluate
 canonical_command: transcripts evaluate
 module_id: transcripts
-view: example_io
 title: Transcription Reliability Evaluation Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Transcription Reliability Evaluation Example

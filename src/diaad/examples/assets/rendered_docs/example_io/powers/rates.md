@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: powers.rates
 command_id: powers.rates
 canonical_command: powers rates
 module_id: powers
-view: example_io
 title: POWERS Rate Calculation Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # POWERS Rate Calculation Example

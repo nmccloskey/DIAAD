@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: words.reselect
 command_id: words.reselect
 canonical_command: words reselect
 module_id: words
-view: example_io
 title: Word Count Reliability Reselection Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Word Count Reliability Reselection Example

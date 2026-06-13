@@ -49,6 +49,17 @@ from psair.examples import (
 DOC_PACKAGE = "diaad.examples"
 DOC_ROOT = ("assets", "rendered_docs", "example_io")
 SPEC_ROOT = ("assets", "spec")
+EXAMPLE_IO_VIEW = "example_io"
+EXAMPLE_IO_VIEW_LABEL = "Example I/O"
+EXAMPLE_IO_SLOT = "examples"
+EXAMPLE_IO_SOURCE_MANUAL = "generated_example_io"
+MANUAL_VIEW_ORDER = {
+    "quickstart": 10,
+    "usage_guide": 20,
+    "research_context": 30,
+    "implementation_notes": 40,
+    EXAMPLE_IO_VIEW: 50,
+}
 
 
 example_assets = ExampleAssets(DOC_PACKAGE, rendered_docs_root=DOC_ROOT)
@@ -65,6 +76,17 @@ def _front_matter(data: dict[str, Any]) -> str:
     return "---\n" + yaml.safe_dump(data, sort_keys=False).strip() + "\n---\n\n"
 
 
+def _manual_view_metadata() -> dict[str, Any]:
+    return {
+        "view": EXAMPLE_IO_VIEW,
+        "view_label": EXAMPLE_IO_VIEW_LABEL,
+        "view_order": MANUAL_VIEW_ORDER[EXAMPLE_IO_VIEW],
+        "slot": EXAMPLE_IO_SLOT,
+        "source_manual": EXAMPLE_IO_SOURCE_MANUAL,
+        "generated": True,
+    }
+
+
 def _with_command_front_matter(command: str, text: str) -> str:
     text = render_runtime_preview_paths(command, text)
     command_id = canonical_command_to_command_id(command)
@@ -72,13 +94,13 @@ def _with_command_front_matter(command: str, text: str) -> str:
     metadata = {
         "object_type": "command",
         "object_types": ["command"],
+        "object_id": command_id,
         "command_id": command_id,
         "canonical_command": command,
         "module_id": module_id,
-        "view": "example_io",
         "title": _title_from_markdown(text),
-        "slot": "examples",
     }
+    metadata.update(_manual_view_metadata())
     return _front_matter(metadata) + text
 
 
@@ -86,15 +108,15 @@ def _with_overview_front_matter(text: str) -> str:
     metadata = {
         "object_type": "workflow",
         "object_types": ["workflow", "command"],
+        "object_id": FULL_DATASET_WORKFLOW_ID,
         "workflow_id": FULL_DATASET_WORKFLOW_ID,
         "command_id": EXAMPLES_COMMAND_ID,
         "canonical_command": "examples",
         "command_subtype": "omnibus",
         "typology": "omnibus_command_workflow",
-        "view": "example_io",
         "title": _title_from_markdown(text),
-        "slot": "examples",
     }
+    metadata.update(_manual_view_metadata())
     return _front_matter(metadata) + text
 
 

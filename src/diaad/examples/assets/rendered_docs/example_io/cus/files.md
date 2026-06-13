@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: cus.files
 command_id: cus.files
 canonical_command: cus files
 module_id: cus
-view: example_io
 title: CU Coding File Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # CU Coding File Example

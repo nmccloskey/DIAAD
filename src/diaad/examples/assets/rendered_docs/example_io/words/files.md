@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: words.files
 command_id: words.files
 canonical_command: words files
 module_id: words
-view: example_io
 title: Word Count File Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Word Count File Example

@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: powers.reselect
 command_id: powers.reselect
 canonical_command: powers reselect
 module_id: powers
-view: example_io
 title: POWERS Reliability Reselection Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # POWERS Reliability Reselection Example

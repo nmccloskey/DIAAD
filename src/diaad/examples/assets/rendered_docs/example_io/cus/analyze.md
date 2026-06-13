@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: cus.analyze
 command_id: cus.analyze
 canonical_command: cus analyze
 module_id: cus
-view: example_io
 title: CU Coding Analysis Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # CU Coding Analysis Example

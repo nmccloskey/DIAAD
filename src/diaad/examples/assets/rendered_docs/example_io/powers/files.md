@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: powers.files
 command_id: powers.files
 canonical_command: powers files
 module_id: powers
-view: example_io
 title: POWERS Coding File Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # POWERS Coding File Example

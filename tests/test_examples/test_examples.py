@@ -748,6 +748,12 @@ def test_rendered_example_docs_have_composable_front_matter():
     assert overview["canonical_command"] == "examples"
     assert overview["command_subtype"] == "omnibus"
     assert overview["view"] == "example_io"
+    assert overview["object_id"] == "full_example_dataset"
+    assert overview["view_label"] == "Example I/O"
+    assert overview["view_order"] == 50
+    assert overview["slot"] == "examples"
+    assert overview["source_manual"] == "generated_example_io"
+    assert overview["generated"] is True
 
     for command, plan in generate_module.EXAMPLE_COMMAND_PLANS.items():
         doc_path = docs_root.joinpath(
@@ -758,11 +764,16 @@ def test_rendered_example_docs_have_composable_front_matter():
         module_id, _action_id = generate_module.command_id_parts(plan.command_id)
         assert metadata["object_type"] == "command"
         assert metadata["object_types"] == ["command"]
+        assert metadata["object_id"] == plan.command_id
         assert metadata["command_id"] == plan.command_id
         assert metadata["canonical_command"] == command
         assert metadata["module_id"] == module_id
         assert metadata["view"] == "example_io"
+        assert metadata["view_label"] == "Example I/O"
+        assert metadata["view_order"] == 50
         assert metadata["slot"] == "examples"
+        assert metadata["source_manual"] == "generated_example_io"
+        assert metadata["generated"] is True
         assert metadata["title"]
 
 

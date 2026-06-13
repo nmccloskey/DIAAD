@@ -7,23 +7,27 @@
 
 ## Manual Map (Tree)
 
-```
-├── 01_overview/
-│   ├── 01_01_introduction.md — Introduction to DIAAD
-│   ├── 01_02_installation.md — How to access the program
-│   └── 01_04_commands_methodolgy.md — Commands by Module
-└── 99_references.md — References
+```text
+01_overview/
+  01_01_introduction.md - Introduction to DIAAD
+  01_02_installation.md - How to access the program
+  01_04_commands_methodolgy.md - Commands by Module
+  01_05_generated_example_io.md - Generated Example I/O View
+99_references.md - References
 ```
 
 ## Outline (Links)
 
 ### 01_overview/
-- [01_01_introduction.md — Introduction to DIAAD](01_overview/01_01_introduction.md)
-- [01_02_installation.md — How to access the program](01_overview/01_02_installation.md)
-- [01_04_commands_methodolgy.md — Commands by Module](01_overview/01_04_commands_methodolgy.md)
+
+- [01_01_introduction.md - Introduction to DIAAD](01_overview/01_01_introduction.md)
+- [01_02_installation.md - How to access the program](01_overview/01_02_installation.md)
+- [01_04_commands_methodolgy.md - Commands by Module](01_overview/01_04_commands_methodolgy.md)
+- [01_05_generated_example_io.md - Generated Example I/O View](01_overview/01_05_generated_example_io.md)
 
 ### Manual root
-- [99_references.md — References](99_references.md)
+
+- [99_references.md - References](99_references.md)
 
 ---
 

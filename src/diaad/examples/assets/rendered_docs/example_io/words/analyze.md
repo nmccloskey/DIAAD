@@ -2,12 +2,17 @@
 object_type: command
 object_types:
 - command
+object_id: words.analyze
 command_id: words.analyze
 canonical_command: words analyze
 module_id: words
-view: example_io
 title: Word Count Analysis Example
+view: example_io
+view_label: Example I/O
+view_order: 50
 slot: examples
+source_manual: generated_example_io
+generated: true
 ---
 
 # Word Count Analysis Example
