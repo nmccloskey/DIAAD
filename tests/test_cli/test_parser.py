@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from diaad.cli.parser import build_arg_parser
 
 
@@ -41,3 +43,10 @@ def test_parser_accepts_batch_config_overrides() -> None:
         "powers_reliability_filename=siteA_powers_rel.xlsx",
     ]
     assert args.dry_run_config is True
+
+
+def test_parser_rejects_removed_examples_files_option() -> None:
+    parser = build_arg_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(["examples", "--files", "diaad_data/output"])

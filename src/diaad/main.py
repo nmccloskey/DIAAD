@@ -30,16 +30,26 @@ def _is_examples_command(args) -> bool:
 
 def _has_examples_options(args) -> bool:
     return bool(
-        getattr(args, "example_files", None)
-        or getattr(args, "render_docs", False)
+        getattr(args, "render_docs", False)
         or getattr(args, "force", False)
     )
 
 
 def _run_examples_command(args) -> None:
-    example_files = getattr(args, "example_files", None)
     render_docs = getattr(args, "render_docs", False)
-    if example_files is None and not render_docs:
+    if render_docs:
+        from diaad.examples.render_docs import render_example_docs
+
+        paths = render_example_docs()
+        for path in paths:
+            print(f"Rendered DIAAD example doc: {path}")
+        return
+
+    ctx = None
+    status = "completed"
+    logger_initialized = False
+
+    try:
         start_time = datetime.now()
         project_root = Path.cwd().resolve()
         set_root(project_root)
@@ -49,25 +59,39 @@ def _run_examples_command(args) -> None:
             project_root=project_root,
             start_time=start_time,
             config_overrides=config_overrides,
-            create_output_dir=False,
         )
-        example_files = ctx.base_output_dir
 
-    if example_files is not None:
+        initialize_logger(
+            start_time,
+            ctx.out_dir,
+            program_name="DIAAD",
+            version=__version__,
+        )
+        logger_initialized = True
+        logger.info("Logger initialized and early logs flushed.")
+        add_finalization_hook(lambda context: finalize_run_artifacts(ctx, context))
+        ctx.set_commands(["examples"])
+        write_start_artifacts(ctx, args)
+
+        logger.info("Executing command(s): examples")
+
         from diaad.examples.generate import generate_example_files
 
+        destination = ctx.out_dir / "example_files_full_dataset"
         project_dir = generate_example_files(
-            example_files,
+            destination,
             force=getattr(args, "force", False),
         )
+        logger.info("Generated DIAAD example files: %s", project_dir)
         print(f"Generated DIAAD example files: {project_dir}")
 
-    if render_docs:
-        from diaad.examples.render_docs import render_example_docs
-
-        paths = render_example_docs()
-        for path in paths:
-            print(f"Rendered DIAAD example doc: {path}")
+    except Exception as e:
+        status = "failed"
+        logger.error("DIAAD examples generation failed: %s", e, exc_info=True)
+        raise
+    finally:
+        if ctx is not None and logger_initialized:
+            terminate_logger(**ctx.termination_kwargs(), status=status)
 
 
 def main(args) -> None:
@@ -81,7 +105,7 @@ def main(args) -> None:
             _run_examples_command(args)
             return
         if _has_examples_options(args):
-            raise ValueError("--files, --render-docs, and --force are only valid with 'diaad examples'.")
+            raise ValueError("--render-docs and --force are only valid with 'diaad examples'.")
 
         start_time = datetime.now()
         project_root = Path.cwd().resolve()

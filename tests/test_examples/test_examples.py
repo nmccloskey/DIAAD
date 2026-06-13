@@ -18,6 +18,7 @@ def _exists(path):
 def test_generate_synthetic_project(tmp_path):
     project_dir = generate_example_files(tmp_path / "synthetic_project")
 
+    assert not any(path.name.startswith("_dx_") for path in project_dir.rglob("*"))
     assert (project_dir / "config" / "project.yaml").exists()
     assert (project_dir / "config" / "advanced.yaml").exists()
     assert not (project_dir / "config" / "advanced_project.yaml").exists()

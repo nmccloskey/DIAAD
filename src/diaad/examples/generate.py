@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 import random
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -53,7 +55,7 @@ from diaad.transcripts.transcription_reliability_selection import (
 from psair.examples import (
     ExampleAssets,
     replace_tree,
-    scratch_dir,
+    scratch_dir as psair_scratch_dir,
     write_json,
     write_text,
     write_yaml,
@@ -152,6 +154,25 @@ def _expected_transcript_workbook(project_dir: Path, specs: dict[str, dict[str, 
 
 
 example_assets = ExampleAssets(SPEC_PACKAGE)
+
+
+@contextmanager
+def scratch_dir(parent):
+    """
+    Create example-generation scratch space outside the final package.
+
+    The PSAIR helper creates ``_dx_*`` directories under the supplied parent.
+    Keeping those temporary directories outside ``project_dir`` prevents
+    transient cleanup failures from leaking scratch artifacts into user-facing
+    example packages.
+    """
+    del parent
+    with tempfile.TemporaryDirectory(
+        prefix="diaad_examples_",
+        ignore_cleanup_errors=True,
+    ) as scratch_parent:
+        with psair_scratch_dir(scratch_parent) as path:
+            yield path
 
 
 def _validate_chat_spec(chat_spec: dict[str, Any]) -> None:

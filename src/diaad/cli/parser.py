@@ -83,17 +83,6 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--files",
-        dest="example_files",
-        type=str,
-        default=None,
-        help=(
-            "For 'diaad examples': directory where runnable example files are "
-            "written. Defaults to configured project.output_dir."
-        ),
-    )
-
-    parser.add_argument(
         "--render-docs",
         action="store_true",
         help="For 'diaad examples': regenerate packaged example I/O markdown.",

@@ -135,11 +135,11 @@ def test_main_dry_run_config_exits_before_logger_and_dispatch(monkeypatch, tmp_p
 
 def test_examples_command_defaults_files_to_configured_output_dir(monkeypatch, tmp_path):
     events = []
-    configured_output = tmp_path / "configured-output"
 
     class FakeContext:
         def __init__(self, config_dir, project_root, start_time, **kwargs):
-            self.base_output_dir = configured_output
+            self.out_dir = tmp_path / "run-output"
+            self.commands = []
             events.append(
                 (
                     "ctx",
@@ -149,6 +149,13 @@ def test_examples_command_defaults_files_to_configured_output_dir(monkeypatch, t
                     kwargs,
                 )
             )
+
+        def set_commands(self, commands):
+            self.commands = list(commands)
+            events.append(("set_commands", list(commands)))
+
+        def termination_kwargs(self):
+            return {"output_dir": self.out_dir}
 
     def fake_generate(destination, *, force=False):
         events.append(("generate", Path(destination), force))
@@ -161,6 +168,18 @@ def test_examples_command_defaults_files_to_configured_output_dir(monkeypatch, t
         lambda path: events.append(("set_root", Path(path))),
     )
     monkeypatch.setattr(main_module, "build_cli_config_overrides", lambda args: {})
+    monkeypatch.setattr(
+        main_module,
+        "initialize_logger",
+        lambda *a, **k: events.append(("init_logger",)),
+    )
+    monkeypatch.setattr(main_module, "add_finalization_hook", lambda hook: events.append(("hook",)))
+    monkeypatch.setattr(
+        main_module,
+        "write_start_artifacts",
+        lambda ctx, args: events.append(("start_artifacts",)),
+    )
+    monkeypatch.setattr(main_module, "terminate_logger", lambda **k: events.append(("terminate", k)))
     monkeypatch.setattr(generate_module, "generate_example_files", fake_generate)
 
     args = SimpleNamespace(
@@ -169,19 +188,28 @@ def test_examples_command_defaults_files_to_configured_output_dir(monkeypatch, t
         input_dir=None,
         output_dir=None,
         set_values=None,
-        example_files=None,
         render_docs=False,
         force=False,
     )
 
     main_module.main(args)
 
-    assert ("generate", configured_output, False) in events
+    assert (
+        "generate",
+        tmp_path / "run-output" / "example_files_full_dataset",
+        False,
+    ) in events
     assert events[1][0] == "ctx"
-    assert events[1][4]["create_output_dir"] is False
+    assert events[1][4]["config_overrides"] == {}
+    assert ("set_commands", ["examples"]) in events
+    assert ("start_artifacts",) in events
+    assert (
+        "terminate",
+        {"output_dir": tmp_path / "run-output", "status": "completed"},
+    ) in events
 
 
-def test_examples_command_honors_output_dir_override_for_default_files(monkeypatch, tmp_path):
+def test_examples_command_honors_output_dir_override(monkeypatch, tmp_path):
     events = []
     overridden_output = tmp_path / "overridden-output"
 
@@ -190,7 +218,13 @@ def test_examples_command_honors_output_dir_override_for_default_files(monkeypat
             assert kwargs["config_overrides"] == {
                 "project.output_dir": str(overridden_output)
             }
-            self.base_output_dir = overridden_output
+            self.out_dir = overridden_output / "diaad_260101_0000"
+
+        def set_commands(self, commands):
+            self.commands = list(commands)
+
+        def termination_kwargs(self):
+            return {"output_dir": self.out_dir}
 
     def fake_generate(destination, *, force=False):
         events.append(("generate", Path(destination), force))
@@ -198,6 +232,10 @@ def test_examples_command_honors_output_dir_override_for_default_files(monkeypat
 
     monkeypatch.setattr(main_module, "RunContext", FakeContext)
     monkeypatch.setattr(main_module, "set_root", lambda path: None)
+    monkeypatch.setattr(main_module, "initialize_logger", lambda *a, **k: None)
+    monkeypatch.setattr(main_module, "add_finalization_hook", lambda hook: None)
+    monkeypatch.setattr(main_module, "write_start_artifacts", lambda ctx, args: None)
+    monkeypatch.setattr(main_module, "terminate_logger", lambda **k: None)
     monkeypatch.setattr(generate_module, "generate_example_files", fake_generate)
 
     args = SimpleNamespace(
@@ -206,11 +244,16 @@ def test_examples_command_honors_output_dir_override_for_default_files(monkeypat
         input_dir=None,
         output_dir=str(overridden_output),
         set_values=None,
-        example_files=None,
         render_docs=False,
         force=True,
     )
 
     main_module.main(args)
 
-    assert events == [("generate", overridden_output, True)]
+    assert events == [
+        (
+            "generate",
+            overridden_output / "diaad_260101_0000" / "example_files_full_dataset",
+            True,
+        )
+    ]
