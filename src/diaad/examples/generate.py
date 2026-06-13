@@ -423,6 +423,17 @@ def _materialize_required_capabilities(
 
 
 def _write_command_example_config(ctx: ExampleBuildContext) -> None:
+    advanced_config = dict(ctx.specs["advanced_config"])
+    resource_path = advanced_config.get("target_vocabulary_resource_path")
+    if resource_path:
+        path = Path(resource_path)
+        input_dir = ctx.specs["project_config"].get("input_dir", "input")
+        if not path.is_absolute() and path.parts and path.parts[0] == input_dir:
+            advanced_config["target_vocabulary_resource_path"] = Path(
+                ctx.project_config["input_dir"],
+                *path.parts[1:],
+            ).as_posix()
+
     write_yaml(
         ctx.example_config_dir / "project.yaml",
         ctx.project_config,
@@ -430,7 +441,7 @@ def _write_command_example_config(ctx: ExampleBuildContext) -> None:
     )
     write_yaml(
         ctx.example_config_dir / "advanced.yaml",
-        ctx.specs["advanced_config"],
+        advanced_config,
         force=ctx.force,
     )
 
@@ -816,6 +827,321 @@ def _materialize_word_count_analysis_capability(ctx: ExampleBuildContext) -> Non
             "word_counting_by_sample.xlsx",
         ),
         target_dir / "word_count_analysis_blind_codebook.xlsx",
+    )
+
+
+def _materialize_powers_coding_capability(ctx: ExampleBuildContext) -> None:
+    target_dir = ctx.example_input_dir / "powers_coding"
+    if target_dir.exists() and not ctx.force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {target_dir}")
+
+    with scratch_dir(ctx.package_dir) as tmpdir:
+        source_input_dir = tmpdir / "source_input"
+        _write_original_chat_inputs(source_input_dir, ctx.specs, force=True)
+        transcript_table = _build_transcript_table_from_chat(
+            input_dir=source_input_dir,
+            output_dir=tmpdir / "transcript_output",
+            specs=ctx.specs,
+        )
+        powers_input_dir = _prepare_powers_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(ctx.specs),
+        )
+        powers_output_dir = tmpdir / "powers_output"
+        powers_output_dir.mkdir(parents=True, exist_ok=True)
+        make_powers_coding_files(
+            metadata_fields=_metadata_fields_for_input(ctx.specs, powers_input_dir),
+            frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
+            num_coders=ctx.specs["project_config"].get("num_coders", 0),
+            input_dir=powers_input_dir,
+            output_dir=powers_output_dir,
+            exclude_speakers=ctx.specs["project_config"].get("exclude_speakers", []),
+            automate_powers=ctx.specs["project_config"].get("automate_powers", False),
+            blinding_config=_powers_blinding_config(ctx.specs),
+            powers_coding_file=ctx.specs["advanced_config"].get(
+                "powers_coding_filename",
+                "powers_coding.xlsx",
+            ),
+            powers_reliability_file=ctx.specs["advanced_config"].get(
+                "powers_reliability_filename",
+                "powers_reliability_coding.xlsx",
+            ),
+            spacy_model_name=ctx.specs["advanced_config"].get(
+                "spacy_model_name",
+                "en_core_web_sm",
+            ),
+            sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+            utterance_id_field=ctx.specs["advanced_config"].get("utterance_id_column", "utterance_id"),
+            transcript_table_filename=_transcript_table_filename(ctx.specs),
+        )
+        replace_tree(powers_output_dir / "powers_coding", target_dir, force=ctx.force)
+
+    coding_file = target_dir / ctx.specs["advanced_config"].get(
+        "powers_coding_filename",
+        "powers_coding.xlsx",
+    )
+    reliability_file = target_dir / ctx.specs["advanced_config"].get(
+        "powers_reliability_filename",
+        "powers_reliability_coding.xlsx",
+    )
+    if coding_file.exists():
+        _fill_powers_coding_workbook(coding_file)
+    if reliability_file.exists():
+        _fill_powers_reliability_workbook(reliability_file)
+
+
+def _materialize_powers_analysis_capability(ctx: ExampleBuildContext) -> None:
+    _materialize_capability(ctx, "powers_coding_workbooks")
+    target_dir = ctx.example_input_dir / "powers_coding_analysis"
+    if target_dir.exists() and not ctx.force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {target_dir}")
+
+    with scratch_dir(ctx.package_dir) as tmpdir:
+        analyze_powers_coding(
+            input_dir=ctx.example_input_dir,
+            output_dir=tmpdir,
+            powers_coding_file=ctx.specs["advanced_config"].get(
+                "powers_coding_filename",
+                "powers_coding.xlsx",
+            ),
+            blinding_config=_powers_blinding_config(ctx.specs),
+            sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        )
+        replace_tree(tmpdir / "powers_coding_analysis", target_dir, force=ctx.force)
+
+
+def _write_blinding_encode_input(target_dir: Path, *, force: bool) -> Path:
+    target = target_dir / "powers_coding.xlsx"
+    if target.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {target}")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        {
+            "sample_id": ["P1_picnic_pre", "P1_picnic_post", "P2_picnic_pre"],
+            "utterance_id": ["utt_001", "utt_002", "utt_003"],
+            "content_words": [7, 5, 6],
+        }
+    ).to_excel(target, index=False)
+    return target
+
+
+def _materialize_blinding_encode_capability(ctx: ExampleBuildContext) -> None:
+    _write_blinding_encode_input(
+        ctx.example_input_dir / "blinding_encode",
+        force=ctx.force,
+    )
+
+
+def _materialize_blinding_decode_capability(ctx: ExampleBuildContext) -> None:
+    target_dir = ctx.example_input_dir / "blinding_decode"
+    if target_dir.exists() and not ctx.force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {target_dir}")
+
+    with scratch_dir(ctx.package_dir) as tmpdir:
+        source_dir = tmpdir / "source"
+        _write_blinding_encode_input(source_dir, force=True)
+        encode_blinding(
+            input_dir=source_dir,
+            output_dir=tmpdir,
+            blinding_config=_blinding_command_config(ctx.specs),
+            seed=ctx.specs["project_config"].get("random_seed", 99),
+        )
+        target_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(
+            tmpdir / "blinding" / "powers_coding_blinded.xlsx",
+            target_dir / "powers_coding_blinded.xlsx",
+        )
+        shutil.copyfile(
+            tmpdir / "blinding" / "blind_codebook.xlsx",
+            target_dir / "blind_codebook.xlsx",
+        )
+
+
+def _command_vocab_resource_path(
+    input_dir: Path,
+    specs: dict[str, dict[str, Any]],
+) -> Path:
+    configured = specs["advanced_config"].get(
+        "target_vocabulary_resource_path",
+        "input/target_vocab/resources/picnic_target_vocab.json",
+    )
+    path = Path(configured)
+    if path.is_absolute():
+        return path
+
+    configured_input_dir = specs["project_config"].get("input_dir", "input")
+    if path.parts and path.parts[0] == configured_input_dir:
+        return input_dir.joinpath(*path.parts[1:])
+    return input_dir / path
+
+
+def _materialize_vocab_resource_capability(ctx: ExampleBuildContext) -> None:
+    resource_path = _command_vocab_resource_path(ctx.example_input_dir, ctx.specs)
+    if resource_path.exists() and not ctx.force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {resource_path}")
+    write_json(resource_path, ctx.specs["vocab_resource"], force=ctx.force)
+
+
+def _write_vocab_unblind_input_from_transcript_table(
+    input_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    transcript_table: Path,
+    *,
+    force: bool,
+) -> Path:
+    out_path = input_dir / "target_vocab" / "unblind_utterance_data.xlsx"
+    if out_path.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {out_path}")
+
+    utt_df = pd.read_excel(transcript_table, sheet_name="utterances")
+    samples_df = pd.read_excel(transcript_table, sheet_name="samples")
+    sample_metadata_cols = [
+        col
+        for col in ["sample_id", "participant_id", "stimulus", "timepoint"]
+        if col in samples_df.columns
+    ]
+    if sample_metadata_cols and set(sample_metadata_cols) != {"sample_id"}:
+        utt_df = utt_df.merge(
+            samples_df[sample_metadata_cols].drop_duplicates(),
+            on="sample_id",
+            how="left",
+        )
+
+    exclude = set(specs["project_config"].get("exclude_speakers", []))
+    if "speaker" in utt_df.columns and exclude:
+        utt_df = utt_df[~utt_df["speaker"].isin(exclude)].copy()
+
+    speaking_times = {
+        sample_id: value
+        for sample_id, value in zip(
+            sorted(utt_df["sample_id"].dropna().unique()),
+            [95, 88, 102],
+        )
+    }
+    utt_df["speaking_time"] = utt_df["sample_id"].map(speaking_times)
+    utt_df["word_count"] = (
+        utt_df["utterance"]
+        .fillna("")
+        .astype(str)
+        .str.replace(r"[^\w\s']", " ", regex=True)
+        .str.split()
+        .str.len()
+    )
+
+    keep_cols = [
+        col
+        for col in [
+            "sample_id",
+            "stimulus",
+            "timepoint",
+            "utterance_id",
+            "speaker",
+            "utterance",
+            "speaking_time",
+            "word_count",
+        ]
+        if col in utt_df.columns
+    ]
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    utt_df[keep_cols].to_excel(out_path, index=False)
+    return out_path
+
+
+def _materialize_target_vocab_unblind_capability(ctx: ExampleBuildContext) -> None:
+    with scratch_dir(ctx.package_dir) as tmpdir:
+        source_input_dir = tmpdir / "source_input"
+        _write_original_chat_inputs(source_input_dir, ctx.specs, force=True)
+        transcript_table = _build_transcript_table_from_chat(
+            input_dir=source_input_dir,
+            output_dir=tmpdir / "transcript_output",
+            specs=ctx.specs,
+        )
+        _write_vocab_unblind_input_from_transcript_table(
+            ctx.example_input_dir,
+            ctx.specs,
+            transcript_table,
+            force=ctx.force,
+        )
+
+
+def _stabilize_target_vocab_output(output_dir: Path) -> None:
+    generated = sorted((output_dir / "target_vocab").glob("target_vocab_data_*.xlsx"))
+    if not generated:
+        raise FileNotFoundError("Target vocabulary analysis did not produce a workbook.")
+    stable = _stable_target_vocab_analysis_name(generated[0])
+    if generated[0] != stable:
+        if stable.exists():
+            stable.unlink()
+        generated[0].replace(stable)
+
+
+def _materialize_target_vocab_analysis_capability(ctx: ExampleBuildContext) -> None:
+    _materialize_capability(ctx, "target_vocab_resource")
+    _materialize_capability(ctx, "target_vocab_unblind_input")
+    target_dir = ctx.example_input_dir / "target_vocab_analysis"
+    if target_dir.exists() and not ctx.force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {target_dir}")
+
+    with scratch_dir(ctx.package_dir) as tmpdir:
+        run_target_vocab(
+            metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
+            input_dir=ctx.example_input_dir,
+            output_dir=tmpdir,
+            exclude_speakers=ctx.specs["project_config"].get("exclude_speakers", []),
+            stimulus_field=ctx.specs["project_config"].get("stimulus_column", "stimulus"),
+            resource_path=_command_vocab_resource_path(ctx.example_input_dir, ctx.specs),
+            sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+            transcript_table_filename=_transcript_table_filename(ctx.specs),
+        )
+        _stabilize_target_vocab_output(tmpdir)
+        replace_tree(tmpdir / "target_vocab", target_dir, force=ctx.force)
+
+
+def _write_command_turns_coding_inputs(
+    input_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    include_reliability: bool,
+    force: bool,
+) -> Path:
+    target_dir = input_dir / "conversation_turns"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    primary_path = target_dir / "conversation_turns_template.xlsx"
+    reliability_path = target_dir / "conversation_turns_reliability_template.xlsx"
+
+    if primary_path.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {primary_path}")
+    if include_reliability and reliability_path.exists() and not force:
+        raise FileExistsError(f"Refusing to overwrite existing file: {reliability_path}")
+
+    _turns_dataframe(specs["turns_sessions"].get("primary_rows", [])).to_excel(
+        primary_path,
+        index=False,
+    )
+    if include_reliability:
+        _turns_dataframe(specs["turns_sessions"].get("reliability_rows", [])).to_excel(
+            reliability_path,
+            index=False,
+        )
+    return target_dir
+
+
+def _materialize_turns_coding_capability(ctx: ExampleBuildContext) -> None:
+    _write_command_turns_coding_inputs(
+        ctx.example_input_dir,
+        ctx.specs,
+        include_reliability=False,
+        force=ctx.force,
+    )
+
+
+def _materialize_turns_reliability_capability(ctx: ExampleBuildContext) -> None:
+    _write_command_turns_coding_inputs(
+        ctx.example_input_dir,
+        ctx.specs,
+        include_reliability=True,
+        force=ctx.force,
     )
 
 
@@ -1817,6 +2143,200 @@ def _build_word_rates_example_output(ctx: ExampleBuildContext) -> None:
     )
 
 
+def _build_blinding_encode_example_output(ctx: ExampleBuildContext) -> None:
+    encode_blinding(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        blinding_config=_blinding_command_config(ctx.specs),
+        seed=ctx.specs["project_config"].get("random_seed", 99),
+    )
+
+
+def _build_blinding_decode_example_output(ctx: ExampleBuildContext) -> None:
+    decode_blinding(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        blinding_config=_blinding_command_config(ctx.specs),
+    )
+
+
+def _build_powers_files_example_output(ctx: ExampleBuildContext) -> None:
+    make_powers_coding_files(
+        metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
+        frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
+        num_coders=ctx.specs["project_config"].get("num_coders", 0),
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        exclude_speakers=ctx.specs["project_config"].get("exclude_speakers", []),
+        automate_powers=ctx.specs["project_config"].get("automate_powers", False),
+        blinding_config=_powers_blinding_config(ctx.specs),
+        powers_coding_file=ctx.specs["advanced_config"].get(
+            "powers_coding_filename",
+            "powers_coding.xlsx",
+        ),
+        powers_reliability_file=ctx.specs["advanced_config"].get(
+            "powers_reliability_filename",
+            "powers_reliability_coding.xlsx",
+        ),
+        spacy_model_name=ctx.specs["advanced_config"].get(
+            "spacy_model_name",
+            "en_core_web_sm",
+        ),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        utterance_id_field=ctx.specs["advanced_config"].get("utterance_id_column", "utterance_id"),
+        transcript_table_filename=_transcript_table_filename(ctx.specs),
+    )
+
+
+def _build_powers_evaluate_example_output(ctx: ExampleBuildContext) -> None:
+    evaluate_powers_reliability(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        powers_coding_file=ctx.specs["advanced_config"].get(
+            "powers_coding_filename",
+            "powers_coding.xlsx",
+        ),
+        powers_reliability_file=ctx.specs["advanced_config"].get(
+            "powers_reliability_filename",
+            "powers_reliability_coding.xlsx",
+        ),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        utterance_id_field=ctx.specs["advanced_config"].get("utterance_id_column", "utterance_id"),
+    )
+
+
+def _build_powers_reselect_example_output(ctx: ExampleBuildContext) -> None:
+    reselect_powers_rel(
+        metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
+        random_seed=ctx.specs["project_config"].get("random_seed", 99),
+        automate_powers=ctx.specs["project_config"].get("automate_powers", False),
+        powers_coding_file=ctx.specs["advanced_config"].get(
+            "powers_coding_filename",
+            "powers_coding.xlsx",
+        ),
+        powers_reliability_file=ctx.specs["advanced_config"].get(
+            "powers_reliability_filename",
+            "powers_reliability_coding.xlsx",
+        ),
+        spacy_model_name=ctx.specs["advanced_config"].get(
+            "spacy_model_name",
+            "en_core_web_sm",
+        ),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
+def _build_powers_analyze_example_output(ctx: ExampleBuildContext) -> None:
+    analyze_powers_coding(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        powers_coding_file=ctx.specs["advanced_config"].get(
+            "powers_coding_filename",
+            "powers_coding.xlsx",
+        ),
+        blinding_config=_powers_blinding_config(ctx.specs),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
+def _build_powers_rates_example_output(ctx: ExampleBuildContext) -> None:
+    calculate_powers_rates(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        speaking_time_file=ctx.specs["advanced_config"].get(
+            "speaking_time_filename",
+            "speaking_times.xlsx",
+        ),
+        speaking_time_field=ctx.specs["advanced_config"].get(
+            "speaking_time_column",
+            "speaking_time",
+        ),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
+def _build_vocab_file_example_output(ctx: ExampleBuildContext) -> None:
+    make_target_vocab_file(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+    )
+
+
+def _build_vocab_check_example_output(ctx: ExampleBuildContext) -> None:
+    check_target_vocab_resources(
+        resource_path=_command_vocab_resource_path(ctx.example_input_dir, ctx.specs),
+        output_dir=ctx.example_output_dir,
+    )
+
+
+def _build_vocab_analyze_example_output(ctx: ExampleBuildContext) -> None:
+    run_target_vocab(
+        metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        exclude_speakers=ctx.specs["project_config"].get("exclude_speakers", []),
+        stimulus_field=ctx.specs["project_config"].get("stimulus_column", "stimulus"),
+        resource_path=_command_vocab_resource_path(ctx.example_input_dir, ctx.specs),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        transcript_table_filename=_transcript_table_filename(ctx.specs),
+    )
+    _stabilize_target_vocab_output(ctx.example_output_dir)
+
+
+def _build_vocab_rates_example_output(ctx: ExampleBuildContext) -> None:
+    calculate_target_vocab_rates(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
+def _build_turns_files_example_output(ctx: ExampleBuildContext) -> None:
+    make_digital_convo_turn_files(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
+        num_bins=ctx.specs["project_config"].get("num_bins", 2),
+        num_coders=ctx.specs["project_config"].get("num_coders", 0),
+        blinding_config=_template_blinding_config(ctx.specs),
+        seed=ctx.specs["project_config"].get("random_seed", 99),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        transcript_table_filename=_transcript_table_filename(ctx.specs),
+    )
+
+
+def _build_turns_evaluate_example_output(ctx: ExampleBuildContext) -> None:
+    evaluate_digital_convo_turns_reliability(
+        metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
+def _build_turns_reselect_example_output(ctx: ExampleBuildContext) -> None:
+    reselect_digital_convo_turns_rel(
+        metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
+        random_seed=ctx.specs["project_config"].get("random_seed", 99),
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
+def _build_turns_analyze_example_output(ctx: ExampleBuildContext) -> None:
+    ctx.example_output_dir.mkdir(parents=True, exist_ok=True)
+    analyze_digital_convo_turns(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+    )
+
+
 def _write_expected_cu_rates(
     project_dir: Path,
     specs: dict[str, dict[str, Any]],
@@ -2741,6 +3261,42 @@ EXAMPLE_CAPABILITIES: dict[str, ExampleCapability] = {
         name="speaking_time_workbook",
         materialize=_materialize_speaking_time_capability,
     ),
+    "powers_coding_workbooks": ExampleCapability(
+        name="powers_coding_workbooks",
+        materialize=_materialize_powers_coding_capability,
+    ),
+    "powers_coding_analysis": ExampleCapability(
+        name="powers_coding_analysis",
+        materialize=_materialize_powers_analysis_capability,
+    ),
+    "blinding_encode_workbook": ExampleCapability(
+        name="blinding_encode_workbook",
+        materialize=_materialize_blinding_encode_capability,
+    ),
+    "blinding_decode_workbook": ExampleCapability(
+        name="blinding_decode_workbook",
+        materialize=_materialize_blinding_decode_capability,
+    ),
+    "target_vocab_resource": ExampleCapability(
+        name="target_vocab_resource",
+        materialize=_materialize_vocab_resource_capability,
+    ),
+    "target_vocab_unblind_input": ExampleCapability(
+        name="target_vocab_unblind_input",
+        materialize=_materialize_target_vocab_unblind_capability,
+    ),
+    "target_vocab_analysis": ExampleCapability(
+        name="target_vocab_analysis",
+        materialize=_materialize_target_vocab_analysis_capability,
+    ),
+    "turns_coding_workbook": ExampleCapability(
+        name="turns_coding_workbook",
+        materialize=_materialize_turns_coding_capability,
+    ),
+    "turns_reliability_workbooks": ExampleCapability(
+        name="turns_reliability_workbooks",
+        materialize=_materialize_turns_reliability_capability,
+    ),
 }
 
 
@@ -2847,6 +3403,89 @@ EXAMPLE_COMMAND_PLANS: dict[str, ExampleCommandPlan] = {
         command="words rates",
         required_capabilities=("word_count_analysis", "speaking_time_workbook"),
         build_output=_build_word_rates_example_output,
+    ),
+
+    # Standalone blinding
+    "blinding encode": ExampleCommandPlan(
+        command="blinding encode",
+        required_capabilities=("blinding_encode_workbook",),
+        build_output=_build_blinding_encode_example_output,
+    ),
+    "blinding decode": ExampleCommandPlan(
+        command="blinding decode",
+        required_capabilities=("blinding_decode_workbook",),
+        build_output=_build_blinding_decode_example_output,
+    ),
+
+    # POWERS coding
+    "powers files": ExampleCommandPlan(
+        command="powers files",
+        required_capabilities=("transcript_table_workbook",),
+        build_output=_build_powers_files_example_output,
+    ),
+    "powers evaluate": ExampleCommandPlan(
+        command="powers evaluate",
+        required_capabilities=("powers_coding_workbooks",),
+        build_output=_build_powers_evaluate_example_output,
+    ),
+    "powers reselect": ExampleCommandPlan(
+        command="powers reselect",
+        required_capabilities=("powers_coding_workbooks",),
+        build_output=_build_powers_reselect_example_output,
+    ),
+    "powers analyze": ExampleCommandPlan(
+        command="powers analyze",
+        required_capabilities=("powers_coding_workbooks",),
+        build_output=_build_powers_analyze_example_output,
+    ),
+    "powers rates": ExampleCommandPlan(
+        command="powers rates",
+        required_capabilities=("powers_coding_analysis", "speaking_time_workbook"),
+        build_output=_build_powers_rates_example_output,
+    ),
+
+    # Target vocabulary
+    "vocab file": ExampleCommandPlan(
+        command="vocab file",
+        required_capabilities=(),
+        build_output=_build_vocab_file_example_output,
+    ),
+    "vocab check": ExampleCommandPlan(
+        command="vocab check",
+        required_capabilities=("target_vocab_resource",),
+        build_output=_build_vocab_check_example_output,
+    ),
+    "vocab analyze": ExampleCommandPlan(
+        command="vocab analyze",
+        required_capabilities=("target_vocab_resource", "target_vocab_unblind_input"),
+        build_output=_build_vocab_analyze_example_output,
+    ),
+    "vocab rates": ExampleCommandPlan(
+        command="vocab rates",
+        required_capabilities=("target_vocab_analysis",),
+        build_output=_build_vocab_rates_example_output,
+    ),
+
+    # Digital conversation turns
+    "turns files": ExampleCommandPlan(
+        command="turns files",
+        required_capabilities=("transcript_table_workbook",),
+        build_output=_build_turns_files_example_output,
+    ),
+    "turns evaluate": ExampleCommandPlan(
+        command="turns evaluate",
+        required_capabilities=("turns_reliability_workbooks",),
+        build_output=_build_turns_evaluate_example_output,
+    ),
+    "turns reselect": ExampleCommandPlan(
+        command="turns reselect",
+        required_capabilities=("turns_reliability_workbooks",),
+        build_output=_build_turns_reselect_example_output,
+    ),
+    "turns analyze": ExampleCommandPlan(
+        command="turns analyze",
+        required_capabilities=("turns_coding_workbook",),
+        build_output=_build_turns_analyze_example_output,
     ),
 }
 

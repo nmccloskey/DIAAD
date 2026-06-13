@@ -440,7 +440,7 @@ def test_generate_combined_command_example_uses_prior_outputs(tmp_path):
 
 def test_generate_command_example_rejects_valid_but_unsupported_command(tmp_path):
     with pytest.raises(ValueError, match="not yet available"):
-        generate_example_files(tmp_path / "command_examples", commands=["powers evaluate"])
+        generate_example_files(tmp_path / "command_examples", commands=["examples"])
 
 
 def test_generate_command_example_rejects_unknown_command(tmp_path):
@@ -522,6 +522,77 @@ def test_generate_pass_4_1_command_examples(tmp_path, command, expected_rel_path
     assert (package_dir / "example_config" / "project.yaml").exists()
     assert _exists(package_dir / expected_rel_path)
     assert not (package_dir / "expected_outputs").exists()
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_rel_path"),
+    [
+        ("blinding encode", "example_output/blinding/powers_coding_blinded.xlsx"),
+        (
+            "blinding decode",
+            "example_output/blinding/powers_coding_blinded_decoded.xlsx",
+        ),
+        ("powers files", "example_output/powers_coding/powers_coding.xlsx"),
+        (
+            "powers evaluate",
+            "example_output/powers_reliability/powers_reliability_results.xlsx",
+        ),
+        (
+            "powers reselect",
+            "example_output/reselected_powers_reliability/reselected_powers_reliability_coding.xlsx",
+        ),
+        ("powers analyze", "example_output/powers_coding_analysis/powers_analysis.xlsx"),
+        ("powers rates", "example_output/powers_coding_analysis/powers_coding_rates.xlsx"),
+        (
+            "vocab file",
+            "example_output/target_vocab/target_vocabulary_resource_template.json",
+        ),
+        (
+            "vocab check",
+            "example_output/target_vocab/target_vocab_resource_check.txt",
+        ),
+        (
+            "vocab analyze",
+            "example_output/target_vocab/target_vocab_data_260101_0000.xlsx",
+        ),
+        ("vocab rates", "example_output/target_vocab/target_vocab_rates.xlsx"),
+        (
+            "turns files",
+            "example_output/coding_templates/conversation_turns_template.xlsx",
+        ),
+        (
+            "turns evaluate",
+            "example_output/turns_reliability/conversation_turns_reliability_results.xlsx",
+        ),
+        (
+            "turns reselect",
+            "example_output/reselected_turns_reliability/reselected_conversation_turns_reliability_template.xlsx",
+        ),
+        ("turns analyze", "example_output/conversation_turns_template_analysis.xlsx"),
+    ],
+)
+def test_generate_pass_4_2_command_examples(tmp_path, command, expected_rel_path):
+    package_dir = generate_example_files(
+        tmp_path / "command_examples",
+        commands=[command],
+    )
+
+    assert package_dir.name == f"example_files_{command.replace(' ', '_')}"
+    _assert_no_scratch_artifacts(package_dir)
+    assert (package_dir / "README.md").exists()
+    assert (package_dir / "example_config" / "project.yaml").exists()
+    assert _exists(package_dir / expected_rel_path)
+    assert not (package_dir / "expected_outputs").exists()
+    if command.startswith("vocab "):
+        assert "example_input/target_vocab/resources" in (
+            package_dir / "example_config" / "advanced.yaml"
+        ).read_text()
+
+
+def test_all_non_examples_commands_have_example_plans():
+    unsupported = sorted(generate_module.VALID_COMMANDS - {"examples"} - set(generate_module.EXAMPLE_COMMAND_PLANS))
+
+    assert unsupported == []
 
 
 def test_render_example_docs():
