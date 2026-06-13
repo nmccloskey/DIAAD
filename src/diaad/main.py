@@ -37,21 +37,32 @@ def _has_examples_options(args) -> bool:
 
 
 def _run_examples_command(args) -> None:
-    if not getattr(args, "example_files", None) and not getattr(args, "render_docs", False):
-        raise ValueError(
-            "diaad examples requires --files <directory>, --render-docs, or both."
+    example_files = getattr(args, "example_files", None)
+    render_docs = getattr(args, "render_docs", False)
+    if example_files is None and not render_docs:
+        start_time = datetime.now()
+        project_root = Path.cwd().resolve()
+        set_root(project_root)
+        config_overrides = build_cli_config_overrides(args)
+        ctx = RunContext(
+            config_dir=args.config,
+            project_root=project_root,
+            start_time=start_time,
+            config_overrides=config_overrides,
+            create_output_dir=False,
         )
+        example_files = ctx.base_output_dir
 
-    if getattr(args, "example_files", None):
+    if example_files is not None:
         from diaad.examples.generate import generate_example_files
 
         project_dir = generate_example_files(
-            args.example_files,
+            example_files,
             force=getattr(args, "force", False),
         )
         print(f"Generated DIAAD example files: {project_dir}")
 
-    if getattr(args, "render_docs", False):
+    if render_docs:
         from diaad.examples.render_docs import render_example_docs
 
         paths = render_example_docs()

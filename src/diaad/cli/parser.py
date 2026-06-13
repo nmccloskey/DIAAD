@@ -87,7 +87,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
         dest="example_files",
         type=str,
         default=None,
-        help="For 'diaad examples': directory where runnable example files are written.",
+        help=(
+            "For 'diaad examples': directory where runnable example files are "
+            "written. Defaults to configured project.output_dir."
+        ),
     )
 
     parser.add_argument(

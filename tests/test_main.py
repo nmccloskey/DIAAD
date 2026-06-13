@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import diaad.main as main_module
+from diaad.examples import generate as generate_module
 
 
 class DummyLogger:
@@ -130,3 +131,86 @@ def test_main_dry_run_config_exits_before_logger_and_dispatch(monkeypatch, tmp_p
     assert ("prep",) not in events
     assert events[0][1]["config_overrides"] == {"project.input_dir": "input/siteA"}
     assert events[0][1]["create_output_dir"] is False
+
+
+def test_examples_command_defaults_files_to_configured_output_dir(monkeypatch, tmp_path):
+    events = []
+    configured_output = tmp_path / "configured-output"
+
+    class FakeContext:
+        def __init__(self, config_dir, project_root, start_time, **kwargs):
+            self.base_output_dir = configured_output
+            events.append(
+                (
+                    "ctx",
+                    config_dir,
+                    Path(project_root),
+                    isinstance(start_time, datetime),
+                    kwargs,
+                )
+            )
+
+    def fake_generate(destination, *, force=False):
+        events.append(("generate", Path(destination), force))
+        return Path(destination)
+
+    monkeypatch.setattr(main_module, "RunContext", FakeContext)
+    monkeypatch.setattr(
+        main_module,
+        "set_root",
+        lambda path: events.append(("set_root", Path(path))),
+    )
+    monkeypatch.setattr(main_module, "build_cli_config_overrides", lambda args: {})
+    monkeypatch.setattr(generate_module, "generate_example_files", fake_generate)
+
+    args = SimpleNamespace(
+        command=["examples"],
+        config="config",
+        input_dir=None,
+        output_dir=None,
+        set_values=None,
+        example_files=None,
+        render_docs=False,
+        force=False,
+    )
+
+    main_module.main(args)
+
+    assert ("generate", configured_output, False) in events
+    assert events[1][0] == "ctx"
+    assert events[1][4]["create_output_dir"] is False
+
+
+def test_examples_command_honors_output_dir_override_for_default_files(monkeypatch, tmp_path):
+    events = []
+    overridden_output = tmp_path / "overridden-output"
+
+    class FakeContext:
+        def __init__(self, config_dir, project_root, start_time, **kwargs):
+            assert kwargs["config_overrides"] == {
+                "project.output_dir": str(overridden_output)
+            }
+            self.base_output_dir = overridden_output
+
+    def fake_generate(destination, *, force=False):
+        events.append(("generate", Path(destination), force))
+        return Path(destination)
+
+    monkeypatch.setattr(main_module, "RunContext", FakeContext)
+    monkeypatch.setattr(main_module, "set_root", lambda path: None)
+    monkeypatch.setattr(generate_module, "generate_example_files", fake_generate)
+
+    args = SimpleNamespace(
+        command=["examples"],
+        config=None,
+        input_dir=None,
+        output_dir=str(overridden_output),
+        set_values=None,
+        example_files=None,
+        render_docs=False,
+        force=True,
+    )
+
+    main_module.main(args)
+
+    assert events == [("generate", overridden_output, True)]
