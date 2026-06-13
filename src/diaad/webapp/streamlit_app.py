@@ -30,39 +30,19 @@ CONFIG_FILENAMES = {
     "advanced.yml": "advanced",
 }
 
-DISPATCHED_COMMANDS = {
-    "transcripts tabularize",
-    "transcripts select",
-    "transcripts reselect",
-    "transcripts evaluate",
-    "cus files",
-    "cus reselect",
-    "cus evaluate",
-    "cus analyze",
-    "cus rates",
-    "words files",
-    "words reselect",
-    "words evaluate",
-    "words analyze",
-    "words rates",
-    "vocab file",
-    "vocab check",
-    "vocab analyze",
-    "vocab rates",
-    "turns files",
-    "turns evaluate",
-    "turns reselect",
-    "turns analyze",
-    "templates utterances",
-    "templates samples",
-    "templates times",
-    "templates subset",
-    "powers files",
-    "powers analyze",
-    "powers rates",
-    "powers evaluate",
-    "powers reselect",
+MODULE_LABELS = {
+    "examples": "Examples / Example I/O",
+    "blinding": "Blinding",
+    "transcripts": "Transcripts",
+    "templates": "Templates",
+    "cus": "Complete Utterances",
+    "words": "Word Counting",
+    "powers": "POWERS",
+    "vocab": "Target Vocabulary Coverage",
+    "turns": "Digital Conversational Turns",
 }
+
+SPECIAL_WEB_COMMANDS = {"examples"}
 
 
 def zip_folder(folder_path: Path) -> BytesIO:
@@ -146,13 +126,82 @@ def _save_uploaded_inputs(input_dir: Path, uploaded_files) -> None:
             f.write(uploaded.getbuffer())
 
 
+def _dispatched_commands() -> set[str]:
+    return set(build_dispatch(object()).keys())
+
+
+def _web_supported_commands() -> set[str]:
+    return _dispatched_commands() | SPECIAL_WEB_COMMANDS
+
+
+def _command_options_by_module() -> dict[str, list[str]]:
+    supported_commands = _web_supported_commands()
+    return {
+        module: [
+            command
+            for command in module_commands
+            if command in supported_commands
+        ]
+        for module, module_commands in MODULE_COMMANDS.items()
+    }
+
+
 def _command_options() -> list[str]:
     return [
         command
-        for module_commands in MODULE_COMMANDS.values()
+        for module_commands in _command_options_by_module().values()
         for command in module_commands
-        if command in DISPATCHED_COMMANDS
     ]
+
+
+def _command_checkbox_key(command: str) -> str:
+    return "diaad_command_" + command.replace(" ", "_").replace("/", "_")
+
+
+def _command_module_key(module: str) -> str:
+    return f"diaad_command_module_{module}_expanded"
+
+
+def _render_command_menu() -> list[str]:
+    command_groups = _command_options_by_module()
+
+    with st.expander("Show / Hide DIAAD Command Menu", expanded=False):
+        for module, commands in command_groups.items():
+            if not commands:
+                continue
+
+            label = MODULE_LABELS.get(module, module.title())
+            state_key = _command_module_key(module)
+            if state_key not in st.session_state:
+                st.session_state[state_key] = False
+
+            is_expanded = bool(st.session_state[state_key])
+            caret = "v" if is_expanded else ">"
+            if st.button(f"{caret} {label}", key=f"{state_key}_button"):
+                st.session_state[state_key] = not is_expanded
+                st.rerun()
+
+            if st.session_state[state_key]:
+                for command in commands:
+                    st.checkbox(
+                        command,
+                        key=_command_checkbox_key(command),
+                        help="Select this canonical DIAAD command for the next run.",
+                    )
+
+    selected = [
+        command
+        for command in _command_options()
+        if st.session_state.get(_command_checkbox_key(command), False)
+    ]
+
+    if selected:
+        st.markdown("Selected commands:")
+        st.code(", ".join(selected), language="text")
+    else:
+        st.caption("No DIAAD commands selected.")
+
+    return selected
 
 
 def _render_manual() -> None:
@@ -224,6 +273,17 @@ def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str
         return zip_folder(ctx.out_dir)
 
 
+def _run_examples_web() -> BytesIO:
+    from diaad.examples.generate import generate_example_files
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = generate_example_files(
+            Path(tmpdir) / "synthetic_project",
+            force=True,
+        )
+        return zip_folder(project_dir)
+
+
 def render_app() -> None:
     st.title("DIAAD Web App")
     st.subheader("Database-oriented, Integrative Architecture for Analyzing Discourse")
@@ -269,21 +329,40 @@ def render_app() -> None:
     )
 
     st.header("Part 3: Commands")
-    commands = st.multiselect(
-        "Select commands",
-        _command_options(),
-        help="These are the same canonical commands used by the CLI.",
-    )
+    commands = _render_command_menu()
 
     if st.button("Run selected commands"):
+        if not commands:
+            st.warning("Please select at least one command.")
+            st.stop()
+
+        if commands == ["examples"]:
+            try:
+                zip_buffer = _run_examples_web()
+                st.success("DIAAD example files generated successfully.")
+                timestamp = datetime.now().strftime("%y%m%d_%H%M")
+                st.download_button(
+                    label="Download Example Files ZIP",
+                    data=zip_buffer,
+                    file_name=f"diaad_example_files_{timestamp}.zip",
+                    mime="application/zip",
+                )
+            except Exception:
+                logger.exception("Unhandled error while generating DIAAD examples.")
+                st.error("An unexpected error occurred while generating DIAAD examples.")
+            st.stop()
+
+        if "examples" in commands:
+            st.warning(
+                "Please run the examples command by itself. It generates a "
+                "standalone synthetic project ZIP rather than using uploaded inputs."
+            )
+            st.stop()
         if configs is None:
             st.warning("Please upload or build a complete two-file config first.")
             st.stop()
         if not uploaded_inputs:
             st.warning("Please upload at least one input file.")
-            st.stop()
-        if not commands:
-            st.warning("Please select at least one command.")
             st.stop()
 
         try:
