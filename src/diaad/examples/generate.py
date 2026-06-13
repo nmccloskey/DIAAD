@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from contextlib import contextmanager
+from dataclasses import dataclass, field
 import random
 import shutil
 import tempfile
@@ -12,6 +14,7 @@ import pandas as pd
 
 from diaad.blinding.decode import decode_blinding
 from diaad.blinding.encode import encode_blinding
+from diaad.cli.commands import VALID_COMMANDS
 from diaad.coding.compl_utts.analysis import analyze_cu_coding
 from diaad.coding.compl_utts.files import make_cu_coding_files
 from diaad.coding.compl_utts.rates import calculate_cu_rates
@@ -127,6 +130,58 @@ TURNS_OUTPUT_DIRS = {
     "reselect": "turns_reselect",
     "analyze": "turns_analyze",
 }
+EXAMPLE_PACKAGE_PREFIX = "example_files_"
+FULL_DATASET_SLUG = "full_dataset"
+
+
+@dataclass(frozen=True)
+class ExampleCapability:
+    """Reusable input artifact that can satisfy one or more example commands."""
+
+    name: str
+    materialize: Callable[["ExampleBuildContext"], None]
+
+
+@dataclass(frozen=True)
+class ExampleCommandPlan:
+    """Command-specific example plan with declared input capabilities."""
+
+    command: str
+    required_capabilities: tuple[str, ...]
+    build_output: Callable[["ExampleBuildContext"], None]
+
+
+@dataclass
+class ExampleBuildContext:
+    """Mutable state shared while building a command-specific example package."""
+
+    package_dir: Path
+    specs: dict[str, dict[str, Any]]
+    force: bool
+    materialized_capabilities: set[str] = field(default_factory=set)
+
+    @property
+    def project_config(self) -> dict[str, Any]:
+        project = dict(self.specs["project_config"])
+        project["input_dir"] = "example_input"
+        project["output_dir"] = "example_output"
+        return project
+
+    @property
+    def example_config_dir(self) -> Path:
+        return self.package_dir / "example_config"
+
+    @property
+    def example_input_dir(self) -> Path:
+        return self.package_dir / self.project_config["input_dir"]
+
+    @property
+    def example_output_dir(self) -> Path:
+        return self.package_dir / self.project_config["output_dir"]
+
+    @property
+    def example_logs_dir(self) -> Path:
+        return self.package_dir / "example_logs"
 
 
 def _transcript_table_filename(specs: dict[str, dict[str, Any]]) -> str:
@@ -268,6 +323,152 @@ def _read_specs() -> dict[str, dict[str, Any]]:
     return specs
 
 
+def _ensure_writable_package(path: Path, *, force: bool) -> None:
+    if path.exists() and any(path.iterdir()) and not force:
+        raise FileExistsError(
+            f"Refusing to write into non-empty directory without --force: {path}"
+        )
+
+
+def _normalize_example_commands(commands: Iterable[str] | str) -> tuple[str, ...]:
+    if isinstance(commands, str):
+        commands = [commands]
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for command in commands:
+        value = command.strip().lower()
+        if not value or value in seen:
+            continue
+        normalized.append(value)
+        seen.add(value)
+
+    invalid = [command for command in normalized if command not in VALID_COMMANDS]
+    if invalid:
+        raise ValueError(
+            "Unknown DIAAD command(s) for examples: " + ", ".join(invalid)
+        )
+
+    unsupported = [
+        command
+        for command in normalized
+        if command not in EXAMPLE_COMMAND_PLANS
+    ]
+    if unsupported:
+        available = ", ".join(sorted(EXAMPLE_COMMAND_PLANS))
+        raise ValueError(
+            "DIAAD example plans are not yet available for: "
+            + ", ".join(unsupported)
+            + f". Available example commands: {available}"
+        )
+
+    return tuple(normalized)
+
+
+def example_package_slug(commands: Iterable[str] | str | None = None) -> str:
+    """Return the stable package slug for a full or command-specific example."""
+    if commands is None:
+        return FULL_DATASET_SLUG
+    normalized = _normalize_example_commands(commands)
+    if not normalized:
+        return FULL_DATASET_SLUG
+    return "_".join(command.replace(" ", "_") for command in normalized)
+
+
+def example_package_name(commands: Iterable[str] | str | None = None) -> str:
+    """Return the stable package directory name for the requested examples."""
+    return f"{EXAMPLE_PACKAGE_PREFIX}{example_package_slug(commands)}"
+
+
+def _required_capabilities_for_commands(commands: Iterable[str] | str) -> tuple[str, ...]:
+    normalized = _normalize_example_commands(commands)
+    required: list[str] = []
+    seen: set[str] = set()
+    for command in normalized:
+        for capability_name in EXAMPLE_COMMAND_PLANS[command].required_capabilities:
+            if capability_name not in seen:
+                required.append(capability_name)
+                seen.add(capability_name)
+    return tuple(required)
+
+
+def _materialize_capability(ctx: ExampleBuildContext, capability_name: str) -> None:
+    if capability_name in ctx.materialized_capabilities:
+        return
+    capability = EXAMPLE_CAPABILITIES[capability_name]
+    capability.materialize(ctx)
+    ctx.materialized_capabilities.add(capability_name)
+
+
+def _materialize_required_capabilities(
+    ctx: ExampleBuildContext,
+    commands: Iterable[str] | str,
+) -> None:
+    for capability_name in _required_capabilities_for_commands(commands):
+        _materialize_capability(ctx, capability_name)
+
+
+def _write_command_example_config(ctx: ExampleBuildContext) -> None:
+    write_yaml(
+        ctx.example_config_dir / "project.yaml",
+        ctx.project_config,
+        force=ctx.force,
+    )
+    write_yaml(
+        ctx.example_config_dir / "advanced.yaml",
+        ctx.specs["advanced_config"],
+        force=ctx.force,
+    )
+
+
+def _command_list_text(commands: Iterable[str]) -> str:
+    return "\n".join(f"- `{command}`" for command in commands)
+
+
+def _write_command_example_readme(
+    ctx: ExampleBuildContext,
+    commands: tuple[str, ...],
+) -> None:
+    commands_text = _command_list_text(commands)
+    example_command = ", ".join(commands)
+    text = f"""# DIAAD Command Example Files
+
+This package contains synthetic example input and output files for:
+
+{commands_text}
+
+Run from this directory with:
+
+```powershell
+diaad {example_command} --config example_config
+```
+
+Key folders:
+
+- `example_config/`: runnable DIAAD configuration for this example package.
+- `example_input/`: synthetic files needed to run the command(s).
+- `example_output/`: representative output produced by the command(s).
+- `example_logs/`: illustrative log output for this example package.
+"""
+    write_text(ctx.package_dir / "README.md", text, force=ctx.force)
+
+
+def _write_command_example_logs(
+    ctx: ExampleBuildContext,
+    commands: tuple[str, ...],
+) -> None:
+    ctx.example_logs_dir.mkdir(parents=True, exist_ok=True)
+    log_text = (
+        "DIAAD example log\n"
+        "=================\n\n"
+        "This illustrative log accompanies a generated command-specific example "
+        "package. Full `diaad examples` runs also write real run logs in the "
+        "timestamped DIAAD output directory.\n\n"
+        "Example command(s): " + ", ".join(commands) + "\n"
+    )
+    write_text(ctx.example_logs_dir / "diaad_example.log", log_text, force=ctx.force)
+
+
 def _write_readme(project_dir: Path, dataset: dict[str, Any], *, force: bool) -> None:
     text = f"""# {dataset.get("name", "DIAAD Synthetic Example Project")}
 
@@ -319,6 +520,105 @@ def _materialize_inputs(project_dir: Path, specs: dict[str, dict[str, Any]], *, 
         )
 
     _write_sample_subset_inputs(project_dir, specs, force=force)
+
+
+def _write_original_chat_inputs(
+    input_dir: Path,
+    specs: dict[str, dict[str, Any]],
+    *,
+    force: bool,
+) -> None:
+    for chat in specs["chat_files"]["chat_files"]:
+        write_text(
+            input_dir / "chat" / chat["filename"],
+            chat["content"].rstrip() + "\n",
+            force=force,
+        )
+
+
+def _build_transcript_table_from_chat(
+    *,
+    input_dir: Path,
+    output_dir: Path,
+    specs: dict[str, dict[str, Any]],
+) -> Path:
+    metadata_config = {
+        "tiers": specs["project_config"].get("metadata_fields", {}),
+        "input_dir": input_dir,
+    }
+    metadata_fields = MetadataManager(metadata_config).metadata_fields
+    chats = read_cha_files(
+        input_dir=input_dir,
+        shuffle=False,
+        exclude_dirnames=[specs["advanced_config"].get("reliability_dirname", "reliability")],
+    )
+    written = tabularize_transcripts(
+        metadata_fields=metadata_fields,
+        chats=chats,
+        output_dir=output_dir,
+        shuffle=False,
+        random_seed=specs["project_config"].get("random_seed", 99),
+        transcript_table_filename=_transcript_table_filename(specs),
+    )
+    if not written:
+        raise RuntimeError("Synthetic transcript tabularization did not write a workbook.")
+    return Path(written[0])
+
+
+def _materialize_chat_input_capability(ctx: ExampleBuildContext) -> None:
+    _write_original_chat_inputs(ctx.example_input_dir, ctx.specs, force=ctx.force)
+
+
+def _materialize_cu_coding_capability(ctx: ExampleBuildContext) -> None:
+    target_dir = ctx.example_input_dir / "cu_coding"
+    if target_dir.exists() and not ctx.force:
+        raise FileExistsError(f"Refusing to overwrite existing directory: {target_dir}")
+
+    with scratch_dir(ctx.package_dir) as tmpdir:
+        source_input_dir = tmpdir / "source_input"
+        _write_original_chat_inputs(source_input_dir, ctx.specs, force=True)
+        transcript_table = _build_transcript_table_from_chat(
+            input_dir=source_input_dir,
+            output_dir=tmpdir / "transcript_output",
+            specs=ctx.specs,
+        )
+        cu_input_dir = _prepare_cu_input(
+            tmpdir,
+            transcript_table,
+            _transcript_table_filename(ctx.specs),
+        )
+        cu_output_dir = tmpdir / "cu_output"
+        cu_output_dir.mkdir(parents=True, exist_ok=True)
+        make_cu_coding_files(
+            metadata_fields=_metadata_fields_for_input(ctx.specs, cu_input_dir),
+            frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
+            num_coders=ctx.specs["project_config"].get("num_coders", 0),
+            input_dir=cu_input_dir,
+            output_dir=cu_output_dir,
+            cu_paradigms=ctx.specs["advanced_config"].get("cu_paradigms", []),
+            exclude_speakers=ctx.specs["project_config"].get("exclude_speakers", []),
+            stimulus_field=ctx.specs["project_config"].get("stimulus_column", ""),
+            blinding_config=_cu_blinding_config(ctx.specs),
+            transcript_table_filename=_transcript_table_filename(ctx.specs),
+        )
+        replace_tree(cu_output_dir / "cu_coding", target_dir, force=ctx.force)
+
+    cu_file = target_dir / "cu_coding.xlsx"
+    rel_file = target_dir / "cu_reliability_coding.xlsx"
+    _fill_cu_workbook(cu_file)
+    if rel_file.exists():
+        _fill_cu_workbook(rel_file, reliability=True)
+
+
+def _metadata_fields_for_input(
+    specs: dict[str, dict[str, Any]],
+    input_dir: Path,
+) -> dict[str, Any]:
+    metadata_config = {
+        "tiers": specs["project_config"].get("metadata_fields", {}),
+        "input_dir": input_dir,
+    }
+    return MetadataManager(metadata_config).metadata_fields
 
 
 def _metadata_fields(project_dir: Path, project_config: dict[str, Any]) -> dict[str, Any]:
@@ -1002,6 +1302,32 @@ def _write_expected_cu_analysis(
         raise FileExistsError(f"Refusing to overwrite existing directory: {analysis_input_dir}")
     replace_tree(expected_dir, analysis_input_dir, force=force)
     return expected_dir
+
+
+def _build_transcripts_tabularize_example_output(ctx: ExampleBuildContext) -> None:
+    _build_transcript_table_from_chat(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        specs=ctx.specs,
+    )
+
+
+def _build_cu_evaluate_example_output(ctx: ExampleBuildContext) -> None:
+    evaluate_cu_reliability(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        cu_paradigms=ctx.specs["advanced_config"].get("cu_paradigms", []),
+    )
+
+
+def _build_cu_analyze_example_output(ctx: ExampleBuildContext) -> None:
+    analyze_cu_coding(
+        input_dir=ctx.example_input_dir,
+        output_dir=ctx.example_output_dir,
+        cu_paradigms=ctx.specs["advanced_config"].get("cu_paradigms") or None,
+        blinding_config=_cu_blinding_config(ctx.specs),
+        exclude_speakers=ctx.specs["project_config"].get("exclude_speakers", []),
+    )
 
 
 def _write_expected_cu_rates(
@@ -1887,22 +2213,40 @@ def _write_expected_turn_analysis(
     return expected_dir
 
 
-def generate_example_files(destination: str | Path, *, force: bool = False) -> Path:
-    """
-    Materialize the synthetic DIAAD example project.
+EXAMPLE_CAPABILITIES: dict[str, ExampleCapability] = {
+    "synthetic_chat_files": ExampleCapability(
+        name="synthetic_chat_files",
+        materialize=_materialize_chat_input_capability,
+    ),
+    "cu_coding_workbooks": ExampleCapability(
+        name="cu_coding_workbooks",
+        materialize=_materialize_cu_coding_capability,
+    ),
+}
 
-    Parameters
-    ----------
-    destination
-        Directory to create or update, usually ``example_files/synthetic_project``.
-    force
-        Overwrite existing files when True.
-    """
+
+EXAMPLE_COMMAND_PLANS: dict[str, ExampleCommandPlan] = {
+    "transcripts tabularize": ExampleCommandPlan(
+        command="transcripts tabularize",
+        required_capabilities=("synthetic_chat_files",),
+        build_output=_build_transcripts_tabularize_example_output,
+    ),
+    "cus evaluate": ExampleCommandPlan(
+        command="cus evaluate",
+        required_capabilities=("cu_coding_workbooks",),
+        build_output=_build_cu_evaluate_example_output,
+    ),
+    "cus analyze": ExampleCommandPlan(
+        command="cus analyze",
+        required_capabilities=("cu_coding_workbooks",),
+        build_output=_build_cu_analyze_example_output,
+    ),
+}
+
+
+def _generate_full_example_files(destination: str | Path, *, force: bool) -> Path:
     project_dir = Path(destination).expanduser().resolve()
-    if project_dir.exists() and any(project_dir.iterdir()) and not force:
-        raise FileExistsError(
-            f"Refusing to write into non-empty directory without --force: {project_dir}"
-        )
+    _ensure_writable_package(project_dir, force=force)
 
     specs = _read_specs()
     project_dir.mkdir(parents=True, exist_ok=True)
@@ -1944,3 +2288,60 @@ def generate_example_files(destination: str | Path, *, force: bool = False) -> P
     _write_expected_turn_reselection(project_dir, specs, force=force)
     _write_expected_turn_analysis(project_dir, specs, force=force)
     return project_dir
+
+
+def _generate_command_example_files(
+    destination: str | Path,
+    *,
+    commands: Iterable[str] | str,
+    force: bool,
+) -> Path:
+    normalized = _normalize_example_commands(commands)
+    package_dir = (
+        Path(destination).expanduser().resolve()
+        / example_package_name(normalized)
+    )
+    _ensure_writable_package(package_dir, force=force)
+
+    specs = _read_specs()
+    package_dir.mkdir(parents=True, exist_ok=True)
+    ctx = ExampleBuildContext(package_dir=package_dir, specs=specs, force=force)
+    _write_command_example_readme(ctx, normalized)
+    _write_command_example_config(ctx)
+    _materialize_required_capabilities(ctx, normalized)
+
+    for command in normalized:
+        EXAMPLE_COMMAND_PLANS[command].build_output(ctx)
+
+    _write_command_example_logs(ctx, normalized)
+    return package_dir
+
+
+def generate_example_files(
+    destination: str | Path,
+    *,
+    force: bool = False,
+    commands: Iterable[str] | str | None = None,
+) -> Path:
+    """
+    Materialize the synthetic DIAAD example project.
+
+    Parameters
+    ----------
+    destination
+        For full-dataset examples, directory to create or update. For
+        command-specific examples, base directory under which
+        ``example_files_<slug>`` is created.
+    force
+        Overwrite existing files when True.
+    commands
+        Optional canonical DIAAD command or commands for command-specific
+        example files. When omitted, the full synthetic dataset is generated.
+    """
+    if commands is None:
+        return _generate_full_example_files(destination, force=force)
+    return _generate_command_example_files(
+        destination,
+        commands=commands,
+        force=force,
+    )

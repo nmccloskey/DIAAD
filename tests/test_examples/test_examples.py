@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pandas as pd
+import pytest
 
 from diaad.examples import get_example_io_docs_path, iter_example_io_markdown_files
 from diaad.examples import generate as generate_module
@@ -15,10 +16,14 @@ def _exists(path):
     return long_path(path).exists()
 
 
+def _assert_no_scratch_artifacts(path):
+    assert not any(item.name.startswith("_dx_") for item in path.rglob("*"))
+
+
 def test_generate_synthetic_project(tmp_path):
     project_dir = generate_example_files(tmp_path / "synthetic_project")
 
-    assert not any(path.name.startswith("_dx_") for path in project_dir.rglob("*"))
+    _assert_no_scratch_artifacts(project_dir)
     assert (project_dir / "config" / "project.yaml").exists()
     assert (project_dir / "config" / "advanced.yaml").exists()
     assert not (project_dir / "config" / "advanced_project.yaml").exists()
@@ -343,6 +348,69 @@ def test_generate_synthetic_project(tmp_path):
         / "turns_analyze"
         / "conversation_turns_template_analysis.xlsx"
     )
+
+
+def test_command_example_capability_union_deduplicates_shared_inputs():
+    assert generate_module._required_capabilities_for_commands(
+        ["cus analyze", "cus evaluate"]
+    ) == ("cu_coding_workbooks",)
+
+
+def test_generate_transcripts_tabularize_command_example(tmp_path):
+    package_dir = generate_example_files(
+        tmp_path / "command_examples",
+        commands=["transcripts tabularize"],
+    )
+
+    assert package_dir.name == "example_files_transcripts_tabularize"
+    _assert_no_scratch_artifacts(package_dir)
+    assert (package_dir / "README.md").exists()
+    assert (package_dir / "example_config" / "project.yaml").exists()
+    assert (package_dir / "example_config" / "advanced.yaml").exists()
+    assert len(list((package_dir / "example_input" / "chat").glob("*.cha"))) == 3
+    assert (
+        package_dir
+        / "example_output"
+        / "transcript_tables"
+        / "transcript_tables.xlsx"
+    ).exists()
+    assert (package_dir / "example_logs" / "diaad_example.log").exists()
+    assert not (package_dir / "expected_outputs").exists()
+
+
+def test_generate_combined_cu_command_example_reuses_shared_inputs(tmp_path):
+    package_dir = generate_example_files(
+        tmp_path / "command_examples",
+        commands=["cus analyze", "cus evaluate"],
+    )
+
+    assert package_dir.name == "example_files_cus_analyze_cus_evaluate"
+    _assert_no_scratch_artifacts(package_dir)
+    assert (
+        package_dir / "example_input" / "cu_coding" / "cu_coding.xlsx"
+    ).exists()
+    assert (
+        package_dir / "example_input" / "cu_coding" / "cu_reliability_coding.xlsx"
+    ).exists()
+    assert not (package_dir / "example_input" / "transcript_tables").exists()
+    assert (
+        package_dir
+        / "example_output"
+        / "cu_coding_analysis"
+        / "cu_coding_by_sample.xlsx"
+    ).exists()
+    assert (
+        package_dir
+        / "example_output"
+        / "cu_reliability"
+        / "cu_reliability_coding_by_sample.xlsx"
+    ).exists()
+    assert not (package_dir / "expected_outputs").exists()
+
+
+def test_generate_command_example_rejects_valid_but_unsupported_command(tmp_path):
+    with pytest.raises(ValueError, match="not yet available"):
+        generate_example_files(tmp_path / "command_examples", commands=["words evaluate"])
 
 
 def test_render_example_docs():
