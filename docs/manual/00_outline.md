@@ -75,7 +75,29 @@
 │   ├── 03_complete_utterances/
 │   │   ├── 01_quickstart.md — Complete Utterances Module Quickstart
 │   │   ├── 03_research_context.md — Complete Utterances Research Context
-│   │   └── 04_implementation_notes.md — Complete Utterances Implementation Notes
+│   │   ├── 04_implementation_notes.md — Complete Utterances Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_files/
+│   │       │   ├── 01_quickstart.md — `cus files` Quickstart
+│   │       │   ├── 02_usage_guide.md — `cus files` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `cus files` Implementation Notes
+│   │       ├── 02_evaluate/
+│   │       │   ├── 01_quickstart.md — `cus evaluate` Quickstart
+│   │       │   ├── 02_usage_guide.md — `cus evaluate` Usage Guide
+│   │       │   ├── 03_research_context.md — `cus evaluate` Research Context
+│   │       │   └── 04_implementation_notes.md — `cus evaluate` Implementation Notes
+│   │       ├── 03_reselect/
+│   │       │   ├── 01_quickstart.md — `cus reselect` Quickstart
+│   │       │   ├── 02_usage_guide.md — `cus reselect` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `cus reselect` Implementation Notes
+│   │       ├── 04_analyze/
+│   │       │   ├── 01_quickstart.md — `cus analyze` Quickstart
+│   │       │   ├── 02_usage_guide.md — `cus analyze` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `cus analyze` Implementation Notes
+│   │       └── 05_rates/
+│   │           ├── 01_quickstart.md — `cus rates` Quickstart
+│   │           ├── 02_usage_guide.md — `cus rates` Usage Guide
+│   │           └── 04_implementation_notes.md — `cus rates` Implementation Notes
 │   ├── 04_word_counting/
 │   │   ├── 01_quickstart.md — Word Counting Module Quickstart
 │   │   ├── 03_research_context.md — Word Counting Research Context
@@ -185,6 +207,32 @@
 - [01_quickstart.md — Complete Utterances Module Quickstart](04_modules/03_complete_utterances/01_quickstart.md)
 - [03_research_context.md — Complete Utterances Research Context](04_modules/03_complete_utterances/03_research_context.md)
 - [04_implementation_notes.md — Complete Utterances Implementation Notes](04_modules/03_complete_utterances/04_implementation_notes.md)
+
+### 04_modules/03_complete_utterances/05_commands/01_files/
+- [01_quickstart.md — `cus files` Quickstart](04_modules/03_complete_utterances/05_commands/01_files/01_quickstart.md)
+- [02_usage_guide.md — `cus files` Usage Guide](04_modules/03_complete_utterances/05_commands/01_files/02_usage_guide.md)
+- [04_implementation_notes.md — `cus files` Implementation Notes](04_modules/03_complete_utterances/05_commands/01_files/04_implementation_notes.md)
+
+### 04_modules/03_complete_utterances/05_commands/02_evaluate/
+- [01_quickstart.md — `cus evaluate` Quickstart](04_modules/03_complete_utterances/05_commands/02_evaluate/01_quickstart.md)
+- [02_usage_guide.md — `cus evaluate` Usage Guide](04_modules/03_complete_utterances/05_commands/02_evaluate/02_usage_guide.md)
+- [03_research_context.md — `cus evaluate` Research Context](04_modules/03_complete_utterances/05_commands/02_evaluate/03_research_context.md)
+- [04_implementation_notes.md — `cus evaluate` Implementation Notes](04_modules/03_complete_utterances/05_commands/02_evaluate/04_implementation_notes.md)
+
+### 04_modules/03_complete_utterances/05_commands/03_reselect/
+- [01_quickstart.md — `cus reselect` Quickstart](04_modules/03_complete_utterances/05_commands/03_reselect/01_quickstart.md)
+- [02_usage_guide.md — `cus reselect` Usage Guide](04_modules/03_complete_utterances/05_commands/03_reselect/02_usage_guide.md)
+- [04_implementation_notes.md — `cus reselect` Implementation Notes](04_modules/03_complete_utterances/05_commands/03_reselect/04_implementation_notes.md)
+
+### 04_modules/03_complete_utterances/05_commands/04_analyze/
+- [01_quickstart.md — `cus analyze` Quickstart](04_modules/03_complete_utterances/05_commands/04_analyze/01_quickstart.md)
+- [02_usage_guide.md — `cus analyze` Usage Guide](04_modules/03_complete_utterances/05_commands/04_analyze/02_usage_guide.md)
+- [04_implementation_notes.md — `cus analyze` Implementation Notes](04_modules/03_complete_utterances/05_commands/04_analyze/04_implementation_notes.md)
+
+### 04_modules/03_complete_utterances/05_commands/05_rates/
+- [01_quickstart.md — `cus rates` Quickstart](04_modules/03_complete_utterances/05_commands/05_rates/01_quickstart.md)
+- [02_usage_guide.md — `cus rates` Usage Guide](04_modules/03_complete_utterances/05_commands/05_rates/02_usage_guide.md)
+- [04_implementation_notes.md — `cus rates` Implementation Notes](04_modules/03_complete_utterances/05_commands/05_rates/04_implementation_notes.md)
 
 ### 04_modules/04_word_counting/
 - [01_quickstart.md — Word Counting Module Quickstart](04_modules/04_word_counting/01_quickstart.md)
