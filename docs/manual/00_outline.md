@@ -101,7 +101,29 @@
 │   ├── 04_word_counting/
 │   │   ├── 01_quickstart.md — Word Counting Module Quickstart
 │   │   ├── 03_research_context.md — Word Counting Research Context
-│   │   └── 04_implementation_notes.md — Word Counting Implementation Notes
+│   │   ├── 04_implementation_notes.md — Word Counting Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_files/
+│   │       │   ├── 01_quickstart.md — `words files` Quickstart
+│   │       │   ├── 02_usage_guide.md — `words files` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `words files` Implementation Notes
+│   │       ├── 02_evaluate/
+│   │       │   ├── 01_quickstart.md — `words evaluate` Quickstart
+│   │       │   ├── 02_usage_guide.md — `words evaluate` Usage Guide
+│   │       │   ├── 03_research_context.md — `words evaluate` Research Context
+│   │       │   └── 04_implementation_notes.md — `words evaluate` Implementation Notes
+│   │       ├── 03_reselect/
+│   │       │   ├── 01_quickstart.md — `words reselect` Quickstart
+│   │       │   ├── 02_usage_guide.md — `words reselect` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `words reselect` Implementation Notes
+│   │       ├── 04_analyze/
+│   │       │   ├── 01_quickstart.md — `words analyze` Quickstart
+│   │       │   ├── 02_usage_guide.md — `words analyze` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `words analyze` Implementation Notes
+│   │       └── 05_rates/
+│   │           ├── 01_quickstart.md — `words rates` Quickstart
+│   │           ├── 02_usage_guide.md — `words rates` Usage Guide
+│   │           └── 04_implementation_notes.md — `words rates` Implementation Notes
 │   ├── 05_powers/
 │   │   ├── 01_quickstart.md — POWERS Module Quickstart
 │   │   ├── 03_research_context.md — POWERS Research Context
@@ -238,6 +260,32 @@
 - [01_quickstart.md — Word Counting Module Quickstart](04_modules/04_word_counting/01_quickstart.md)
 - [03_research_context.md — Word Counting Research Context](04_modules/04_word_counting/03_research_context.md)
 - [04_implementation_notes.md — Word Counting Implementation Notes](04_modules/04_word_counting/04_implementation_notes.md)
+
+### 04_modules/04_word_counting/05_commands/01_files/
+- [01_quickstart.md — `words files` Quickstart](04_modules/04_word_counting/05_commands/01_files/01_quickstart.md)
+- [02_usage_guide.md — `words files` Usage Guide](04_modules/04_word_counting/05_commands/01_files/02_usage_guide.md)
+- [04_implementation_notes.md — `words files` Implementation Notes](04_modules/04_word_counting/05_commands/01_files/04_implementation_notes.md)
+
+### 04_modules/04_word_counting/05_commands/02_evaluate/
+- [01_quickstart.md — `words evaluate` Quickstart](04_modules/04_word_counting/05_commands/02_evaluate/01_quickstart.md)
+- [02_usage_guide.md — `words evaluate` Usage Guide](04_modules/04_word_counting/05_commands/02_evaluate/02_usage_guide.md)
+- [03_research_context.md — `words evaluate` Research Context](04_modules/04_word_counting/05_commands/02_evaluate/03_research_context.md)
+- [04_implementation_notes.md — `words evaluate` Implementation Notes](04_modules/04_word_counting/05_commands/02_evaluate/04_implementation_notes.md)
+
+### 04_modules/04_word_counting/05_commands/03_reselect/
+- [01_quickstart.md — `words reselect` Quickstart](04_modules/04_word_counting/05_commands/03_reselect/01_quickstart.md)
+- [02_usage_guide.md — `words reselect` Usage Guide](04_modules/04_word_counting/05_commands/03_reselect/02_usage_guide.md)
+- [04_implementation_notes.md — `words reselect` Implementation Notes](04_modules/04_word_counting/05_commands/03_reselect/04_implementation_notes.md)
+
+### 04_modules/04_word_counting/05_commands/04_analyze/
+- [01_quickstart.md — `words analyze` Quickstart](04_modules/04_word_counting/05_commands/04_analyze/01_quickstart.md)
+- [02_usage_guide.md — `words analyze` Usage Guide](04_modules/04_word_counting/05_commands/04_analyze/02_usage_guide.md)
+- [04_implementation_notes.md — `words analyze` Implementation Notes](04_modules/04_word_counting/05_commands/04_analyze/04_implementation_notes.md)
+
+### 04_modules/04_word_counting/05_commands/05_rates/
+- [01_quickstart.md — `words rates` Quickstart](04_modules/04_word_counting/05_commands/05_rates/01_quickstart.md)
+- [02_usage_guide.md — `words rates` Usage Guide](04_modules/04_word_counting/05_commands/05_rates/02_usage_guide.md)
+- [04_implementation_notes.md — `words rates` Implementation Notes](04_modules/04_word_counting/05_commands/05_rates/04_implementation_notes.md)
 
 ### 04_modules/05_powers/
 - [01_quickstart.md — POWERS Module Quickstart](04_modules/05_powers/01_quickstart.md)
