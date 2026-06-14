@@ -54,7 +54,24 @@
 │   ├── 02_templates/
 │   │   ├── 01_quickstart.md — Templates Module Quickstart
 │   │   ├── 03_research_context.md — Templates Research Context
-│   │   └── 04_implementation_notes.md — Templates Implementation Notes
+│   │   ├── 04_implementation_notes.md — Templates Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_utterances/
+│   │       │   ├── 01_quickstart.md — `templates utterances` Quickstart
+│   │       │   ├── 02_usage_guide.md — `templates utterances` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `templates utterances` Implementation Notes
+│   │       ├── 02_samples/
+│   │       │   ├── 01_quickstart.md — `templates samples` Quickstart
+│   │       │   ├── 02_usage_guide.md — `templates samples` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `templates samples` Implementation Notes
+│   │       ├── 03_times/
+│   │       │   ├── 01_quickstart.md — `templates times` Quickstart
+│   │       │   ├── 02_usage_guide.md — `templates times` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `templates times` Implementation Notes
+│   │       └── 04_subset/
+│   │           ├── 01_quickstart.md — `templates subset` Quickstart
+│   │           ├── 02_usage_guide.md — `templates subset` Usage Guide
+│   │           └── 04_implementation_notes.md — `templates subset` Implementation Notes
 │   ├── 03_complete_utterances/
 │   │   ├── 01_quickstart.md — Complete Utterances Module Quickstart
 │   │   ├── 03_research_context.md — Complete Utterances Research Context
@@ -143,6 +160,26 @@
 - [01_quickstart.md — Templates Module Quickstart](04_modules/02_templates/01_quickstart.md)
 - [03_research_context.md — Templates Research Context](04_modules/02_templates/03_research_context.md)
 - [04_implementation_notes.md — Templates Implementation Notes](04_modules/02_templates/04_implementation_notes.md)
+
+### 04_modules/02_templates/05_commands/01_utterances/
+- [01_quickstart.md — `templates utterances` Quickstart](04_modules/02_templates/05_commands/01_utterances/01_quickstart.md)
+- [02_usage_guide.md — `templates utterances` Usage Guide](04_modules/02_templates/05_commands/01_utterances/02_usage_guide.md)
+- [04_implementation_notes.md — `templates utterances` Implementation Notes](04_modules/02_templates/05_commands/01_utterances/04_implementation_notes.md)
+
+### 04_modules/02_templates/05_commands/02_samples/
+- [01_quickstart.md — `templates samples` Quickstart](04_modules/02_templates/05_commands/02_samples/01_quickstart.md)
+- [02_usage_guide.md — `templates samples` Usage Guide](04_modules/02_templates/05_commands/02_samples/02_usage_guide.md)
+- [04_implementation_notes.md — `templates samples` Implementation Notes](04_modules/02_templates/05_commands/02_samples/04_implementation_notes.md)
+
+### 04_modules/02_templates/05_commands/03_times/
+- [01_quickstart.md — `templates times` Quickstart](04_modules/02_templates/05_commands/03_times/01_quickstart.md)
+- [02_usage_guide.md — `templates times` Usage Guide](04_modules/02_templates/05_commands/03_times/02_usage_guide.md)
+- [04_implementation_notes.md — `templates times` Implementation Notes](04_modules/02_templates/05_commands/03_times/04_implementation_notes.md)
+
+### 04_modules/02_templates/05_commands/04_subset/
+- [01_quickstart.md — `templates subset` Quickstart](04_modules/02_templates/05_commands/04_subset/01_quickstart.md)
+- [02_usage_guide.md — `templates subset` Usage Guide](04_modules/02_templates/05_commands/04_subset/02_usage_guide.md)
+- [04_implementation_notes.md — `templates subset` Implementation Notes](04_modules/02_templates/05_commands/04_subset/04_implementation_notes.md)
 
 ### 04_modules/03_complete_utterances/
 - [01_quickstart.md — Complete Utterances Module Quickstart](04_modules/03_complete_utterances/01_quickstart.md)
