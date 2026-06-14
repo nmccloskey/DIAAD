@@ -17,6 +17,10 @@ def test_cu_file_helpers_accept_custom_sample_id(monkeypatch):
             "speaker": ["PAR", "INV", "PAR"],
             "utterance": ["one", "two", "three"],
             "narrative": ["A", "A", "B"],
+            "input_order": [1, 1, 2],
+            "shuffled_order": [2, 2, 1],
+            "position": [1, 2, 1],
+            "position_sub": [0, 0, 0],
         }
     )
 
@@ -26,6 +30,13 @@ def test_cu_file_helpers_accept_custom_sample_id(monkeypatch):
         stimulus_field="narrative",
         sample_id_field="expanded_sample_id",
     )
+    assert not {
+        "input_order",
+        "shuffled_order",
+        "position",
+        "position_sub",
+    } & set(base.columns)
+
     primary, reliability = files._build_cu_assignments(
         base,
         mode="two",

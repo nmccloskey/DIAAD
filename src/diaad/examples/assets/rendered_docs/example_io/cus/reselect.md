@@ -69,15 +69,15 @@ The command reads prior CU coding and reliability workbooks from `diaad_data/inp
 
 `diaad_data/output/diaad_YYMMDD_HHMM/reselected_cu_coding_reliability/reselected_cu_reliability_coding.xlsx`
 
-| sample_id | input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | comment | id | sv | rel |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2 | 3 |  | picnic | U0001 | 1 | 0 | INV | What do you notice first? |  | 1 |  |  |
-| 2 | 3 |  | picnic | U0002 | 2 | 0 | PAR | A picnic. |  | 1 | 1.0 | 1.0 |
-| 2 | 3 |  | picnic | U0003 | 3 | 0 | PAR | The dad is opening the basket. |  | 1 | 1.0 | 0.0 |
-| 2 | 3 |  | picnic | U0004 | 4 | 0 | PAR | The dog wants food! |  | 1 | 0.0 | 0.0 |
-| 2 | 3 |  | picnic | U0005 | 5 | 0 | INV | What might happen next? |  | 1 |  |  |
-| 2 | 3 |  | picnic | U0006 | 6 | 0 | PAR | They will eat lunch. |  | 1 | 1.0 | 1.0 |
-| 2 | 3 |  | picnic | U0007 | 7 | 0 | PAR | Maybe the dog gets a cracker. |  | 1 | 1.0 | 1.0 |
+| sample_id | stimulus | utterance_id | speaker | utterance | comment | id | sv | rel |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 | picnic | U0001 | INV | What do you notice first? |  | 1 |  |  |
+| 2 | picnic | U0002 | PAR | A picnic. |  | 1 | 1.0 | 1.0 |
+| 2 | picnic | U0003 | PAR | The dad is opening the basket. |  | 1 | 1.0 | 0.0 |
+| 2 | picnic | U0004 | PAR | The dog wants food! |  | 1 | 0.0 | 0.0 |
+| 2 | picnic | U0005 | INV | What might happen next? |  | 1 |  |  |
+| 2 | picnic | U0006 | PAR | They will eat lunch. |  | 1 | 1.0 | 1.0 |
+| 2 | picnic | U0007 | PAR | Maybe the dog gets a cracker. |  | 1 | 1.0 | 1.0 |
 
 ## Notes
 

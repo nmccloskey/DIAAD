@@ -15,6 +15,19 @@ from diaad.coding.utils import segment, assign_coders, resolve_stim_cols
 from diaad.metadata.blinding import blind_file_identifiers, write_blind_codebook
 
 
+CU_TT_DROP_COLS = [
+    "file",
+    "file_ext",
+    "file_dir",
+    "speaking_time",
+    "input_order",
+    "shuffled_order",
+    METADATA_MISMATCH_COL,
+    "position",
+    "position_sub",
+]
+
+
 def _coder_ids(num_coders: int) -> list[int]:
     """Return canonical integer coder IDs: 1..num_coders."""
     return list(range(1, max(0, int(num_coders)) + 1))
@@ -201,8 +214,6 @@ def _prepare_cu_base_dataframe(
     """
     Shuffle sample blocks and drop non-coding columns from an utterance dataframe.
     """
-    stim_cols = resolve_stim_cols(stimulus_field)
-
     if sample_id_field not in uttdf.columns:
         raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
 
@@ -210,20 +221,52 @@ def _prepare_cu_base_dataframe(
     random.shuffle(subdfs)
     shuffled_utt_df = pd.concat(subdfs, ignore_index=True)
 
-    drop_cols = [
-        col
-        for col in (
-            ["file", "file_ext", "file_dir", "speaking_time", METADATA_MISMATCH_COL]
-            + [
-                field_name
-                for field_name in metadata_fields
-                if field_name.lower() not in stim_cols
-            ]
-        )
-        if col in shuffled_utt_df.columns
-    ]
+    drop_cols = _get_cu_drop_cols(
+        shuffled_utt_df,
+        metadata_fields,
+        stimulus_field,
+    )
+
+    logger.info(f"Transcript columns: {list(shuffled_utt_df.columns)}")
+    logger.info(f"Final drop cols: {drop_cols}")
 
     return shuffled_utt_df.drop(columns=drop_cols).copy()
+
+
+def _metadata_field_names(metadata_fields) -> list[str]:
+    """Return configured metadata field column names across manager/list inputs."""
+    if metadata_fields is None:
+        return []
+
+    if hasattr(metadata_fields, "items"):
+        return [
+            str(getattr(field, "name", field_name))
+            for field_name, field in metadata_fields.items()
+        ]
+
+    return [str(getattr(field, "name", field)) for field in metadata_fields]
+
+
+def _get_cu_drop_cols(
+    df: pd.DataFrame,
+    metadata_fields,
+    stimulus_field,
+) -> list[str]:
+    """
+    Identify transcript-table columns to drop before CU export.
+    """
+    stim_cols = resolve_stim_cols(stimulus_field)
+    non_stim_metadata_cols = [
+        field_name
+        for field_name in _metadata_field_names(metadata_fields)
+        if field_name.lower() not in stim_cols
+    ]
+
+    drop_cols = []
+    for col in CU_TT_DROP_COLS + non_stim_metadata_cols:
+        if col in df.columns and col not in drop_cols:
+            drop_cols.append(col)
+    return drop_cols
 
 
 def _build_cu_assignments(
@@ -455,7 +498,10 @@ def make_cu_coding_files(
     )
 
     try:
-        uttdf = extract_transcript_data(transcript_table)
+        uttdf = extract_transcript_data(
+            transcript_table,
+            sample_id_field=sample_id_field,
+        )
 
         cu_df = _prepare_cu_base_dataframe(
             uttdf=uttdf,

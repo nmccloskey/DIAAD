@@ -73,16 +73,16 @@ The command reads `diaad_data/input/cu_coding/cu_coding.xlsx`. The blind codeboo
 
 `diaad_data/output/diaad_YYMMDD_HHMM/cu_coding_analysis/cu_coding_by_utterance.xlsx`
 
-| input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | sv | rel | cu | sample_id_blinded |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 |  | picnic | U0002 | 2 | 0 | PAR | The family brought food to the park. | 1 | 1 | 1 | 1 |
-| 1 |  | picnic | U0003 | 3 | 0 | PAR | The little girl [/] the little girl pours juice. | 0 | 1 | 0 | 1 |
-| 1 |  | picnic | U0004 | 4 | 0 | PAR | Then they share sandwiches. | 1 | 0 | 0 | 1 |
-| 1 |  | picnic | U0006 | 6 | 0 | PAR | Yes, the dog waits beside them. | 1 | 0 | 0 | 1 |
-| 1 |  | picnic | U0007 | 7 | 0 | PAR | The day is quiet. | 0 | 1 | 0 | 1 |
-| 3 |  | picnic | U0002 | 2 | 0 | PAR | A picnic. | 1 | 1 | 1 | 2 |
-| 3 |  | picnic | U0003 | 3 | 0 | PAR | The dad is opening the basket. | 1 | 0 | 0 | 2 |
-| 3 |  | picnic | U0004 | 4 | 0 | PAR | The dog wants food! | 0 | 0 | 0 | 2 |
+| stimulus | utterance_id | speaker | utterance | sv | rel | cu | sample_id_blinded |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| picnic | U0002 | PAR | The family brought food to the park. | 1 | 1 | 1 | 1 |
+| picnic | U0003 | PAR | The little girl [/] the little girl pours juice. | 0 | 1 | 0 | 1 |
+| picnic | U0004 | PAR | Then they share sandwiches. | 1 | 0 | 0 | 1 |
+| picnic | U0006 | PAR | Yes, the dog waits beside them. | 1 | 0 | 0 | 1 |
+| picnic | U0007 | PAR | The day is quiet. | 0 | 1 | 0 | 1 |
+| picnic | U0002 | PAR | A picnic. | 1 | 1 | 1 | 2 |
+| picnic | U0003 | PAR | The dad is opening the basket. | 1 | 0 | 0 | 2 |
+| picnic | U0004 | PAR | The dog wants food! | 0 | 0 | 0 | 2 |
 
 `diaad_data/output/diaad_YYMMDD_HHMM/cu_coding_analysis/cu_coding_by_sample_long.xlsx`
 

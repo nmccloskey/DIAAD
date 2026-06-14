@@ -78,29 +78,29 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 `diaad_data/output/diaad_YYMMDD_HHMM/cu_coding/cu_coding.xlsx`
 
-| sample_id | input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | comment | id | sv | rel |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 1 |  | picnic | U0001 | 1 | 0 | INV | Please tell the picnic story again. |  | 1 |  |  |
-| 1 | 1 |  | picnic | U0002 | 2 | 0 | PAR | The family brought food to the park. |  | 1 | 1.0 | 1.0 |
-| 1 | 1 |  | picnic | U0003 | 3 | 0 | PAR | The little girl [/] the little girl pours juice. |  | 1 | 0.0 | 1.0 |
-| 1 | 1 |  | picnic | U0004 | 4 | 0 | PAR | Then they share sandwiches. |  | 1 | 1.0 | 0.0 |
-| 1 | 1 |  | picnic | U0005 | 5 | 0 | INV | Anything else? |  | 1 |  |  |
-| 1 | 1 |  | picnic | U0006 | 6 | 0 | PAR | Yes, the dog waits beside them. |  | 1 | 1.0 | 0.0 |
-| 1 | 1 |  | picnic | U0007 | 7 | 0 | PAR | The day is quiet. |  | 1 | 0.0 | 1.0 |
-| 2 | 3 |  | picnic | U0001 | 1 | 0 | INV | What do you notice first? |  | 1 |  |  |
+| sample_id | stimulus | utterance_id | speaker | utterance | comment | id | sv | rel |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | picnic | U0001 | INV | Please tell the picnic story again. |  | 1 |  |  |
+| 1 | picnic | U0002 | PAR | The family brought food to the park. |  | 1 | 1.0 | 1.0 |
+| 1 | picnic | U0003 | PAR | The little girl [/] the little girl pours juice. |  | 1 | 0.0 | 1.0 |
+| 1 | picnic | U0004 | PAR | Then they share sandwiches. |  | 1 | 1.0 | 0.0 |
+| 1 | picnic | U0005 | INV | Anything else? |  | 1 |  |  |
+| 1 | picnic | U0006 | PAR | Yes, the dog waits beside them. |  | 1 | 1.0 | 0.0 |
+| 1 | picnic | U0007 | PAR | The day is quiet. |  | 1 | 0.0 | 1.0 |
+| 2 | picnic | U0001 | INV | What do you notice first? |  | 1 |  |  |
 
 `diaad_data/output/diaad_YYMMDD_HHMM/cu_coding/cu_reliability_coding.xlsx`
 
-| sample_id | input_order | shuffled_order | stimulus | utterance_id | position | position_sub | speaker | utterance | comment | id | sv | rel |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 1 |  | picnic | U0001 | 1 | 0 | INV | Please tell the picnic story again. |  | 2 |  |  |
-| 1 | 1 |  | picnic | U0002 | 2 | 0 | PAR | The family brought food to the park. |  | 2 | 1.0 | 0.0 |
-| 1 | 1 |  | picnic | U0003 | 3 | 0 | PAR | The little girl [/] the little girl pours juice. |  | 2 | 0.0 | 1.0 |
-| 1 | 1 |  | picnic | U0004 | 4 | 0 | PAR | Then they share sandwiches. |  | 2 | 1.0 | 0.0 |
-| 1 | 1 |  | picnic | U0005 | 5 | 0 | INV | Anything else? |  | 2 |  |  |
-| 1 | 1 |  | picnic | U0006 | 6 | 0 | PAR | Yes, the dog waits beside them. |  | 2 | 1.0 | 0.0 |
-| 1 | 1 |  | picnic | U0007 | 7 | 0 | PAR | The day is quiet. |  | 2 | 0.0 | 1.0 |
-| 3 | 2 |  | picnic | U0001 | 1 | 0 | INV | Tell me what is happening in the picnic picture. |  | 1 |  |  |
+| sample_id | stimulus | utterance_id | speaker | utterance | comment | id | sv | rel |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | picnic | U0001 | INV | Please tell the picnic story again. |  | 2 |  |  |
+| 1 | picnic | U0002 | PAR | The family brought food to the park. |  | 2 | 1.0 | 0.0 |
+| 1 | picnic | U0003 | PAR | The little girl [/] the little girl pours juice. |  | 2 | 0.0 | 1.0 |
+| 1 | picnic | U0004 | PAR | Then they share sandwiches. |  | 2 | 1.0 | 0.0 |
+| 1 | picnic | U0005 | INV | Anything else? |  | 2 |  |  |
+| 1 | picnic | U0006 | PAR | Yes, the dog waits beside them. |  | 2 | 1.0 | 0.0 |
+| 1 | picnic | U0007 | PAR | The day is quiet. |  | 2 | 0.0 | 1.0 |
+| 3 | picnic | U0001 | INV | Tell me what is happening in the picnic picture. |  | 1 |  |  |
 
 `diaad_data/output/diaad_YYMMDD_HHMM/cu_coding/cu_blind_codebook.xlsx`
 

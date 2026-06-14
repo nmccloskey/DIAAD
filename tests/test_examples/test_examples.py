@@ -164,12 +164,33 @@ def test_generate_synthetic_project(tmp_path):
     resubset_subset = pd.read_excel(long_path(resubset_workbook), sheet_name="subset")
     assert {"selected", "excluded"} <= set(resubset_samples.columns)
     assert not resubset_subset["excluded"].any()
-    assert _exists(
+    cu_coding_file = (
         project_dir
         / "expected_outputs"
         / "cus_module"
         / "cus_files"
         / "cu_coding.xlsx"
+    )
+    cu_reliability_file = (
+        project_dir
+        / "expected_outputs"
+        / "cus_module"
+        / "cus_files"
+        / "cu_reliability_coding.xlsx"
+    )
+    assert _exists(cu_coding_file)
+    forbidden_cu_columns = {
+        "input_order",
+        "shuffled_order",
+        "position",
+        "position_sub",
+    }
+    assert not forbidden_cu_columns & set(
+        pd.read_excel(long_path(cu_coding_file)).columns
+    )
+    assert _exists(cu_reliability_file)
+    assert not forbidden_cu_columns & set(
+        pd.read_excel(long_path(cu_reliability_file)).columns
     )
     assert _exists(
         project_dir
