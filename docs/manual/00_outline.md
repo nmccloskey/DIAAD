@@ -27,7 +27,30 @@
 │   ├── 01_transcripts/
 │   │   ├── 01_quickstart.md — Transcripts Module Quickstart
 │   │   ├── 03_research_context.md — Transcripts Research Context
-│   │   └── 04_implementation_notes.md — Transcripts Implementation Notes
+│   │   ├── 04_implementation_notes.md — Transcripts Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_tabularize/
+│   │       │   ├── 01_quickstart.md — `transcripts tabularize` Quickstart
+│   │       │   ├── 02_usage_guide.md — `transcripts tabularize` Usage Guide
+│   │       │   ├── 03_research_context.md — `transcripts tabularize` Research Context
+│   │       │   └── 04_implementation_notes.md — `transcripts tabularize` Implementation Notes
+│   │       ├── 02_chats/
+│   │       │   ├── 01_quickstart.md — `transcripts chats` Quickstart
+│   │       │   ├── 02_usage_guide.md — `transcripts chats` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `transcripts chats` Implementation Notes
+│   │       ├── 03_select/
+│   │       │   ├── 01_quickstart.md — `transcripts select` Quickstart
+│   │       │   ├── 02_usage_guide.md — `transcripts select` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `transcripts select` Implementation Notes
+│   │       ├── 04_evaluate/
+│   │       │   ├── 01_quickstart.md — `transcripts evaluate` Quickstart
+│   │       │   ├── 02_usage_guide.md — `transcripts evaluate` Usage Guide
+│   │       │   ├── 03_research_context.md — `transcripts evaluate` Research Context
+│   │       │   └── 04_implementation_notes.md — `transcripts evaluate` Implementation Notes
+│   │       └── 05_reselect/
+│   │           ├── 01_quickstart.md — `transcripts reselect` Quickstart
+│   │           ├── 02_usage_guide.md — `transcripts reselect` Usage Guide
+│   │           └── 04_implementation_notes.md — `transcripts reselect` Implementation Notes
 │   ├── 02_templates/
 │   │   ├── 01_quickstart.md — Templates Module Quickstart
 │   │   ├── 03_research_context.md — Templates Research Context
@@ -88,6 +111,33 @@
 - [01_quickstart.md — Transcripts Module Quickstart](04_modules/01_transcripts/01_quickstart.md)
 - [03_research_context.md — Transcripts Research Context](04_modules/01_transcripts/03_research_context.md)
 - [04_implementation_notes.md — Transcripts Implementation Notes](04_modules/01_transcripts/04_implementation_notes.md)
+
+### 04_modules/01_transcripts/05_commands/01_tabularize/
+- [01_quickstart.md — `transcripts tabularize` Quickstart](04_modules/01_transcripts/05_commands/01_tabularize/01_quickstart.md)
+- [02_usage_guide.md — `transcripts tabularize` Usage Guide](04_modules/01_transcripts/05_commands/01_tabularize/02_usage_guide.md)
+- [03_research_context.md — `transcripts tabularize` Research Context](04_modules/01_transcripts/05_commands/01_tabularize/03_research_context.md)
+- [04_implementation_notes.md — `transcripts tabularize` Implementation Notes](04_modules/01_transcripts/05_commands/01_tabularize/04_implementation_notes.md)
+
+### 04_modules/01_transcripts/05_commands/02_chats/
+- [01_quickstart.md — `transcripts chats` Quickstart](04_modules/01_transcripts/05_commands/02_chats/01_quickstart.md)
+- [02_usage_guide.md — `transcripts chats` Usage Guide](04_modules/01_transcripts/05_commands/02_chats/02_usage_guide.md)
+- [04_implementation_notes.md — `transcripts chats` Implementation Notes](04_modules/01_transcripts/05_commands/02_chats/04_implementation_notes.md)
+
+### 04_modules/01_transcripts/05_commands/03_select/
+- [01_quickstart.md — `transcripts select` Quickstart](04_modules/01_transcripts/05_commands/03_select/01_quickstart.md)
+- [02_usage_guide.md — `transcripts select` Usage Guide](04_modules/01_transcripts/05_commands/03_select/02_usage_guide.md)
+- [04_implementation_notes.md — `transcripts select` Implementation Notes](04_modules/01_transcripts/05_commands/03_select/04_implementation_notes.md)
+
+### 04_modules/01_transcripts/05_commands/04_evaluate/
+- [01_quickstart.md — `transcripts evaluate` Quickstart](04_modules/01_transcripts/05_commands/04_evaluate/01_quickstart.md)
+- [02_usage_guide.md — `transcripts evaluate` Usage Guide](04_modules/01_transcripts/05_commands/04_evaluate/02_usage_guide.md)
+- [03_research_context.md — `transcripts evaluate` Research Context](04_modules/01_transcripts/05_commands/04_evaluate/03_research_context.md)
+- [04_implementation_notes.md — `transcripts evaluate` Implementation Notes](04_modules/01_transcripts/05_commands/04_evaluate/04_implementation_notes.md)
+
+### 04_modules/01_transcripts/05_commands/05_reselect/
+- [01_quickstart.md — `transcripts reselect` Quickstart](04_modules/01_transcripts/05_commands/05_reselect/01_quickstart.md)
+- [02_usage_guide.md — `transcripts reselect` Usage Guide](04_modules/01_transcripts/05_commands/05_reselect/02_usage_guide.md)
+- [04_implementation_notes.md — `transcripts reselect` Implementation Notes](04_modules/01_transcripts/05_commands/05_reselect/04_implementation_notes.md)
 
 ### 04_modules/02_templates/
 - [01_quickstart.md — Templates Module Quickstart](04_modules/02_templates/01_quickstart.md)
