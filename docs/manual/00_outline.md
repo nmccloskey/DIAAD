@@ -17,6 +17,7 @@
   02_command_line.md - Command-Line Operation
   03_webapp.md - Web App Operation
   04_configuration.md - Configuration
+  05_testing.md - Testing
 03_features/
   03_generated_example_io.md - Generated Example I/O View
 99_references.md - References
@@ -36,6 +37,7 @@
 - [02_command_line.md - Command-Line Operation](02_operation/02_command_line.md)
 - [03_webapp.md - Web App Operation](02_operation/03_webapp.md)
 - [04_configuration.md - Configuration](02_operation/04_configuration.md)
+- [05_testing.py - Testing](02_operation/05_testing.py)
 
 ### 03_features/
 
