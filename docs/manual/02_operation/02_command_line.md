@@ -54,7 +54,7 @@ To use a single nested YAML file:
 diaad transcripts tabularize --config diaad_config.yaml
 ```
 
-The nested file should use top-level `project:` and `advanced:` sections. See [Configuration](04_configuration.md) for the shared configuration model, defaults, path behavior, and validation rules.
+The nested file should use top-level `project:` and `advanced:` sections. See Configuration (`docs/manual/02_operation/04_configuration.md`) for the shared configuration model, defaults, path behavior, and validation rules.
 
 ## Common Options
 

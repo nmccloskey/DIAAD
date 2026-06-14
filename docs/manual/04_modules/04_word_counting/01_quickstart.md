@@ -37,8 +37,8 @@ If CU coding output is available, `words files` can use it as preferred input so
 
 ## Read Next
 
-- [Word Counting Versus Target Vocabulary Coverage](../../03_features/02_word_counting_vs_target_vocabulary_coverage.md)
-- [Transcript tabularization](../../03_features/01_transcript_tabularization.md)
-- [Configuration](../../02_operation/04_configuration.md)
+- Word Counting Versus Target Vocabulary Coverage: `docs/manual/03_features/02_word_counting_vs_target_vocabulary_coverage.md`
+- Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
 
 Later command pages describe workbook columns, first-pass counting behavior, reliability evaluation, and rates.

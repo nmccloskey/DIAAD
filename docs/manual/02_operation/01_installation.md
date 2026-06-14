@@ -112,7 +112,7 @@ your_project/
     output/
 ```
 
-The `config/` directory is optional for quick tests because DIAAD has packaged defaults. For real work, keeping project-specific configuration files is recommended. Configuration is described in more detail in [Configuration](04_configuration.md).
+The `config/` directory is optional for quick tests because DIAAD has packaged defaults. For real work, keeping project-specific configuration files is recommended. Configuration is described in more detail in Configuration (`docs/manual/02_operation/04_configuration.md`).
 
 ## Generated Examples
 

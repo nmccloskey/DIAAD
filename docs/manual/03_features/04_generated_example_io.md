@@ -58,12 +58,12 @@ Documentation maintainers can regenerate the packaged Example I/O markdown with 
 
 When example content changes, update the example specs, generator, renderer, or tests, then regenerate the Example I/O pages. Do not duplicate generated example tables, workbook previews, manifests, or generated README content inside authored manual pages.
 
-## Related Manual Pages
+## Read Next
 
-- [Functional overview](../01_overview/03_functional_overview.md)
-- [Command-line operation](../02_operation/02_command_line.md)
-- [Web app operation](../02_operation/03_webapp.md)
-- [Testing](../02_operation/05_testing.md)
+- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Command-line operation: `docs/manual/02_operation/02_command_line.md`
+- Web app operation: `docs/manual/02_operation/03_webapp.md`
+- Testing: `docs/manual/02_operation/05_testing.md`
 
 ## Draft Review Notes
 

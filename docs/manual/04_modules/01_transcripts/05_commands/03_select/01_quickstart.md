@@ -50,6 +50,6 @@ Use the selected rows and blank reliability `.cha` files to organize independent
 
 ## Read Next
 
-- [Generated Example I/O](../../../../03_features/04_generated_example_io.md)
-- [Transcripts module quickstart](../../01_quickstart.md)
-- [Configuration](../../../../02_operation/04_configuration.md)
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`
+- Transcripts module quickstart: `docs/manual/04_modules/01_transcripts/01_quickstart.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`

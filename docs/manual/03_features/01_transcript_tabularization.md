@@ -73,12 +73,12 @@ Some DIAAD workflows may begin without transcript tables, such as:
 
 The broader principle is not "everything must start as CHAT." The broader principle is that reproducible workflows need stable identifiers and predictable tables. Transcript tabularization is DIAAD's main way to create that structure for transcript-based discourse analysis.
 
-## Related Manual Pages
+## Read Next
 
-- [Configuration](../02_operation/04_configuration.md)
-- [Functional overview](../01_overview/03_functional_overview.md)
-- [Exact file name matching](03_exact_file_name_matching.md)
-- [Generated Example I/O](04_generated_example_io.md)
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`
 
 ## Draft Review Notes
 

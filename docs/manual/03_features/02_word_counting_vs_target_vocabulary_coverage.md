@@ -54,11 +54,11 @@ The safest interpretation is:
 - speaking-time rates normalize whichever count-like measure is being used;
 - coverage proportions and percentile fields require their own interpretation.
 
-## Related Manual Pages
+## Read Next
 
-- [Functional overview](../01_overview/03_functional_overview.md)
-- [Configuration](../02_operation/04_configuration.md)
-- [Generated Example I/O](04_generated_example_io.md)
+- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`
 
 Later Word Counting and Target Vocabulary Coverage module pages will provide command-specific inputs, outputs, reliability guidance, custom-resource schema details, and research-context discussion.
 

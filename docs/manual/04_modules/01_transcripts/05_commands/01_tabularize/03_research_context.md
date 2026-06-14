@@ -24,4 +24,4 @@ The main methodological caution is that revisions should be deliberate. Changing
 
 `transcripts tabularize` does not validate a study's transcription conventions, sampling plan, coding manual, or metadata ontology. It also does not make later blinding or reliability decisions valid on its own. It creates structured transcript data so those decisions can be made and audited more clearly.
 
-For the broader module framing, see [Transcripts research context](../../03_research_context.md).
+For the broader module framing, see Transcripts research context (`docs/manual/04_modules/01_transcripts/03_research_context.md`).

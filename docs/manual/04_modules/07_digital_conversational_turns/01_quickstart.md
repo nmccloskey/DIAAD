@@ -33,7 +33,7 @@ When transcript tables are available, `turns files` can use them to scaffold sam
 
 ## Read Next
 
-- [Transcript tabularization](../../03_features/01_transcript_tabularization.md)
-- [Configuration](../../02_operation/04_configuration.md)
+- Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
 
 Later command pages describe turn-string syntax, bin/session columns, reliability comparison, and transition outputs.

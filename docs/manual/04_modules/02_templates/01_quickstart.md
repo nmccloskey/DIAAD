@@ -33,8 +33,8 @@ Transcript-table-based template commands usually expect `transcript_tables.xlsx`
 
 ## Read Next
 
-- [Transcript tabularization](../../03_features/01_transcript_tabularization.md)
-- [Exact file name matching](../../03_features/03_exact_file_name_matching.md)
-- [Configuration](../../02_operation/04_configuration.md)
+- Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
+- Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
 
 Later command pages describe the exact columns, reliability subset behavior, and expected input workbook structure for each template command.

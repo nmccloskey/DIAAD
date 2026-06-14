@@ -79,4 +79,4 @@ If no `.cha` files are found, check `project.input_dir` and the directory from w
 
 If metadata fields are unexpectedly blank, inspect the `metadata_mismatches` sheet and compare the configured metadata patterns with the source file paths.
 
-If later commands cannot find the workbook, preserve the configured transcript table filename or update `advanced.transcript_table_filename` consistently. See [Exact file name matching](../../../../03_features/03_exact_file_name_matching.md).
+If later commands cannot find the workbook, preserve the configured transcript table filename or update `advanced.transcript_table_filename` consistently. See Exact file name matching (`docs/manual/03_features/03_exact_file_name_matching.md`).

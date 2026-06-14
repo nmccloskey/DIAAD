@@ -40,8 +40,8 @@ blind_columns:
 
 ## Read Next
 
-- [Configuration](../../02_operation/04_configuration.md)
-- [Exact file name matching](../../03_features/03_exact_file_name_matching.md)
-- [Web app operation](../../02_operation/03_webapp.md)
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
+- Web app operation: `docs/manual/02_operation/03_webapp.md`
 
 Later command and functionality pages describe codebook discovery, auto-blind behavior, and privacy/de-identification cautions in more detail.

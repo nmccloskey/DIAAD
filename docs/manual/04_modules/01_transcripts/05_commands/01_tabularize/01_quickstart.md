@@ -8,7 +8,7 @@
 diaad transcripts tabularize --config config
 ```
 
-The `--config config` argument is optional when the project has a `config/` directory in the working directory. See [Command-line operation](../../../../02_operation/02_command_line.md) for shared CLI behavior.
+The `--config config` argument is optional when the project has a `config/` directory in the working directory. See Command-line operation (`docs/manual/02_operation/02_command_line.md`) for shared CLI behavior.
 
 ## Minimum Inputs
 
@@ -42,7 +42,7 @@ Open the transcript table and inspect it before generating downstream coding fil
 
 ## Read Next
 
-- [Transcript tabularization feature](../../../../03_features/01_transcript_tabularization.md)
-- [Transcripts module quickstart](../../01_quickstart.md)
-- [Configuration](../../../../02_operation/04_configuration.md)
-- [Generated Example I/O](../../../../03_features/04_generated_example_io.md)
+- Transcript tabularization feature: `docs/manual/03_features/01_transcript_tabularization.md`
+- Transcripts module quickstart: `docs/manual/04_modules/01_transcripts/01_quickstart.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`

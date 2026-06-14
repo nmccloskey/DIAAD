@@ -39,7 +39,7 @@ Review the workbook and report together. Use the alignment files for cases that 
 
 ## Read Next
 
-- [Research context](03_research_context.md)
-- [Usage guide](02_usage_guide.md)
-- [Transcripts module quickstart](../../01_quickstart.md)
-- [Generated Example I/O](../../../../03_features/04_generated_example_io.md)
+- Research context: `docs/manual/04_modules/01_transcripts/05_commands/04_evaluate/03_research_context.md`
+- Usage guide: `docs/manual/04_modules/01_transcripts/05_commands/04_evaluate/02_usage_guide.md`
+- Transcripts module quickstart: `docs/manual/04_modules/01_transcripts/01_quickstart.md`
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`

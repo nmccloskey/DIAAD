@@ -41,6 +41,6 @@ Open the generated `.cha` files and confirm that speaker labels, utterance order
 
 ## Read Next
 
-- [Transcript tabularization feature](../../../../03_features/01_transcript_tabularization.md)
-- [Exact file name matching](../../../../03_features/03_exact_file_name_matching.md)
-- [Transcripts module quickstart](../../01_quickstart.md)
+- Transcript tabularization feature: `docs/manual/03_features/01_transcript_tabularization.md`
+- Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
+- Transcripts module quickstart: `docs/manual/04_modules/01_transcripts/01_quickstart.md`

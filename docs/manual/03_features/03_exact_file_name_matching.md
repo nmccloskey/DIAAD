@@ -66,12 +66,12 @@ This does not remove the filename contract. If a web run needs `transcript_table
 - Use `--dry-run-config` after changing filename or identifier settings.
 - Treat file renaming as an analysis decision, not just a file-management cleanup.
 
-## Related Manual Pages
+## Read Next
 
-- [Configuration](../02_operation/04_configuration.md)
-- [Command-line operation](../02_operation/02_command_line.md)
-- [Web app operation](../02_operation/03_webapp.md)
-- [Transcript tabularization](01_transcript_tabularization.md)
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Command-line operation: `docs/manual/02_operation/02_command_line.md`
+- Web app operation: `docs/manual/02_operation/03_webapp.md`
+- Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
 
 ## Draft Review Notes
 

@@ -40,9 +40,9 @@ Example packages show:
 
 ## Read Next
 
-- [Generated Example I/O](../../03_features/04_generated_example_io.md)
-- [Command-line operation](../../02_operation/02_command_line.md)
-- [Web app operation](../../02_operation/03_webapp.md)
-- [Testing](../../02_operation/05_testing.md)
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`
+- Command-line operation: `docs/manual/02_operation/02_command_line.md`
+- Web app operation: `docs/manual/02_operation/03_webapp.md`
+- Testing: `docs/manual/02_operation/05_testing.md`
 
 Later command pages will connect each command to its generated Example I/O view.

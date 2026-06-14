@@ -50,9 +50,9 @@ After tabularization, inspect the transcript table workbook before continuing. I
 
 ## Read Next
 
-- [Transcript tabularization feature](../../03_features/01_transcript_tabularization.md)
-- [Exact file name matching](../../03_features/03_exact_file_name_matching.md)
-- [Configuration](../../02_operation/04_configuration.md)
-- [Functional overview](../../01_overview/03_functional_overview.md)
+- Transcript tabularization feature: `docs/manual/03_features/01_transcript_tabularization.md`
+- Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
 
 Later command pages describe exact input layouts, workbook sheets, and command-specific options.

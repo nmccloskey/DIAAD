@@ -33,7 +33,7 @@ The web app supports two configuration paths:
 
 The web app expects the split configuration form. Uploading only one of the two files is incomplete.
 
-During a web run, DIAAD uses the app's temporary input and output folders. This means uploaded configuration values for `project.input_dir` and `project.output_dir` are not used as local filesystem paths in the browser session. Other project and advanced settings still control processing behavior. See [Configuration](04_configuration.md) for the shared configuration model and current settings.
+During a web run, DIAAD uses the app's temporary input and output folders. This means uploaded configuration values for `project.input_dir` and `project.output_dir` are not used as local filesystem paths in the browser session. Other project and advanced settings still control processing behavior. See Configuration (`docs/manual/02_operation/04_configuration.md`) for the shared configuration model and current settings.
 
 ## Uploading Inputs
 

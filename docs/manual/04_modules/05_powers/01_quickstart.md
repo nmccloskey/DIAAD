@@ -41,8 +41,8 @@ POWERS automation uses NLP support. The default configured spaCy model is `en_co
 
 ## Read Next
 
-- [Transcript tabularization](../../03_features/01_transcript_tabularization.md)
-- [Installation](../../02_operation/01_installation.md)
-- [Configuration](../../02_operation/04_configuration.md)
+- Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
+- Installation: `docs/manual/02_operation/01_installation.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
 
 Later POWERS command and automation-functionality pages will describe supported automated fields and workbook expectations in more detail.

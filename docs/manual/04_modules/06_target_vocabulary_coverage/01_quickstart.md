@@ -45,8 +45,8 @@ The analysis workbook contains `summary` and `details` sheets.
 
 ## Read Next
 
-- [Word Counting Versus Target Vocabulary Coverage](../../03_features/02_word_counting_vs_target_vocabulary_coverage.md)
-- [Exact file name matching](../../03_features/03_exact_file_name_matching.md)
-- [Configuration](../../02_operation/04_configuration.md)
+- Word Counting Versus Target Vocabulary Coverage: `docs/manual/03_features/02_word_counting_vs_target_vocabulary_coverage.md`
+- Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
 
 Later command and functionality pages describe resource JSON structure, custom resource paths, and norm handling.

@@ -39,8 +39,8 @@ Reliability and rates are optional workflow components, but they are common in r
 
 ## Read Next
 
-- [Transcript tabularization](../../03_features/01_transcript_tabularization.md)
-- [Configuration](../../02_operation/04_configuration.md)
-- [Functional overview](../../01_overview/03_functional_overview.md)
+- Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
 
 Later command pages describe coding columns, coder assignment, reliability pairing, and analysis output structure.
