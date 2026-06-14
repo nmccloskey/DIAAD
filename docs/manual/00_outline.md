@@ -1,7 +1,7 @@
 # Instruction Manual
 
 **Version:** 0.0.0
-**Generated:** 2026-06-10
+**Generated:** 2026-06-14
 
 ---
 
@@ -9,10 +9,15 @@
 
 ```text
 01_overview/
-  01_01_introduction.md - Introduction to DIAAD
-  01_02_installation.md - How to access the program
-  01_04_commands_methodolgy.md - Commands by Module
-  01_05_generated_example_io.md - Generated Example I/O View
+  01_introduction.md - Introduction to DIAAD
+  02_methodolgical_overview.md - Methodological Overview
+02_operation/
+  01_installation.md - Installation
+  02_command_line.md - Command-Line Operation
+  03_webapp.md - Web App Operation
+  04_configuration.md - Configuration
+03_features/
+  03_generated_example_io.md - Generated Example I/O View
 99_references.md - References
 ```
 
@@ -20,10 +25,19 @@
 
 ### 01_overview/
 
-- [01_01_introduction.md - Introduction to DIAAD](01_overview/01_01_introduction.md)
-- [01_02_installation.md - How to access the program](01_overview/01_02_installation.md)
-- [01_04_commands_methodolgy.md - Commands by Module](01_overview/01_04_commands_methodolgy.md)
-- [01_05_generated_example_io.md - Generated Example I/O View](01_overview/01_05_generated_example_io.md)
+- [01_introduction.md - Introduction to DIAAD](01_overview/01_introduction.md)
+- [02_methodolgical_overview.md - Methodological Overview](01_overview/02_methodolgical_overview.md)
+
+### 02_operation/
+
+- [01_installation.md - Installation](02_operation/01_installation.md)
+- [02_command_line.md - Command-Line Operation](02_operation/02_command_line.md)
+- [03_webapp.md - Web App Operation](02_operation/03_webapp.md)
+- [04_configuration.md - Configuration](02_operation/04_configuration.md)
+
+### 03_features/
+
+- [03_generated_example_io.md - Generated Example I/O View](03_features/03_generated_example_io.md)
 
 ### Manual root
 
