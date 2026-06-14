@@ -127,7 +127,29 @@
 │   ├── 05_powers/
 │   │   ├── 01_quickstart.md — POWERS Module Quickstart
 │   │   ├── 03_research_context.md — POWERS Research Context
-│   │   └── 04_implementation_notes.md — POWERS Implementation Notes
+│   │   ├── 04_implementation_notes.md — POWERS Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_files/
+│   │       │   ├── 01_quickstart.md — `powers files` Quickstart
+│   │       │   ├── 02_usage_guide.md — `powers files` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `powers files` Implementation Notes
+│   │       ├── 02_analyze/
+│   │       │   ├── 01_quickstart.md — `powers analyze` Quickstart
+│   │       │   ├── 02_usage_guide.md — `powers analyze` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `powers analyze` Implementation Notes
+│   │       ├── 03_rates/
+│   │       │   ├── 01_quickstart.md — `powers rates` Quickstart
+│   │       │   ├── 02_usage_guide.md — `powers rates` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `powers rates` Implementation Notes
+│   │       ├── 04_evaluate/
+│   │       │   ├── 01_quickstart.md — `powers evaluate` Quickstart
+│   │       │   ├── 02_usage_guide.md — `powers evaluate` Usage Guide
+│   │       │   ├── 03_research_context.md — `powers evaluate` Research Context
+│   │       │   └── 04_implementation_notes.md — `powers evaluate` Implementation Notes
+│   │       └── 05_reselect/
+│   │           ├── 01_quickstart.md — `powers reselect` Quickstart
+│   │           ├── 02_usage_guide.md — `powers reselect` Usage Guide
+│   │           └── 04_implementation_notes.md — `powers reselect` Implementation Notes
 │   ├── 06_target_vocabulary_coverage/
 │   │   ├── 01_quickstart.md — Target Vocabulary Coverage Module Quickstart
 │   │   ├── 03_research_context.md — Target Vocabulary Coverage Research Context
@@ -291,6 +313,32 @@
 - [01_quickstart.md — POWERS Module Quickstart](04_modules/05_powers/01_quickstart.md)
 - [03_research_context.md — POWERS Research Context](04_modules/05_powers/03_research_context.md)
 - [04_implementation_notes.md — POWERS Implementation Notes](04_modules/05_powers/04_implementation_notes.md)
+
+### 04_modules/05_powers/05_commands/01_files/
+- [01_quickstart.md — `powers files` Quickstart](04_modules/05_powers/05_commands/01_files/01_quickstart.md)
+- [02_usage_guide.md — `powers files` Usage Guide](04_modules/05_powers/05_commands/01_files/02_usage_guide.md)
+- [04_implementation_notes.md — `powers files` Implementation Notes](04_modules/05_powers/05_commands/01_files/04_implementation_notes.md)
+
+### 04_modules/05_powers/05_commands/02_analyze/
+- [01_quickstart.md — `powers analyze` Quickstart](04_modules/05_powers/05_commands/02_analyze/01_quickstart.md)
+- [02_usage_guide.md — `powers analyze` Usage Guide](04_modules/05_powers/05_commands/02_analyze/02_usage_guide.md)
+- [04_implementation_notes.md — `powers analyze` Implementation Notes](04_modules/05_powers/05_commands/02_analyze/04_implementation_notes.md)
+
+### 04_modules/05_powers/05_commands/03_rates/
+- [01_quickstart.md — `powers rates` Quickstart](04_modules/05_powers/05_commands/03_rates/01_quickstart.md)
+- [02_usage_guide.md — `powers rates` Usage Guide](04_modules/05_powers/05_commands/03_rates/02_usage_guide.md)
+- [04_implementation_notes.md — `powers rates` Implementation Notes](04_modules/05_powers/05_commands/03_rates/04_implementation_notes.md)
+
+### 04_modules/05_powers/05_commands/04_evaluate/
+- [01_quickstart.md — `powers evaluate` Quickstart](04_modules/05_powers/05_commands/04_evaluate/01_quickstart.md)
+- [02_usage_guide.md — `powers evaluate` Usage Guide](04_modules/05_powers/05_commands/04_evaluate/02_usage_guide.md)
+- [03_research_context.md — `powers evaluate` Research Context](04_modules/05_powers/05_commands/04_evaluate/03_research_context.md)
+- [04_implementation_notes.md — `powers evaluate` Implementation Notes](04_modules/05_powers/05_commands/04_evaluate/04_implementation_notes.md)
+
+### 04_modules/05_powers/05_commands/05_reselect/
+- [01_quickstart.md — `powers reselect` Quickstart](04_modules/05_powers/05_commands/05_reselect/01_quickstart.md)
+- [02_usage_guide.md — `powers reselect` Usage Guide](04_modules/05_powers/05_commands/05_reselect/02_usage_guide.md)
+- [04_implementation_notes.md — `powers reselect` Implementation Notes](04_modules/05_powers/05_commands/05_reselect/04_implementation_notes.md)
 
 ### 04_modules/06_target_vocabulary_coverage/
 - [01_quickstart.md — Target Vocabulary Coverage Module Quickstart](04_modules/06_target_vocabulary_coverage/01_quickstart.md)
