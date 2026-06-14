@@ -53,3 +53,19 @@ Generated Example I/O pages are maintained separately from authored manual prose
 DIAAD aims to make discourse-analysis workflows more efficient, systematic, and reproducible. It does not remove the need for methodological judgment. Manual coding protocols still need clear rules, reliability review, and project-specific documentation. Automated first passes still need human inspection. Custom target vocabulary resources should be interpreted cautiously unless independently validated. Configuration choices should be recorded and reviewed as part of a study's analytic method.
 
 The codebase is the ground source of truth for operational details. When this manual explains syntax, file names, settings, and outputs, it should be understood as documentation of the current DIAAD implementation rather than a substitute for project-specific research protocols.
+
+## Acknowledgments
+
+DIAAD builds on and integrates functionality from two excellent open-source resources:
+
+- [**batchalign2**](https://github.com/TalkBank/batchalign2) – Developed by the TalkBank team, Batchalign provides a robust backend for automatic speech recognition (ASR). DIAAD was designed to function downstream of this system, leveraging its debulletized `.cha` files as input. This integration allows researchers to significantly expedite batch transcription, which without an ASR springboard might bottleneck discourse analysis.
+
+> Liu H, MacWhinney B, Fromm D, Lanzi A. *Automation of Language Sample Analysis*. J Speech Lang Hear Res. 2023 Jul 12;66(7):2421-2433. doi: 10.1044/2023_JSLHR-22-00642. Epub 2023 Jun 22. PMID: 37348510; PMCID: PMC10555460.
+
+- [**coreLexicon**](https://github.com/rbcavanaugh/coreLexicon) – A web-based interface for Core Lexicon analysis developed by Rob Cavanaugh, et al (2021). DIAAD's target vocabulary coverage workflow uses built-in CoreLex-style resources and accesses associated normative data using resource-declared Google Sheet URLs to calculate optional percentiles.
+
+  - **Inspiration & overlap:** DIAAD retains the accuracy, efficiency, and percentile concepts from the original web app while exporting batch-friendly summary and long-format detail tables.
+  - **Enhancements:** DIAAD supports batch analysis of uploaded/input tabular data and reports normalized target vocabulary coverage for aggregate comparisons across tasks.
+  - **Recommended use cases:** The original web app remains an excellent choice for small numbers of individualized reports, while DIAAD's workflow focuses on higher-throughput downstream statistical workflows.
+
+> Cavanaugh, R., Dalton, S. G., & Richardson, J. (2021). coreLexicon: *An open-source web-app for scoring core lexicon analysis*. R package version 0.0.1.0000. https://github.com/aphasia-apps/coreLexicon

@@ -11,6 +11,7 @@
 01_overview/
   01_introduction.md - Introduction to DIAAD
   02_methodolgical_overview.md - Methodological Overview
+  03_functional_overview.md - Functional Overview
 02_operation/
   01_installation.md - Installation
   02_command_line.md - Command-Line Operation
@@ -27,6 +28,7 @@
 
 - [01_introduction.md - Introduction to DIAAD](01_overview/01_introduction.md)
 - [02_methodolgical_overview.md - Methodological Overview](01_overview/02_methodolgical_overview.md)
+- [03_functional_overview.md - Functional Overview](01_overview/03_functional_overview.md)
 
 ### 02_operation/
 
