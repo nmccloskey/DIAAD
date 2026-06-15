@@ -1,6 +1,8 @@
 # Digital Conversational Turns Module Quickstart
 
-The Digital Conversational Turns module supports turn-sequence coding when a project wants to represent conversational turns directly, often before or instead of full transcription. After definition, this manual may refer to the module as DCT.
+The Digital Conversational Turns module supports turn-sequence coding when a project wants to represent conversational turns directly. After definition, this manual may refer to the module as DCT.
+
+DCT coding can be useful when a project wants a lower-burden alternative or precursor to full transcript analysis. The current `turns files` command still uses DIAAD transcript tables to scaffold sample rows, but the coding task itself is a compact turn-string task rather than utterance-level transcription.
 
 ## Commands
 
@@ -20,20 +22,29 @@ turns evaluate
 turns analyze
 ```
 
-When transcript tables are available, `turns files` can use them to scaffold sample and bin rows. The analytic value of DCT is strongest when turn order is not already fully represented in transcript content, or when a project deliberately codes turns before transcription.
+`turns files` creates one row per sample and configured bin. Coders enter a turn string such as:
+
+```text
+0.1..23.0.12
+```
+
+Digits identify speakers. By convention in the bundled guidance, `0` is the clinician or other non-client interlocutor category, and digits `1` through `9` identify client or participant speakers. Dots are optional markers that DIAAD preserves and summarizes.
+
+The current parser treats each digit as one speaker code, so it does not support participant identifiers of `10` or above as multi-digit IDs.
 
 ## Common Outputs
 
 | Step | Typical outputs |
 |---|---|
-| File generation | `coding_templates/conversation_turns_template.xlsx`, reliability template, codebook |
+| File generation | `coding_templates/conversation_turns_template.xlsx`, reliability template, optional codebook |
 | Reliability evaluation | `turns_reliability/conversation_turns_reliability_results.xlsx`, report, alignments |
 | Reselection | `reselected_turns_reliability/` |
-| Analysis | A DCT analysis workbook with speaker, group, session, bin, participation, and transition summaries where available |
+| Analysis | `conversation_turns_template_analysis.xlsx` or similarly named analysis workbook with speaker, group, session, bin, participation, and transition summaries where available |
 
 ## Read Next
 
 - Transcript tabularization: `docs/manual/03_features/01_transcript_tabularization.md`
 - Configuration: `docs/manual/02_operation/04_configuration.md`
+- Digital Conversational Turns research context: `docs/manual/04_modules/07_digital_conversational_turns/03_research_context.md`
 
 Later command pages describe turn-string syntax, bin/session columns, reliability comparison, and transition outputs.

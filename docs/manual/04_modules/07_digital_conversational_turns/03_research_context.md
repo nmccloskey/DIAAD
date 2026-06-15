@@ -1,19 +1,35 @@
 # Digital Conversational Turns Research Context
 
-Digital Conversational Turns is a coding approach for representing conversational turn sequences without requiring full transcript text. It can be useful when transcription is not available, when a project needs a lower-burden pre-transcription measure, or when the research question centers on turn distribution and sequence rather than lexical content.
+Digital Conversational Turns is a coding approach for representing conversational turn sequences as compact digit strings. It is intended for questions about participation, turn distribution, and conversational sequence rather than lexical content.
+
+## Beyond Turn Tallies
+
+A simple turn tally records how many turns each speaker took. DCT preserves more structure by recording the order of turns. A sequence such as `0.1..23.0.12` can be parsed into speaker counts, marker counts, session or bin summaries, transition matrices, and sequence-similarity measures for reliability.
+
+That sequence structure can support analyses of who participates, how participation changes across bins or sessions, and which speaker-to-speaker transitions are common. For example, a project can distinguish participant-to-participant transitions from clinician-to-participant transitions, which may be useful when conversation-focused interventions aim to increase direct participant interaction.
 
 ## Transcriptionless Or Pre-Transcription Use
 
-DCT is best understood as transcriptionless or pre-transcription support. If a full transcript already exists, the turn sequence is often already encoded by speaker tiers, so manual DCT coding may be redundant. A future extension may derive similar quantitative profiles from transcript speaker tags, but the current module is primarily a manual turn-coding workflow.
+DCT is most useful when a project needs a lower-burden measure before, instead of, or alongside full transcription. If a complete transcript already exists, turn order may already be available through speaker tiers, and separate manual DCT coding may be redundant.
 
-## What It Can Show
+The current DIAAD command surface still uses transcript tables to scaffold DCT templates. In practice, that means the file-generation command needs the sample structure that transcript tables provide, while the actual DCT coding task does not require coders to transcribe utterance text.
 
-Completed turn strings can support summaries of speaker participation, session or bin patterns, group-level comparisons, and transition behavior. Those summaries can be analytically generative, especially for dialogue dynamics, but they are not substitutes for transcript-level linguistic analysis.
+## Speaker Codes And Sequence Assumptions
+
+The current DCT parser treats each digit as one speaker code. In the intended convention, `0` represents the clinician or other non-client interlocutor category, and digits `1` through `9` represent client or participant speakers.
+
+This design is compact and easy to code with a number pad, but it assumes no more than ten speaker categories. It also assumes that turn order can be represented as a clear linear sequence. Overlap, simultaneous talk, or group conversations with many speakers can make that assumption less realistic.
+
+Future protocols could represent overlapping turns with additional syntax, but that would make coding and reliability interpretation more complex. The current DIAAD implementation should therefore be used most cautiously for settings where overlapping turns are frequent or analytically central.
 
 ## Reliability
 
-Reliability evaluation compares primary and reliability turn strings using count and sequence information. Low agreement may reflect coder disagreement about turn boundaries, speaker assignment, or string syntax.
+Reliability evaluation uses both count and sequence information. Count summaries ask whether coders attributed similar numbers of turns to each speaker within each sample, session, and bin. Sequence summaries ask whether the two turn strings are similar in order, using Levenshtein distance and similarity.
 
-## Draft Review Notes
+Low agreement can reflect disagreement about turn boundaries, speaker assignment, digit-string syntax, or how to handle overlapping or ambiguous turns. Reliability results should be interpreted alongside the project's DCT coding protocol and any training or adjudication process.
 
-Before publication, review the transcriptionless/pre-transcription framing, the planned-extension wording, and any research claims about conversational dynamics.
+## Read Next
+
+- Digital Conversational Turns quickstart: `docs/manual/04_modules/07_digital_conversational_turns/01_quickstart.md`
+- Configuration: `docs/manual/02_operation/04_configuration.md`
+- Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`

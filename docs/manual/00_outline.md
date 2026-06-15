@@ -175,7 +175,26 @@
 │   ├── 07_digital_conversational_turns/
 │   │   ├── 01_quickstart.md — Digital Conversational Turns Module Quickstart
 │   │   ├── 03_research_context.md — Digital Conversational Turns Research Context
-│   │   └── 04_implementation_notes.md — Digital Conversational Turns Implementation Notes
+│   │   ├── 04_implementation_notes.md — Digital Conversational Turns Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_files/
+│   │       │   ├── 01_quickstart.md — `turns files` Quickstart
+│   │       │   ├── 02_usage_guide.md — `turns files` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `turns files` Implementation Notes
+│   │       ├── 02_evaluate/
+│   │       │   ├── 01_quickstart.md — `turns evaluate` Quickstart
+│   │       │   ├── 02_usage_guide.md — `turns evaluate` Usage Guide
+│   │       │   ├── 03_research_context.md — `turns evaluate` Research Context
+│   │       │   └── 04_implementation_notes.md — `turns evaluate` Implementation Notes
+│   │       ├── 03_reselect/
+│   │       │   ├── 01_quickstart.md — `turns reselect` Quickstart
+│   │       │   ├── 02_usage_guide.md — `turns reselect` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `turns reselect` Implementation Notes
+│   │       └── 04_analyze/
+│   │           ├── 01_quickstart.md — `turns analyze` Quickstart
+│   │           ├── 02_usage_guide.md — `turns analyze` Usage Guide
+│   │           ├── 03_research_context.md — `turns analyze` Research Context
+│   │           └── 04_implementation_notes.md — `turns analyze` Implementation Notes
 │   ├── 08_blinding/
 │   │   ├── 01_quickstart.md — Blinding Module Quickstart
 │   │   ├── 03_research_context.md — Blinding Research Context
@@ -388,6 +407,28 @@
 - [01_quickstart.md — Digital Conversational Turns Module Quickstart](04_modules/07_digital_conversational_turns/01_quickstart.md)
 - [03_research_context.md — Digital Conversational Turns Research Context](04_modules/07_digital_conversational_turns/03_research_context.md)
 - [04_implementation_notes.md — Digital Conversational Turns Implementation Notes](04_modules/07_digital_conversational_turns/04_implementation_notes.md)
+
+### 04_modules/07_digital_conversational_turns/05_commands/01_files/
+- [01_quickstart.md — `turns files` Quickstart](04_modules/07_digital_conversational_turns/05_commands/01_files/01_quickstart.md)
+- [02_usage_guide.md — `turns files` Usage Guide](04_modules/07_digital_conversational_turns/05_commands/01_files/02_usage_guide.md)
+- [04_implementation_notes.md — `turns files` Implementation Notes](04_modules/07_digital_conversational_turns/05_commands/01_files/04_implementation_notes.md)
+
+### 04_modules/07_digital_conversational_turns/05_commands/02_evaluate/
+- [01_quickstart.md — `turns evaluate` Quickstart](04_modules/07_digital_conversational_turns/05_commands/02_evaluate/01_quickstart.md)
+- [02_usage_guide.md — `turns evaluate` Usage Guide](04_modules/07_digital_conversational_turns/05_commands/02_evaluate/02_usage_guide.md)
+- [03_research_context.md — `turns evaluate` Research Context](04_modules/07_digital_conversational_turns/05_commands/02_evaluate/03_research_context.md)
+- [04_implementation_notes.md — `turns evaluate` Implementation Notes](04_modules/07_digital_conversational_turns/05_commands/02_evaluate/04_implementation_notes.md)
+
+### 04_modules/07_digital_conversational_turns/05_commands/03_reselect/
+- [01_quickstart.md — `turns reselect` Quickstart](04_modules/07_digital_conversational_turns/05_commands/03_reselect/01_quickstart.md)
+- [02_usage_guide.md — `turns reselect` Usage Guide](04_modules/07_digital_conversational_turns/05_commands/03_reselect/02_usage_guide.md)
+- [04_implementation_notes.md — `turns reselect` Implementation Notes](04_modules/07_digital_conversational_turns/05_commands/03_reselect/04_implementation_notes.md)
+
+### 04_modules/07_digital_conversational_turns/05_commands/04_analyze/
+- [01_quickstart.md — `turns analyze` Quickstart](04_modules/07_digital_conversational_turns/05_commands/04_analyze/01_quickstart.md)
+- [02_usage_guide.md — `turns analyze` Usage Guide](04_modules/07_digital_conversational_turns/05_commands/04_analyze/02_usage_guide.md)
+- [03_research_context.md — `turns analyze` Research Context](04_modules/07_digital_conversational_turns/05_commands/04_analyze/03_research_context.md)
+- [04_implementation_notes.md — `turns analyze` Implementation Notes](04_modules/07_digital_conversational_turns/05_commands/04_analyze/04_implementation_notes.md)
 
 ### 04_modules/08_blinding/
 - [01_quickstart.md — Blinding Module Quickstart](04_modules/08_blinding/01_quickstart.md)

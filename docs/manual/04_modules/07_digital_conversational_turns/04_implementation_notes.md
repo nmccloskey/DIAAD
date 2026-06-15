@@ -4,17 +4,17 @@ The Digital Conversational Turns module is implemented under `src/diaad/coding/c
 
 ## File Generation
 
-`turns files` builds a base table from transcript tables, expands rows by configured bins, assigns coder and reliability material, and writes outputs under `coding_templates/`:
+`turns files` currently passes through the CLI transcript-table prerequisite gate. It builds a base table from the sample sheet in transcript tables, expands rows by configured bins, assigns coder and reliability material, and writes outputs under `coding_templates/`:
 
 - `conversation_turns_template.xlsx`
 - `conversation_turns_reliability_template.xlsx`
-- `conversation_turns_template_codebook.xlsx`
+- `conversation_turns_template_codebook.xlsx`, when configured blinding is active
 
 ## Analysis
 
-`turns analyze` reads completed turn workbooks, parses turn strings, computes speaker-level, group-level, bin-level, session-level, participation, and transition metrics where the required columns are available, and writes an analysis workbook.
+`turns analyze` recursively reads completed turn workbooks whose filenames match the conversation-turns pattern, parses turn strings, computes speaker-level, group-level, bin-level, session-level, participation, and transition metrics where the required columns are available, and writes one analysis workbook per input file.
 
-Transition outputs are derived from extracted speaker sequences.
+Turn strings are parsed digit by digit. Dot markers are counted separately as `mark1` and `mark2` when one or two dots follow a digit. Transition outputs are derived from extracted digit sequences.
 
 ## Reliability And Reselection
 
