@@ -1,7 +1,7 @@
 # Instruction Manual
 
 **Version:** 0.0.0
-**Generated:** 2026-06-14
+**Generated:** 2026-06-15
 
 ---
 
@@ -153,7 +153,25 @@
 │   ├── 06_target_vocabulary_coverage/
 │   │   ├── 01_quickstart.md — Target Vocabulary Coverage Module Quickstart
 │   │   ├── 03_research_context.md — Target Vocabulary Coverage Research Context
-│   │   └── 04_implementation_notes.md — Target Vocabulary Coverage Implementation Notes
+│   │   ├── 04_implementation_notes.md — Target Vocabulary Coverage Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_file/
+│   │       │   ├── 01_quickstart.md — `vocab file` Quickstart
+│   │       │   ├── 02_usage_guide.md — `vocab file` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `vocab file` Implementation Notes
+│   │       ├── 02_check/
+│   │       │   ├── 01_quickstart.md — `vocab check` Quickstart
+│   │       │   ├── 02_usage_guide.md — `vocab check` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `vocab check` Implementation Notes
+│   │       ├── 03_analyze/
+│   │       │   ├── 01_quickstart.md — `vocab analyze` Quickstart
+│   │       │   ├── 02_usage_guide.md — `vocab analyze` Usage Guide
+│   │       │   ├── 03_research_context.md — `vocab analyze` Research Context
+│   │       │   └── 04_implementation_notes.md — `vocab analyze` Implementation Notes
+│   │       └── 04_rates/
+│   │           ├── 01_quickstart.md — `vocab rates` Quickstart
+│   │           ├── 02_usage_guide.md — `vocab rates` Usage Guide
+│   │           └── 04_implementation_notes.md — `vocab rates` Implementation Notes
 │   ├── 07_digital_conversational_turns/
 │   │   ├── 01_quickstart.md — Digital Conversational Turns Module Quickstart
 │   │   ├── 03_research_context.md — Digital Conversational Turns Research Context
@@ -344,6 +362,27 @@
 - [01_quickstart.md — Target Vocabulary Coverage Module Quickstart](04_modules/06_target_vocabulary_coverage/01_quickstart.md)
 - [03_research_context.md — Target Vocabulary Coverage Research Context](04_modules/06_target_vocabulary_coverage/03_research_context.md)
 - [04_implementation_notes.md — Target Vocabulary Coverage Implementation Notes](04_modules/06_target_vocabulary_coverage/04_implementation_notes.md)
+
+### 04_modules/06_target_vocabulary_coverage/05_commands/01_file/
+- [01_quickstart.md — `vocab file` Quickstart](04_modules/06_target_vocabulary_coverage/05_commands/01_file/01_quickstart.md)
+- [02_usage_guide.md — `vocab file` Usage Guide](04_modules/06_target_vocabulary_coverage/05_commands/01_file/02_usage_guide.md)
+- [04_implementation_notes.md — `vocab file` Implementation Notes](04_modules/06_target_vocabulary_coverage/05_commands/01_file/04_implementation_notes.md)
+
+### 04_modules/06_target_vocabulary_coverage/05_commands/02_check/
+- [01_quickstart.md — `vocab check` Quickstart](04_modules/06_target_vocabulary_coverage/05_commands/02_check/01_quickstart.md)
+- [02_usage_guide.md — `vocab check` Usage Guide](04_modules/06_target_vocabulary_coverage/05_commands/02_check/02_usage_guide.md)
+- [04_implementation_notes.md — `vocab check` Implementation Notes](04_modules/06_target_vocabulary_coverage/05_commands/02_check/04_implementation_notes.md)
+
+### 04_modules/06_target_vocabulary_coverage/05_commands/03_analyze/
+- [01_quickstart.md — `vocab analyze` Quickstart](04_modules/06_target_vocabulary_coverage/05_commands/03_analyze/01_quickstart.md)
+- [02_usage_guide.md — `vocab analyze` Usage Guide](04_modules/06_target_vocabulary_coverage/05_commands/03_analyze/02_usage_guide.md)
+- [03_research_context.md — `vocab analyze` Research Context](04_modules/06_target_vocabulary_coverage/05_commands/03_analyze/03_research_context.md)
+- [04_implementation_notes.md — `vocab analyze` Implementation Notes](04_modules/06_target_vocabulary_coverage/05_commands/03_analyze/04_implementation_notes.md)
+
+### 04_modules/06_target_vocabulary_coverage/05_commands/04_rates/
+- [01_quickstart.md — `vocab rates` Quickstart](04_modules/06_target_vocabulary_coverage/05_commands/04_rates/01_quickstart.md)
+- [02_usage_guide.md — `vocab rates` Usage Guide](04_modules/06_target_vocabulary_coverage/05_commands/04_rates/02_usage_guide.md)
+- [04_implementation_notes.md — `vocab rates` Implementation Notes](04_modules/06_target_vocabulary_coverage/05_commands/04_rates/04_implementation_notes.md)
 
 ### 04_modules/07_digital_conversational_turns/
 - [01_quickstart.md — Digital Conversational Turns Module Quickstart](04_modules/07_digital_conversational_turns/01_quickstart.md)

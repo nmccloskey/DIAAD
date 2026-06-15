@@ -16,7 +16,7 @@ Resources declare required metadata, base forms, variant maps, and optional norm
 
 ## Analysis
 
-`vocab analyze` prepares input from preferred unblinded utterance data when available, otherwise from transcript tables. It filters to stimuli present in the active resources, removes excluded speakers when speaker labels are available, reformats text, matches variants to base forms, and writes a timestamped `target_vocab_data_*.xlsx` workbook with `summary` and `details` sheets.
+`vocab analyze` currently passes through the CLI transcript-table prerequisite gate. Inside the analysis implementation, it prepares input from preferred unblinded utterance data when available, otherwise from transcript tables. It filters to stimuli present in the active resources, removes excluded speakers when speaker labels are available, reformats text, matches variants to base forms, and writes a timestamped `target_vocab_data_*.xlsx` workbook with `summary` and `details` sheets.
 
 ## Rates
 
