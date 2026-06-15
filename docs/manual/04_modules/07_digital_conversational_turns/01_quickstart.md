@@ -9,12 +9,12 @@ DCT coding can be useful when a project wants a lower-burden alternative or prec
 | Command | Main use |
 |---|---|
 | `diaad turns evaluate` | Evaluate DCT reliability. |
-| `diaad turns analyze` | Analyze completed DCT turn strings. |
+| `diaad turns analyze` | Analyze completed DCT turn strings, or transcript-table speaker sequences when no DCT workbook is present. |
 
 ## Typical Sequence
 
 ```text
-manual turn-string coding
+manual turn-string coding or transcript tables
 turns evaluate
 turns analyze
 ```
@@ -27,7 +27,9 @@ Coders enter a turn string such as:
 
 Digits identify speakers. By convention in the bundled guidance, `0` is the clinician or other non-client interlocutor category, and digits `1` through `9` identify client or participant speakers. Dots are optional markers that DIAAD preserves and summarizes.
 
-The current parser treats each digit as one speaker code, so it does not support participant identifiers of `10` or above as multi-digit IDs.
+Transcript-table input uses the speaker tags from the ordered utterance rows directly. Speakers listed in `project.exclude_speakers` are not dropped for DCT analysis; they are pooled into the non-client category. If the list is not empty, its first value becomes that category label, so `exclude_speakers: [INV, INV2]` maps both `INV` and `INV2` to `INV`.
+
+Manual DCT strings are still parsed digit by digit. A string containing `10` is interpreted as speaker `1` followed by speaker `0`.
 
 ## Common Outputs
 

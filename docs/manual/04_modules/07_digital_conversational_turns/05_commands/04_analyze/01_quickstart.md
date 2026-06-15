@@ -1,6 +1,6 @@
 # `turns analyze` Quickstart
 
-`diaad turns analyze` summarizes completed DCT turn strings across speakers, bins, sessions, groups, and transitions.
+`diaad turns analyze` summarizes completed DCT turn strings or transcript-table speaker sequences across speakers, sessions, groups, and transitions.
 
 ## Run
 
@@ -18,12 +18,26 @@ conversation_turns.xlsx
 
 Each workbook must include `turns` and either the configured sample identifier column or `group`.
 
+If the DCT workbook is absent, DIAAD falls back to the exact configured transcript table, such as:
+
+```text
+transcript_tables.xlsx
+```
+
+When fallback uses transcript tables, speaker tags come from ordered utterance rows and no bins are synthesized.
+
 ## Primary Output
 
 For the matching input workbook, DIAAD writes an analysis workbook in the current output directory. For the standard coding filename, the output is:
 
 ```text
 conversation_turns_analysis.xlsx
+```
+
+For transcript-table fallback, the default output is:
+
+```text
+transcript_tables_turns_analysis.xlsx
 ```
 
 Possible sheets include:

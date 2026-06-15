@@ -612,6 +612,8 @@ class RunContext:
             **self.kwargs_io(),
             "sample_id_field": self.config.sample_id_field,
             "dct_coding_filename": self.config.advanced.dct_coding_filename,
+            "transcript_table_filename": self.config.transcript_table_filename,
+            "exclude_speakers": self.exclude_speakers,
         }
 
     # ------------------------------------------------------------------

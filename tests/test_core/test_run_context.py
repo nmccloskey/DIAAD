@@ -443,3 +443,8 @@ def test_run_context_threads_target_vocab_and_turn_identifier_fields(monkeypatch
         ctx.kwargs_digital_convo_turns()["dct_coding_filename"]
         == "conversation_turns.xlsx"
     )
+    assert (
+        ctx.kwargs_digital_convo_turns()["transcript_table_filename"]
+        == "site_transcript_tables.xlsx"
+    )
+    assert ctx.kwargs_digital_convo_turns()["exclude_speakers"] == ["INV"]

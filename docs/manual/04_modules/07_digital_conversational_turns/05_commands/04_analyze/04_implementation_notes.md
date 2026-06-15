@@ -8,9 +8,10 @@ The main path is:
 
 1. `src/diaad/cli/commands.py` registers `turns analyze`.
 2. `src/diaad/cli/dispatch.py` dispatches the command without a transcript-table prerequisite.
-3. `src/diaad/core/run_context.py` passes input/output paths, the configured sample identifier, and `advanced.dct_coding_filename`.
-4. `src/diaad/core/run_wrappers.py` calls `analyze_digital_convo_turns()`.
-5. `src/diaad/coding/convo_turns/analysis.py` writes one analysis workbook for the configured primary coding file.
+3. `src/diaad/core/run_context.py` passes input/output paths, excluded speakers, the configured sample identifier, `advanced.dct_coding_filename`, and `advanced.transcript_table_filename`.
+4. `src/diaad/core/run_wrappers.py` calls `analyze_digital_convo_turns()` for the DCT workbook.
+5. If the DCT workbook is absent, the wrapper calls `ctx.ensure_transcript_tables()` and reruns `analyze_digital_convo_turns()` with transcript-table mode enabled.
+6. `src/diaad/coding/convo_turns/analysis.py` writes one analysis workbook for the selected source.
 
 ## File Discovery
 
@@ -20,19 +21,44 @@ The implementation uses DIAAD's exact file discovery policy to find one workbook
 advanced.dct_coding_filename
 ```
 
-The search scans the configured input and output directories. It errors if no file is found or if multiple matching files are found. It reads the first sheet of the matching workbook.
+The search scans the configured input and output directories. It falls back only when no DCT workbook is found. Multiple DCT matches are treated as duplicates and do not fall back.
+
+Fallback uses the same exact-file policy for:
+
+```text
+advanced.transcript_table_filename
+```
+
+Multiple transcript table matches are treated as duplicates. Missing transcript tables are handled by `ctx.ensure_transcript_tables()`, so `project.auto_tabularize` decides whether CHAT files may be tabularized automatically.
 
 ## Parsing
 
-If `group` is absent and the configured sample identifier is present, the analysis renames the configured sample identifier to `group`.
+Analysis normalizes both sources into event rows with:
 
-The parser extracts digits with regular expressions. `extract_turn_counts()` ignores dot markers and returns counts per digit. `extract_turn_stats()` counts turn totals plus `mark1` and `mark2` when one or two dots follow a digit.
+```text
+sample_id
+session
+bin
+speaker
+sequence_position
+mark1
+mark2
+source
+```
 
-Transition sequences are extracted from digits only.
+`session` and `bin` are optional. Transcript-derived rows do not synthesize bins.
+
+DCT parsing extracts digit-speaker events with regular expressions. `extract_turn_counts()` ignores dot markers and returns counts per digit. `extract_turn_stats()` counts turn totals plus `mark1` and `mark2` when one or two dots follow a digit.
+
+Transcript-table parsing reads joined transcript rows and treats each speaker tag as a single sequence token.
+
+Speakers listed in `project.exclude_speakers` are pooled into the disinterest category rather than dropped. When the list is not empty, its first value is the category label and DCT `0` is mapped to that label.
+
+Transition sequences are derived from normalized speaker tokens.
 
 ## Workbook Writing
 
-The output filename is the input filename with `_analysis` inserted before `.xlsx`. Sheets are written only when the corresponding dataframe is nonempty.
+DCT output filenames insert `_analysis` before `.xlsx`. Transcript-table fallback inserts `_turns_analysis` before `.xlsx`. Sheets are written only when the corresponding dataframe is nonempty.
 
 Possible sheets are:
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from psair.core.logger import logger
+
 
 # ------------------------------------------------------------------
 # Blinding
@@ -197,7 +199,19 @@ def run_analyze_digital_convo_turns(ctx):
         analyze_digital_convo_turns,
     )
 
-    return analyze_digital_convo_turns(**ctx.kwargs_digital_convo_turns())
+    kwargs = ctx.kwargs_digital_convo_turns()
+    try:
+        return analyze_digital_convo_turns(**kwargs)
+    except FileNotFoundError:
+        ctx.ensure_transcript_tables()
+        logger.info(
+            "No configured DCT coding workbook was found; falling back to "
+            "transcript table speaker sequences for turns analysis."
+        )
+        return analyze_digital_convo_turns(
+            **kwargs,
+            use_transcript_tables=True,
+        )
 
 
 # ------------------------------------------------------------------

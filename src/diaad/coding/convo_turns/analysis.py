@@ -5,7 +5,8 @@ from tqdm import tqdm
 from pathlib import Path
 from scipy.stats import entropy
 from collections import Counter, defaultdict
-from diaad.metadata.discovery import find_one_matching_file
+from diaad.metadata.discovery import find_one_matching_file, find_transcript_table
+from diaad.transcripts.transcript_tables import extract_transcript_data
 from psair.core.logger import logger, get_rel_path
 
 
@@ -70,15 +71,31 @@ def mean_absolute_change(series):
     """Return mean absolute change between consecutive elements of a numeric series."""
     return np.mean(np.abs(np.diff(series)))
 
-def clinician_to_participant_ratio(group):
+def _excluded_speaker_token(exclude_speakers=None) -> str:
+    speakers = [str(speaker) for speaker in (exclude_speakers or []) if str(speaker)]
+    return speakers[0] if speakers else "0"
+
+
+def _normalize_speaker_token(speaker, exclude_speakers=None) -> str:
+    token = str(speaker).strip()
+    excluded_token = _excluded_speaker_token(exclude_speakers)
+    excluded = {str(item).strip() for item in (exclude_speakers or [])}
+    if token == "0" and exclude_speakers:
+        return excluded_token
+    if token in excluded:
+        return excluded_token
+    return token
+
+
+def clinician_to_participant_ratio(group, disinterest_speaker: str = "0"):
     """
     Compute the clinician-to-participant turn ratio within a group.
 
     Parameters
     ----------
     group : pandas.DataFrame
-        Must contain 'speaker' and 'turns' columns. Speaker '0' is assumed
-        to be the clinician, all others are participants.
+        Must contain 'speaker' and 'turns' columns. The configured
+        disinterest speaker is treated as the clinician/non-client category.
 
     Returns
     -------
@@ -86,8 +103,8 @@ def clinician_to_participant_ratio(group):
         Ratio of clinician turns to participant turns, or NaN if denominator is zero.
     """
     speaker_turns = group.groupby('speaker')['turns'].sum()
-    clinician_turns = speaker_turns.get('0', 0)
-    participant_turns = speaker_turns.drop('0', errors='ignore').sum()
+    clinician_turns = speaker_turns.get(disinterest_speaker, 0)
+    participant_turns = speaker_turns.drop(disinterest_speaker, errors='ignore').sum()
     return clinician_turns / participant_turns if participant_turns > 0 else np.nan
 
 def compute_speaker_level(df):
@@ -223,7 +240,7 @@ def compute_bin_level(df, grouping_cols):
     sort_cols = [col for col in [*grouping_cols, 'speaker'] if col in bin_level.columns]
     return bin_level.sort_values(sort_cols, kind='mergesort').reset_index(drop=True)
 
-def compute_session_level(turn_totals):
+def compute_session_level(turn_totals, disinterest_speaker: str = "0"):
     """
     Summarize turn-taking metrics at the session level.
 
@@ -257,7 +274,13 @@ def compute_session_level(turn_totals):
 
     ratios = (
         turn_totals.groupby(['session', 'group'])
-        .apply(clinician_to_participant_ratio, include_groups=False)
+        .apply(
+            lambda group: clinician_to_participant_ratio(
+                group,
+                disinterest_speaker=disinterest_speaker,
+            ),
+            include_groups=False,
+        )
         .reset_index(name='clinician_participant_ratio')
     )
 
@@ -335,7 +358,9 @@ def compute_participation_level(turn_totals, has_bin=False):
 
 # --- Transition Matrices and Ratios ---
 def extract_sequence(turn_string):
-    return re.findall(r'\d', turn_string)
+    if isinstance(turn_string, (list, tuple, pd.Series)):
+        return [str(token) for token in turn_string]
+    return re.findall(r'\d', str(turn_string))
 
 def build_transition_matrix(sequences):
     """
@@ -368,14 +393,14 @@ def build_transition_matrix(sequences):
 
     return matrix.div(matrix.sum(axis=1), axis=0).fillna(0)
 
-def compute_transition_metrics(df):
+def compute_transition_metrics(events, disinterest_speaker: str = "0"):
     """
     Compute transition matrices and speaker ratios for each group.
 
     Parameters
     ----------
-    df : pandas.DataFrame
-        Must include 'group' and 'turns' (string-encoded sequences).
+    events : pandas.DataFrame
+        Normalized turn events with 'group', 'speaker', and sequence columns.
 
     Returns
     -------
@@ -388,9 +413,19 @@ def compute_transition_metrics(df):
     speaker_matrices = {}
     speaker_ratios = []
 
-    for group, group_df in df.groupby('group'):
-        # Ensure valid sequences
-        sequences = [extract_sequence(ts) for ts in group_df['turns'] if isinstance(ts, str) and ts.strip()]
+    for group, group_df in events.groupby('group'):
+        sequence_group_cols = [
+            col for col in ['group', 'session', 'bin'] if col in group_df.columns
+        ]
+        sequences = []
+        for _, sequence_df in group_df.groupby(sequence_group_cols, dropna=False):
+            sequence = (
+                sequence_df.sort_values('sequence_position', kind='mergesort')['speaker']
+                .astype(str)
+                .tolist()
+            )
+            if sequence:
+                sequences.append(sequence)
         if not sequences:
             continue
 
@@ -399,10 +434,18 @@ def compute_transition_metrics(df):
 
         # Compute ratios
         speakers = matrix.columns.astype(str)
-        participants = [s for s in speakers if s != '0']
+        participants = [s for s in speakers if s != disinterest_speaker]
         ptp = matrix.loc[participants, participants].to_numpy().sum() if participants else np.nan
-        ptc = matrix.loc[participants, '0'].sum() if '0' in matrix.columns else np.nan
-        cpp = matrix.loc['0', participants].sum() if '0' in matrix.index else np.nan
+        ptc = (
+            matrix.loc[participants, disinterest_speaker].sum()
+            if disinterest_speaker in matrix.columns
+            else np.nan
+        )
+        cpp = (
+            matrix.loc[disinterest_speaker, participants].sum()
+            if disinterest_speaker in matrix.index
+            else np.nan
+        )
 
         speaker_ratios.append({
             'group': group,
@@ -416,9 +459,204 @@ def compute_transition_metrics(df):
         'speaker_ratios': pd.DataFrame(speaker_ratios)
     }
 
+
+def _events_from_dct_coding(
+    df,
+    *,
+    sample_id_field: str = "sample_id",
+    exclude_speakers=None,
+):
+    df = df.copy()
+    if 'group' not in df.columns and sample_id_field in df.columns:
+        df = df.rename(columns={sample_id_field: 'group'})
+
+    required_cols = ['group', 'turns']
+    for col in required_cols:
+        if col not in df.columns:
+            raise ValueError(f"Missing required column: {col}")
+
+    has_session = 'session' in df.columns
+    has_bin = 'bin' in df.columns
+    rows = []
+    for _, row in df.iterrows():
+        if pd.isna(row['turns']):
+            continue
+        sequence_position = 0
+        for match in re.finditer(r'(\d)(\.{1,2})?', str(row['turns'])):
+            sequence_position += 1
+            dots = match.group(2) or ""
+            event = {
+                'sample_id': row.get('group'),
+                'group': row.get('group'),
+                'speaker': _normalize_speaker_token(
+                    match.group(1),
+                    exclude_speakers,
+                ),
+                'sequence_position': sequence_position,
+                'mark1': 1 if dots == '.' else 0,
+                'mark2': 1 if dots == '..' else 0,
+                'source': 'dct_coding',
+            }
+            if has_session:
+                event['session'] = row.get('session')
+            if has_bin:
+                event['bin'] = row.get('bin')
+            rows.append(event)
+
+    return pd.DataFrame(rows), has_session, has_bin
+
+
+def _events_from_transcript_rows(
+    df,
+    *,
+    sample_id_field: str = "sample_id",
+    exclude_speakers=None,
+):
+    required_cols = [sample_id_field, 'speaker']
+    for col in required_cols:
+        if col not in df.columns:
+            raise ValueError(f"Missing required column: {col}")
+
+    transcript_df = df.copy()
+    transcript_df['_source_row_order'] = range(len(transcript_df))
+    sort_cols = [
+        col
+        for col in [sample_id_field, 'session', 'position', 'position_sub', '_source_row_order']
+        if col in transcript_df.columns
+    ]
+    transcript_df = transcript_df.sort_values(sort_cols, kind='mergesort')
+    has_session = 'session' in transcript_df.columns
+
+    rows = []
+    grouping_cols = [sample_id_field]
+    if has_session:
+        grouping_cols.append('session')
+    for _, group_df in transcript_df.groupby(grouping_cols, dropna=False):
+        for sequence_position, (_, row) in enumerate(group_df.iterrows(), start=1):
+            if pd.isna(row.get('speaker')):
+                continue
+            event = {
+                'sample_id': row.get(sample_id_field),
+                'group': row.get(sample_id_field),
+                'speaker': _normalize_speaker_token(
+                    row.get('speaker'),
+                    exclude_speakers,
+                ),
+                'sequence_position': sequence_position,
+                'mark1': 0,
+                'mark2': 0,
+                'source': 'transcript_table',
+            }
+            if has_session:
+                event['session'] = row.get('session')
+            rows.append(event)
+
+    return pd.DataFrame(rows), has_session, False
+
+
+def _events_from_transcript_table(
+    transcript_table,
+    *,
+    sample_id_field: str = "sample_id",
+    exclude_speakers=None,
+):
+    transcript_df = extract_transcript_data(
+        transcript_table,
+        kind='joined',
+        sample_id_field=sample_id_field,
+    )
+    return _events_from_transcript_rows(
+        transcript_df,
+        sample_id_field=sample_id_field,
+        exclude_speakers=exclude_speakers,
+    )
+
+
+def _turn_totals_from_events(events, *, has_session=False, has_bin=False):
+    grouping_cols = ['group']
+    if has_session and 'session' in events.columns:
+        grouping_cols.append('session')
+    grouping_cols.append('speaker')
+    if has_bin and 'bin' in events.columns:
+        grouping_cols.append('bin')
+
+    turn_totals = (
+        events.groupby(grouping_cols, dropna=False)
+        .agg(
+            turns=('speaker', 'size'),
+            mark1=('mark1', 'sum'),
+            mark2=('mark2', 'sum'),
+        )
+        .reset_index()
+    )
+    return turn_totals
+
+
+def _empty_analysis_result():
+    return {
+        'speaker_level': pd.DataFrame(),
+        'group_level': pd.DataFrame(),
+        'bin_level': pd.DataFrame(),
+        'session_level': pd.DataFrame(),
+        'participation_level': pd.DataFrame(),
+        'transition_matrices': {},
+        'speaker_ratios': pd.DataFrame(),
+    }
+
+
+def _analyze_turn_events(
+    events,
+    *,
+    has_session=False,
+    has_bin=False,
+    disinterest_speaker: str = "0",
+):
+    if events.empty:
+        logger.warning("No conversation turn events available for analysis.")
+        return _empty_analysis_result()
+
+    turn_totals = _turn_totals_from_events(
+        events,
+        has_session=has_session,
+        has_bin=has_bin,
+    )
+
+    ct_data = {
+        'speaker_level': compute_speaker_level(turn_totals),
+        'group_level': compute_group_level(turn_totals),
+    }
+
+    if has_bin:
+        bin_grouping = ['group']
+        if has_session:
+            bin_grouping.append('session')
+        bin_grouping.append('bin')
+        turn_totals = compute_bin_level(turn_totals, grouping_cols=bin_grouping)
+        ct_data['bin_level'] = turn_totals
+
+    if has_session:
+        ct_data['session_level'] = compute_session_level(
+            turn_totals,
+            disinterest_speaker=disinterest_speaker,
+        )
+        ct_data['participation_level'] = compute_participation_level(
+            turn_totals,
+            has_bin=has_bin,
+        )
+
+    ct_data.update(
+        compute_transition_metrics(
+            events,
+            disinterest_speaker=disinterest_speaker,
+        )
+    )
+    return ct_data
+
+
 def _analyze_convo_turns_file(
     df,
     sample_id_field: str = "sample_id",
+    exclude_speakers=None,
 ):
     """
     Analyze a single conversation turns dataframe.
@@ -441,65 +679,17 @@ def _analyze_convo_turns_file(
             'speaker_ratios': DataFrame
         }
     """
-    df = df.copy()
-    if 'group' not in df.columns and sample_id_field in df.columns:
-        df = df.rename(columns={sample_id_field: 'group'})
-
-    required_cols = ['group', 'turns']
-    for col in required_cols:
-        if col not in df.columns:
-            raise ValueError(f"Missing required column: {col}")
-
-    has_session = 'session' in df.columns
-    has_bin = 'bin' in df.columns
-
-    grouping_cols = ['group', 'speaker']
-    if has_session:
-        grouping_cols.append('session')
-    if has_bin:
-        grouping_cols.append('bin')
-
-    # Extract turn data
-    rows = []
-    for _, row in df.iterrows():
-        if pd.isna(row['turns']):
-            continue
-        row_dict = row.to_dict()
-        turn_counts, mark1_counts, mark2_counts = extract_turn_stats(row_dict.get('turns', ''))
-        speakers = sorted(set(turn_counts) | set(mark1_counts) | set(mark2_counts))
-        for speaker in speakers:
-            rows.append({
-                'group': row_dict.get('group'),
-                'session': row_dict.get('session'),
-                'speaker': speaker,
-                'bin': row_dict.get('bin'),
-                'turns': int(turn_counts.get(speaker, 0)),
-                'mark1': int(mark1_counts.get(speaker, 0)),
-                'mark2': int(mark2_counts.get(speaker, 0)),
-            })
-    turn_totals = pd.DataFrame(rows)
-
-    # Compute metrics
-    ct_data = {
-        'speaker_level': compute_speaker_level(turn_totals),
-        'group_level': compute_group_level(turn_totals),
-    }
-
-    if has_bin:
-        bin_grouping = ['group']
-        if has_session:
-            bin_grouping.append('session')
-        bin_grouping.append('bin')  # always include 'bin'
-        turn_totals = compute_bin_level(turn_totals, grouping_cols=bin_grouping)
-        ct_data['bin_level'] = turn_totals
-
-    if has_session:
-        ct_data['session_level'] = compute_session_level(turn_totals)
-        ct_data['participation_level'] = compute_participation_level(turn_totals, has_bin=has_bin)
-    
-    ct_data.update(compute_transition_metrics(df))
-
-    return ct_data
+    events, has_session, has_bin = _events_from_dct_coding(
+        df,
+        sample_id_field=sample_id_field,
+        exclude_speakers=exclude_speakers,
+    )
+    return _analyze_turn_events(
+        events,
+        has_session=has_session,
+        has_bin=has_bin,
+        disinterest_speaker=_excluded_speaker_token(exclude_speakers),
+    )
 
 # Summary statistics with coefficient of variation
 def summarize(df, level_name):
@@ -535,6 +725,9 @@ def analyze_digital_convo_turns(
     output_dir,
     sample_id_field: str = "sample_id",
     dct_coding_filename: str = "conversation_turns.xlsx",
+    transcript_table_filename: str = "transcript_tables.xlsx",
+    exclude_speakers=None,
+    use_transcript_tables: bool = False,
 ):
     """
     Run full analysis pipeline on conversation turn files.
@@ -542,7 +735,8 @@ def analyze_digital_convo_turns(
     Parameters
     ----------
     input_dir : str or Path
-        Directory to search for the configured conversation-turns coding file.
+        Directory to search for the configured conversation-turns coding file
+        or transcript table.
     output_dir : str or Path
         Directory where analysis Excel outputs are written.
 
@@ -558,30 +752,55 @@ def analyze_digital_convo_turns(
 
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    ct_files = [
-        find_one_matching_file(
+    if use_transcript_tables:
+        source_file = find_transcript_table(
+            directories=[input_dir, output_dir],
+            filename=transcript_table_filename,
+            required=True,
+            label="transcript table file for conversation turns analysis",
+        )
+        source_label = "transcript table"
+        out_file_name = source_file.name.replace('.xlsx', '_turns_analysis.xlsx')
+    else:
+        source_file = find_one_matching_file(
             directories=[input_dir, output_dir],
             filename=dct_coding_filename,
             label="conversation turns coding file",
         )
-    ]
-    logger.info(f"Found conversation turns coding file: {get_rel_path(ct_files[0])}.")
+        source_label = "conversation turns coding file"
+        out_file_name = source_file.name.replace('.xlsx', '_analysis.xlsx')
 
-    for ct_file in tqdm(ct_files, desc="Analyzing conversation turns"):
+    logger.info(f"Found {source_label}: {get_rel_path(source_file)}.")
+
+    for ct_file in tqdm([source_file], desc="Analyzing conversation turns"):
         try:
-            xls = pd.ExcelFile(ct_file)
-            if not xls.sheet_names:
-                logger.warning(f"No sheets found in file: {ct_file.name}")
-                continue
-            df = xls.parse(xls.sheet_names[0])
-            if df.empty:
-                logger.warning(f"Empty data in file: {ct_file.name}")
-                continue
+            if use_transcript_tables:
+                events, has_session, has_bin = _events_from_transcript_table(
+                    ct_file,
+                    sample_id_field=sample_id_field,
+                    exclude_speakers=exclude_speakers,
+                )
+                ct_data = _analyze_turn_events(
+                    events,
+                    has_session=has_session,
+                    has_bin=has_bin,
+                    disinterest_speaker=_excluded_speaker_token(exclude_speakers),
+                )
+            else:
+                xls = pd.ExcelFile(ct_file)
+                if not xls.sheet_names:
+                    logger.warning(f"No sheets found in file: {ct_file.name}")
+                    continue
+                df = xls.parse(xls.sheet_names[0])
+                if df.empty:
+                    logger.warning(f"Empty data in file: {ct_file.name}")
+                    continue
 
-            ct_data = _analyze_convo_turns_file(
-                df,
-                sample_id_field=sample_id_field,
-            )
+                ct_data = _analyze_convo_turns_file(
+                    df,
+                    sample_id_field=sample_id_field,
+                    exclude_speakers=exclude_speakers,
+                )
 
             # Extract all data levels (with fallback to empty df)
             bin_level = ct_data.get('bin_level', pd.DataFrame())
@@ -610,8 +829,6 @@ def analyze_digital_convo_turns(
 
             summary_stats_all = pd.concat(summary_frames, ignore_index=True) if summary_frames else pd.DataFrame()
 
-            # Save to Excel
-            out_file_name = ct_file.name.replace('.xlsx', '_analysis.xlsx')
             final_path = Path(output_dir, out_file_name)
 
             with pd.ExcelWriter(final_path, engine='xlsxwriter') as writer:
