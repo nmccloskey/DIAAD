@@ -11,17 +11,19 @@ The Blinding module encodes and decodes configured identifier columns in tabular
 
 ## Typical Use
 
-Use blinding when coders should work with masked identifiers:
+Use blinding when coders or downstream analysts should work with masked identifiers. For manual coding, encode before distributing coder-facing files, or use a coding workflow's `auto_blind` support when available:
 
 ```bash
 diaad blinding encode --config config
 ```
 
-After manual coding, decode when analysis should be tied back to canonical sample identifiers:
+After manual coding, decode before DIAAD analysis when analysis needs canonical sample identifiers, metadata joins, or exact filename/material matching:
 
 ```bash
 diaad blinding decode --config config
 ```
+
+After analysis, a project may choose to encode selected analysis exports again for blinded statistical workflows or external sharing. That post-analysis encoding should use the same codebook when the blinded values need to remain comparable with earlier blinded materials.
 
 Project settings live in `advanced.yaml`, especially:
 
@@ -44,4 +46,4 @@ blind_columns:
 - Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
 - Web app operation: `docs/manual/02_operation/03_webapp.md`
 
-Later command and functionality pages describe codebook discovery, auto-blind behavior, and privacy/de-identification cautions in more detail.
+Command and functionality pages describe codebook discovery, auto-blind behavior, and privacy/de-identification cautions in more detail.

@@ -10,7 +10,11 @@ For example, a lab may deidentify filenames and blind sample IDs, but if the sam
 
 ## Encode And Decode
 
-Encoding supports a masked coding stage. Decoding supports analysis after coding, when results need to reconnect with canonical identifiers, metadata, or other project files.
+Encoding supports a masked coding stage. For manual coding procedures, this is usually the recommended direction of travel: prepare coder-facing files, encode configured identifiers, distribute the blinded files, and preserve the codebook separately.
+
+Decoding supports analysis after coding, when results need to reconnect with canonical identifiers, metadata, transcript tables, or other project files. In most DIAAD workflows, decoding back to original sample identifiers before analysis is safer than asking every downstream analysis command to infer blinded identifiers.
+
+After analysis, users may prefer another encoding step for statistical workflows, exports, or collaboration packages where analysts should not see raw identifiers. That later encoding is a sharing and analysis-design choice, not a substitute for preserving the original codebook and decoded canonical analysis files.
 
 The codebook is therefore a sensitive reproducibility artifact. Losing it can make decoded analysis difficult; sharing it too broadly can defeat the purpose of masking.
 
@@ -18,6 +22,6 @@ The codebook is therefore a sensitive reproducibility artifact. Losing it can ma
 
 The web app runs in a temporary workspace and returns outputs as a ZIP, but sensitive transcript data still require project-level judgment. For workflows with identifying or highly sensitive content, local CLI use may be preferable even when software-level blinding is available.
 
-## Draft Review Notes
+## Review Flag
 
-Before publication, review privacy, de-identification, web-vs-CLI, and codebook storage guidance carefully.
+Privacy, de-identification, web-vs-CLI, and codebook storage guidance should receive human review before publication.

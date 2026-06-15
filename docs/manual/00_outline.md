@@ -198,7 +198,16 @@
 │   ├── 08_blinding/
 │   │   ├── 01_quickstart.md — Blinding Module Quickstart
 │   │   ├── 03_research_context.md — Blinding Research Context
-│   │   └── 04_implementation_notes.md — Blinding Implementation Notes
+│   │   ├── 04_implementation_notes.md — Blinding Implementation Notes
+│   │   └── 05_commands/
+│   │       ├── 01_encode/
+│   │       │   ├── 01_quickstart.md — `blinding encode` Quickstart
+│   │       │   ├── 02_usage_guide.md — `blinding encode` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `blinding encode` Implementation Notes
+│   │       └── 02_decode/
+│   │           ├── 01_quickstart.md — `blinding decode` Quickstart
+│   │           ├── 02_usage_guide.md — `blinding decode` Usage Guide
+│   │           └── 04_implementation_notes.md — `blinding decode` Implementation Notes
 │   └── 09_examples/
 │       ├── 01_quickstart.md — Examples Module Quickstart
 │       ├── 02_usage_guide.md — Examples Module Usage Guide
@@ -434,6 +443,16 @@
 - [01_quickstart.md — Blinding Module Quickstart](04_modules/08_blinding/01_quickstart.md)
 - [03_research_context.md — Blinding Research Context](04_modules/08_blinding/03_research_context.md)
 - [04_implementation_notes.md — Blinding Implementation Notes](04_modules/08_blinding/04_implementation_notes.md)
+
+### 04_modules/08_blinding/05_commands/01_encode/
+- [01_quickstart.md — `blinding encode` Quickstart](04_modules/08_blinding/05_commands/01_encode/01_quickstart.md)
+- [02_usage_guide.md — `blinding encode` Usage Guide](04_modules/08_blinding/05_commands/01_encode/02_usage_guide.md)
+- [04_implementation_notes.md — `blinding encode` Implementation Notes](04_modules/08_blinding/05_commands/01_encode/04_implementation_notes.md)
+
+### 04_modules/08_blinding/05_commands/02_decode/
+- [01_quickstart.md — `blinding decode` Quickstart](04_modules/08_blinding/05_commands/02_decode/01_quickstart.md)
+- [02_usage_guide.md — `blinding decode` Usage Guide](04_modules/08_blinding/05_commands/02_decode/02_usage_guide.md)
+- [04_implementation_notes.md — `blinding decode` Implementation Notes](04_modules/08_blinding/05_commands/02_decode/04_implementation_notes.md)
 
 ### 04_modules/09_examples/
 - [01_quickstart.md — Examples Module Quickstart](04_modules/09_examples/01_quickstart.md)
