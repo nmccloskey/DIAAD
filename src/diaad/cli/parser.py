@@ -15,6 +15,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
             "  diaad transcripts tabularize\n"
             "  diaad cus analyze\n"
             "  diaad transcripts tabularize, cus files, words files\n"
+            "  diaad streamlit\n"
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -111,6 +112,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help_lines.append(f"  {module}:")
         for cmd in commands:
             help_lines.append(f"    - {cmd}")
+    help_lines.extend(
+        [
+            "  web:",
+            "    - streamlit",
+        ]
+    )
 
     parser.epilog = "\n".join(help_lines)
     return parser

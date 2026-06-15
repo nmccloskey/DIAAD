@@ -15,7 +15,7 @@ pip install "diaad[web]"
 Then launch:
 
 ```bash
-streamlit_diaad
+diaad streamlit
 ```
 
 The launcher starts Streamlit and prints a local URL. Open that URL in a browser to use the app.

@@ -135,6 +135,43 @@ def test_main_dry_run_config_exits_before_logger_and_dispatch(monkeypatch, tmp_p
     assert events[0][1]["create_output_dir"] is False
 
 
+def test_streamlit_command_launches_without_project_context(monkeypatch):
+    events = []
+
+    def fail_context(*args, **kwargs):
+        raise AssertionError("streamlit launch should not create a RunContext")
+
+    monkeypatch.setattr(main_module, "RunContext", fail_context)
+    monkeypatch.setattr(
+        main_module,
+        "_run_streamlit_command",
+        lambda: events.append(("streamlit",)) or 23,
+    )
+
+    args = SimpleNamespace(command=["streamlit"])
+
+    assert main_module.main(args) == 23
+    assert events == [("streamlit",)]
+
+
+def test_streamlit_command_rejects_examples_options(monkeypatch):
+    monkeypatch.setattr(
+        main_module,
+        "_run_streamlit_command",
+        lambda: pytest.fail("streamlit launcher should not run"),
+    )
+
+    args = SimpleNamespace(
+        command=["streamlit"],
+        render_docs=False,
+        example_commands=["cus analyze"],
+        force=False,
+    )
+
+    with pytest.raises(ValueError, match="diaad examples"):
+        main_module.main(args)
+
+
 def test_examples_command_defaults_files_to_configured_output_dir(monkeypatch, tmp_path):
     events = []
 

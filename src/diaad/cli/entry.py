@@ -9,7 +9,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        main_core(args)
+        return main_core(args)
     except Exception as e:
         logger.error(f"DIAAD execution failed: {e}")
         raise

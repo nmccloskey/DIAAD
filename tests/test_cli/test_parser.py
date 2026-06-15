@@ -67,3 +67,12 @@ def test_parser_accepts_repeatable_examples_for_command_option() -> None:
 
     assert args.command == ["examples"]
     assert args.example_commands == ["cus analyze", "cus evaluate"]
+
+
+def test_parser_help_lists_streamlit_launcher() -> None:
+    parser = build_arg_parser()
+
+    help_text = parser.format_help()
+
+    assert "diaad streamlit" in help_text
+    assert "    - streamlit" in help_text

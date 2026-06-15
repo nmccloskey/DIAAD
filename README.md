@@ -92,8 +92,10 @@ diaad "transcripts tabularize, cus files, words files"
 Launch the local web app after installing `diaad[web]`:
 
 ```bash
-streamlit_diaad
+diaad streamlit
 ```
+
+The legacy `streamlit_diaad` launcher is also available.
 
 ## Project Configuration
 

@@ -283,23 +283,26 @@ Source code: [nmccloskey/DIAAD](https://github.com/nmccloskey/DIAAD)
 def _render_manual() -> None:
     if render_manual_ui is None:
         return
-    
+
     repo_root = Path(__file__).resolve().parents[3]
+    package_root = Path(__file__).resolve().parents[1]
 
-    render_manual_ui(
-        repo_root=repo_root,
-        manual_rel_dir="docs/manual",
-        expander_label="Show / Hide DIAAD Manual Menu",
-        ui_key="diaad_manual",
-    )
+    if (repo_root / "docs/manual").exists():
+        render_manual_ui(
+            repo_root=repo_root,
+            manual_rel_dir="docs/manual",
+            expander_label="Show / Hide DIAAD Manual Menu",
+            ui_key="diaad_manual",
+        )
 
-    # Convenient for development, but will be threaded into the user manual.
-    render_manual_ui(
-        repo_root=repo_root,
-        manual_rel_dir="src/diaad/examples/assets/rendered_docs/example_io",
-        expander_label="Show / Hide DIAAD Example Input/Output Menu",
-        ui_key="diaad_examples",
-    )
+    example_docs_rel_dir = "examples/assets/rendered_docs/example_io"
+    if (package_root / example_docs_rel_dir).exists():
+        render_manual_ui(
+            repo_root=package_root,
+            manual_rel_dir=example_docs_rel_dir,
+            expander_label="Show / Hide DIAAD Example Input/Output Menu",
+            ui_key="diaad_examples",
+        )
 
 
 def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str]) -> BytesIO:
@@ -509,17 +512,19 @@ def _running_under_streamlit() -> bool:
         return False
 
 
-def main() -> None:
+def main() -> int | None:
     """Launch the Streamlit app, or render it when already inside Streamlit."""
     if _running_under_streamlit():
         render_app()
         return
 
-    import subprocess
-    import sys
+    from diaad.webapp.launcher import launch_streamlit
 
-    subprocess.run([sys.executable, "-m", "streamlit", "run", __file__], check=False)
+    return launch_streamlit()
 
 
 if __name__ == "__main__":
-    render_app()
+    if _running_under_streamlit():
+        render_app()
+    else:
+        raise SystemExit(main())

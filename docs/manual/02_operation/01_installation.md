@@ -61,7 +61,7 @@ DIAAD separates core processing dependencies from optional web, NLP, and develop
 | Install target | Command | What it adds |
 |---|---|---|
 | Core CLI | `pip install diaad` | The `diaad` command and core processing libraries. |
-| Web app | `pip install "diaad[web]"` | Streamlit support for launching the local web app with `streamlit_diaad`. |
+| Web app | `pip install "diaad[web]"` | Streamlit support for launching the local web app with `diaad streamlit`. |
 | NLP support | `pip install "diaad[nlp]"` | spaCy support for workflows that use automated NLP processing. |
 | Web plus NLP | `pip install "diaad[web,nlp]"` | Both the local web app and spaCy support. |
 | Development | `pip install -e ".[dev,web,nlp]"` | Editable install with tests, web support, and NLP support. |
@@ -87,7 +87,7 @@ diaad --help
 If you installed the web extra, check the local web app launcher:
 
 ```bash
-streamlit_diaad
+diaad streamlit
 ```
 
 This should start a Streamlit server and print a local URL.

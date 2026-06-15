@@ -39,7 +39,7 @@ dependencies = [
 
 [project.scripts]
 diaad = "diaad.cli.entry:main"
-streamlit_diaad = "diaad.webapp.streamlit_app:main"
+streamlit_diaad = "diaad.webapp.launcher:main"
 
 [project.optional-dependencies]
 dev = ["pytest"]

@@ -24,8 +24,22 @@ from psair.core.logger import (
 )
 
 
+def _command_text(args) -> str:
+    return " ".join(args.command).strip().lower()
+
+
 def _is_examples_command(args) -> bool:
-    return " ".join(args.command).strip().lower() == "examples"
+    return _command_text(args) == "examples"
+
+
+def _is_streamlit_command(args) -> bool:
+    return _command_text(args) == "streamlit"
+
+
+def _run_streamlit_command() -> int:
+    from diaad.webapp.launcher import launch_streamlit
+
+    return launch_streamlit()
 
 
 def _has_examples_options(args) -> bool:
@@ -104,13 +118,20 @@ def _run_examples_command(args) -> None:
             terminate_logger(**ctx.termination_kwargs(), status=status)
 
 
-def main(args) -> None:
+def main(args) -> int | None:
     """Parse CLI arguments and execute the requested DIAAD commands."""
     ctx = None
     status = "completed"
     logger_initialized = False
 
     try:
+        if _is_streamlit_command(args):
+            if _has_examples_options(args):
+                raise ValueError(
+                    "--render-docs, --for-command, and --force are only valid with "
+                    "'diaad examples'."
+                )
+            return _run_streamlit_command()
         if _is_examples_command(args):
             _run_examples_command(args)
             return
@@ -200,4 +221,4 @@ def main(args) -> None:
 if __name__ == "__main__":
     parser = build_arg_parser()
     args = parser.parse_args()
-    main(args)
+    raise SystemExit(main(args))
