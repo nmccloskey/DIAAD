@@ -17,6 +17,8 @@ This separation keeps the manual readable while making examples reproducible. If
 
 Generated Example I/O pages include YAML front matter so a manual composition layer can place them beside authored views for the same object.
 
+Generated Example I/O pages and downloadable toy example packages do not need to match byte-for-byte. The documentation view is a readable preview of command inputs, outputs, and runtime-shaped paths. The downloaded packages are runnable synthetic file sets for hands-on inspection. Both are generated from DIAAD example infrastructure and both support operational understanding, but they are not the same artifact.
+
 Command pages declare fields such as:
 
 - `object_type: command`
@@ -64,7 +66,4 @@ When example content changes, update the example specs, generator, renderer, or 
 - Command-line operation: `docs/manual/02_operation/02_command_line.md`
 - Web app operation: `docs/manual/02_operation/03_webapp.md`
 - Testing: `docs/manual/02_operation/05_testing.md`
-
-## Draft Review Notes
-
-Before publication, confirm whether authored manual pages will receive comparable front matter. This page currently treats generated `example_io` metadata as a composition contract for generated documentation only.
+- Examples module: `docs/manual/04_modules/09_examples/01_quickstart.md`

@@ -212,7 +212,12 @@
 │       ├── 01_quickstart.md — Examples Module Quickstart
 │       ├── 02_usage_guide.md — Examples Module Usage Guide
 │       ├── 03_research_context.md — Examples Research Context
-│       └── 04_implementation_notes.md — Examples Implementation Notes
+│       ├── 04_implementation_notes.md — Examples Implementation Notes
+│       └── 05_commands/
+│           └── 01_examples/
+│               ├── 01_quickstart.md — `examples` Quickstart
+│               ├── 02_usage_guide.md — `examples` Usage Guide
+│               └── 04_implementation_notes.md — `examples` Implementation Notes
 └── 99_references.md — References
 ```
 
@@ -459,6 +464,11 @@
 - [02_usage_guide.md — Examples Module Usage Guide](04_modules/09_examples/02_usage_guide.md)
 - [03_research_context.md — Examples Research Context](04_modules/09_examples/03_research_context.md)
 - [04_implementation_notes.md — Examples Implementation Notes](04_modules/09_examples/04_implementation_notes.md)
+
+### 04_modules/09_examples/05_commands/01_examples/
+- [01_quickstart.md — `examples` Quickstart](04_modules/09_examples/05_commands/01_examples/01_quickstart.md)
+- [02_usage_guide.md — `examples` Usage Guide](04_modules/09_examples/05_commands/01_examples/02_usage_guide.md)
+- [04_implementation_notes.md — `examples` Implementation Notes](04_modules/09_examples/05_commands/01_examples/04_implementation_notes.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
