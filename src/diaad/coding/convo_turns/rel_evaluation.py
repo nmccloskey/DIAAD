@@ -343,6 +343,8 @@ def evaluate_digital_convo_turns_reliability(
     input_dir,
     output_dir,
     sample_id_field: str = "sample_id",
+    dct_coding_filename: str = "conversation_turns.xlsx",
+    dct_coding_reliability: str = "conversation_turns_reliability.xlsx",
 ):
     """
     Evaluate digital conversation turn reliability using counts and sequence similarity.
@@ -354,12 +356,12 @@ def evaluate_digital_convo_turns_reliability(
 
     org_file = find_one_matching_file(
         directories=[input_dir, output_dir],
-        filename="conversation_turns_template.xlsx",
+        filename=dct_coding_filename,
         label="conversation turns coding file",
     )
     rel_file = find_one_matching_file(
         directories=[input_dir, output_dir],
-        filename="conversation_turns_reliability_template.xlsx",
+        filename=dct_coding_reliability,
         label="conversation turns reliability file",
     )
 

@@ -127,7 +127,7 @@ Current command modules and actions are:
 | `words` | `words files`, `words evaluate`, `words reselect`, `words analyze`, `words rates` |
 | `powers` | `powers files`, `powers analyze`, `powers rates`, `powers evaluate`, `powers reselect` |
 | `vocab` | `vocab file`, `vocab check`, `vocab analyze`, `vocab rates` |
-| `turns` | `turns files`, `turns evaluate`, `turns reselect`, `turns analyze` |
+| `turns` | `turns evaluate`, `turns analyze` |
 
 ## Generated Examples
 

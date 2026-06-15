@@ -38,6 +38,8 @@ class FakeConfigManager:
         self.powers_reliability_filename = "powers_reliability_coding.xlsx"
         self.powers_coding_file = self.powers_coding_filename
         self.powers_reliability_file = self.powers_reliability_filename
+        self.dct_coding_filename = "conversation_turns.xlsx"
+        self.dct_coding_reliability = "conversation_turns_reliability.xlsx"
         self.transcript_table_filename = "site_transcript_tables.xlsx"
         self.transcript_table_file = self.transcript_table_filename
         self.spacy_model_name = "en_core_web_trf"
@@ -58,6 +60,8 @@ class FakeConfigManager:
             target_vocabulary_resource_path="",
             powers_coding_filename="powers_coding.xlsx",
             powers_reliability_filename="powers_reliability_coding.xlsx",
+            dct_coding_filename="conversation_turns.xlsx",
+            dct_coding_reliability="conversation_turns_reliability.xlsx",
             transcript_table_filename="site_transcript_tables.xlsx",
             spacy_model_name="en_core_web_trf",
             sample_id_column="expanded_sample_id",
@@ -423,19 +427,19 @@ def test_run_context_threads_target_vocab_and_turn_identifier_fields(monkeypatch
     assert ctx.kwargs_target_vocab()["transcript_table_filename"] == "site_transcript_tables.xlsx"
     assert ctx.kwargs_target_vocab_rates()["sample_id_field"] == "expanded_sample_id"
     assert (
-        ctx.kwargs_make_digital_convo_turn_files()["sample_id_field"]
-        == "expanded_sample_id"
-    )
-    assert (
-        ctx.kwargs_make_digital_convo_turn_files()["transcript_table_filename"]
-        == "site_transcript_tables.xlsx"
-    )
-    assert (
         ctx.kwargs_digital_convo_turns_reliability()["sample_id_field"]
         == "expanded_sample_id"
     )
     assert (
-        ctx.kwargs_reselect_digital_convo_turns()["sample_id_field"]
-        == "expanded_sample_id"
+        ctx.kwargs_digital_convo_turns_reliability()["dct_coding_filename"]
+        == "conversation_turns.xlsx"
+    )
+    assert (
+        ctx.kwargs_digital_convo_turns_reliability()["dct_coding_reliability"]
+        == "conversation_turns_reliability.xlsx"
     )
     assert ctx.kwargs_digital_convo_turns()["sample_id_field"] == "expanded_sample_id"
+    assert (
+        ctx.kwargs_digital_convo_turns()["dct_coding_filename"]
+        == "conversation_turns.xlsx"
+    )

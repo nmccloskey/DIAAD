@@ -140,6 +140,8 @@ Current `advanced` settings are:
 | `powers_coding_filename` | `powers_coding.xlsx` | POWERS coding workbook name. |
 | `powers_reliability_filename` | `powers_reliability_coding.xlsx` | POWERS reliability coding workbook name. |
 | `spacy_model_name` | `en_core_web_sm` | spaCy language model name for NLP-backed workflows. |
+| `dct_coding_filename` | `conversation_turns.xlsx` | Digital Conversational Turns primary coding workbook name. |
+| `dct_coding_reliability` | `conversation_turns_reliability.xlsx` | Digital Conversational Turns reliability coding workbook name. |
 | `target_vocabulary_resource_path` | `''` | Optional custom target-vocabulary resource path. |
 | `auto_blind` | `false` | Whether supported workflows should automatically use configured blinding columns. |
 | `blind_columns` | `[sample_id]` | Columns to encode for blinding. |

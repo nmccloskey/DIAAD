@@ -35,10 +35,10 @@ your_project/
   diaad_data/
     input/
       conversation_turns/
-        conversation_turns_template.xlsx
+        conversation_turns.xlsx
     output/
       diaad_YYMMDD_HHMM/
-        conversation_turns_template_analysis.xlsx
+        conversation_turns_analysis.xlsx
         logs/
           diaad_YYMMDD_HHMM.log
           diaad_YYMMDD_HHMM_metadata.json
@@ -51,9 +51,15 @@ input_dir: diaad_data/input
 output_dir: diaad_data/output
 ```
 
+## Advanced Config
+
+```yaml
+dct_coding_filename: conversation_turns.xlsx
+```
+
 ## Input Snippet
 
-`diaad_data/input/conversation_turns/conversation_turns_template.xlsx`
+`diaad_data/input/conversation_turns/conversation_turns.xlsx`
 
 | sample_id | session | bin | turns |
 | --- | --- | --- | --- |
@@ -66,7 +72,7 @@ output_dir: diaad_data/output
 
 ## Output Preview
 
-`diaad_data/output/diaad_YYMMDD_HHMM/conversation_turns_template_analysis.xlsx`
+`diaad_data/output/diaad_YYMMDD_HHMM/conversation_turns_analysis.xlsx`
 
 ### Sheet: bin_level_turns
 

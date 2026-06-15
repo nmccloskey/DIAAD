@@ -2,27 +2,24 @@
 
 The Digital Conversational Turns module supports turn-sequence coding when a project wants to represent conversational turns directly. After definition, this manual may refer to the module as DCT.
 
-DCT coding can be useful when a project wants a lower-burden alternative or precursor to full transcript analysis. The current `turns files` command still uses DIAAD transcript tables to scaffold sample rows, but the coding task itself is a compact turn-string task rather than utterance-level transcription.
+DCT coding can be useful when a project wants a lower-burden alternative or precursor to full transcript analysis. Manual DCT coding uses compact turn-string workbooks rather than utterance-level transcript text.
 
 ## Commands
 
 | Command | Main use |
 |---|---|
-| `diaad turns files` | Create DCT coding and reliability workbooks. |
 | `diaad turns evaluate` | Evaluate DCT reliability. |
-| `diaad turns reselect` | Select replacement DCT reliability material. |
 | `diaad turns analyze` | Analyze completed DCT turn strings. |
 
 ## Typical Sequence
 
 ```text
-turns files
 manual turn-string coding
 turns evaluate
 turns analyze
 ```
 
-`turns files` creates one row per sample and configured bin. Coders enter a turn string such as:
+Coders enter a turn string such as:
 
 ```text
 0.1..23.0.12
@@ -36,10 +33,8 @@ The current parser treats each digit as one speaker code, so it does not support
 
 | Step | Typical outputs |
 |---|---|
-| File generation | `coding_templates/conversation_turns_template.xlsx`, reliability template, optional codebook |
 | Reliability evaluation | `turns_reliability/conversation_turns_reliability_results.xlsx`, report, alignments |
-| Reselection | `reselected_turns_reliability/` |
-| Analysis | `conversation_turns_template_analysis.xlsx` or similarly named analysis workbook with speaker, group, session, bin, participation, and transition summaries where available |
+| Analysis | `conversation_turns_analysis.xlsx` or similarly named analysis workbook with speaker, group, session, bin, participation, and transition summaries where available |
 
 ## Read Next
 

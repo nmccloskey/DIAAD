@@ -28,9 +28,7 @@ from diaad.coding.powers.rates import calculate_powers_rates
 from diaad.coding.powers.rel_evaluation import evaluate_powers_reliability
 from diaad.coding.powers.rel_reselection import reselect_powers_rel
 from diaad.coding.convo_turns.analysis import analyze_digital_convo_turns
-from diaad.coding.convo_turns.files import make_digital_convo_turn_files
 from diaad.coding.convo_turns.rel_evaluation import evaluate_digital_convo_turns_reliability
-from diaad.coding.convo_turns.rel_reselection import reselect_digital_convo_turns_rel
 from diaad.coding.target_vocab.analysis import run_target_vocab
 from diaad.coding.target_vocab.files import (
     check_target_vocab_resources,
@@ -128,9 +126,7 @@ VOCAB_OUTPUT_DIRS = {
     "rates": "vocab_rates",
 }
 TURNS_OUTPUT_DIRS = {
-    "files": "turns_files",
     "evaluate": "turns_evaluate",
-    "reselect": "turns_reselect",
     "analyze": "turns_analyze",
 }
 EXAMPLE_PACKAGE_PREFIX = "example_files_"
@@ -294,14 +290,9 @@ EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID: dict[str, str] = {
         VOCAB_OUTPUT_DIRS["analyze"],
     ),
     "vocab.rates": expected_output_root(VOCAB_MODULE_DIR, VOCAB_OUTPUT_DIRS["rates"]),
-    "turns.files": expected_output_root(TURNS_MODULE_DIR, TURNS_OUTPUT_DIRS["files"]),
     "turns.evaluate": expected_output_root(
         TURNS_MODULE_DIR,
         TURNS_OUTPUT_DIRS["evaluate"],
-    ),
-    "turns.reselect": expected_output_root(
-        TURNS_MODULE_DIR,
-        TURNS_OUTPUT_DIRS["reselect"],
     ),
     "turns.analyze": expected_output_root(
         TURNS_MODULE_DIR,
@@ -425,14 +416,8 @@ EXPECTED_OUTPUT_RUNTIME_ROOTS: dict[str, tuple[str, ...]] = {
     EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["vocab.rates"]: (
         "target_vocab",
     ),
-    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.files"]: (
-        "coding_templates",
-    ),
     EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.evaluate"]: (
         "turns_reliability",
-    ),
-    EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.reselect"]: (
-        "reselected_turns_reliability",
     ),
     EXPECTED_OUTPUT_ROOTS_BY_COMMAND_ID["turns.analyze"]: (),
 }
@@ -570,6 +555,20 @@ def _metadata_source_filename(specs: dict[str, dict[str, Any]]) -> str:
     return specs["advanced_config"].get(
         "metadata_source",
         DEFAULT_TRANSCRIPT_TABLE_FILENAME,
+    )
+
+
+def _dct_coding_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get(
+        "dct_coding_filename",
+        "conversation_turns.xlsx",
+    )
+
+
+def _dct_reliability_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get(
+        "dct_coding_reliability",
+        "conversation_turns_reliability.xlsx",
     )
 
 
@@ -1495,8 +1494,8 @@ def _write_command_turns_coding_inputs(
 ) -> Path:
     target_dir = input_dir / "conversation_turns"
     target_dir.mkdir(parents=True, exist_ok=True)
-    primary_path = target_dir / "conversation_turns_template.xlsx"
-    reliability_path = target_dir / "conversation_turns_reliability_template.xlsx"
+    primary_path = target_dir / _dct_coding_filename(specs)
+    reliability_path = target_dir / _dct_reliability_filename(specs)
 
     if primary_path.exists() and not force:
         raise FileExistsError(f"Refusing to overwrite existing file: {primary_path}")
@@ -2682,37 +2681,14 @@ def _build_vocab_rates_example_output(ctx: ExampleBuildContext) -> None:
     )
 
 
-def _build_turns_files_example_output(ctx: ExampleBuildContext) -> None:
-    make_digital_convo_turn_files(
-        input_dir=ctx.example_input_dir,
-        output_dir=ctx.example_output_dir,
-        frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
-        num_bins=ctx.specs["project_config"].get("num_bins", 2),
-        num_coders=ctx.specs["project_config"].get("num_coders", 0),
-        blinding_config=_template_blinding_config(ctx.specs),
-        seed=ctx.specs["project_config"].get("random_seed", 99),
-        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
-        transcript_table_filename=_transcript_table_filename(ctx.specs),
-    )
-
-
 def _build_turns_evaluate_example_output(ctx: ExampleBuildContext) -> None:
     evaluate_digital_convo_turns_reliability(
         metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
         input_dir=ctx.example_input_dir,
         output_dir=ctx.example_output_dir,
         sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
-    )
-
-
-def _build_turns_reselect_example_output(ctx: ExampleBuildContext) -> None:
-    reselect_digital_convo_turns_rel(
-        metadata_fields=_metadata_fields_for_input(ctx.specs, ctx.example_input_dir),
-        input_dir=ctx.example_input_dir,
-        output_dir=ctx.example_output_dir,
-        frac=ctx.specs["project_config"].get("reliability_fraction", 0.34),
-        random_seed=ctx.specs["project_config"].get("random_seed", 99),
-        sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        dct_coding_filename=_dct_coding_filename(ctx.specs),
+        dct_coding_reliability=_dct_reliability_filename(ctx.specs),
     )
 
 
@@ -2722,6 +2698,7 @@ def _build_turns_analyze_example_output(ctx: ExampleBuildContext) -> None:
         input_dir=ctx.example_input_dir,
         output_dir=ctx.example_output_dir,
         sample_id_field=ctx.specs["advanced_config"].get("sample_id_column", "sample_id"),
+        dct_coding_filename=_dct_coding_filename(ctx.specs),
     )
 
 
@@ -3483,8 +3460,8 @@ def _write_turns_coding_inputs(
 ) -> Path:
     turns_dir = _turns_input_dir(project_dir, specs)
     turns_dir.mkdir(parents=True, exist_ok=True)
-    primary_path = turns_dir / "conversation_turns_template.xlsx"
-    reliability_path = turns_dir / "conversation_turns_reliability_template.xlsx"
+    primary_path = turns_dir / _dct_coding_filename(specs)
+    reliability_path = turns_dir / _dct_reliability_filename(specs)
 
     if not force and (primary_path.exists() or reliability_path.exists()):
         raise FileExistsError(f"Refusing to overwrite existing turns input files in: {turns_dir}")
@@ -3494,47 +3471,6 @@ def _write_turns_coding_inputs(
     primary_df.to_excel(primary_path, index=False)
     reliability_df.to_excel(reliability_path, index=False)
     return turns_dir
-
-
-def _write_expected_turn_files(
-    project_dir: Path,
-    specs: dict[str, dict[str, Any]],
-    *,
-    force: bool,
-) -> Path:
-    expected_dir = (
-        project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["files"]
-    )
-    transcript_table = (
-        project_dir
-        / "expected_outputs"
-        / TRANSCRIPTS_MODULE_DIR
-        / TABULARIZE_OUTPUT_DIR
-        / _transcript_table_filename(specs)
-    )
-
-    with scratch_dir(project_dir) as tmpdir:
-        input_dir = _prepare_template_input(
-            tmpdir,
-            transcript_table,
-            _transcript_table_filename(specs),
-        )
-        output_dir = tmpdir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        random.seed(specs["project_config"].get("random_seed", 99))
-        make_digital_convo_turn_files(
-            input_dir=input_dir,
-            output_dir=output_dir,
-            frac=specs["project_config"].get("reliability_fraction", 0.34),
-            num_bins=specs["project_config"].get("num_bins", 2),
-            num_coders=specs["project_config"].get("num_coders", 0),
-            blinding_config=_template_blinding_config(specs),
-            seed=specs["project_config"].get("random_seed", 99),
-            transcript_table_filename=_transcript_table_filename(specs),
-        )
-        replace_tree(output_dir / "coding_templates", expected_dir, force=force)
-
-    return expected_dir
 
 
 def _write_expected_turn_evaluation(
@@ -3554,33 +3490,10 @@ def _write_expected_turn_evaluation(
             metadata_fields=metadata_fields,
             input_dir=input_dir,
             output_dir=tmpdir,
+            dct_coding_filename=_dct_coding_filename(specs),
+            dct_coding_reliability=_dct_reliability_filename(specs),
         )
         replace_tree(tmpdir / "turns_reliability", expected_dir, force=force)
-
-    return expected_dir
-
-
-def _write_expected_turn_reselection(
-    project_dir: Path,
-    specs: dict[str, dict[str, Any]],
-    *,
-    force: bool,
-) -> Path:
-    expected_dir = (
-        project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["reselect"]
-    )
-    input_dir = _turns_input_dir(project_dir, specs)
-    metadata_fields = _metadata_fields(project_dir, specs["project_config"])
-
-    with scratch_dir(project_dir) as tmpdir:
-        reselect_digital_convo_turns_rel(
-            metadata_fields=metadata_fields,
-            input_dir=input_dir,
-            output_dir=tmpdir,
-            frac=specs["project_config"].get("reliability_fraction", 0.34),
-            random_seed=specs["project_config"].get("random_seed", 99),
-        )
-        replace_tree(tmpdir / "reselected_turns_reliability", expected_dir, force=force)
 
     return expected_dir
 
@@ -3594,7 +3507,7 @@ def _write_expected_turn_analysis(
     expected_dir = (
         project_dir / "expected_outputs" / TURNS_MODULE_DIR / TURNS_OUTPUT_DIRS["analyze"]
     )
-    primary_path = _turns_input_dir(project_dir, specs) / "conversation_turns_template.xlsx"
+    primary_path = _turns_input_dir(project_dir, specs) / _dct_coding_filename(specs)
 
     with scratch_dir(project_dir) as tmpdir:
         input_dir = tmpdir / "input" / "conversation_turns"
@@ -3602,7 +3515,11 @@ def _write_expected_turn_analysis(
         shutil.copyfile(primary_path, input_dir / primary_path.name)
         output_dir = tmpdir / "output"
         output_dir.mkdir(parents=True, exist_ok=True)
-        analyze_digital_convo_turns(input_dir=input_dir, output_dir=output_dir)
+        analyze_digital_convo_turns(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            dct_coding_filename=_dct_coding_filename(specs),
+        )
         replace_tree(output_dir, expected_dir, force=force)
 
     return expected_dir
@@ -3855,20 +3772,10 @@ EXAMPLE_COMMAND_PLANS: dict[str, ExampleCommandPlan] = {
     ),
 
     # Digital conversation turns
-    "turns files": ExampleCommandPlan(
-        command="turns files",
-        required_capabilities=("transcript_table_workbook",),
-        build_output=_build_turns_files_example_output,
-    ),
     "turns evaluate": ExampleCommandPlan(
         command="turns evaluate",
         required_capabilities=("turns_reliability_workbooks",),
         build_output=_build_turns_evaluate_example_output,
-    ),
-    "turns reselect": ExampleCommandPlan(
-        command="turns reselect",
-        required_capabilities=("turns_reliability_workbooks",),
-        build_output=_build_turns_reselect_example_output,
     ),
     "turns analyze": ExampleCommandPlan(
         command="turns analyze",
@@ -4079,9 +3986,7 @@ def _generate_full_example_files(destination: str | Path, *, force: bool) -> Pat
     _write_expected_vocab_check(project_dir, specs, force=force)
     _write_expected_vocab_analysis(project_dir, specs, force=force)
     _write_expected_vocab_rates(project_dir, specs, force=force)
-    _write_expected_turn_files(project_dir, specs, force=force)
     _write_expected_turn_evaluation(project_dir, specs, force=force)
-    _write_expected_turn_reselection(project_dir, specs, force=force)
     _write_expected_turn_analysis(project_dir, specs, force=force)
     _write_full_example_manifest(project_dir, force=force)
     return project_dir

@@ -20,9 +20,9 @@ from diaad.coding.templates.utils import (
 from diaad.transcripts.transcript_tables import extract_transcript_data
 
 
-TURNS_TEMPLATE_FILENAME = "conversation_turns_template.xlsx"
-TURNS_RELIABILITY_FILENAME = "conversation_turns_reliability_template.xlsx"
-TURNS_CODEBOOK_FILENAME = "conversation_turns_template_codebook.xlsx"
+TURNS_TEMPLATE_FILENAME = "conversation_turns.xlsx"
+TURNS_RELIABILITY_FILENAME = "conversation_turns_reliability.xlsx"
+TURNS_CODEBOOK_FILENAME = "conversation_turns_codebook.xlsx"
 
 
 def _build_turns_template_base(

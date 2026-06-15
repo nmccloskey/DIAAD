@@ -73,3 +73,36 @@ def test_bin_level_turns_are_sorted_by_grouping_and_speaker():
         {"bin": "bin_2", "speaker": "2"},
         {"bin": "bin_2", "speaker": "3"},
     ]
+
+
+def test_analyze_digital_convo_turns_uses_configured_primary_file(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+
+    primary = pd.DataFrame(
+        {
+            "sample_id": ["S001"],
+            "turns": ["0.1"],
+        }
+    )
+    reliability = pd.DataFrame(
+        {
+            "sample_id": ["S002"],
+            "turns": ["1.0"],
+        }
+    )
+    primary.to_excel(input_dir / "conversation_turns.xlsx", index=False)
+    reliability.to_excel(
+        input_dir / "conversation_turns_reliability.xlsx",
+        index=False,
+    )
+
+    analysis.analyze_digital_convo_turns(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        dct_coding_filename="conversation_turns.xlsx",
+    )
+
+    assert (output_dir / "conversation_turns_analysis.xlsx").exists()
+    assert not (output_dir / "conversation_turns_reliability_analysis.xlsx").exists()

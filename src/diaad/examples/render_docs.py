@@ -151,6 +151,17 @@ def _transcript_table_filename(specs: dict[str, dict[str, Any]]) -> str:
     return specs["advanced_config"].get("transcript_table_filename", EXPECTED_WORKBOOK)
 
 
+def _dct_coding_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get("dct_coding_filename", "conversation_turns.xlsx")
+
+
+def _dct_reliability_filename(specs: dict[str, dict[str, Any]]) -> str:
+    return specs["advanced_config"].get(
+        "dct_coding_reliability",
+        "conversation_turns_reliability.xlsx",
+    )
+
+
 def _transcript_table_input_path(specs: dict[str, dict[str, Any]]) -> str:
     return f"diaad_data/input/transcript_tables/{_transcript_table_filename(specs)}"
 
@@ -189,6 +200,8 @@ def _project_tree(
     command: str = "all",
     *,
     transcript_table_filename: str = EXPECTED_WORKBOOK,
+    dct_coding_filename: str = "conversation_turns.xlsx",
+    dct_reliability_filename: str = "conversation_turns_reliability.xlsx",
 ) -> str:
     if command == "tabularize":
         input_files = """      chat/
@@ -395,31 +408,18 @@ def _project_tree(
         target_vocab_data_YYMMDD_HHMM.xlsx"""
         outputs = """        target_vocab/
           target_vocab_rates.xlsx"""
-    elif command == "turns_files":
-        input_files = f"""      transcript_tables/
-        {transcript_table_filename}"""
-        outputs = """        coding_templates/
-          conversation_turns_template.xlsx
-          conversation_turns_reliability_template.xlsx
-          conversation_turns_template_codebook.xlsx"""
     elif command == "turns_evaluate":
-        input_files = """      conversation_turns/
-        conversation_turns_template.xlsx
-        conversation_turns_reliability_template.xlsx"""
+        input_files = f"""      conversation_turns/
+        {dct_coding_filename}
+        {dct_reliability_filename}"""
         outputs = """        turns_reliability/
           conversation_turns_reliability_results.xlsx
           conversation_turns_reliability_report.txt
           global_alignments/"""
-    elif command == "turns_reselect":
-        input_files = """      conversation_turns/
-        conversation_turns_template.xlsx
-        conversation_turns_reliability_template.xlsx"""
-        outputs = """        reselected_turns_reliability/
-          reselected_conversation_turns_reliability_template.xlsx"""
     elif command == "turns_analyze":
-        input_files = """      conversation_turns/
-        conversation_turns_template.xlsx"""
-        outputs = """        conversation_turns_template_analysis.xlsx"""
+        input_files = f"""      conversation_turns/
+        {dct_coding_filename}"""
+        outputs = """        conversation_turns_analysis.xlsx"""
     else:
         input_files = """      chat/
         P1_picnic_pre.cha
@@ -481,8 +481,8 @@ def _example_files_tree() -> str:
       target_vocab_analysis/
         target_vocab_data_260101_0000.xlsx
       conversation_turns/
-        conversation_turns_template.xlsx
-        conversation_turns_reliability_template.xlsx
+        conversation_turns.xlsx
+        conversation_turns_reliability.xlsx
       speaking_times/
         speaking_times.xlsx
       sample_subset/
@@ -584,17 +584,11 @@ def _example_files_tree() -> str:
           target_vocab_rates.xlsx"""
         + """
       turns_module/
-        turns_files/
-          conversation_turns_template.xlsx
-          conversation_turns_reliability_template.xlsx
-          conversation_turns_template_codebook.xlsx
         turns_evaluate/
           conversation_turns_reliability_results.xlsx
           conversation_turns_reliability_report.txt
-        turns_reselect/
-          reselected_conversation_turns_reliability_template.xlsx
         turns_analyze/
-          conversation_turns_template_analysis.xlsx"""
+          conversation_turns_analysis.xlsx"""
     )
 
 
@@ -2140,49 +2134,6 @@ def _turns_rows_table(specs: dict[str, dict[str, Any]], key: str) -> str:
     return markdown_table(pd.DataFrame(specs["turns_sessions"].get(key, [])))
 
 
-def _turns_files_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = _output_dir(project_dir, "turns files")
-
-    return f"""# Conversation Turns File Example
-
-This example demonstrates how `diaad turns files` creates blank digital conversation-turn coding and reliability workbooks.
-
-## Command
-
-{fenced("diaad turns files --config config", "bash")}
-
-## Project Files
-
-{fenced(_project_tree("turns_files", transcript_table_filename=_transcript_table_filename(specs)))}
-
-## Basic Config
-
-{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "num_bins", "num_coders", "metadata_fields"]), "yaml")}
-
-## Advanced Config
-
-{fenced(preview_yaml(specs["advanced_config"], ["auto_blind", "blind_columns", "metadata_source", "codebook_filename"]), "yaml")}
-
-## Input Snippet
-
-The command uses `{_transcript_table_input_path(specs)}` to create one row per sample and bin.
-
-## Output Preview
-
-{_output_ref("turns files", "conversation_turns_template.xlsx")}
-
-{markdown_table(pd.read_excel(output_dir / "conversation_turns_template.xlsx"))}
-
-{_output_ref("turns files", "conversation_turns_reliability_template.xlsx")}
-
-{markdown_table(pd.read_excel(output_dir / "conversation_turns_reliability_template.xlsx"))}
-
-## Notes
-
-The generated local example fills separate synthetic turn strings into conversation-turn workbooks so downstream examples can be demonstrated. Digits identify speakers and dot markers are preserved for analysis.
-"""
-
-
 def _turns_evaluate_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     output_dir = _output_dir(project_dir, "turns evaluate")
     report = output_dir / "conversation_turns_reliability_report.txt"
@@ -2198,19 +2149,27 @@ This example demonstrates how `diaad turns evaluate` compares primary and reliab
 
 ## Project Files
 
-{fenced(_project_tree("turns_evaluate"))}
+{fenced(_project_tree(
+    "turns_evaluate",
+    dct_coding_filename=_dct_coding_filename(specs),
+    dct_reliability_filename=_dct_reliability_filename(specs),
+))}
 
 ## Basic Config
 
 {fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "metadata_fields"]), "yaml")}
 
+## Advanced Config
+
+{fenced(preview_yaml(specs["advanced_config"], ["dct_coding_filename", "dct_coding_reliability"]), "yaml")}
+
 ## Input Snippet
 
-`diaad_data/input/conversation_turns/conversation_turns_template.xlsx`
+`diaad_data/input/conversation_turns/{_dct_coding_filename(specs)}`
 
 {_turns_rows_table(specs, "primary_rows")}
 
-`diaad_data/input/conversation_turns/conversation_turns_reliability_template.xlsx`
+`diaad_data/input/conversation_turns/{_dct_reliability_filename(specs)}`
 
 {_turns_rows_table(specs, "reliability_rows")}
 
@@ -2230,45 +2189,9 @@ The synthetic turn strings use four speakers (`0`, `1`, `2`, and `3`) and includ
 """
 
 
-def _turns_reselect_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
-    output_dir = _output_dir(project_dir, "turns reselect")
-    workbook = next(output_dir.glob("*.xlsx"))
-
-    return f"""# Conversation Turns Reliability Reselection Example
-
-This example demonstrates how `diaad turns reselect` selects replacement samples for digital conversation-turn reliability coding.
-
-## Command
-
-{fenced("diaad turns reselect --config config", "bash")}
-
-## Project Files
-
-{fenced(_project_tree("turns_reselect"))}
-
-## Basic Config
-
-{fenced(_project_config_snippet(specs, ["input_dir", "output_dir", "reliability_fraction", "random_seed", "metadata_fields"]), "yaml")}
-
-## Input Snippet
-
-The primary turns workbook has two synthetic sample IDs. The prior reliability workbook contains only `S001`, so reselection can choose a replacement sample.
-
-## Output Preview
-
-{_output_ref("turns reselect", workbook.name)}
-
-{markdown_table(pd.read_excel(workbook))}
-
-## Notes
-
-Reselected rows keep the session and bin structure while clearing the `turns` cells for fresh reliability coding.
-"""
-
-
 def _turns_analyze_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
     output_dir = _output_dir(project_dir, "turns analyze")
-    workbook = output_dir / "conversation_turns_template_analysis.xlsx"
+    workbook = output_dir / "conversation_turns_analysis.xlsx"
 
     return f"""# Conversation Turns Analysis Example
 
@@ -2280,21 +2203,25 @@ This example demonstrates how `diaad turns analyze` summarizes digital conversat
 
 ## Project Files
 
-{fenced(_project_tree("turns_analyze"))}
+{fenced(_project_tree("turns_analyze", dct_coding_filename=_dct_coding_filename(specs)))}
 
 ## Basic Config
 
 {fenced(_project_config_snippet(specs, ["input_dir", "output_dir"]), "yaml")}
 
+## Advanced Config
+
+{fenced(preview_yaml(specs["advanced_config"], ["dct_coding_filename"]), "yaml")}
+
 ## Input Snippet
 
-`diaad_data/input/conversation_turns/conversation_turns_template.xlsx`
+`diaad_data/input/conversation_turns/{_dct_coding_filename(specs)}`
 
 {_turns_rows_table(specs, "primary_rows")}
 
 ## Output Preview
 
-{_output_ref("turns analyze", "conversation_turns_template_analysis.xlsx")}
+{_output_ref("turns analyze", "conversation_turns_analysis.xlsx")}
 
 {all_workbook_sheet_tables(workbook)}
 
@@ -2338,9 +2265,7 @@ COMMAND_DOC_BUILDERS: tuple[tuple[str, DocBuilder], ...] = (
     ("vocab check", _vocab_check_doc),
     ("vocab analyze", _vocab_analyze_doc),
     ("vocab rates", _vocab_rates_doc),
-    ("turns files", _turns_files_doc),
     ("turns evaluate", _turns_evaluate_doc),
-    ("turns reselect", _turns_reselect_doc),
     ("turns analyze", _turns_analyze_doc),
 )
 

@@ -40,6 +40,8 @@ ADVANCED_KEYS = {
     "speaking_time_filename",
     "speaking_time_column",
     "target_vocabulary_resource_path",
+    "dct_coding_filename",
+    "dct_coding_reliability",
     "auto_blind",
     "blind_columns",
     "metadata_source",

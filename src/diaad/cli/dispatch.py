@@ -12,7 +12,6 @@ from diaad.core.run_wrappers import (
     run_calculate_powers_rates,
     run_calculate_target_vocab_rates,
     run_evaluate_digital_convo_turns,
-    run_make_digital_convo_turn_files,
     run_check_target_vocab_resources,
     run_make_target_vocab_file,
     run_target_vocab,
@@ -29,7 +28,6 @@ from diaad.core.run_wrappers import (
     run_make_powers_coding_files,
     run_make_word_count_files,
     run_reselect_cu_rel,
-    run_reselect_digital_convo_turns,
     run_reselect_powers_reliability_coding,
     run_reselect_transcription_reliability_samples,
     run_reselect_wc_rel,
@@ -60,7 +58,6 @@ TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "templates utterances",
     "templates samples",
     "templates times",
-    "turns files",
 }
 
 def commands_require_chats(commands: Iterable[str]) -> bool:
@@ -142,9 +139,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         # --------------------------------------------------------------
         # Digital Conversation Turns
         # --------------------------------------------------------------
-        "turns files": lambda: run_make_digital_convo_turn_files(ctx),
         "turns evaluate": lambda: run_evaluate_digital_convo_turns(ctx),
-        "turns reselect": lambda: run_reselect_digital_convo_turns(ctx),
         "turns analyze": lambda: run_analyze_digital_convo_turns(ctx),
 
         # --------------------------------------------------------------

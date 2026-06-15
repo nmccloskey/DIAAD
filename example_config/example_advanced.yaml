@@ -104,6 +104,17 @@ target_vocabulary_resource_path: ""
 
 
 # -------------------------------------------------------------------
+# Digital conversational turns
+# -------------------------------------------------------------------
+
+# Exact filename containing DCT primary coding.
+dct_coding_filename: "conversation_turns.xlsx"
+
+# Exact filename containing DCT reliability coding.
+dct_coding_reliability: "conversation_turns_reliability.xlsx"
+
+
+# -------------------------------------------------------------------
 # Project blinding
 # -------------------------------------------------------------------
 

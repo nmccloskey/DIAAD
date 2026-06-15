@@ -9,7 +9,7 @@ This page gives a centralized map of DIAAD's current modules, commands, and cros
 | Transcript tabularization | Converts CHAT transcripts into stable sample- and utterance-level tables. | `transcripts tabularize` | Transcripts module; transcript-based workflows. |
 | Transcript recovery | Reconstructs CHAT-style files from transcript tables when possible. | `transcripts chats` | Transcripts module. |
 | Reliability workflows | Selects reliability subsets, evaluates agreement, and creates replacement subsets when needed. | `transcripts select`, `transcripts evaluate`, `transcripts reselect`; module-specific `evaluate` and `reselect` commands | Reliability functionality; module command pages. |
-| Coding file generation | Creates workbooks for manual or human-reviewed coding. | `cus files`, `words files`, `powers files`, `turns files`, `templates utterances`, `templates samples`, `templates times` | Module command pages. |
+| Coding file generation | Creates workbooks for manual or human-reviewed coding. | `cus files`, `words files`, `powers files`, `templates utterances`, `templates samples`, `templates times` | Module command pages. |
 | Coding analysis | Summarizes completed coding workbooks into analysis-ready tables. | `cus analyze`, `words analyze`, `powers analyze`, `turns analyze`, `vocab analyze` | Module command pages. |
 | Rate calculation | Combines analysis outputs with speaking-time values to calculate per-minute rates. | `templates times`, `cus rates`, `words rates`, `powers rates`, `vocab rates` | Rate-calculation functionality. |
 | Target vocabulary resources | Creates, validates, and applies built-in or custom target vocabulary resources. | `vocab file`, `vocab check`, `vocab analyze` | Target vocabulary module. |
@@ -108,9 +108,7 @@ This page gives a centralized map of DIAAD's current modules, commands, and cros
 
 | Command | Purpose | Primary input | Primary output |
 |---|---|---|---|
-| `turns files` | Generate Digital Conversational Turn coding and reliability templates. | Transcript tables. | Turn-coding and reliability workbooks. |
 | `turns evaluate` | Evaluate turn-coding reliability using count and sequence comparisons. | Completed turn-coding and reliability workbooks. | Reliability workbook, reports, and alignment artifacts. |
-| `turns reselect` | Create a new turn-coding reliability subset after prior samples have been used. | Existing turn-coding and reliability materials. | Replacement turn reliability template(s). |
 | `turns analyze` | Analyze completed Digital Conversational Turn coding. | Completed turn-coding workbooks. | Speaker, group, session, and transition summaries. |
 
 ## Common Workflow Shapes
@@ -130,7 +128,7 @@ This page gives a centralized map of DIAAD's current modules, commands, and cros
 | Dependency type | Commands affected | Behavior |
 |---|---|---|
 | CHAT files | `transcripts tabularize`, `transcripts select` | These commands read `.cha` transcripts directly. |
-| Transcript tables | `cus files`, `vocab analyze`, `powers files`, `transcripts chats`, `templates utterances`, `templates samples`, `templates times`, `turns files`; fallback input for `words files` | These commands need transcript tables. If `auto_tabularize` is false, run `transcripts tabularize` first. |
+| Transcript tables | `cus files`, `vocab analyze`, `powers files`, `transcripts chats`, `templates utterances`, `templates samples`, `templates times`; fallback input for `words files` | These commands need transcript tables. If `auto_tabularize` is false, run `transcripts tabularize` first. |
 | CU coding files | Preferred input for `words files` | Word-count file generation uses CU coding files when present so neutral/non-countable utterances can be excluded before first-pass counts. |
 | Completed coding files | `cus evaluate`, `cus analyze`, `words evaluate`, `words analyze`, `powers evaluate`, `powers analyze`, `turns evaluate`, `turns analyze` | DIAAD expects human-entered or human-reviewed coding files in the configured input location. |
 | Speaking-time tables | `cus rates`, `words rates`, `powers rates`, `vocab rates` | Use `templates times` to create a starting workbook. |

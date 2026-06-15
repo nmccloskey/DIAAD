@@ -35,8 +35,8 @@ your_project/
   diaad_data/
     input/
       conversation_turns/
-        conversation_turns_template.xlsx
-        conversation_turns_reliability_template.xlsx
+        conversation_turns.xlsx
+        conversation_turns_reliability.xlsx
     output/
       diaad_YYMMDD_HHMM/
         turns_reliability/
@@ -62,9 +62,16 @@ metadata_fields:
   - post
 ```
 
+## Advanced Config
+
+```yaml
+dct_coding_filename: conversation_turns.xlsx
+dct_coding_reliability: conversation_turns_reliability.xlsx
+```
+
 ## Input Snippet
 
-`diaad_data/input/conversation_turns/conversation_turns_template.xlsx`
+`diaad_data/input/conversation_turns/conversation_turns.xlsx`
 
 | sample_id | session | bin | turns |
 | --- | --- | --- | --- |
@@ -75,7 +82,7 @@ metadata_fields:
 | S002 | visit_1 | bin_1 | 0.13..20.1 |
 | S002 | visit_1 | bin_2 | 3.0..12.30 |
 
-`diaad_data/input/conversation_turns/conversation_turns_reliability_template.xlsx`
+`diaad_data/input/conversation_turns/conversation_turns_reliability.xlsx`
 
 | sample_id | session | bin | turns |
 | --- | --- | --- | --- |
@@ -124,7 +131,7 @@ metadata_fields:
 ```text
 Digital Conversation Turns Reliability Report
 
-Source reliability file: conversation_turns_reliability_template.xlsx
+Source reliability file: conversation_turns_reliability.xlsx
 
 Coverage in primary coding file
 --------------------------------

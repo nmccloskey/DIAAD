@@ -38,6 +38,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
             "powers_coding_filename": "custom_powers.xlsx",
             "powers_reliability_filename": "custom_powers_rel.xlsx",
             "spacy_model_name": "en_core_web_trf",
+            "dct_coding_filename": "site_turns.xlsx",
+            "dct_coding_reliability": "site_turns_reliability.xlsx",
         },
     )
 
@@ -64,6 +66,8 @@ def test_config_manager_normalizes_values_from_yaml(tmp_path):
     assert config.powers_coding_filename == "custom_powers.xlsx"
     assert config.powers_reliability_filename == "custom_powers_rel.xlsx"
     assert config.spacy_model_name == "en_core_web_trf"
+    assert config.dct_coding_filename == "site_turns.xlsx"
+    assert config.dct_coding_reliability == "site_turns_reliability.xlsx"
     assert config.config_source["kind"] == "split_dir"
     assert config.config_source["defaults_applied"] is True
 
@@ -184,6 +188,7 @@ def test_packaged_default_config_parses_cleanly():
     assert config.to_dict()["project"]["input_dir"] == "diaad_data/input"
     assert config.to_dict()["advanced"]["sample_id_column"] == "sample_id"
     assert config.to_dict()["advanced"]["spacy_model_name"] == "en_core_web_sm"
+    assert config.to_dict()["advanced"]["dct_coding_filename"] == "conversation_turns.xlsx"
     assert config.override_diff == {}
 
 
@@ -219,6 +224,8 @@ def test_advanced_config_defaults_do_not_auto_blind():
 
     assert advanced.sample_id_column == "sample_id"
     assert advanced.utterance_id_column == "utterance_id"
+    assert advanced.dct_coding_filename == "conversation_turns.xlsx"
+    assert advanced.dct_coding_reliability == "conversation_turns_reliability.xlsx"
     assert advanced.blind_columns == ["sample_id"]
     assert advanced.id_columns == ["sample_id", "utterance_id"]
     assert advanced.should_blind("coding") is False

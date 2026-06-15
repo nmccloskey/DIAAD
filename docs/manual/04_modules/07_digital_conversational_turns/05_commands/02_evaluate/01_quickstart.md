@@ -13,8 +13,8 @@ diaad turns evaluate --config config
 Place the completed primary and reliability workbooks where DIAAD can find them by exact filename:
 
 ```text
-conversation_turns_template.xlsx
-conversation_turns_reliability_template.xlsx
+conversation_turns.xlsx
+conversation_turns_reliability.xlsx
 ```
 
 Each workbook must include the configured sample identifier column and `turns`. `session` and `bin` are recommended because they define the comparison unit.

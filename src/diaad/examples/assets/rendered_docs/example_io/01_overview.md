@@ -76,8 +76,8 @@ example_files/
       target_vocab_analysis/
         target_vocab_data_260101_0000.xlsx
       conversation_turns/
-        conversation_turns_template.xlsx
-        conversation_turns_reliability_template.xlsx
+        conversation_turns.xlsx
+        conversation_turns_reliability.xlsx
       speaking_times/
         speaking_times.xlsx
       sample_subset/
@@ -174,15 +174,9 @@ example_files/
         vocab_rates/
           target_vocab_rates.xlsx
       turns_module/
-        turns_files/
-          conversation_turns_template.xlsx
-          conversation_turns_reliability_template.xlsx
-          conversation_turns_template_codebook.xlsx
         turns_evaluate/
           conversation_turns_reliability_results.xlsx
           conversation_turns_reliability_report.txt
-        turns_reselect/
-          reselected_conversation_turns_reliability_template.xlsx
         turns_analyze/
-          conversation_turns_template_analysis.xlsx
+          conversation_turns_analysis.xlsx
 ```

@@ -345,20 +345,13 @@ def test_generate_synthetic_project(tmp_path):
         project_dir
         / "input"
         / "conversation_turns"
-        / "conversation_turns_template.xlsx"
+        / "conversation_turns.xlsx"
     )
     assert _exists(
         project_dir
         / "input"
         / "conversation_turns"
-        / "conversation_turns_reliability_template.xlsx"
-    )
-    assert _exists(
-        project_dir
-        / "expected_outputs"
-        / "turns_module"
-        / "turns_files"
-        / "conversation_turns_template.xlsx"
+        / "conversation_turns_reliability.xlsx"
     )
     turns_reliability = (
         project_dir
@@ -374,15 +367,15 @@ def test_generate_synthetic_project(tmp_path):
         project_dir
         / "expected_outputs"
         / "turns_module"
-        / "turns_reselect"
-        / "reselected_conversation_turns_reliability_template.xlsx"
+        / "turns_analyze"
+        / "conversation_turns_analysis.xlsx"
     )
-    assert _exists(
+    assert not _exists(
         project_dir
         / "expected_outputs"
         / "turns_module"
         / "turns_analyze"
-        / "conversation_turns_template_analysis.xlsx"
+        / "conversation_turns_reliability_analysis.xlsx"
     )
 
     manifest = _read_json(project_dir / "example_manifest.json")
@@ -651,18 +644,10 @@ def test_generate_pass_4_1_command_examples(tmp_path, command, expected_rel_path
         ),
         ("vocab rates", "example_output/target_vocab/target_vocab_rates.xlsx"),
         (
-            "turns files",
-            "example_output/coding_templates/conversation_turns_template.xlsx",
-        ),
-        (
             "turns evaluate",
             "example_output/turns_reliability/conversation_turns_reliability_results.xlsx",
         ),
-        (
-            "turns reselect",
-            "example_output/reselected_turns_reliability/reselected_conversation_turns_reliability_template.xlsx",
-        ),
-        ("turns analyze", "example_output/conversation_turns_template_analysis.xlsx"),
+        ("turns analyze", "example_output/conversation_turns_analysis.xlsx"),
     ],
 )
 def test_generate_pass_4_2_command_examples(tmp_path, command, expected_rel_path):
@@ -785,9 +770,7 @@ def test_render_example_docs():
     assert any(path.name == "check.md" and path.parent.name == "vocab" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "vocab" for path in paths)
     assert any(path.name == "rates.md" and path.parent.name == "vocab" for path in paths)
-    assert any(path.name == "files.md" and path.parent.name == "turns" for path in paths)
     assert any(path.name == "evaluate.md" and path.parent.name == "turns" for path in paths)
-    assert any(path.name == "reselect.md" and path.parent.name == "turns" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "turns" for path in paths)
     assert (get_example_io_docs_path() / "transcripts" / "tabularize.md").exists()
 

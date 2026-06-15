@@ -4,22 +4,15 @@ Use `diaad turns analyze` when DCT strings are complete and ready to become quan
 
 ## File Discovery
 
-The command searches the configured input directory recursively for `.xlsx` files whose names match the conversation-turns pattern:
+The command searches the configured input and output directories recursively for exactly one primary DCT coding workbook. By default, that workbook is:
 
 ```text
-Convo Turns
-Conversation Turns
-Conversation_Turns
+conversation_turns.xlsx
 ```
 
-The match is case-insensitive and can also match filenames such as:
+The filename is controlled by `advanced.dct_coding_filename`. If no matching file is found, or more than one matching file is found, DIAAD stops with a discovery error.
 
-```text
-conversation_turns_template.xlsx
-conversation_turns_reliability_template.xlsx
-```
-
-Keep the analysis input directory focused on the files you intend to analyze. Otherwise, reliability or reselected templates may also be analyzed if their filenames match.
+Until the transcript-table fallback pass is implemented, `turns analyze` analyzes only the primary manual coding workbook.
 
 ## Required Fields
 

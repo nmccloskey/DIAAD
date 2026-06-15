@@ -4,12 +4,14 @@ Use `diaad turns evaluate` after primary and reliability coders have completed D
 
 ## File Discovery
 
-The command looks in the configured input directory and current run output directory for these exact filenames:
+The command looks in the configured input directory and current run output directory for the exact configured filenames. The defaults are:
 
 ```text
-conversation_turns_template.xlsx
-conversation_turns_reliability_template.xlsx
+conversation_turns.xlsx
+conversation_turns_reliability.xlsx
 ```
+
+They are controlled by `advanced.dct_coding_filename` and `advanced.dct_coding_reliability`.
 
 If multiple files with the same expected name are available, exact-file discovery behavior applies. Keep the evaluation input directory clean, or move the intended workbooks into a dedicated subdirectory.
 
@@ -62,6 +64,5 @@ If rows seem to disappear, check for duplicate sample/session/bin keys in either
 
 ## Read Next
 
-- `turns reselect` quickstart: `docs/manual/04_modules/07_digital_conversational_turns/05_commands/03_reselect/01_quickstart.md`
 - `turns analyze` quickstart: `docs/manual/04_modules/07_digital_conversational_turns/05_commands/04_analyze/01_quickstart.md`
 - Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`

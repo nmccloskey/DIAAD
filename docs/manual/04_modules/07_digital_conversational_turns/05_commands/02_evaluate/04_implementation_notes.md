@@ -17,8 +17,8 @@ The main path is:
 The current implementation uses exact filename discovery for:
 
 ```text
-conversation_turns_template.xlsx
-conversation_turns_reliability_template.xlsx
+conversation_turns.xlsx
+conversation_turns_reliability.xlsx
 ```
 
 It searches the configured input directory and the current run output directory. Metadata fields are passed through the run context, but the current DCT reliability evaluator does not use them for pairing; the exact filenames define the primary and reliability pair.

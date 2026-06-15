@@ -8,19 +8,19 @@ The main path is:
 
 1. `src/diaad/cli/commands.py` registers `turns analyze`.
 2. `src/diaad/cli/dispatch.py` dispatches the command without a transcript-table prerequisite.
-3. `src/diaad/core/run_context.py` passes input/output paths and the configured sample identifier.
+3. `src/diaad/core/run_context.py` passes input/output paths, the configured sample identifier, and `advanced.dct_coding_filename`.
 4. `src/diaad/core/run_wrappers.py` calls `analyze_digital_convo_turns()`.
-5. `src/diaad/coding/convo_turns/analysis.py` writes one analysis workbook per matching input workbook.
+5. `src/diaad/coding/convo_turns/analysis.py` writes one analysis workbook for the configured primary coding file.
 
 ## File Discovery
 
-The implementation recursively scans the configured input directory for `.xlsx` files whose names match:
+The implementation uses DIAAD's exact file discovery policy to find one workbook named by:
 
 ```text
-.*(Convo|Conversation)_?Turns.*\.xlsx
+advanced.dct_coding_filename
 ```
 
-The search does not scan the output directory. It reads the first sheet of each matching workbook.
+The search scans the configured input and output directories. It errors if no file is found or if multiple matching files are found. It reads the first sheet of the matching workbook.
 
 ## Parsing
 
@@ -32,7 +32,7 @@ Transition sequences are extracted from digits only.
 
 ## Workbook Writing
 
-For each input file, the output filename is the input filename with `_analysis` inserted before `.xlsx`. Sheets are written only when the corresponding dataframe is nonempty.
+The output filename is the input filename with `_analysis` inserted before `.xlsx`. Sheets are written only when the corresponding dataframe is nonempty.
 
 Possible sheets are:
 

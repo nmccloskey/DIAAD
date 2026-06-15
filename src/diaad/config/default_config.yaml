@@ -31,6 +31,8 @@ advanced:
   powers_coding_filename: powers_coding.xlsx
   powers_reliability_filename: powers_reliability_coding.xlsx
   spacy_model_name: en_core_web_sm
+  dct_coding_filename: conversation_turns.xlsx
+  dct_coding_reliability: conversation_turns_reliability.xlsx
   target_vocabulary_resource_path: ''
   auto_blind: false
   blind_columns:

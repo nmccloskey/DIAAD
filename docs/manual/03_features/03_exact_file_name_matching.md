@@ -26,6 +26,8 @@ These defaults come from `src/diaad/config/default_config.yaml`.
 | `advanced.speaking_time_filename` | `speaking_times.xlsx` | Speaking-time workbook for rate calculations. |
 | `advanced.powers_coding_filename` | `powers_coding.xlsx` | Completed POWERS coding workbook. |
 | `advanced.powers_reliability_filename` | `powers_reliability_coding.xlsx` | POWERS reliability coding workbook. |
+| `advanced.dct_coding_filename` | `conversation_turns.xlsx` | Completed Digital Conversational Turns coding workbook. |
+| `advanced.dct_coding_reliability` | `conversation_turns_reliability.xlsx` | Digital Conversational Turns reliability coding workbook. |
 | `advanced.metadata_source` | `transcript_tables.xlsx` | Metadata source for workflows that read metadata independently. |
 
 The configured identifier columns are also part of the contract. The defaults are `sample_id` for `advanced.sample_id_column` and `utterance_id` for `advanced.utterance_id_column`.

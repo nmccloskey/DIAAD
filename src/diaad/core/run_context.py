@@ -597,36 +597,13 @@ class RunContext:
     # ------------------------------------------------------------------
     # Digital Conversation Turns
     # ------------------------------------------------------------------
-    def kwargs_make_digital_convo_turn_files(self) -> dict[str, Any]:
-        """Return kwargs for digital conversation turn template generation."""
-        return {
-            "input_dir": self.input_dir,
-            "output_dir": self.out_dir,
-            "frac": self.reliability_fraction,
-            "num_bins": self.num_bins,
-            "num_coders": self.num_coders,
-            "blinding_config": self.config.blinding,
-            "seed": self.random_seed,
-            "sample_id_field": self.config.sample_id_field,
-            "transcript_table_filename": self.config.transcript_table_filename,
-        }
-
     def kwargs_digital_convo_turns_reliability(self) -> dict[str, Any]:
         """Return kwargs for digital conversation turn reliability evaluation."""
         return {
             **self.kwargs_metadata_field_io(),
             "sample_id_field": self.config.sample_id_field,
-        }
-
-    def kwargs_reselect_digital_convo_turns(self) -> dict[str, Any]:
-        """Return kwargs for digital conversation turn reliability reselection."""
-        return {
-            "metadata_fields": self.metadata_fields,
-            "input_dir": self.input_dir,
-            "output_dir": self.out_dir,
-            "frac": self.reliability_fraction,
-            "random_seed": self.random_seed,
-            "sample_id_field": self.config.sample_id_field,
+            "dct_coding_filename": self.config.advanced.dct_coding_filename,
+            "dct_coding_reliability": self.config.advanced.dct_coding_reliability,
         }
 
     def kwargs_digital_convo_turns(self) -> dict[str, Any]:
@@ -634,6 +611,7 @@ class RunContext:
         return {
             **self.kwargs_io(),
             "sample_id_field": self.config.sample_id_field,
+            "dct_coding_filename": self.config.advanced.dct_coding_filename,
         }
 
     # ------------------------------------------------------------------

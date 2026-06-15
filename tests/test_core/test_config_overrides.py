@@ -39,6 +39,7 @@ def test_parse_config_overrides_accepts_explicit_sections() -> None:
             "project.output_dir=data/output/siteA",
             "advanced.powers_reliability_filename=siteA_powers_rel.xlsx",
             "advanced.utterance_id_column=expanded_utterance_id",
+            "advanced.dct_coding_filename=siteA_turns.xlsx",
         ]
     )
 
@@ -46,6 +47,7 @@ def test_parse_config_overrides_accepts_explicit_sections() -> None:
         "project.output_dir": "data/output/siteA",
         "advanced.powers_reliability_filename": "siteA_powers_rel.xlsx",
         "advanced.utterance_id_column": "expanded_utterance_id",
+        "advanced.dct_coding_filename": "siteA_turns.xlsx",
     }
 
 

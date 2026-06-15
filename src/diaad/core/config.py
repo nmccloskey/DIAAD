@@ -93,6 +93,9 @@ class AdvancedConfig:
     powers_reliability_filename: str = "powers_reliability_coding.xlsx"
     spacy_model_name: str = "en_core_web_sm"
 
+    dct_coding_filename: str = "conversation_turns.xlsx"
+    dct_coding_reliability: str = "conversation_turns_reliability.xlsx"
+
     target_vocabulary_resource_path: str = ""
 
     auto_blind: bool = False
@@ -197,6 +200,14 @@ class AdvancedConfig:
     @property
     def spacy_model(self) -> str:
         return self.spacy_model_name
+
+    @property
+    def dct_coding_file(self) -> str:
+        return self.dct_coding_filename
+
+    @property
+    def dct_reliability_file(self) -> str:
+        return self.dct_coding_reliability
 
     @property
     def coding_blind_cols(self) -> list[str]:
@@ -450,6 +461,14 @@ class ConfigManager:
         return self.advanced.spacy_model_name
 
     @property
+    def dct_coding_filename(self) -> str:
+        return self.advanced.dct_coding_filename
+
+    @property
+    def dct_coding_reliability(self) -> str:
+        return self.advanced.dct_coding_reliability
+
+    @property
     def metadata_fields_config(self) -> dict[str, Any]:
         """
         Return normalized metadata field definitions in the shape expected
@@ -555,6 +574,8 @@ class ConfigManager:
                 "powers_coding_filename": advanced.powers_coding_filename,
                 "powers_reliability_filename": advanced.powers_reliability_filename,
                 "spacy_model_name": advanced.spacy_model_name,
+                "dct_coding_filename": advanced.dct_coding_filename,
+                "dct_coding_reliability": advanced.dct_coding_reliability,
                 "target_vocabulary_resource_path": (
                     advanced.target_vocabulary_resource_path
                 ),
@@ -715,6 +736,14 @@ class ConfigManager:
             spacy_model_name=self._as_str(
                 data.get("spacy_model_name"),
                 default="en_core_web_sm",
+            ),
+            dct_coding_filename=self._as_str(
+                data.get("dct_coding_filename"),
+                default="conversation_turns.xlsx",
+            ),
+            dct_coding_reliability=self._as_str(
+                data.get("dct_coding_reliability"),
+                default="conversation_turns_reliability.xlsx",
             ),
             target_vocabulary_resource_path=self._as_str(
                 data.get("target_vocabulary_resource_path"),

@@ -406,6 +406,23 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
         ],
     ),
     (
+        "Digital conversational turns",
+        [
+            {
+                "name": "dct_coding_filename",
+                "label": "DCT coding file name",
+                "default": "conversation_turns.xlsx",
+                "help": "Expected digital conversational turns primary coding workbook file name.",
+            },
+            {
+                "name": "dct_coding_reliability",
+                "label": "DCT reliability file name",
+                "default": "conversation_turns_reliability.xlsx",
+                "help": "Expected digital conversational turns reliability coding workbook file name.",
+            },
+        ],
+    ),
+    (
         "Project blinding",
         [
             {

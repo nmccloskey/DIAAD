@@ -10,20 +10,20 @@ diaad turns analyze --config config
 
 ## Minimum Inputs
 
-Place completed DCT workbooks under the configured input directory. The command scans recursively for Excel filenames matching the conversation-turns pattern, such as:
+Place the completed primary DCT workbook under the configured input directory. By default, the exact filename is:
 
 ```text
-conversation_turns_template.xlsx
+conversation_turns.xlsx
 ```
 
 Each workbook must include `turns` and either the configured sample identifier column or `group`.
 
 ## Primary Output
 
-For each matching input workbook, DIAAD writes an analysis workbook in the current output directory. For the standard template filename, the output is:
+For the matching input workbook, DIAAD writes an analysis workbook in the current output directory. For the standard coding filename, the output is:
 
 ```text
-conversation_turns_template_analysis.xlsx
+conversation_turns_analysis.xlsx
 ```
 
 Possible sheets include:

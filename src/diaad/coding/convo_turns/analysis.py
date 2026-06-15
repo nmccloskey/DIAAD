@@ -5,6 +5,7 @@ from tqdm import tqdm
 from pathlib import Path
 from scipy.stats import entropy
 from collections import Counter, defaultdict
+from diaad.metadata.discovery import find_one_matching_file
 from psair.core.logger import logger, get_rel_path
 
 
@@ -533,6 +534,7 @@ def analyze_digital_convo_turns(
     input_dir,
     output_dir,
     sample_id_field: str = "sample_id",
+    dct_coding_filename: str = "conversation_turns.xlsx",
 ):
     """
     Run full analysis pipeline on conversation turn files.
@@ -540,7 +542,7 @@ def analyze_digital_convo_turns(
     Parameters
     ----------
     input_dir : str or Path
-        Directory to search for Convo/Conversation_Turns Excel files.
+        Directory to search for the configured conversation-turns coding file.
     output_dir : str or Path
         Directory where analysis Excel outputs are written.
 
@@ -554,10 +556,16 @@ def analyze_digital_convo_turns(
         - Summary statistics
     """
 
-    # Collect candidate .xlsx files then filter by regex
-    name_re = re.compile(r'.*(Convo|Conversation)_?Turns.*\.xlsx$', re.IGNORECASE)
-    ct_files = [f for f in Path(input_dir).rglob('*.xlsx') if name_re.search(f.name)]
-    logger.info(f"Found {len(ct_files)} files in {get_rel_path(input_dir)}.")
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    ct_files = [
+        find_one_matching_file(
+            directories=[input_dir, output_dir],
+            filename=dct_coding_filename,
+            label="conversation turns coding file",
+        )
+    ]
+    logger.info(f"Found conversation turns coding file: {get_rel_path(ct_files[0])}.")
 
     for ct_file in tqdm(ct_files, desc="Analyzing conversation turns"):
         try:

@@ -62,9 +62,7 @@ MODULE_COMMANDS = {
     ],
 
     "turns": [
-        "turns files",
         "turns evaluate",
-        "turns reselect",
         "turns analyze",
     ],
 
