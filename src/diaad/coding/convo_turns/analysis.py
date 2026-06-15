@@ -77,14 +77,55 @@ def _excluded_speaker_token(exclude_speakers=None) -> str:
 
 
 def _normalize_speaker_token(speaker, exclude_speakers=None) -> str:
+    mapped, _reason = _map_speaker_label(speaker, exclude_speakers)
+    return mapped
+
+
+def _map_speaker_label(speaker, exclude_speakers=None) -> tuple[str, str]:
     token = str(speaker).strip()
     excluded_token = _excluded_speaker_token(exclude_speakers)
     excluded = {str(item).strip() for item in (exclude_speakers or [])}
     if token == "0" and exclude_speakers:
-        return excluded_token
+        return excluded_token, "dct_zero_to_excluded_speaker"
     if token in excluded:
-        return excluded_token
-    return token
+        if token == excluded_token:
+            return excluded_token, "excluded_speaker_anchor"
+        return excluded_token, "excluded_speaker_pooled"
+    return token, "identity"
+
+
+def _speaker_mapping_from_events(events):
+    columns = ["source", "original_speaker", "mapped_speaker", "mapping_reason"]
+    if events.empty or "original_speaker" not in events.columns:
+        return pd.DataFrame(columns=columns)
+
+    mapping = (
+        events[columns]
+        .drop_duplicates()
+        .sort_values(["source", "original_speaker", "mapped_speaker"], kind="mergesort")
+        .reset_index(drop=True)
+    )
+    return mapping
+
+
+def _log_speaker_mapping(mapping):
+    if mapping.empty:
+        logger.info("No speaker labels were available to map for DCT analysis.")
+        return
+
+    remapped = mapping[mapping["original_speaker"] != mapping["mapped_speaker"]]
+    if remapped.empty:
+        logger.info(
+            "DCT speaker label mapping retained %d speaker label(s) unchanged.",
+            len(mapping),
+        )
+        return
+
+    pairs = ", ".join(
+        f"{row.original_speaker}->{row.mapped_speaker}"
+        for row in remapped.itertuples(index=False)
+    )
+    logger.info("DCT speaker label mapping applied: %s.", pairs)
 
 
 def clinician_to_participant_ratio(group, disinterest_speaker: str = "0"):
@@ -485,13 +526,18 @@ def _events_from_dct_coding(
         for match in re.finditer(r'(\d)(\.{1,2})?', str(row['turns'])):
             sequence_position += 1
             dots = match.group(2) or ""
+            original_speaker = match.group(1)
+            mapped_speaker, mapping_reason = _map_speaker_label(
+                original_speaker,
+                exclude_speakers,
+            )
             event = {
                 'sample_id': row.get('group'),
                 'group': row.get('group'),
-                'speaker': _normalize_speaker_token(
-                    match.group(1),
-                    exclude_speakers,
-                ),
+                'speaker': mapped_speaker,
+                'original_speaker': original_speaker,
+                'mapped_speaker': mapped_speaker,
+                'mapping_reason': mapping_reason,
                 'sequence_position': sequence_position,
                 'mark1': 1 if dots == '.' else 0,
                 'mark2': 1 if dots == '..' else 0,
@@ -535,13 +581,18 @@ def _events_from_transcript_rows(
         for sequence_position, (_, row) in enumerate(group_df.iterrows(), start=1):
             if pd.isna(row.get('speaker')):
                 continue
+            original_speaker = str(row.get('speaker')).strip()
+            mapped_speaker, mapping_reason = _map_speaker_label(
+                original_speaker,
+                exclude_speakers,
+            )
             event = {
                 'sample_id': row.get(sample_id_field),
                 'group': row.get(sample_id_field),
-                'speaker': _normalize_speaker_token(
-                    row.get('speaker'),
-                    exclude_speakers,
-                ),
+                'speaker': mapped_speaker,
+                'original_speaker': original_speaker,
+                'mapped_speaker': mapped_speaker,
+                'mapping_reason': mapping_reason,
                 'sequence_position': sequence_position,
                 'mark1': 0,
                 'mark2': 0,
@@ -615,6 +666,9 @@ def _analyze_turn_events(
         logger.warning("No conversation turn events available for analysis.")
         return _empty_analysis_result()
 
+    speaker_mapping = _speaker_mapping_from_events(events)
+    _log_speaker_mapping(speaker_mapping)
+
     turn_totals = _turn_totals_from_events(
         events,
         has_session=has_session,
@@ -624,6 +678,7 @@ def _analyze_turn_events(
     ct_data = {
         'speaker_level': compute_speaker_level(turn_totals),
         'group_level': compute_group_level(turn_totals),
+        'speaker_label_mapping': speaker_mapping,
     }
 
     if has_bin:
@@ -808,6 +863,7 @@ def analyze_digital_convo_turns(
             session_level = ct_data.get('session_level', pd.DataFrame())
             speaker_level = ct_data.get('speaker_level', pd.DataFrame())
             group_level = ct_data.get('group_level', pd.DataFrame())
+            speaker_label_mapping = ct_data.get('speaker_label_mapping', pd.DataFrame())
             speaker_ratios = ct_data.get('speaker_ratios', pd.DataFrame())
             speaker_matrices = ct_data.get('transition_matrices', {})
 
@@ -839,6 +895,7 @@ def analyze_digital_convo_turns(
                 write_if_not_empty(group_level, writer, 'group_level_summary')
                 write_if_not_empty(summary_stats_all, writer, 'summary_statistics')
                 write_if_not_empty(speaker_ratios, writer, 'speaker_level_ratios')
+                write_if_not_empty(speaker_label_mapping, writer, 'speaker_label_mapping')
 
                 for name, matrix in speaker_matrices.items():
                     sheet_name = f"speaker_matrix_{name}"[:31]  # Excel max sheet name = 31

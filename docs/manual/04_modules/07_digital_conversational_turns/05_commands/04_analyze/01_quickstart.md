@@ -50,6 +50,7 @@ speaker_level_turns
 group_level_summary
 summary_statistics
 speaker_level_ratios
+speaker_label_mapping
 speaker_matrix_<group>
 ```
 

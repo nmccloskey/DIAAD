@@ -8,17 +8,17 @@ The main path is:
 
 1. `src/diaad/cli/commands.py` registers `turns evaluate`.
 2. `src/diaad/cli/dispatch.py` dispatches the command without a transcript-table prerequisite.
-3. `src/diaad/core/run_context.py` passes metadata-field I/O and the configured sample identifier.
+3. `src/diaad/core/run_context.py` passes metadata-field I/O, the configured sample identifier, `advanced.dct_coding_filename`, and `advanced.dct_coding_reliability`.
 4. `src/diaad/core/run_wrappers.py` calls `evaluate_digital_convo_turns_reliability()`.
 5. `src/diaad/coding/convo_turns/rel_evaluation.py` writes reliability results, report, and alignments.
 
 ## File Discovery
 
-The current implementation uses exact filename discovery for:
+The current implementation uses exact filename discovery for the configured primary and reliability workbooks:
 
 ```text
-conversation_turns.xlsx
-conversation_turns_reliability.xlsx
+advanced.dct_coding_filename
+advanced.dct_coding_reliability
 ```
 
 It searches the configured input directory and the current run output directory. Metadata fields are passed through the run context, but the current DCT reliability evaluator does not use them for pairing; the exact filenames define the primary and reliability pair.

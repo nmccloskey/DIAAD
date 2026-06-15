@@ -109,6 +109,44 @@ def test_turn_reliability_helpers_accept_custom_sample_id(tmp_path):
     assert "expanded_sample_id" in samples.columns
 
 
+def test_turn_reliability_uses_configured_filenames(tmp_path):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "output"
+    input_dir.mkdir()
+
+    primary = pd.DataFrame(
+        {
+            "sample_id": ["S1"],
+            "session": ["A"],
+            "bin": ["bin_1"],
+            "turns": ["0.1"],
+        }
+    )
+    reliability = pd.DataFrame(
+        {
+            "sample_id": ["S1"],
+            "session": ["A"],
+            "bin": ["bin_1"],
+            "turns": ["0.1"],
+        }
+    )
+    primary.to_excel(input_dir / "site_turns.xlsx", index=False)
+    reliability.to_excel(input_dir / "site_turns_reliability.xlsx", index=False)
+
+    rel_evaluation.evaluate_digital_convo_turns_reliability(
+        metadata_fields={},
+        input_dir=input_dir,
+        output_dir=output_dir,
+        dct_coding_filename="site_turns.xlsx",
+        dct_coding_reliability="site_turns_reliability.xlsx",
+    )
+
+    results = output_dir / "turns_reliability" / "conversation_turns_reliability_results.xlsx"
+    assert results.exists()
+    with pd.ExcelFile(results, engine="openpyxl") as xls:
+        assert {"counts", "sequences", "samples"} <= set(xls.sheet_names)
+
+
 def test_turn_reselection_accepts_custom_sample_id():
     df = pd.DataFrame(
         {

@@ -66,6 +66,8 @@ Speakers listed in `project.exclude_speakers` are pooled into the DCT non-client
 
 `speaker_level_ratios` summarizes transition probabilities into participant-to-participant, participant-to-clinician, and clinician-to-participant categories.
 
+`speaker_label_mapping` records original speaker labels, mapped speaker labels, and the reason for each mapping. This is especially useful when `project.exclude_speakers` pools multiple transcript speaker tags into the DCT non-client category.
+
 `speaker_matrix_<group>` sheets contain transition matrices for each group. Excel sheet names are truncated to fit Excel's sheet-name limit.
 
 ## Common Problems

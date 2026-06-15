@@ -128,6 +128,12 @@ def test_dct_events_map_zero_to_first_excluded_speaker():
     assert has_session is False
     assert has_bin is False
     assert list(events["speaker"]) == ["INV", "1", "INV"]
+    assert list(events["original_speaker"]) == ["0", "1", "0"]
+    assert list(events["mapping_reason"]) == [
+        "dct_zero_to_excluded_speaker",
+        "identity",
+        "dct_zero_to_excluded_speaker",
+    ]
     assert list(events["mark2"]) == [0, 1, 0]
 
 
@@ -149,6 +155,12 @@ def test_transcript_rows_map_excluded_speakers_and_keep_tokens():
     assert has_session is False
     assert has_bin is False
     assert list(events["speaker"]) == ["INV", "CHI", "INV", "MOT"]
+    assert list(events["mapping_reason"]) == [
+        "excluded_speaker_anchor",
+        "identity",
+        "excluded_speaker_pooled",
+        "identity",
+    ]
     assert list(events["sequence_position"]) == [1, 2, 3, 4]
 
 
@@ -190,9 +202,19 @@ def test_analyze_digital_convo_turns_from_transcript_table(tmp_path):
     out_file = output_dir / "transcript_tables_turns_analysis.xlsx"
     assert out_file.exists()
     with pd.ExcelFile(out_file, engine="openpyxl") as xls:
+        assert "speaker_label_mapping" in xls.sheet_names
         speakers = pd.read_excel(xls, sheet_name="speaker_level_turns")
+        mapping = pd.read_excel(xls, sheet_name="speaker_label_mapping")
         matrix = pd.read_excel(xls, sheet_name="speaker_matrix_S001", index_col=0)
 
     assert set(speakers["speaker"]) == {"INV", "CHI"}
     assert "INV2" not in set(speakers["speaker"])
+    assert {
+        ("INV", "INV", "excluded_speaker_anchor"),
+        ("INV2", "INV", "excluded_speaker_pooled"),
+        ("CHI", "CHI", "identity"),
+    } <= set(
+        mapping[["original_speaker", "mapped_speaker", "mapping_reason"]]
+        .itertuples(index=False, name=None)
+    )
     assert {"INV", "CHI"} <= set(matrix.columns.astype(str))

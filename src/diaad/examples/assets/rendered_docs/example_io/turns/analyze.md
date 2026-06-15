@@ -148,6 +148,15 @@ dct_coding_filename: conversation_turns.xlsx
 | S001 | 1.716666666666667 | 1.283333333333333 | 1 |
 | S002 | 1.833333333333333 | 1.166666666666667 | 1 |
 
+### Sheet: speaker_label_mapping
+
+| source | original_speaker | mapped_speaker | mapping_reason |
+| --- | --- | --- | --- |
+| dct_coding | 0 | 0 | identity |
+| dct_coding | 1 | 1 | identity |
+| dct_coding | 2 | 2 | identity |
+| dct_coding | 3 | 3 | identity |
+
 ### Sheet: speaker_matrix_S001
 
 | Unnamed: 0 | 0 | 1 | 2 | 3 |

@@ -70,8 +70,11 @@ speaker_level_turns
 group_level_summary
 summary_statistics
 speaker_level_ratios
+speaker_label_mapping
 speaker_matrix_<group>
 ```
+
+The `speaker_label_mapping` sheet is built from normalized event rows and logs the original speaker label, mapped speaker label, mapping reason, and source. The same mapping is also summarized in the run log.
 
 ## Relevant Sources
 
