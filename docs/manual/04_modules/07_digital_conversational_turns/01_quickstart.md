@@ -13,9 +13,18 @@ DCT coding can be useful when a project wants a lower-burden alternative or prec
 
 ## Typical Sequence
 
+For manual DCT workbooks:
+
 ```text
-manual turn-string coding or transcript tables
+manual turn-string coding
 turns evaluate
+turns analyze
+```
+
+For transcript-table fallback analysis:
+
+```text
+transcripts tabularize
 turns analyze
 ```
 
@@ -44,4 +53,4 @@ Manual DCT strings are still parsed digit by digit. A string containing `10` is 
 - Configuration: `docs/manual/02_operation/04_configuration.md`
 - Digital Conversational Turns research context: `docs/manual/04_modules/07_digital_conversational_turns/03_research_context.md`
 
-Later command pages describe turn-string syntax, bin/session columns, reliability comparison, and transition outputs.
+Later command pages describe turn-string syntax, transcript-table fallback behavior, bin/session columns, reliability comparison, and transition outputs.

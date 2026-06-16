@@ -45,7 +45,7 @@ These names intentionally use `example_` prefixes so users do not confuse synthe
 
 The web app does not expose `examples` as an ordinary selectable dispatch command. In Part 3: Commands, it provides a dedicated example-file download action.
 
-If no commands are selected, the button downloads the full example dataset. If commands are selected, the button downloads command-specific examples for the selected functions.
+If no commands are selected, the button downloads the full example dataset. If commands are selected, the button downloads command-specific examples for the selected commands.
 
 The web app ZIP filename uses a stable example slug, such as:
 

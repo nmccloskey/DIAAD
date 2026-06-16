@@ -28,7 +28,7 @@ By default, DIAAD writes:
 diaad_data/output/diaad_YYMMDD_HHMM/transcript_tables/transcript_tables.xlsx
 ```
 
-That workbook becomes the common input for many later modules, including Complete Utterances, Word Counting, POWERS, Target Vocabulary Coverage, Templates, and some Digital Conversational Turn file-generation workflows.
+That workbook becomes the common input for many later modules, including Complete Utterances, Word Counting, POWERS, Target Vocabulary Coverage, Templates, and transcript-table-informed Digital Conversational Turn analysis.
 
 ## What To Inspect
 
@@ -53,6 +53,6 @@ After tabularization, inspect the transcript table workbook before continuing. I
 - Transcript tabularization feature: `docs/manual/03_features/01_transcript_tabularization.md`
 - Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
 - Configuration: `docs/manual/02_operation/04_configuration.md`
-- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Functional overview: `docs/manual/01_overview/04_functional_overview.md`
 
 Later command pages describe exact input layouts, workbook sheets, and command-specific options.

@@ -12,7 +12,7 @@ That sequence structure can support analyses of who participates, how participat
 
 DCT is most useful when a project needs a lower-burden measure before, instead of, or alongside full transcription. If a complete transcript already exists, turn order may already be available through speaker tiers, and separate manual DCT coding may be redundant.
 
-The current DIAAD command surface still uses transcript tables to scaffold DCT templates. In practice, that means the file-generation command needs the sample structure that transcript tables provide, while the actual DCT coding task does not require coders to transcribe utterance text.
+The current DIAAD command surface exposes `turns evaluate` and `turns analyze`, not a DCT file-generation command. Manual DCT workbooks are prepared outside the current `turns` command surface. When no primary DCT workbook is found, `turns analyze` can instead use ordered transcript-table speaker tags as a transcript-table-informed speaker-dynamics summary.
 
 ## Speaker Codes And Sequence Assumptions
 
