@@ -337,10 +337,18 @@
 │   │   ├── 01_quickstart.md — Monologic Narrative Target Vocabulary Coverage Quickstart
 │   │   ├── 02_usage_guide.md — Monologic Narrative Target Vocabulary Coverage Usage Guide
 │   │   └── 03_research_context.md — Monologic Narrative Target Vocabulary Coverage Research Context
-│   └── 10_digital_conversational_turns/
-│       ├── 01_quickstart.md — Digital Conversational Turns Quickstart
-│       ├── 02_usage_guide.md — Digital Conversational Turns Usage Guide
-│       └── 03_research_context.md — Digital Conversational Turns Research Context
+│   ├── 10_digital_conversational_turns/
+│   │   ├── 01_quickstart.md — Digital Conversational Turns Quickstart
+│   │   ├── 02_usage_guide.md — Digital Conversational Turns Usage Guide
+│   │   └── 03_research_context.md — Digital Conversational Turns Research Context
+│   ├── 11_monologic_narrative_integrated_workflow/
+│   │   ├── 01_quickstart.md — Monologic Narrative Integrated Workflow Quickstart
+│   │   ├── 02_usage_guide.md — Monologic Narrative Integrated Workflow Usage Guide
+│   │   └── 03_research_context.md — Monologic Narrative Integrated Workflow Research Context
+│   └── 12_clinician_client_dialogue_powers/
+│       ├── 01_quickstart.md — Clinician-Client Dialogue POWERS Quickstart
+│       ├── 02_usage_guide.md — Clinician-Client Dialogue POWERS Usage Guide
+│       └── 03_research_context.md — Clinician-Client Dialogue POWERS Research Context
 └── 99_references.md — References
 ```
 
@@ -739,6 +747,16 @@
 - [01_quickstart.md — Digital Conversational Turns Quickstart](06_workflows/10_digital_conversational_turns/01_quickstart.md)
 - [02_usage_guide.md — Digital Conversational Turns Usage Guide](06_workflows/10_digital_conversational_turns/02_usage_guide.md)
 - [03_research_context.md — Digital Conversational Turns Research Context](06_workflows/10_digital_conversational_turns/03_research_context.md)
+
+### 06_workflows/11_monologic_narrative_integrated_workflow/
+- [01_quickstart.md — Monologic Narrative Integrated Workflow Quickstart](06_workflows/11_monologic_narrative_integrated_workflow/01_quickstart.md)
+- [02_usage_guide.md — Monologic Narrative Integrated Workflow Usage Guide](06_workflows/11_monologic_narrative_integrated_workflow/02_usage_guide.md)
+- [03_research_context.md — Monologic Narrative Integrated Workflow Research Context](06_workflows/11_monologic_narrative_integrated_workflow/03_research_context.md)
+
+### 06_workflows/12_clinician_client_dialogue_powers/
+- [01_quickstart.md — Clinician-Client Dialogue POWERS Quickstart](06_workflows/12_clinician_client_dialogue_powers/01_quickstart.md)
+- [02_usage_guide.md — Clinician-Client Dialogue POWERS Usage Guide](06_workflows/12_clinician_client_dialogue_powers/02_usage_guide.md)
+- [03_research_context.md — Clinician-Client Dialogue POWERS Research Context](06_workflows/12_clinician_client_dialogue_powers/03_research_context.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
