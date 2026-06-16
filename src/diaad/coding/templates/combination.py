@@ -17,9 +17,24 @@ METADATA_COLUMNS = [SOURCE_FILE_COL, "order", "sheet", "num_rows"]
 RESERVED_OUTPUT_COLUMNS = {COMBINED_ID_COL, SOURCE_FILE_COL}
 
 
-def _find_combination_inputs(input_dir: str | Path) -> list[Path]:
+def _is_relative_to(path: Path, directory: Path) -> bool:
     """
-    Find Excel workbooks directly inside the input directory.
+    Return whether path is inside directory, tolerating older Python idioms.
+    """
+    try:
+        path.relative_to(directory)
+    except ValueError:
+        return False
+    return True
+
+
+def _find_combination_inputs(
+    input_dir: str | Path,
+    *,
+    output_dir: str | Path | None = None,
+) -> list[Path]:
+    """
+    Find Excel workbooks recursively inside the input directory.
     """
     input_path = Path(input_dir)
     if not input_path.exists() or not input_path.is_dir():
@@ -28,18 +43,28 @@ def _find_combination_inputs(input_dir: str | Path) -> list[Path]:
             f"{get_rel_path(input_path)}."
         )
 
+    resolved_output_dir = (
+        Path(output_dir).resolve() if output_dir is not None else None
+    )
     paths = [
         path
-        for path in input_path.glob("*.xlsx")
-        if path.is_file() and not path.name.startswith("~$")
+        for path in input_path.rglob("*.xlsx")
+        if (
+            path.is_file()
+            and not path.name.startswith("~$")
+            and (
+                resolved_output_dir is None
+                or not _is_relative_to(path.resolve(), resolved_output_dir)
+            )
+        )
     ]
     if not paths:
         raise FileNotFoundError(
-            f"DIAAD did not find any .xlsx files directly in "
+            f"DIAAD did not find any .xlsx files under "
             f"{get_rel_path(input_path)}."
         )
 
-    return paths
+    return sorted(paths, key=lambda path: path.relative_to(input_path).as_posix())
 
 
 def _relative_source_file(path: Path, input_dir: Path) -> str:
@@ -226,7 +251,7 @@ def make_combined_template_file(
     """
     Combine same-schema Excel template workbooks into one workbook.
 
-    The command scans only the immediate input directory for ``.xlsx`` files.
+    The command scans the input directory recursively for ``.xlsx`` files.
     All input workbooks must have the same sheet names, and each matching sheet
     must have the same columns. Empty sheets with headers are allowed. The
     output mirrors the input sheet names, adds ``combined_id`` and
@@ -234,7 +259,7 @@ def make_combined_template_file(
     row counts by source file and sheet.
     """
     input_path = Path(input_dir)
-    paths = _find_combination_inputs(input_path)
+    paths = _find_combination_inputs(input_path, output_dir=output_dir)
 
     logger.info(
         "Combining %s template workbook(s): %s",
