@@ -1,7 +1,7 @@
 # Instruction Manual
 
 **Version:** 0.0.0
-**Generated:** 2026-06-15
+**Generated:** 2026-06-16
 
 ---
 
@@ -277,11 +277,21 @@
 │   │   ├── 02_usage_guide.md — Blinding, Unblinding, and Auto-Blind Usage Guide
 │   │   ├── 03_research_context.md — Blinding, Unblinding, and Auto-Blind Research Context
 │   │   └── 04_implementation_notes.md — Blinding, Unblinding, and Auto-Blind Implementation Notes
-│   └── 15_speaking_time_rate_calculation/
-│       ├── 01_quickstart.md — Speaking-Time Rate Calculation Quickstart
-│       ├── 02_usage_guide.md — Speaking-Time Rate Calculation Usage Guide
-│       ├── 03_research_context.md — Speaking-Time Rate Calculation Research Context
-│       └── 04_implementation_notes.md — Speaking-Time Rate Calculation Implementation Notes
+│   ├── 15_speaking_time_rate_calculation/
+│   │   ├── 01_quickstart.md — Speaking-Time Rate Calculation Quickstart
+│   │   ├── 02_usage_guide.md — Speaking-Time Rate Calculation Usage Guide
+│   │   ├── 03_research_context.md — Speaking-Time Rate Calculation Research Context
+│   │   └── 04_implementation_notes.md — Speaking-Time Rate Calculation Implementation Notes
+│   ├── 16_target_vocabulary_resource_management/
+│   │   ├── 01_quickstart.md — Target Vocabulary Resource Management Quickstart
+│   │   ├── 02_usage_guide.md — Target Vocabulary Resource Management Usage Guide
+│   │   ├── 03_research_context.md — Target Vocabulary Resource Management Research Context
+│   │   └── 04_implementation_notes.md — Target Vocabulary Resource Management Implementation Notes
+│   └── 17_powers_automation_support/
+│       ├── 01_quickstart.md — POWERS Automation Support Quickstart
+│       ├── 02_usage_guide.md — POWERS Automation Support Usage Guide
+│       ├── 03_research_context.md — POWERS Automation Support Research Context
+│       └── 04_implementation_notes.md — POWERS Automation Support Implementation Notes
 └── 99_references.md — References
 ```
 
@@ -609,6 +619,18 @@
 - [02_usage_guide.md — Speaking-Time Rate Calculation Usage Guide](05_functionalities/15_speaking_time_rate_calculation/02_usage_guide.md)
 - [03_research_context.md — Speaking-Time Rate Calculation Research Context](05_functionalities/15_speaking_time_rate_calculation/03_research_context.md)
 - [04_implementation_notes.md — Speaking-Time Rate Calculation Implementation Notes](05_functionalities/15_speaking_time_rate_calculation/04_implementation_notes.md)
+
+### 05_functionalities/16_target_vocabulary_resource_management/
+- [01_quickstart.md — Target Vocabulary Resource Management Quickstart](05_functionalities/16_target_vocabulary_resource_management/01_quickstart.md)
+- [02_usage_guide.md — Target Vocabulary Resource Management Usage Guide](05_functionalities/16_target_vocabulary_resource_management/02_usage_guide.md)
+- [03_research_context.md — Target Vocabulary Resource Management Research Context](05_functionalities/16_target_vocabulary_resource_management/03_research_context.md)
+- [04_implementation_notes.md — Target Vocabulary Resource Management Implementation Notes](05_functionalities/16_target_vocabulary_resource_management/04_implementation_notes.md)
+
+### 05_functionalities/17_powers_automation_support/
+- [01_quickstart.md — POWERS Automation Support Quickstart](05_functionalities/17_powers_automation_support/01_quickstart.md)
+- [02_usage_guide.md — POWERS Automation Support Usage Guide](05_functionalities/17_powers_automation_support/02_usage_guide.md)
+- [03_research_context.md — POWERS Automation Support Research Context](05_functionalities/17_powers_automation_support/03_research_context.md)
+- [04_implementation_notes.md — POWERS Automation Support Implementation Notes](05_functionalities/17_powers_automation_support/04_implementation_notes.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
