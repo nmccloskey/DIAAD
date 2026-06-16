@@ -307,11 +307,24 @@
 │   │   ├── 02_usage_guide.md — Web App Project Setup and First Run Usage Guide
 │   │   ├── 03_research_context.md — Web App Project Setup and First Run Research Context
 │   │   └── 04_implementation_notes.md — Web App Project Setup and First Run Implementation Notes
-│   └── 03_example_dataset_command_specific_packages/
-│       ├── 01_quickstart.md — Example Dataset and Command-Specific Packages Quickstart
-│       ├── 02_usage_guide.md — Example Dataset and Command-Specific Packages Usage Guide
-│       ├── 03_research_context.md — Example Dataset and Command-Specific Packages Research Context
-│       └── 04_implementation_notes.md — Example Dataset and Command-Specific Packages Implementation Notes
+│   ├── 03_example_dataset_command_specific_packages/
+│   │   ├── 01_quickstart.md — Example Dataset and Command-Specific Packages Quickstart
+│   │   ├── 02_usage_guide.md — Example Dataset and Command-Specific Packages Usage Guide
+│   │   ├── 03_research_context.md — Example Dataset and Command-Specific Packages Research Context
+│   │   └── 04_implementation_notes.md — Example Dataset and Command-Specific Packages Implementation Notes
+│   ├── 04_transcription_based_workflow_baseline/
+│   │   ├── 01_quickstart.md — Transcription-Based Workflow Baseline Quickstart
+│   │   ├── 02_usage_guide.md — Transcription-Based Workflow Baseline Usage Guide
+│   │   ├── 03_research_context.md — Transcription-Based Workflow Baseline Research Context
+│   │   └── 04_implementation_notes.md — Transcription-Based Workflow Baseline Implementation Notes
+│   ├── 05_transcription_reliability/
+│   │   ├── 01_quickstart.md — Transcription Reliability Quickstart
+│   │   ├── 02_usage_guide.md — Transcription Reliability Usage Guide
+│   │   └── 03_research_context.md — Transcription Reliability Research Context
+│   └── 06_transcript_table_revision_chat_export/
+│       ├── 01_quickstart.md — Transcript Table Revision and CHAT Export Quickstart
+│       ├── 02_usage_guide.md — Transcript Table Revision and CHAT Export Usage Guide
+│       └── 03_research_context.md — Transcript Table Revision and CHAT Export Research Context
 └── 99_references.md — References
 ```
 
@@ -674,6 +687,22 @@
 - [02_usage_guide.md — Example Dataset and Command-Specific Packages Usage Guide](06_workflows/03_example_dataset_command_specific_packages/02_usage_guide.md)
 - [03_research_context.md — Example Dataset and Command-Specific Packages Research Context](06_workflows/03_example_dataset_command_specific_packages/03_research_context.md)
 - [04_implementation_notes.md — Example Dataset and Command-Specific Packages Implementation Notes](06_workflows/03_example_dataset_command_specific_packages/04_implementation_notes.md)
+
+### 06_workflows/04_transcription_based_workflow_baseline/
+- [01_quickstart.md — Transcription-Based Workflow Baseline Quickstart](06_workflows/04_transcription_based_workflow_baseline/01_quickstart.md)
+- [02_usage_guide.md — Transcription-Based Workflow Baseline Usage Guide](06_workflows/04_transcription_based_workflow_baseline/02_usage_guide.md)
+- [03_research_context.md — Transcription-Based Workflow Baseline Research Context](06_workflows/04_transcription_based_workflow_baseline/03_research_context.md)
+- [04_implementation_notes.md — Transcription-Based Workflow Baseline Implementation Notes](06_workflows/04_transcription_based_workflow_baseline/04_implementation_notes.md)
+
+### 06_workflows/05_transcription_reliability/
+- [01_quickstart.md — Transcription Reliability Quickstart](06_workflows/05_transcription_reliability/01_quickstart.md)
+- [02_usage_guide.md — Transcription Reliability Usage Guide](06_workflows/05_transcription_reliability/02_usage_guide.md)
+- [03_research_context.md — Transcription Reliability Research Context](06_workflows/05_transcription_reliability/03_research_context.md)
+
+### 06_workflows/06_transcript_table_revision_chat_export/
+- [01_quickstart.md — Transcript Table Revision and CHAT Export Quickstart](06_workflows/06_transcript_table_revision_chat_export/01_quickstart.md)
+- [02_usage_guide.md — Transcript Table Revision and CHAT Export Usage Guide](06_workflows/06_transcript_table_revision_chat_export/02_usage_guide.md)
+- [03_research_context.md — Transcript Table Revision and CHAT Export Research Context](06_workflows/06_transcript_table_revision_chat_export/03_research_context.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
