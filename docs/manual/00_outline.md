@@ -296,6 +296,22 @@
 │       ├── 02_usage_guide.md — POWERS Automation Support Usage Guide
 │       ├── 03_research_context.md — POWERS Automation Support Research Context
 │       └── 04_implementation_notes.md — POWERS Automation Support Implementation Notes
+├── 06_workflows/
+│   ├── 01_cli_project_setup_first_run/
+│   │   ├── 01_quickstart.md — CLI Project Setup and First Run Quickstart
+│   │   ├── 02_usage_guide.md — CLI Project Setup and First Run Usage Guide
+│   │   ├── 03_research_context.md — CLI Project Setup and First Run Research Context
+│   │   └── 04_implementation_notes.md — CLI Project Setup and First Run Implementation Notes
+│   ├── 02_web_app_project_setup_first_run/
+│   │   ├── 01_quickstart.md — Web App Project Setup and First Run Quickstart
+│   │   ├── 02_usage_guide.md — Web App Project Setup and First Run Usage Guide
+│   │   ├── 03_research_context.md — Web App Project Setup and First Run Research Context
+│   │   └── 04_implementation_notes.md — Web App Project Setup and First Run Implementation Notes
+│   └── 03_example_dataset_command_specific_packages/
+│       ├── 01_quickstart.md — Example Dataset and Command-Specific Packages Quickstart
+│       ├── 02_usage_guide.md — Example Dataset and Command-Specific Packages Usage Guide
+│       ├── 03_research_context.md — Example Dataset and Command-Specific Packages Research Context
+│       └── 04_implementation_notes.md — Example Dataset and Command-Specific Packages Implementation Notes
 └── 99_references.md — References
 ```
 
@@ -640,6 +656,24 @@
 - [02_usage_guide.md — POWERS Automation Support Usage Guide](05_functionalities/17_powers_automation_support/02_usage_guide.md)
 - [03_research_context.md — POWERS Automation Support Research Context](05_functionalities/17_powers_automation_support/03_research_context.md)
 - [04_implementation_notes.md — POWERS Automation Support Implementation Notes](05_functionalities/17_powers_automation_support/04_implementation_notes.md)
+
+### 06_workflows/01_cli_project_setup_first_run/
+- [01_quickstart.md — CLI Project Setup and First Run Quickstart](06_workflows/01_cli_project_setup_first_run/01_quickstart.md)
+- [02_usage_guide.md — CLI Project Setup and First Run Usage Guide](06_workflows/01_cli_project_setup_first_run/02_usage_guide.md)
+- [03_research_context.md — CLI Project Setup and First Run Research Context](06_workflows/01_cli_project_setup_first_run/03_research_context.md)
+- [04_implementation_notes.md — CLI Project Setup and First Run Implementation Notes](06_workflows/01_cli_project_setup_first_run/04_implementation_notes.md)
+
+### 06_workflows/02_web_app_project_setup_first_run/
+- [01_quickstart.md — Web App Project Setup and First Run Quickstart](06_workflows/02_web_app_project_setup_first_run/01_quickstart.md)
+- [02_usage_guide.md — Web App Project Setup and First Run Usage Guide](06_workflows/02_web_app_project_setup_first_run/02_usage_guide.md)
+- [03_research_context.md — Web App Project Setup and First Run Research Context](06_workflows/02_web_app_project_setup_first_run/03_research_context.md)
+- [04_implementation_notes.md — Web App Project Setup and First Run Implementation Notes](06_workflows/02_web_app_project_setup_first_run/04_implementation_notes.md)
+
+### 06_workflows/03_example_dataset_command_specific_packages/
+- [01_quickstart.md — Example Dataset and Command-Specific Packages Quickstart](06_workflows/03_example_dataset_command_specific_packages/01_quickstart.md)
+- [02_usage_guide.md — Example Dataset and Command-Specific Packages Usage Guide](06_workflows/03_example_dataset_command_specific_packages/02_usage_guide.md)
+- [03_research_context.md — Example Dataset and Command-Specific Packages Research Context](06_workflows/03_example_dataset_command_specific_packages/03_research_context.md)
+- [04_implementation_notes.md — Example Dataset and Command-Specific Packages Implementation Notes](06_workflows/03_example_dataset_command_specific_packages/04_implementation_notes.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
