@@ -71,7 +71,7 @@ TODO: Confirm whether future web runs should write the same `effective_config.ya
 
 ## Command Registry Concern
 
-The current source registry includes `templates combine`, and dispatch supports it. Earlier command drafting plans did not include a command page for it. Before final publication, either add that command page or decide that it should be hidden/removed from user-facing command lists.
+The current source registry includes `templates combine`, and dispatch supports it. The authored manual now includes a command page for it. Before final publication, keep the registry, dispatch table, web command menu, and command documentation synchronized so user-facing command lists do not drift.
 
 ## Read Next
 

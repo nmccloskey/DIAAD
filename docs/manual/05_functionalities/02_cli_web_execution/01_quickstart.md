@@ -39,7 +39,7 @@ In the web app:
 1. Upload or build configuration.
 2. Upload input files.
 3. Select commands in Part 3.
-4. Run selected functions.
+4. Run selected commands.
 5. Download the output ZIP.
 
 The web app is best for learning, smaller interactive runs, and deidentified examples.

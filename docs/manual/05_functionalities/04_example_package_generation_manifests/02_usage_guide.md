@@ -119,7 +119,7 @@ The manifest is useful for programmatic inspection, tests, and documentation too
 
 The web app has a dedicated examples download action in Part 3. It is not an ordinary dispatch command checkbox.
 
-If no commands are selected, the web app downloads the full example dataset. If commands are selected, it downloads command-specific examples for those selected functions. ZIP names use stable slugs such as:
+If no commands are selected, the web app downloads the full example dataset. If commands are selected, it downloads command-specific examples for those selected commands. ZIP names use stable slugs such as:
 
 ```text
 diaad_example_files_cus_analyze_cus_evaluate_YYMMDD_HHMM.zip

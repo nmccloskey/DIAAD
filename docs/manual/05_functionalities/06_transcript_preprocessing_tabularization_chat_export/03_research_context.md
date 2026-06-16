@@ -28,6 +28,6 @@ For research reporting, the table usually remains the more important artifact: i
 
 ## Read Next
 
-- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Functional overview: `docs/manual/01_overview/04_functional_overview.md`
 - Transcript tabularization feature: `docs/manual/03_features/01_transcript_tabularization.md`
 - Revision handling research context: `docs/manual/05_functionalities/11_revision_handling/03_research_context.md`

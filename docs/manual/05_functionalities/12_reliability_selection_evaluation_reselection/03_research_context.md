@@ -30,6 +30,6 @@ TODO: Before publication, review whether the transcription reliability similarit
 
 ## Read Next
 
-- Methodological overview: `docs/manual/01_overview/02_methodolgical_overview.md`
+- Methodological overview: `docs/manual/01_overview/03_methodolgical_overview.md`
 - Transcript text normalization: `docs/manual/05_functionalities/07_transcript_text_normalization_speaker_exclusion/03_research_context.md`
 - Revision handling: `docs/manual/05_functionalities/11_revision_handling/03_research_context.md`

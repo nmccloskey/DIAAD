@@ -22,7 +22,7 @@ Generate one package for a small command set by repeating `--for-command`:
 diaad examples --for-command "cus analyze" --for-command "cus evaluate"
 ```
 
-In the web app, use Part 3. With no commands selected, the examples button downloads the full example dataset. With commands selected, it downloads examples for the selected functions.
+In the web app, use Part 3. With no commands selected, the examples button downloads the full example dataset. With commands selected, it downloads examples for the selected commands.
 
 ## Package Types
 

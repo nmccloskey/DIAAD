@@ -31,6 +31,8 @@ For CHAT-based transcription reliability evaluation, excluded labels are compare
 
 For transcript-table workflows that support speaker exclusion, DIAAD filters rows by the `speaker` column. Those row filters are case-insensitive after trimming whitespace.
 
+Digital Conversational Turns is an important exception: `turns analyze` pools configured excluded speakers into the non-client category rather than dropping them from the turn sequence.
+
 ## When To Exclude Speakers
 
 Speaker exclusion is most useful when the analytic unit is a target participant's language rather than the whole interaction. For example, a clinician-client dialog may include prompts, clarifications, and task instructions from a clinician. If a word-count or target-vocabulary analysis is meant to describe the client's speech, excluding the clinician speaker label prevents those prompts from entering the count.

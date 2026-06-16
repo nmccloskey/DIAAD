@@ -26,6 +26,6 @@ When results depend on these settings, report enough detail that another analyst
 
 ## Read Next
 
-- Methodological overview: `docs/manual/01_overview/02_methodolgical_overview.md`
+- Methodological overview: `docs/manual/01_overview/03_methodolgical_overview.md`
 - Word Counting research context: `docs/manual/04_modules/04_word_counting/03_research_context.md`
 - Target Vocabulary Coverage research context: `docs/manual/04_modules/06_target_vocabulary_coverage/03_research_context.md`
