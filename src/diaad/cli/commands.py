@@ -28,6 +28,7 @@ MODULE_COMMANDS = {
         "templates samples",
         "templates times",
         "templates subset",
+        "templates combine",
     ],
 
     "cus": [

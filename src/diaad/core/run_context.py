@@ -668,6 +668,10 @@ class RunContext:
             "seed": self.random_seed,
         }
 
+    def kwargs_make_combined_template(self) -> dict[str, Any]:
+        """Return kwargs for template workbook combination."""
+        return self.kwargs_io()
+
     # ------------------------------------------------------------------
     # POWERS coding workflow
     # ------------------------------------------------------------------

@@ -1,3 +1,7 @@
+from diaad.coding.templates.combination import (
+    COMBINED_TEMPLATE_FILENAME,
+    make_combined_template_file,
+)
 from diaad.coding.templates.samples import (
     SampleTemplateConfig,
     add_balanced_bins,
@@ -30,6 +34,7 @@ from diaad.coding.templates.utils import (
 __all__ = [
     "DEFAULT_NUM_BINS",
     "DEFAULT_STIMULUS_FIELD",
+    "COMBINED_TEMPLATE_FILENAME",
     "SAMPLE_SUBSET_FILENAME",
     "TEMPLATE_SUBDIR",
     "SampleTemplateConfig",
@@ -38,6 +43,7 @@ __all__ = [
     "build_sample_coding_template",
     "build_speaking_time_template",
     "build_utterance_coding_template",
+    "make_combined_template_file",
     "make_sample_coding_template",
     "make_sample_subset_file",
     "make_sample_template_files",

@@ -19,6 +19,7 @@ from diaad.core.run_wrappers import (
     run_evaluate_powers_reliability,
     run_evaluate_transcription_reliability,
     run_evaluate_word_count_reliability,
+    run_make_combined_template,
     run_make_cu_coding_files,
     run_detabularize_transcripts,
     run_make_sample_templates,
@@ -149,6 +150,7 @@ def build_dispatch(ctx) -> CommandDispatch:
         "templates samples": lambda: run_make_sample_templates(ctx),
         "templates times": lambda: run_make_speaking_time_templates(ctx),
         "templates subset": lambda: run_make_sample_subset(ctx),
+        "templates combine": lambda: run_make_combined_template(ctx),
 
         # --------------------------------------------------------------
         # POWERS coding workflow

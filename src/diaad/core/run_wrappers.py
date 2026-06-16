@@ -245,6 +245,13 @@ def run_make_sample_subset(ctx):
     return make_sample_subset_file(**ctx.kwargs_make_sample_subset())
 
 
+def run_make_combined_template(ctx):
+    """Combine same-schema template workbooks."""
+    from diaad.coding.templates.combination import make_combined_template_file
+
+    return make_combined_template_file(**ctx.kwargs_make_combined_template())
+
+
 # ------------------------------------------------------------------
 # POWERS coding workflow
 # ------------------------------------------------------------------
