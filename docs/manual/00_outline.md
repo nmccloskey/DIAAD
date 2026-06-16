@@ -321,10 +321,26 @@
 │   │   ├── 01_quickstart.md — Transcription Reliability Quickstart
 │   │   ├── 02_usage_guide.md — Transcription Reliability Usage Guide
 │   │   └── 03_research_context.md — Transcription Reliability Research Context
-│   └── 06_transcript_table_revision_chat_export/
-│       ├── 01_quickstart.md — Transcript Table Revision and CHAT Export Quickstart
-│       ├── 02_usage_guide.md — Transcript Table Revision and CHAT Export Usage Guide
-│       └── 03_research_context.md — Transcript Table Revision and CHAT Export Research Context
+│   ├── 06_transcript_table_revision_chat_export/
+│   │   ├── 01_quickstart.md — Transcript Table Revision and CHAT Export Quickstart
+│   │   ├── 02_usage_guide.md — Transcript Table Revision and CHAT Export Usage Guide
+│   │   └── 03_research_context.md — Transcript Table Revision and CHAT Export Research Context
+│   ├── 07_monologic_narrative_complete_utterances/
+│   │   ├── 01_quickstart.md — Monologic Narrative Complete Utterances Quickstart
+│   │   ├── 02_usage_guide.md — Monologic Narrative Complete Utterances Usage Guide
+│   │   └── 03_research_context.md — Monologic Narrative Complete Utterances Research Context
+│   ├── 08_monologic_narrative_word_counting/
+│   │   ├── 01_quickstart.md — Monologic Narrative Word Counting Quickstart
+│   │   ├── 02_usage_guide.md — Monologic Narrative Word Counting Usage Guide
+│   │   └── 03_research_context.md — Monologic Narrative Word Counting Research Context
+│   ├── 09_monologic_narrative_target_vocabulary_coverage/
+│   │   ├── 01_quickstart.md — Monologic Narrative Target Vocabulary Coverage Quickstart
+│   │   ├── 02_usage_guide.md — Monologic Narrative Target Vocabulary Coverage Usage Guide
+│   │   └── 03_research_context.md — Monologic Narrative Target Vocabulary Coverage Research Context
+│   └── 10_digital_conversational_turns/
+│       ├── 01_quickstart.md — Digital Conversational Turns Quickstart
+│       ├── 02_usage_guide.md — Digital Conversational Turns Usage Guide
+│       └── 03_research_context.md — Digital Conversational Turns Research Context
 └── 99_references.md — References
 ```
 
@@ -703,6 +719,26 @@
 - [01_quickstart.md — Transcript Table Revision and CHAT Export Quickstart](06_workflows/06_transcript_table_revision_chat_export/01_quickstart.md)
 - [02_usage_guide.md — Transcript Table Revision and CHAT Export Usage Guide](06_workflows/06_transcript_table_revision_chat_export/02_usage_guide.md)
 - [03_research_context.md — Transcript Table Revision and CHAT Export Research Context](06_workflows/06_transcript_table_revision_chat_export/03_research_context.md)
+
+### 06_workflows/07_monologic_narrative_complete_utterances/
+- [01_quickstart.md — Monologic Narrative Complete Utterances Quickstart](06_workflows/07_monologic_narrative_complete_utterances/01_quickstart.md)
+- [02_usage_guide.md — Monologic Narrative Complete Utterances Usage Guide](06_workflows/07_monologic_narrative_complete_utterances/02_usage_guide.md)
+- [03_research_context.md — Monologic Narrative Complete Utterances Research Context](06_workflows/07_monologic_narrative_complete_utterances/03_research_context.md)
+
+### 06_workflows/08_monologic_narrative_word_counting/
+- [01_quickstart.md — Monologic Narrative Word Counting Quickstart](06_workflows/08_monologic_narrative_word_counting/01_quickstart.md)
+- [02_usage_guide.md — Monologic Narrative Word Counting Usage Guide](06_workflows/08_monologic_narrative_word_counting/02_usage_guide.md)
+- [03_research_context.md — Monologic Narrative Word Counting Research Context](06_workflows/08_monologic_narrative_word_counting/03_research_context.md)
+
+### 06_workflows/09_monologic_narrative_target_vocabulary_coverage/
+- [01_quickstart.md — Monologic Narrative Target Vocabulary Coverage Quickstart](06_workflows/09_monologic_narrative_target_vocabulary_coverage/01_quickstart.md)
+- [02_usage_guide.md — Monologic Narrative Target Vocabulary Coverage Usage Guide](06_workflows/09_monologic_narrative_target_vocabulary_coverage/02_usage_guide.md)
+- [03_research_context.md — Monologic Narrative Target Vocabulary Coverage Research Context](06_workflows/09_monologic_narrative_target_vocabulary_coverage/03_research_context.md)
+
+### 06_workflows/10_digital_conversational_turns/
+- [01_quickstart.md — Digital Conversational Turns Quickstart](06_workflows/10_digital_conversational_turns/01_quickstart.md)
+- [02_usage_guide.md — Digital Conversational Turns Usage Guide](06_workflows/10_digital_conversational_turns/02_usage_guide.md)
+- [03_research_context.md — Digital Conversational Turns Research Context](06_workflows/10_digital_conversational_turns/03_research_context.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
