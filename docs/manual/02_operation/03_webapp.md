@@ -52,7 +52,7 @@ The command menu is organized by DIAAD module. Select the command or commands yo
 
 The `examples` command is handled separately from the normal command menu. Use the app's example download control to obtain generated example files.
 
-If no commands are selected, the examples control downloads the full example dataset. If commands are selected, it downloads example files relevant to the selected functions.
+If no commands are selected, the examples control downloads the full example dataset. If commands are selected, it downloads example files relevant to the selected commands.
 
 ## Running and Downloading
 

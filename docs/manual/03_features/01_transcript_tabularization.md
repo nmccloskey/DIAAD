@@ -53,7 +53,7 @@ The inverse command, `transcripts chats`, exports CHAT-style files from transcri
 
 ## Where Transcript Tables Are Required
 
-Many DIAAD commands require transcript tables, including the commands that create Complete Utterance, POWERS, target vocabulary, generic coding-template, speaking-time, and conversation-turn files from transcript content.
+Many DIAAD commands require transcript tables, including commands that create Complete Utterance, POWERS, target vocabulary, generic coding-template, and speaking-time files from transcript content. Digital Conversational Turns can also use transcript tables as a fallback source for speaker-sequence analysis when no primary DCT workbook is found.
 
 If a later command needs transcript tables and `transcripts tabularize` is not part of the same run, DIAAD searches the input directory and current run output directory for the configured transcript table filename. If it cannot find a usable table, the command fails unless `project.auto_tabularize` is set to `true`.
 
@@ -76,7 +76,7 @@ The broader principle is not "everything must start as CHAT." The broader princi
 ## Read Next
 
 - Configuration: `docs/manual/02_operation/04_configuration.md`
-- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Functional overview: `docs/manual/01_overview/04_functional_overview.md`
 - Exact file name matching: `docs/manual/03_features/03_exact_file_name_matching.md`
 - Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`
 

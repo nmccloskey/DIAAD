@@ -62,7 +62,7 @@ POWERS supports discourse-pragmatic coding for clinician-client or other dialogu
 
 Target Vocabulary Coverage supports CoreLex-style and custom lexicon analyses. Built-in narrative resources provide a convenience layer for select standard stimuli, while custom lexicons can be used for project-specific elicitation tasks. Custom resources should be interpreted cautiously unless their psychometric properties are evaluated for the intended use (Pritchard et al., 2018).
 
-Digital Conversational Turns supports transcriptionless or pre-transcription analysis of turn sequences. It can be useful when a project needs a feasible way to characterize participation patterns, speaker transitions, or conversational dynamics before a full transcript exists. If a transcript is already available, the sequence of turns is already represented in the transcript's speaker tags; a future extension may derive similar profiles directly from transcript tables.
+Digital Conversational Turns supports transcriptionless or pre-transcription analysis of turn sequences. It can be useful when a project needs a feasible way to characterize participation patterns, speaker transitions, or conversational dynamics before a full transcript exists. If a transcript is already available, DIAAD can also derive transcript-table-informed speaker dynamics from ordered speaker tags when no primary DCT workbook is found.
 
 The Templates module is different from these analytic modules. It is supportive infrastructure for coding schemes DIAAD does not directly analyze. It can create utterance-level templates, sample-level templates, speaking-time templates, and general sample subsets while preserving the same logic of identifiers, coder assignment, blinding, and reliability sampling.
 

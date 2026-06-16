@@ -62,7 +62,7 @@ When example content changes, update the example specs, generator, renderer, or 
 
 ## Read Next
 
-- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Functional overview: `docs/manual/01_overview/04_functional_overview.md`
 - Command-line operation: `docs/manual/02_operation/02_command_line.md`
 - Web app operation: `docs/manual/02_operation/03_webapp.md`
 - Testing: `docs/manual/02_operation/05_testing.md`

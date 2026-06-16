@@ -29,6 +29,7 @@ tests/
   helpers.py
   test_main.py
   test_webapp_command_menu.py
+  test_webapp_launcher.py
   test_blinding/
   test_cli/
   test_coding/

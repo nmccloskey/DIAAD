@@ -56,7 +56,7 @@ The safest interpretation is:
 
 ## Read Next
 
-- Functional overview: `docs/manual/01_overview/03_functional_overview.md`
+- Functional overview: `docs/manual/01_overview/04_functional_overview.md`
 - Configuration: `docs/manual/02_operation/04_configuration.md`
 - Generated Example I/O: `docs/manual/03_features/04_generated_example_io.md`
 

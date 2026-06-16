@@ -29,7 +29,7 @@ This page gives a centralized map of DIAAD's current modules, commands, and cros
 | `words` | Support manual word-count coding workflows. | Transcript tables or CU-derived coding inputs. | Word-count workbooks, reliability summaries, word-count analyses, word-count rates. |
 | `powers` | Support POWERS coding, selected automation, reliability, analysis, and rates. | Transcript tables and completed POWERS coding files. | POWERS coding workbooks, reliability summaries, analysis workbooks, POWERS rates. |
 | `vocab` | Support target vocabulary resource creation, validation, analysis, and rates. | Built-in or custom vocabulary resources plus transcript-derived inputs. | Resource templates/checks, coverage summaries, long-format detail tables, rates. |
-| `turns` | Support Digital Conversational Turn coding and analysis. | Transcript tables and completed turn-coding workbooks. | Turn-coding templates, reliability reports, transition and summary analyses. |
+| `turns` | Support Digital Conversational Turn reliability and analysis. | Completed turn-coding workbooks, reliability workbooks, or transcript tables for fallback speaker-sequence analysis. | Reliability reports, transition summaries, and speaker/group/session analyses. |
 
 ## Command Index
 
@@ -64,6 +64,7 @@ This page gives a centralized map of DIAAD's current modules, commands, and cros
 | `templates samples` | Generate generic sample-level or bin-level coding templates. | Transcript tables. | Sample-level coding template workbooks. |
 | `templates times` | Generate a speaking-time workbook for later rate calculations. | Transcript tables. | Speaking-time template workbook. |
 | `templates subset` | Select a general sample subset from eligible samples. | One Excel workbook with a `samples` sheet and sample identifier column; optional `exclude` column. | Sample subset workbook. |
+| `templates combine` | Stack same-schema template workbooks into one combined workbook. | Multiple compatible `.xlsx` workbooks. | `combined.xlsx` with combined sheets and metadata. |
 
 ### Complete Utterances
 
