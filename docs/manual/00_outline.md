@@ -220,11 +220,48 @@
 │   │   ├── 01_quickstart.md — CLI and Web Execution Quickstart
 │   │   ├── 02_usage_guide.md — CLI and Web Execution Usage Guide
 │   │   └── 04_implementation_notes.md — CLI and Web Execution Implementation Notes
-│   └── 03_run_provenance_audit_artifacts/
-│       ├── 01_quickstart.md — Run Provenance and Audit Artifacts Quickstart
-│       ├── 02_usage_guide.md — Run Provenance and Audit Artifacts Usage Guide
-│       ├── 03_research_context.md — Run Provenance and Audit Artifacts Research Context
-│       └── 04_implementation_notes.md — Run Provenance and Audit Artifacts Implementation Notes
+│   ├── 03_run_provenance_audit_artifacts/
+│   │   ├── 01_quickstart.md — Run Provenance and Audit Artifacts Quickstart
+│   │   ├── 02_usage_guide.md — Run Provenance and Audit Artifacts Usage Guide
+│   │   ├── 03_research_context.md — Run Provenance and Audit Artifacts Research Context
+│   │   └── 04_implementation_notes.md — Run Provenance and Audit Artifacts Implementation Notes
+│   ├── 04_example_package_generation_manifests/
+│   │   ├── 01_quickstart.md — Example Package Generation and Manifests Quickstart
+│   │   ├── 02_usage_guide.md — Example Package Generation and Manifests Usage Guide
+│   │   └── 04_implementation_notes.md — Example Package Generation and Manifests Implementation Notes
+│   ├── 05_generated_example_io_manual_composition/
+│   │   ├── 01_quickstart.md — Generated Example I/O Manual Composition Quickstart
+│   │   ├── 02_usage_guide.md — Generated Example I/O Manual Composition Usage Guide
+│   │   └── 04_implementation_notes.md — Generated Example I/O Manual Composition Implementation Notes
+│   ├── 06_transcript_preprocessing_tabularization_chat_export/
+│   │   ├── 01_quickstart.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Quickstart
+│   │   ├── 02_usage_guide.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Usage Guide
+│   │   ├── 03_research_context.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Research Context
+│   │   └── 04_implementation_notes.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Implementation Notes
+│   ├── 07_transcript_text_normalization_speaker_exclusion/
+│   │   ├── 01_quickstart.md — Transcript Text Normalization and Speaker Exclusion Quickstart
+│   │   ├── 02_usage_guide.md — Transcript Text Normalization and Speaker Exclusion Usage Guide
+│   │   ├── 03_research_context.md — Transcript Text Normalization and Speaker Exclusion Research Context
+│   │   └── 04_implementation_notes.md — Transcript Text Normalization and Speaker Exclusion Implementation Notes
+│   ├── 08_metadata_extraction/
+│   │   ├── 01_quickstart.md — Metadata Extraction Quickstart
+│   │   ├── 02_usage_guide.md — Metadata Extraction Usage Guide
+│   │   ├── 03_research_context.md — Metadata Extraction Research Context
+│   │   └── 04_implementation_notes.md — Metadata Extraction Implementation Notes
+│   ├── 09_configured_filenames_file_discovery_input_selection/
+│   │   ├── 01_quickstart.md — Configured Filenames, File Discovery, and Input Selection Quickstart
+│   │   ├── 02_usage_guide.md — Configured Filenames, File Discovery, and Input Selection Usage Guide
+│   │   └── 04_implementation_notes.md — Configured Filenames, File Discovery, and Input Selection Implementation Notes
+│   ├── 10_configurable_sample_utterance_identifiers/
+│   │   ├── 01_quickstart.md — Configurable Sample and Utterance Identifiers Quickstart
+│   │   ├── 02_usage_guide.md — Configurable Sample and Utterance Identifiers Usage Guide
+│   │   ├── 03_research_context.md — Configurable Sample and Utterance Identifiers Research Context
+│   │   └── 04_implementation_notes.md — Configurable Sample and Utterance Identifiers Implementation Notes
+│   └── 11_revision_handling/
+│       ├── 01_quickstart.md — Revision Handling Quickstart
+│       ├── 02_usage_guide.md — Revision Handling Usage Guide
+│       ├── 03_research_context.md — Revision Handling Research Context
+│       └── 04_implementation_notes.md — Revision Handling Implementation Notes
 └── 99_references.md — References
 ```
 
@@ -483,6 +520,51 @@
 - [02_usage_guide.md — Run Provenance and Audit Artifacts Usage Guide](05_functionalities/03_run_provenance_audit_artifacts/02_usage_guide.md)
 - [03_research_context.md — Run Provenance and Audit Artifacts Research Context](05_functionalities/03_run_provenance_audit_artifacts/03_research_context.md)
 - [04_implementation_notes.md — Run Provenance and Audit Artifacts Implementation Notes](05_functionalities/03_run_provenance_audit_artifacts/04_implementation_notes.md)
+
+### 05_functionalities/04_example_package_generation_manifests/
+- [01_quickstart.md — Example Package Generation and Manifests Quickstart](05_functionalities/04_example_package_generation_manifests/01_quickstart.md)
+- [02_usage_guide.md — Example Package Generation and Manifests Usage Guide](05_functionalities/04_example_package_generation_manifests/02_usage_guide.md)
+- [04_implementation_notes.md — Example Package Generation and Manifests Implementation Notes](05_functionalities/04_example_package_generation_manifests/04_implementation_notes.md)
+
+### 05_functionalities/05_generated_example_io_manual_composition/
+- [01_quickstart.md — Generated Example I/O Manual Composition Quickstart](05_functionalities/05_generated_example_io_manual_composition/01_quickstart.md)
+- [02_usage_guide.md — Generated Example I/O Manual Composition Usage Guide](05_functionalities/05_generated_example_io_manual_composition/02_usage_guide.md)
+- [04_implementation_notes.md — Generated Example I/O Manual Composition Implementation Notes](05_functionalities/05_generated_example_io_manual_composition/04_implementation_notes.md)
+
+### 05_functionalities/06_transcript_preprocessing_tabularization_chat_export/
+- [01_quickstart.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Quickstart](05_functionalities/06_transcript_preprocessing_tabularization_chat_export/01_quickstart.md)
+- [02_usage_guide.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Usage Guide](05_functionalities/06_transcript_preprocessing_tabularization_chat_export/02_usage_guide.md)
+- [03_research_context.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Research Context](05_functionalities/06_transcript_preprocessing_tabularization_chat_export/03_research_context.md)
+- [04_implementation_notes.md — Transcript Preprocessing, Tabularization, Auto-Tabularization, and CHAT Export Implementation Notes](05_functionalities/06_transcript_preprocessing_tabularization_chat_export/04_implementation_notes.md)
+
+### 05_functionalities/07_transcript_text_normalization_speaker_exclusion/
+- [01_quickstart.md — Transcript Text Normalization and Speaker Exclusion Quickstart](05_functionalities/07_transcript_text_normalization_speaker_exclusion/01_quickstart.md)
+- [02_usage_guide.md — Transcript Text Normalization and Speaker Exclusion Usage Guide](05_functionalities/07_transcript_text_normalization_speaker_exclusion/02_usage_guide.md)
+- [03_research_context.md — Transcript Text Normalization and Speaker Exclusion Research Context](05_functionalities/07_transcript_text_normalization_speaker_exclusion/03_research_context.md)
+- [04_implementation_notes.md — Transcript Text Normalization and Speaker Exclusion Implementation Notes](05_functionalities/07_transcript_text_normalization_speaker_exclusion/04_implementation_notes.md)
+
+### 05_functionalities/08_metadata_extraction/
+- [01_quickstart.md — Metadata Extraction Quickstart](05_functionalities/08_metadata_extraction/01_quickstart.md)
+- [02_usage_guide.md — Metadata Extraction Usage Guide](05_functionalities/08_metadata_extraction/02_usage_guide.md)
+- [03_research_context.md — Metadata Extraction Research Context](05_functionalities/08_metadata_extraction/03_research_context.md)
+- [04_implementation_notes.md — Metadata Extraction Implementation Notes](05_functionalities/08_metadata_extraction/04_implementation_notes.md)
+
+### 05_functionalities/09_configured_filenames_file_discovery_input_selection/
+- [01_quickstart.md — Configured Filenames, File Discovery, and Input Selection Quickstart](05_functionalities/09_configured_filenames_file_discovery_input_selection/01_quickstart.md)
+- [02_usage_guide.md — Configured Filenames, File Discovery, and Input Selection Usage Guide](05_functionalities/09_configured_filenames_file_discovery_input_selection/02_usage_guide.md)
+- [04_implementation_notes.md — Configured Filenames, File Discovery, and Input Selection Implementation Notes](05_functionalities/09_configured_filenames_file_discovery_input_selection/04_implementation_notes.md)
+
+### 05_functionalities/10_configurable_sample_utterance_identifiers/
+- [01_quickstart.md — Configurable Sample and Utterance Identifiers Quickstart](05_functionalities/10_configurable_sample_utterance_identifiers/01_quickstart.md)
+- [02_usage_guide.md — Configurable Sample and Utterance Identifiers Usage Guide](05_functionalities/10_configurable_sample_utterance_identifiers/02_usage_guide.md)
+- [03_research_context.md — Configurable Sample and Utterance Identifiers Research Context](05_functionalities/10_configurable_sample_utterance_identifiers/03_research_context.md)
+- [04_implementation_notes.md — Configurable Sample and Utterance Identifiers Implementation Notes](05_functionalities/10_configurable_sample_utterance_identifiers/04_implementation_notes.md)
+
+### 05_functionalities/11_revision_handling/
+- [01_quickstart.md — Revision Handling Quickstart](05_functionalities/11_revision_handling/01_quickstart.md)
+- [02_usage_guide.md — Revision Handling Usage Guide](05_functionalities/11_revision_handling/02_usage_guide.md)
+- [03_research_context.md — Revision Handling Research Context](05_functionalities/11_revision_handling/03_research_context.md)
+- [04_implementation_notes.md — Revision Handling Implementation Notes](05_functionalities/11_revision_handling/04_implementation_notes.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
