@@ -122,7 +122,7 @@ Current command modules and actions are:
 | `examples` | `examples` |
 | `blinding` | `blinding encode`, `blinding decode` |
 | `transcripts` | `transcripts select`, `transcripts evaluate`, `transcripts reselect`, `transcripts tabularize`, `transcripts chats` |
-| `templates` | `templates utterances`, `templates samples`, `templates times`, `templates subset` |
+| `templates` | `templates utterances`, `templates samples`, `templates times`, `templates subset`, `templates combine` |
 | `cus` | `cus files`, `cus evaluate`, `cus reselect`, `cus analyze`, `cus rates` |
 | `words` | `words files`, `words evaluate`, `words reselect`, `words analyze`, `words rates` |
 | `powers` | `powers files`, `powers analyze`, `powers rates`, `powers evaluate`, `powers reselect` |

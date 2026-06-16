@@ -210,6 +210,21 @@
 │               ├── 01_quickstart.md — `examples` Quickstart
 │               ├── 02_usage_guide.md — `examples` Usage Guide
 │               └── 04_implementation_notes.md — `examples` Implementation Notes
+├── 05_functionalities/
+│   ├── 01_configuration_sources_defaults_overrides/
+│   │   ├── 01_quickstart.md — Configuration Sources, Defaults, and Overrides Quickstart
+│   │   ├── 02_usage_guide.md — Configuration Sources, Defaults, and Overrides Usage Guide
+│   │   ├── 03_research_context.md — Configuration Sources, Defaults, and Overrides Research Context
+│   │   └── 04_implementation_notes.md — Configuration Sources, Defaults, and Overrides Implementation Notes
+│   ├── 02_cli_web_execution/
+│   │   ├── 01_quickstart.md — CLI and Web Execution Quickstart
+│   │   ├── 02_usage_guide.md — CLI and Web Execution Usage Guide
+│   │   └── 04_implementation_notes.md — CLI and Web Execution Implementation Notes
+│   └── 03_run_provenance_audit_artifacts/
+│       ├── 01_quickstart.md — Run Provenance and Audit Artifacts Quickstart
+│       ├── 02_usage_guide.md — Run Provenance and Audit Artifacts Usage Guide
+│       ├── 03_research_context.md — Run Provenance and Audit Artifacts Research Context
+│       └── 04_implementation_notes.md — Run Provenance and Audit Artifacts Implementation Notes
 └── 99_references.md — References
 ```
 
@@ -451,6 +466,23 @@
 - [01_quickstart.md — `examples` Quickstart](04_modules/09_examples/05_commands/01_examples/01_quickstart.md)
 - [02_usage_guide.md — `examples` Usage Guide](04_modules/09_examples/05_commands/01_examples/02_usage_guide.md)
 - [04_implementation_notes.md — `examples` Implementation Notes](04_modules/09_examples/05_commands/01_examples/04_implementation_notes.md)
+
+### 05_functionalities/01_configuration_sources_defaults_overrides/
+- [01_quickstart.md — Configuration Sources, Defaults, and Overrides Quickstart](05_functionalities/01_configuration_sources_defaults_overrides/01_quickstart.md)
+- [02_usage_guide.md — Configuration Sources, Defaults, and Overrides Usage Guide](05_functionalities/01_configuration_sources_defaults_overrides/02_usage_guide.md)
+- [03_research_context.md — Configuration Sources, Defaults, and Overrides Research Context](05_functionalities/01_configuration_sources_defaults_overrides/03_research_context.md)
+- [04_implementation_notes.md — Configuration Sources, Defaults, and Overrides Implementation Notes](05_functionalities/01_configuration_sources_defaults_overrides/04_implementation_notes.md)
+
+### 05_functionalities/02_cli_web_execution/
+- [01_quickstart.md — CLI and Web Execution Quickstart](05_functionalities/02_cli_web_execution/01_quickstart.md)
+- [02_usage_guide.md — CLI and Web Execution Usage Guide](05_functionalities/02_cli_web_execution/02_usage_guide.md)
+- [04_implementation_notes.md — CLI and Web Execution Implementation Notes](05_functionalities/02_cli_web_execution/04_implementation_notes.md)
+
+### 05_functionalities/03_run_provenance_audit_artifacts/
+- [01_quickstart.md — Run Provenance and Audit Artifacts Quickstart](05_functionalities/03_run_provenance_audit_artifacts/01_quickstart.md)
+- [02_usage_guide.md — Run Provenance and Audit Artifacts Usage Guide](05_functionalities/03_run_provenance_audit_artifacts/02_usage_guide.md)
+- [03_research_context.md — Run Provenance and Audit Artifacts Research Context](05_functionalities/03_run_provenance_audit_artifacts/03_research_context.md)
+- [04_implementation_notes.md — Run Provenance and Audit Artifacts Implementation Notes](05_functionalities/03_run_provenance_audit_artifacts/04_implementation_notes.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
