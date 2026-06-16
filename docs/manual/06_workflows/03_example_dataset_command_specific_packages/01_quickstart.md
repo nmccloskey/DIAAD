@@ -48,7 +48,7 @@ Those packages more closely resemble a tangible toy project for the requested co
 In the web app, use the example download action in Part 3:
 
 - select no commands to download the full example dataset;
-- select commands to download command-specific examples for those functions.
+- select commands to download command-specific examples for those commands.
 
 ## Manual Example I/O
 

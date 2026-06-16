@@ -36,7 +36,7 @@ For staged workflows, upload the outputs from the prior stage in a structure tha
 In Part 3, the examples download button changes with command selection:
 
 - no selected commands: download the full example dataset;
-- selected commands: download command-specific examples for those functions.
+- selected commands: download command-specific examples for those commands.
 
 This is often the easiest way to see what the web app expects before uploading study data.
 

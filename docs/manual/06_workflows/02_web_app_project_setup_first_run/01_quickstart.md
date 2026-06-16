@@ -38,7 +38,7 @@ In the app:
 3. Upload input files or a folder.
 4. Select one or more commands in Part 3.
 5. Optionally download examples for the selected commands.
-6. Run the selected functions.
+6. Run the selected commands.
 7. Download the results ZIP before closing the session.
 
 ## Choosing Hosted, Local Web, Or CLI
