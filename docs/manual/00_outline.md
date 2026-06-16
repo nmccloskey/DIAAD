@@ -257,11 +257,31 @@
 │   │   ├── 02_usage_guide.md — Configurable Sample and Utterance Identifiers Usage Guide
 │   │   ├── 03_research_context.md — Configurable Sample and Utterance Identifiers Research Context
 │   │   └── 04_implementation_notes.md — Configurable Sample and Utterance Identifiers Implementation Notes
-│   └── 11_revision_handling/
-│       ├── 01_quickstart.md — Revision Handling Quickstart
-│       ├── 02_usage_guide.md — Revision Handling Usage Guide
-│       ├── 03_research_context.md — Revision Handling Research Context
-│       └── 04_implementation_notes.md — Revision Handling Implementation Notes
+│   ├── 11_revision_handling/
+│   │   ├── 01_quickstart.md — Revision Handling Quickstart
+│   │   ├── 02_usage_guide.md — Revision Handling Usage Guide
+│   │   ├── 03_research_context.md — Revision Handling Research Context
+│   │   └── 04_implementation_notes.md — Revision Handling Implementation Notes
+│   ├── 12_reliability_selection_evaluation_reselection/
+│   │   ├── 01_quickstart.md — Reliability Selection, Evaluation, and Reselection Quickstart
+│   │   ├── 02_usage_guide.md — Reliability Selection, Evaluation, and Reselection Usage Guide
+│   │   ├── 03_research_context.md — Reliability Selection, Evaluation, and Reselection Research Context
+│   │   └── 04_implementation_notes.md — Reliability Selection, Evaluation, and Reselection Implementation Notes
+│   ├── 13_sample_subsetting_resubsetting/
+│   │   ├── 01_quickstart.md — General Sample Subsetting and Re-Subsetting Quickstart
+│   │   ├── 02_usage_guide.md — General Sample Subsetting and Re-Subsetting Usage Guide
+│   │   ├── 03_research_context.md — General Sample Subsetting and Re-Subsetting Research Context
+│   │   └── 04_implementation_notes.md — General Sample Subsetting and Re-Subsetting Implementation Notes
+│   ├── 14_blinding_unblinding_auto_blind/
+│   │   ├── 01_quickstart.md — Blinding, Unblinding, and Auto-Blind Quickstart
+│   │   ├── 02_usage_guide.md — Blinding, Unblinding, and Auto-Blind Usage Guide
+│   │   ├── 03_research_context.md — Blinding, Unblinding, and Auto-Blind Research Context
+│   │   └── 04_implementation_notes.md — Blinding, Unblinding, and Auto-Blind Implementation Notes
+│   └── 15_speaking_time_rate_calculation/
+│       ├── 01_quickstart.md — Speaking-Time Rate Calculation Quickstart
+│       ├── 02_usage_guide.md — Speaking-Time Rate Calculation Usage Guide
+│       ├── 03_research_context.md — Speaking-Time Rate Calculation Research Context
+│       └── 04_implementation_notes.md — Speaking-Time Rate Calculation Implementation Notes
 └── 99_references.md — References
 ```
 
@@ -565,6 +585,30 @@
 - [02_usage_guide.md — Revision Handling Usage Guide](05_functionalities/11_revision_handling/02_usage_guide.md)
 - [03_research_context.md — Revision Handling Research Context](05_functionalities/11_revision_handling/03_research_context.md)
 - [04_implementation_notes.md — Revision Handling Implementation Notes](05_functionalities/11_revision_handling/04_implementation_notes.md)
+
+### 05_functionalities/12_reliability_selection_evaluation_reselection/
+- [01_quickstart.md — Reliability Selection, Evaluation, and Reselection Quickstart](05_functionalities/12_reliability_selection_evaluation_reselection/01_quickstart.md)
+- [02_usage_guide.md — Reliability Selection, Evaluation, and Reselection Usage Guide](05_functionalities/12_reliability_selection_evaluation_reselection/02_usage_guide.md)
+- [03_research_context.md — Reliability Selection, Evaluation, and Reselection Research Context](05_functionalities/12_reliability_selection_evaluation_reselection/03_research_context.md)
+- [04_implementation_notes.md — Reliability Selection, Evaluation, and Reselection Implementation Notes](05_functionalities/12_reliability_selection_evaluation_reselection/04_implementation_notes.md)
+
+### 05_functionalities/13_sample_subsetting_resubsetting/
+- [01_quickstart.md — General Sample Subsetting and Re-Subsetting Quickstart](05_functionalities/13_sample_subsetting_resubsetting/01_quickstart.md)
+- [02_usage_guide.md — General Sample Subsetting and Re-Subsetting Usage Guide](05_functionalities/13_sample_subsetting_resubsetting/02_usage_guide.md)
+- [03_research_context.md — General Sample Subsetting and Re-Subsetting Research Context](05_functionalities/13_sample_subsetting_resubsetting/03_research_context.md)
+- [04_implementation_notes.md — General Sample Subsetting and Re-Subsetting Implementation Notes](05_functionalities/13_sample_subsetting_resubsetting/04_implementation_notes.md)
+
+### 05_functionalities/14_blinding_unblinding_auto_blind/
+- [01_quickstart.md — Blinding, Unblinding, and Auto-Blind Quickstart](05_functionalities/14_blinding_unblinding_auto_blind/01_quickstart.md)
+- [02_usage_guide.md — Blinding, Unblinding, and Auto-Blind Usage Guide](05_functionalities/14_blinding_unblinding_auto_blind/02_usage_guide.md)
+- [03_research_context.md — Blinding, Unblinding, and Auto-Blind Research Context](05_functionalities/14_blinding_unblinding_auto_blind/03_research_context.md)
+- [04_implementation_notes.md — Blinding, Unblinding, and Auto-Blind Implementation Notes](05_functionalities/14_blinding_unblinding_auto_blind/04_implementation_notes.md)
+
+### 05_functionalities/15_speaking_time_rate_calculation/
+- [01_quickstart.md — Speaking-Time Rate Calculation Quickstart](05_functionalities/15_speaking_time_rate_calculation/01_quickstart.md)
+- [02_usage_guide.md — Speaking-Time Rate Calculation Usage Guide](05_functionalities/15_speaking_time_rate_calculation/02_usage_guide.md)
+- [03_research_context.md — Speaking-Time Rate Calculation Research Context](05_functionalities/15_speaking_time_rate_calculation/03_research_context.md)
+- [04_implementation_notes.md — Speaking-Time Rate Calculation Implementation Notes](05_functionalities/15_speaking_time_rate_calculation/04_implementation_notes.md)
 
 ### Manual root
 - [99_references.md — References](99_references.md)
