@@ -1,1 +1,3 @@
--e .[dev,web]
+# Root requirements.txt is intentionally kept light for Streamlit Community Cloud.
+# Compile locked environments from reqs/*.in instead.
+.[web]
