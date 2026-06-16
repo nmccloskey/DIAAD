@@ -32,6 +32,12 @@ Both commands can create primary and reliability workbooks. They can also write 
 
 The output workbook, `sample_subset.xlsx`, contains `samples` and `subset` sheets with selected/excluded status columns.
 
+## Template Combination
+
+`templates combine` finds all eligible Excel workbooks recursively under the configured input directory. It requires all workbooks to have the same sheet names and matching columns within each sheet.
+
+The output workbook, `combined.xlsx`, mirrors the input sheet names, adds `combined_id` and `source_file` to each combined sheet, and writes a `metadata` sheet with row counts by source workbook and sheet.
+
 ## Boundaries
 
 Template files are intended as starting points for human work. They do not validate a custom coding scheme and do not automatically analyze arbitrary codes unless a later command or external workflow is designed for that purpose.

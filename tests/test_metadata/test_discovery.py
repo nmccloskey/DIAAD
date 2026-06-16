@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+import diaad.metadata.discovery as discovery
 from diaad.metadata.discovery import (
     MultipleFilesFoundError,
+    find_files_by_extension,
     find_one_file_by_extension,
     find_one_matching_file,
     find_transcript_table,
@@ -95,6 +99,51 @@ def test_find_one_file_by_extension_searches_recursively_and_skips_excel_temp_fi
     )
 
     assert found == expected
+
+
+def test_find_files_by_extension_recurses_keeps_duplicate_names_and_skips_temp_files(tmp_path):
+    root = tmp_path / "input"
+    first = root / "site_a" / "coding.xlsx"
+    second = root / "site_b" / "coding.xlsx"
+    temp_file = root / "site_c" / "~$coding.xlsx"
+    first.parent.mkdir(parents=True)
+    second.parent.mkdir(parents=True)
+    temp_file.parent.mkdir(parents=True)
+    first.touch()
+    second.touch()
+    temp_file.touch()
+
+    found = find_files_by_extension(directories=root, search_ext="xlsx")
+
+    assert found == [first, second]
+
+
+def test_find_files_by_extension_delegates_to_psair_backend(monkeypatch, tmp_path):
+    calls = []
+    expected = tmp_path / "input" / "source.xlsx"
+
+    def fake_find_matching_files(**kwargs):
+        calls.append(kwargs)
+        return [expected]
+
+    monkeypatch.setattr(discovery, "psair_find_matching_files", fake_find_matching_files)
+
+    found = discovery.find_files_by_extension(
+        directories=tmp_path / "input",
+        search_ext="xlsx",
+    )
+
+    assert found == [expected]
+    assert calls == [
+        {
+            "directories": [Path(tmp_path / "input")],
+            "search_base": "?",
+            "search_ext": ".xlsx",
+            "match_mode": "contains",
+            "deduplicate": False,
+            "ignore_excel_temp_files": True,
+        }
+    ]
 
 
 def test_find_transcript_table_returns_none_when_optional_and_missing(tmp_path):

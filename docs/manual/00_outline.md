@@ -68,10 +68,14 @@
 │   │       │   ├── 01_quickstart.md — `templates times` Quickstart
 │   │       │   ├── 02_usage_guide.md — `templates times` Usage Guide
 │   │       │   └── 04_implementation_notes.md — `templates times` Implementation Notes
-│   │       └── 04_subset/
-│   │           ├── 01_quickstart.md — `templates subset` Quickstart
-│   │           ├── 02_usage_guide.md — `templates subset` Usage Guide
-│   │           └── 04_implementation_notes.md — `templates subset` Implementation Notes
+│   │       ├── 04_subset/
+│   │       │   ├── 01_quickstart.md — `templates subset` Quickstart
+│   │       │   ├── 02_usage_guide.md — `templates subset` Usage Guide
+│   │       │   └── 04_implementation_notes.md — `templates subset` Implementation Notes
+│   │       └── 05_combine/
+│   │           ├── 01_quickstart.md — `templates combine` Quickstart
+│   │           ├── 02_usage_guide.md — `templates combine` Usage Guide
+│   │           └── 04_implementation_notes.md — `templates combine` Implementation Notes
 │   ├── 03_complete_utterances/
 │   │   ├── 01_quickstart.md — Complete Utterances Module Quickstart
 │   │   ├── 03_research_context.md — Complete Utterances Research Context
@@ -371,6 +375,11 @@
 - [01_quickstart.md — `templates subset` Quickstart](04_modules/02_templates/05_commands/04_subset/01_quickstart.md)
 - [02_usage_guide.md — `templates subset` Usage Guide](04_modules/02_templates/05_commands/04_subset/02_usage_guide.md)
 - [04_implementation_notes.md — `templates subset` Implementation Notes](04_modules/02_templates/05_commands/04_subset/04_implementation_notes.md)
+
+### 04_modules/02_templates/05_commands/05_combine/
+- [01_quickstart.md — `templates combine` Quickstart](04_modules/02_templates/05_commands/05_combine/01_quickstart.md)
+- [02_usage_guide.md — `templates combine` Usage Guide](04_modules/02_templates/05_commands/05_combine/02_usage_guide.md)
+- [04_implementation_notes.md — `templates combine` Implementation Notes](04_modules/02_templates/05_commands/05_combine/04_implementation_notes.md)
 
 ### 04_modules/03_complete_utterances/
 - [01_quickstart.md — Complete Utterances Module Quickstart](04_modules/03_complete_utterances/01_quickstart.md)

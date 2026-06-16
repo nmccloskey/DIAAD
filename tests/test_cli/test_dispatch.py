@@ -80,3 +80,18 @@ def test_build_dispatch_includes_template_subset(monkeypatch):
     dispatch["templates subset"]()
 
     assert seen == [ctx]
+
+
+def test_build_dispatch_includes_template_combine(monkeypatch):
+    ctx = object()
+    seen = []
+    monkeypatch.setattr(
+        dispatch_module,
+        "run_make_combined_template",
+        lambda value: seen.append(value),
+    )
+
+    dispatch = dispatch_module.build_dispatch(ctx)
+    dispatch["templates combine"]()
+
+    assert seen == [ctx]

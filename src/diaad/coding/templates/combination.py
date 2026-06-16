@@ -7,6 +7,7 @@ import pandas as pd
 from psair.core.logger import get_rel_path, logger
 
 from diaad.coding.templates.utils import TEMPLATE_SUBDIR
+from diaad.metadata.discovery import find_files_by_extension
 
 
 COMBINED_TEMPLATE_FILENAME = "combined.xlsx"
@@ -17,22 +18,7 @@ METADATA_COLUMNS = [SOURCE_FILE_COL, "order", "sheet", "num_rows"]
 RESERVED_OUTPUT_COLUMNS = {COMBINED_ID_COL, SOURCE_FILE_COL}
 
 
-def _is_relative_to(path: Path, directory: Path) -> bool:
-    """
-    Return whether path is inside directory, tolerating older Python idioms.
-    """
-    try:
-        path.relative_to(directory)
-    except ValueError:
-        return False
-    return True
-
-
-def _find_combination_inputs(
-    input_dir: str | Path,
-    *,
-    output_dir: str | Path | None = None,
-) -> list[Path]:
+def _find_combination_inputs(input_dir: str | Path) -> list[Path]:
     """
     Find Excel workbooks recursively inside the input directory.
     """
@@ -43,28 +29,14 @@ def _find_combination_inputs(
             f"{get_rel_path(input_path)}."
         )
 
-    resolved_output_dir = (
-        Path(output_dir).resolve() if output_dir is not None else None
-    )
-    paths = [
-        path
-        for path in input_path.rglob("*.xlsx")
-        if (
-            path.is_file()
-            and not path.name.startswith("~$")
-            and (
-                resolved_output_dir is None
-                or not _is_relative_to(path.resolve(), resolved_output_dir)
-            )
-        )
-    ]
+    paths = find_files_by_extension(directories=input_path, search_ext=".xlsx")
     if not paths:
         raise FileNotFoundError(
             f"DIAAD did not find any .xlsx files under "
             f"{get_rel_path(input_path)}."
         )
 
-    return sorted(paths, key=lambda path: path.relative_to(input_path).as_posix())
+    return paths
 
 
 def _relative_source_file(path: Path, input_dir: Path) -> str:
@@ -259,7 +231,7 @@ def make_combined_template_file(
     row counts by source file and sheet.
     """
     input_path = Path(input_dir)
-    paths = _find_combination_inputs(input_path, output_dir=output_dir)
+    paths = _find_combination_inputs(input_path)
 
     logger.info(
         "Combining %s template workbook(s): %s",

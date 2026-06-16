@@ -137,27 +137,48 @@ def find_one_file_by_extension(
     This supports workflows that intentionally accept any filename with a
     specific extension, while preserving DIAAD's strict one-file policy.
     """
-    ext = str(search_ext)
-    if not ext.startswith("."):
-        ext = f".{ext}"
-
     searched_dirs = _coerce_directories(directories)
-    matches: list[Path] = []
-
-    for directory in searched_dirs:
-        if not directory.exists() or not directory.is_dir():
-            continue
-        matches.extend(
-            path
-            for path in directory.rglob(f"*{ext}")
-            if path.is_file() and not path.name.startswith("~$")
-        )
+    matches = find_files_by_extension(
+        directories=searched_dirs,
+        search_ext=search_ext,
+    )
 
     return require_one_file(
         matches,
         label=label,
-        configured_filename=f"*{ext}",
+        configured_filename=f"*{_normalize_extension(search_ext)}",
         directories=searched_dirs,
+    )
+
+
+def _normalize_extension(search_ext: str) -> str:
+    """
+    Normalize an extension string to include the leading dot.
+    """
+    ext = str(search_ext)
+    return ext if ext.startswith(".") else f".{ext}"
+
+
+def find_files_by_extension(
+    *,
+    directories: Path | str | Iterable[Path | str] | None = None,
+    search_ext: str = ".xlsx",
+) -> list[Path]:
+    """
+    Find files by extension across one or more directories.
+
+    Discovery is recursive, keeps duplicate filenames as distinct paths, and
+    skips temporary Excel lock files beginning with ``~$``.
+    """
+    ext = _normalize_extension(search_ext)
+    searched_dirs = _coerce_directories(directories)
+    return psair_find_matching_files(
+        directories=searched_dirs,
+        search_base="?",
+        search_ext=ext,
+        match_mode="contains",
+        deduplicate=False,
+        ignore_excel_temp_files=True,
     )
 
 

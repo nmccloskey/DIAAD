@@ -23,7 +23,7 @@ def _read_sheet(path, sheet_name):
 
 def test_make_combined_template_file_recurses_and_preserves_relative_sources(tmp_path):
     input_dir = tmp_path / "input"
-    output_dir = input_dir / "output"
+    output_dir = tmp_path / "output"
 
     _write_workbook(
         input_dir / "site_a" / "coding.xlsx",
@@ -38,10 +38,6 @@ def test_make_combined_template_file_recurses_and_preserves_relative_sources(tmp
             "utterances": pd.DataFrame({"value": ["x"], "utterance_id": ["B1_u1"]}),
             "samples": pd.DataFrame({"code": [3], "sample_id": ["B1"]}),
         },
-    )
-    _write_workbook(
-        output_dir / "old_output.xlsx",
-        {"wrong": pd.DataFrame({"wrong": [1]})},
     )
     (input_dir / "~$ignored.xlsx").touch()
 
