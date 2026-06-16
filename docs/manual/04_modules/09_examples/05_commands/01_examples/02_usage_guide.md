@@ -88,7 +88,7 @@ Download full example dataset
 If commands are selected, click:
 
 ```text
-Download example files for selected functions
+Download example files for selected commands
 ```
 
 The downloaded ZIP contains the same kind of full or command-specific package that the CLI can generate.

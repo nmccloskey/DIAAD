@@ -44,7 +44,7 @@ example_files_cus_analyze_cus_evaluate/
 
 ## Web App
 
-In the web app, use Part 3: Commands. If no commands are selected, the examples button downloads the full example dataset. If commands are selected, it downloads command-specific examples for those selected functions.
+In the web app, use Part 3: Commands. If no commands are selected, the examples button downloads the full example dataset. If commands are selected, it downloads command-specific examples for those selected commands.
 
 ## Immediate Next Step
 
