@@ -1,3 +1,17 @@
+---
+object_type: command
+object_types:
+  - command
+object_id: transcripts.tabularize
+command_id: transcripts.tabularize
+module_id: transcripts
+view: research_context
+view_label: Research Context
+view_order: 30
+source_manual: authored
+generated: false
+---
+
 # `transcripts tabularize` Research Context
 
 Transcript tabularization is more than file conversion. In DIAAD, it establishes the shared sample and utterance structure that later coding, reliability, blinding, and analysis steps use to stay aligned.

@@ -10,6 +10,7 @@ import streamlit as st
 import yaml
 
 from diaad import __version__
+from diaad.examples import get_example_io_docs_path
 from diaad.cli.commands import MODULE_COMMANDS
 from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
 from psair.core.logger import initialize_logger, logger, set_root, terminate_logger
@@ -271,13 +272,50 @@ Welcome to the DIAAD web app.
 Use this page to build or upload configuration files, upload your DIAAD input
 files, choose one or more DIAAD commands, and download the resulting output ZIP.
 
-The manual and example menus below provide command-specific guidance and example
-input/output files. DIAAD runs in a temporary workspace for each web run, so
-uploaded inputs are processed only within that run.
+The manual menu below provides command-specific guidance and generated Example
+I/O views. DIAAD runs in a temporary workspace for each web run, so uploaded
+inputs are processed only within that run.
 
 Source code: [nmccloskey/DIAAD](https://github.com/nmccloskey/DIAAD)
             """.strip()
         )
+
+
+def _manual_sources(
+    *,
+    repo_root: Path,
+    package_root: Path,
+) -> list[dict[str, object]]:
+    """Return DIAAD manual sources for the composed PSAIR manual viewer."""
+    sources: list[dict[str, object]] = []
+
+    manual_root = repo_root / "docs/manual"
+    if manual_root.exists():
+        sources.append(
+            {
+                "root": manual_root,
+                "name": "diaad_manual",
+                "source_manual": "authored",
+                "role": "authored",
+            }
+        )
+
+    example_docs_root = get_example_io_docs_path()
+    if not example_docs_root.exists():
+        fallback = package_root / "examples/assets/rendered_docs/example_io"
+        example_docs_root = fallback
+
+    if example_docs_root.exists():
+        sources.append(
+            {
+                "root": example_docs_root,
+                "name": "diaad_example_io",
+                "source_manual": "generated_example_io",
+                "role": "generated",
+            }
+        )
+
+    return sources
 
 
 def _render_manual() -> None:
@@ -286,23 +324,19 @@ def _render_manual() -> None:
 
     repo_root = Path(__file__).resolve().parents[3]
     package_root = Path(__file__).resolve().parents[1]
+    manual_sources = _manual_sources(repo_root=repo_root, package_root=package_root)
+    if not manual_sources:
+        return
 
-    if (repo_root / "docs/manual").exists():
-        render_manual_ui(
-            repo_root=repo_root,
-            manual_rel_dir="docs/manual",
-            expander_label="Show / Hide DIAAD Manual Menu",
-            ui_key="diaad_manual",
-        )
-
-    example_docs_rel_dir = "examples/assets/rendered_docs/example_io"
-    if (package_root / example_docs_rel_dir).exists():
-        render_manual_ui(
-            repo_root=package_root,
-            manual_rel_dir=example_docs_rel_dir,
-            expander_label="Show / Hide DIAAD Example Input/Output Menu",
-            ui_key="diaad_examples",
-        )
+    render_manual_ui(
+        repo_root=repo_root,
+        manual_rel_dir="docs/manual",
+        manual_sources=manual_sources,
+        expander_label="Show / Hide DIAAD Manual Menu",
+        ui_key="diaad_manual",
+        compose_infer_from_paths=True,
+        compose_unmatched_policy="generated_root",
+    )
 
 
 def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str]) -> BytesIO:

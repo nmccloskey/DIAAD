@@ -1,3 +1,17 @@
+---
+object_type: command
+object_types:
+  - command
+object_id: transcripts.tabularize
+command_id: transcripts.tabularize
+module_id: transcripts
+view: implementation_notes
+view_label: Implementation Notes
+view_order: 40
+source_manual: authored
+generated: false
+---
+
 # `transcripts tabularize` Implementation Notes
 
 `transcripts tabularize` is registered as the canonical command `transcripts tabularize` and dispatches through `run_tabularize_transcripts()`.

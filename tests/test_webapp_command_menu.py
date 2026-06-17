@@ -9,6 +9,8 @@ pytest.importorskip("streamlit")
 
 import streamlit as st
 
+from psair.examples import ManualSource, build_composed_manual
+
 from diaad.cli.commands import MODULE_COMMANDS
 from diaad.examples import generate as generate_module
 from diaad.webapp import config_builder
@@ -136,3 +138,83 @@ def test_restore_default_config_ui_state_keeps_unrelated_state():
     assert st.session_state["unrelated"] == "keep"
 
     del st.session_state["unrelated"]
+
+
+def test_manual_sources_include_authored_and_generated_roots():
+    repo_root = Path(streamlit_app.__file__).resolve().parents[3]
+    package_root = Path(streamlit_app.__file__).resolve().parents[1]
+
+    sources = streamlit_app._manual_sources(
+        repo_root=repo_root,
+        package_root=package_root,
+    )
+
+    assert sources == [
+        {
+            "root": repo_root / "docs/manual",
+            "name": "diaad_manual",
+            "source_manual": "authored",
+            "role": "authored",
+        },
+        {
+            "root": streamlit_app.get_example_io_docs_path(),
+            "name": "diaad_example_io",
+            "source_manual": "generated_example_io",
+            "role": "generated",
+        },
+    ]
+
+
+def test_render_manual_uses_one_composed_manual_viewer(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        streamlit_app,
+        "render_manual_ui",
+        lambda **kwargs: calls.append(kwargs),
+    )
+
+    streamlit_app._render_manual()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call["manual_rel_dir"] == "docs/manual"
+    assert call["expander_label"] == "Show / Hide DIAAD Manual Menu"
+    assert call["ui_key"] == "diaad_manual"
+    assert call["compose_infer_from_paths"] is True
+    assert call["compose_unmatched_policy"] == "generated_root"
+    assert [source["role"] for source in call["manual_sources"]] == [
+        "authored",
+        "generated",
+    ]
+
+
+def test_composed_manual_threads_tabularize_example_io():
+    repo_root = Path(streamlit_app.__file__).resolve().parents[3]
+    package_root = Path(streamlit_app.__file__).resolve().parents[1]
+    source_dicts = streamlit_app._manual_sources(
+        repo_root=repo_root,
+        package_root=package_root,
+    )
+    sources = [
+        ManualSource(
+            root=source["root"],
+            name=str(source["name"]),
+            source_manual=str(source["source_manual"]),
+            role=str(source["role"]),
+        )
+        for source in source_dicts
+    ]
+
+    composed = build_composed_manual(
+        sources,
+        infer_from_paths=True,
+        unmatched_policy="generated_root",
+    )
+
+    rel = "04_modules/01_transcripts/05_commands/01_tabularize/05_example_io.md"
+    assert rel in composed.flat
+    assert composed.flat[rel].abs_path == (
+        streamlit_app.get_example_io_docs_path() / "transcripts" / "tabularize.md"
+    ).resolve()
+    assert composed.flat[rel].title == "Example I/O"
+    assert composed.flat[rel].text.startswith("# Transcript Tabularization Example")

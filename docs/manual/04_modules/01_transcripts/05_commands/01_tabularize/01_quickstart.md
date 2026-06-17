@@ -1,3 +1,17 @@
+---
+object_type: command
+object_types:
+  - command
+object_id: transcripts.tabularize
+command_id: transcripts.tabularize
+module_id: transcripts
+view: quickstart
+view_label: Quickstart
+view_order: 10
+source_manual: authored
+generated: false
+---
+
 # `transcripts tabularize` Quickstart
 
 `diaad transcripts tabularize` converts CHAT `.cha` transcripts into DIAAD transcript tables. It is the usual first command for transcript-based DIAAD workflows.

@@ -1,3 +1,17 @@
+---
+object_type: command
+object_types:
+  - command
+object_id: transcripts.tabularize
+command_id: transcripts.tabularize
+module_id: transcripts
+view: usage_guide
+view_label: Usage Guide
+view_order: 20
+source_manual: authored
+generated: false
+---
+
 # `transcripts tabularize` Usage Guide
 
 Use `diaad transcripts tabularize` when a project has CHAT transcripts and later DIAAD commands need table-based sample and utterance data.
