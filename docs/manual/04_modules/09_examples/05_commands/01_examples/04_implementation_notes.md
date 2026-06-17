@@ -1,3 +1,21 @@
+---
+object_type: workflow
+object_types:
+  - workflow
+  - command
+object_id: full_example_dataset
+workflow_id: full_example_dataset
+command_id: examples
+canonical_command: examples
+command_subtype: omnibus
+typology: omnibus_command_workflow
+module_id: examples
+view: implementation_notes
+view_label: Implementation Notes
+view_order: 40
+source_manual: authored
+generated: false
+---
 # `examples` Implementation Notes
 
 `diaad examples` is handled before normal command dispatch.

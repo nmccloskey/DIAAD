@@ -181,6 +181,7 @@ def test_render_manual_uses_one_composed_manual_viewer(monkeypatch):
     assert call["expander_label"] == "Show / Hide DIAAD Manual Menu"
     assert call["ui_key"] == "diaad_manual"
     assert call["compose_infer_from_paths"] is True
+    assert call["compose_path_module_aliases"] == streamlit_app._MANUAL_PATH_MODULE_ALIASES
     assert call["compose_unmatched_policy"] == "generated_root"
     assert [source["role"] for source in call["manual_sources"]] == [
         "authored",
@@ -208,6 +209,7 @@ def test_composed_manual_threads_tabularize_example_io():
     composed = build_composed_manual(
         sources,
         infer_from_paths=True,
+        path_module_aliases=streamlit_app._MANUAL_PATH_MODULE_ALIASES,
         unmatched_policy="generated_root",
     )
 
@@ -218,3 +220,50 @@ def test_composed_manual_threads_tabularize_example_io():
     ).resolve()
     assert composed.flat[rel].title == "Example I/O"
     assert composed.flat[rel].text.startswith("# Transcript Tabularization Example")
+
+def _build_diaad_composed_manual():
+    repo_root = Path(streamlit_app.__file__).resolve().parents[3]
+    package_root = Path(streamlit_app.__file__).resolve().parents[1]
+    source_dicts = streamlit_app._manual_sources(
+        repo_root=repo_root,
+        package_root=package_root,
+    )
+    sources = [
+        ManualSource(
+            root=source["root"],
+            name=str(source["name"]),
+            source_manual=str(source["source_manual"]),
+            role=str(source["role"]),
+        )
+        for source in source_dicts
+    ]
+    return build_composed_manual(
+        sources,
+        infer_from_paths=True,
+        path_module_aliases=streamlit_app._MANUAL_PATH_MODULE_ALIASES,
+        unmatched_policy="generated_root",
+    )
+
+
+def test_composed_manual_threads_aliased_module_example_io_without_generated_branch():
+    composed = _build_diaad_composed_manual()
+
+    rel = "04_modules/03_complete_utterances/05_commands/01_files/05_example_io.md"
+    assert rel in composed.flat
+    assert composed.flat[rel].abs_path == (
+        streamlit_app.get_example_io_docs_path() / "cus" / "files.md"
+    ).resolve()
+    assert not any(path.startswith("generated/") for path in composed.flat)
+    assert not any("No authored anchor" in item for item in composed.diagnostics)
+
+
+def test_composed_manual_threads_full_example_dataset_overview():
+    composed = _build_diaad_composed_manual()
+
+    rel = "04_modules/09_examples/05_commands/01_examples/05_example_io.md"
+    assert rel in composed.flat
+    assert composed.flat[rel].abs_path == (
+        streamlit_app.get_example_io_docs_path() / "01_overview.md"
+    ).resolve()
+    assert composed.flat[rel].title == "Example I/O"
+    assert composed.flat[rel].text.startswith("# DIAAD Example I/O Manual")

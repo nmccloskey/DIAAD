@@ -281,6 +281,14 @@ Source code: [nmccloskey/DIAAD](https://github.com/nmccloskey/DIAAD)
         )
 
 
+_MANUAL_PATH_MODULE_ALIASES = {
+    "complete_utterances": "cus",
+    "word_counting": "words",
+    "target_vocabulary_coverage": "vocab",
+    "digital_conversational_turns": "turns",
+}
+
+
 def _manual_sources(
     *,
     repo_root: Path,
@@ -335,6 +343,7 @@ def _render_manual() -> None:
         expander_label="Show / Hide DIAAD Manual Menu",
         ui_key="diaad_manual",
         compose_infer_from_paths=True,
+        compose_path_module_aliases=_MANUAL_PATH_MODULE_ALIASES,
         compose_unmatched_policy="generated_root",
     )
 

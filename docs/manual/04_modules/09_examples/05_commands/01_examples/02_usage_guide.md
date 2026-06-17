@@ -1,3 +1,21 @@
+---
+object_type: workflow
+object_types:
+  - workflow
+  - command
+object_id: full_example_dataset
+workflow_id: full_example_dataset
+command_id: examples
+canonical_command: examples
+command_subtype: omnibus
+typology: omnibus_command_workflow
+module_id: examples
+view: usage_guide
+view_label: Usage Guide
+view_order: 20
+source_manual: authored
+generated: false
+---
 # `examples` Usage Guide
 
 Use `diaad examples` before running unfamiliar commands on study data. The generated files are synthetic and are meant to make DIAAD's file contracts tangible.

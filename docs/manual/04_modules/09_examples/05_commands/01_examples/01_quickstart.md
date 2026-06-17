@@ -1,3 +1,21 @@
+---
+object_type: workflow
+object_types:
+  - workflow
+  - command
+object_id: full_example_dataset
+workflow_id: full_example_dataset
+command_id: examples
+canonical_command: examples
+command_subtype: omnibus
+typology: omnibus_command_workflow
+module_id: examples
+view: quickstart
+view_label: Quickstart
+view_order: 10
+source_manual: authored
+generated: false
+---
 # `examples` Quickstart
 
 `diaad examples` generates synthetic DIAAD example files for learning, testing an installation, and inspecting expected project structure.

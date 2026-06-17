@@ -111,7 +111,7 @@ implementation_notes
 example_io
 ```
 
-Authored DIAAD pages live under `docs/manual/`; generated Example I/O pages live under the packaged example docs root. PSAIR's composer scans both roots and groups by front matter rather than moving files. During the transition, DIAAD-compatible path inference can help authored command folders that do not yet carry front matter, but explicit metadata is the clearer long-term contract.
+Authored DIAAD pages live under `docs/manual/`; generated Example I/O pages live under the packaged example docs root. PSAIR's composer scans both roots and groups by front matter rather than moving files. During the transition, DIAAD-compatible path inference can help authored command folders that do not yet carry front matter, and the DIAAD web app passes module-folder aliases such as `complete_utterances -> cus`, `word_counting -> words`, `target_vocabulary_coverage -> vocab`, and `digital_conversational_turns -> turns`. Explicit metadata is still the clearer long-term contract.
 
 ## Maintenance Checks
 
