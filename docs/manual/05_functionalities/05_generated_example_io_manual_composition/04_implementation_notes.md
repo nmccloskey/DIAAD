@@ -9,6 +9,7 @@ Primary sources:
 - `src/diaad/examples/render_docs.py`
 - `src/diaad/examples/generate.py`
 - `src/diaad/examples/__init__.py`
+- `src/diaad/webapp/streamlit_app.py`
 - `src/diaad/examples/assets/rendered_docs/example_io/`
 - `.codex-local/itineraries/DIAAD_oriented_PSAIR_notes_for_user_example_manual_synthesis.md`
 
@@ -33,7 +34,7 @@ DOC_PACKAGE = diaad.examples
 DOC_ROOT = assets/rendered_docs/example_io
 ```
 
-The web app can render authored manual pages and generated Example I/O pages as separate manual roots.
+The web app passes the authored manual root and generated Example I/O root to PSAIR's composed manual viewer, so users browse one manual tree instead of separate manual and example menus.
 
 ## Renderer Metadata
 
@@ -110,7 +111,7 @@ implementation_notes
 example_io
 ```
 
-Authored DIAAD pages currently live under `docs/manual/`; generated Example I/O pages live under the packaged example docs root. A future PSAIR-side composer should scan both roots and group by front matter rather than moving files.
+Authored DIAAD pages live under `docs/manual/`; generated Example I/O pages live under the packaged example docs root. PSAIR's composer scans both roots and groups by front matter rather than moving files. During the transition, DIAAD-compatible path inference can help authored command folders that do not yet carry front matter, but explicit metadata is the clearer long-term contract.
 
 ## Maintenance Checks
 
@@ -131,7 +132,7 @@ Use the test helper from Testing (`docs/manual/02_operation/05_testing.md`) when
 
 ## Boundary With PSAIR
 
-DIAAD should keep generating rich Example I/O pages with stable metadata. PSAIR should own generalized multi-root manual composition. This keeps DIAAD from copying generated files into `docs/manual/` and keeps PSAIR from needing to scrape DIAAD-specific body text.
+DIAAD should keep generating rich Example I/O pages with stable metadata. PSAIR owns generalized multi-root manual composition for viewing and export. This keeps DIAAD from copying generated files into `docs/manual/` and keeps PSAIR from needing to scrape DIAAD-specific body text. Detailed composer behavior, virtual paths, unmatched generated pages, and media-link limitations belong in PSAIR's doctools manual rather than in DIAAD's user manual.
 
 ## Read Next
 

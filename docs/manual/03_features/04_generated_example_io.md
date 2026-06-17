@@ -15,7 +15,7 @@ This separation keeps the manual readable while making examples reproducible. If
 
 ## Composition Contract
 
-Generated Example I/O pages include YAML front matter so a manual composition layer can place them beside authored views for the same object.
+Generated Example I/O pages include YAML front matter so PSAIR's manual composition layer can place them beside authored views for the same object. DIAAD's web app uses that PSAIR-side composer to present authored manual pages and generated Example I/O pages in one navigation tree while keeping their source files separate.
 
 Generated Example I/O pages and downloadable toy example packages do not need to match byte-for-byte. The documentation view is a readable preview of command inputs, outputs, and runtime-shaped paths. The downloaded packages are runnable synthetic file sets for hands-on inspection. Both are generated from DIAAD example infrastructure and both support operational understanding, but they are not the same artifact.
 
@@ -48,7 +48,7 @@ Transcripts
     Example I/O
 ```
 
-In that layout, authored pages stay concise and conceptual, while the generated `example_io` view remains preview-driven and reproducible.
+In that layout, authored pages stay concise and conceptual, while the generated `example_io` view remains preview-driven and reproducible. A command does not need every authored view; the composed tree orders whichever authored views exist and then threads in generated views that share the same object identity.
 
 ## User Examples and Maintainer Regeneration
 

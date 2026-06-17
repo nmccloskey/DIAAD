@@ -1,6 +1,6 @@
 # Generated Example I/O Manual Composition Quickstart
 
-Generated Example I/O pages are DIAAD's generated manual view for command examples. They live outside the authored manual tree, but they carry front matter that lets a composition layer place them beside authored command views.
+Generated Example I/O pages are DIAAD's generated manual view for command examples. They live outside the authored manual tree, but they carry front matter that lets PSAIR's manual composition layer place them beside authored command views.
 
 ## Source Roots
 
@@ -34,7 +34,7 @@ The generated Example I/O page provides:
 Example I/O
 ```
 
-Together, these views help users understand both how to run a command and what its files look like.
+Together, these views help users understand both how to run a command and what its files look like. Authored view sets are allowed to be uneven; a command can omit `Research Context` and still receive an `Example I/O` view when the metadata matches.
 
 ## Regeneration
 

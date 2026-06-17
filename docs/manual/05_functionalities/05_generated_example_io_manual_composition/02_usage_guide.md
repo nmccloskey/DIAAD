@@ -63,7 +63,7 @@ canonical_command: examples
 view: example_io
 ```
 
-A composition layer can group authored and generated files by object identity, then order views by `view_order`.
+PSAIR's composition layer groups authored and generated files by object identity, then orders views by `view_order`. DIAAD keeps only the DIAAD metadata expectations here; the detailed composer API and export contract live in PSAIR's doctools manual.
 
 ## Expected Composed Shape
 
@@ -78,7 +78,7 @@ Transcripts
     Example I/O
 ```
 
-The generated Example I/O file stays in the generated source root. The composed manual can still display it next to authored views.
+The generated Example I/O file stays in the generated source root. The composed manual can still display it next to authored views, and those authored views do not have to be a complete fixed set for every command.
 
 ## Path Behavior
 
