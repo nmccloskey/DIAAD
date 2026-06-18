@@ -3,6 +3,7 @@
 ![PyPI version](https://img.shields.io/pypi/v/diaad)
 ![Python](https://img.shields.io/pypi/pyversions/diaad)
 ![License](https://img.shields.io/github/license/nmccloskey/DIAAD)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://diaad-web.streamlit.app/)
 
 DIAAD is open-source Python infrastructure for reproducible discourse analysis workflows. It helps organize CHAT transcripts, transcript-derived tables, metadata, manual coding files, reliability checks, blinding, rate calculations, target vocabulary analysis, generated examples, and run artifacts across repeated analyses.
 
