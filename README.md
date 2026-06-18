@@ -22,40 +22,62 @@ DIAAD is under active development. Output formats, command behavior, and documen
 
 ## Installation
 
-DIAAD requires Python `>=3.12,<3.13`. A fresh virtual environment is recommended.
+DIAAD requires Python `>=3.12,<3.13`.
+
+### Recommended: conda
+
+```bash
+conda create -n diaad python=3.12
+conda activate diaad
+python -m pip install diaad
+```
+
+### Alternative: venv
+
+Create and activate a virtual environment:
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
-pip install diaad
 ```
 
-On macOS or Linux, activate the environment with:
+Windows:
+
+```bash
+.venv\Scripts\activate
+```
+
+macOS/Linux:
 
 ```bash
 source .venv/bin/activate
 ```
 
-Optional dependency groups:
+Install DIAAD:
 
 ```bash
-pip install "diaad[web]"      # local Streamlit web app
-pip install "diaad[nlp]"      # spaCy support for NLP-backed workflows
-pip install "diaad[web,nlp]"  # both
+python -m pip install diaad
 ```
 
-If you install the `nlp` extra and use the default POWERS automation model, also install the spaCy model:
+### Optional dependency groups
+
+```bash
+python -m pip install "diaad[web]"      # local Streamlit web app
+python -m pip install "diaad[nlp]"      # NLP-backed workflows (spaCy)
+python -m pip install "diaad[web,nlp]"  # both
+```
+
+If you install the `nlp` extra and plan to use the default POWERS automation model, also install the required spaCy language model:
 
 ```bash
 python -m spacy download en_core_web_sm
 ```
 
-For development from a local checkout:
+### Development installation
 
 ```bash
 git clone https://github.com/nmccloskey/DIAAD.git
 cd DIAAD
-pip install -e ".[dev,web,nlp]"
+python -m pip
 ```
 
 ## Quick Start
