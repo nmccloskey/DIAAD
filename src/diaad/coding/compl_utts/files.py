@@ -75,7 +75,7 @@ def _assign_single_coding_columns(
     """Add one unprefixed coding layer."""
     base_cols = ["id", "sv", "rel", "comment"]
     for col in base_cols:
-        df[col] = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
+        df[col] = _neutral_string_column(df, exclude_speakers)
 
     if len(cu_paradigms) < 2:
         return df
@@ -100,7 +100,7 @@ def _assign_three_coding_columns(
         "c2_id", "c2_sv", "c2_rel", "c2_comment",
     ]
     for col in base_cols:
-        df[col] = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
+        df[col] = _neutral_string_column(df, exclude_speakers)
 
     if len(cu_paradigms) < 2:
         return df
@@ -117,6 +117,14 @@ def _assign_three_coding_columns(
                 )
 
     return df
+
+
+def _neutral_string_column(
+    df: pd.DataFrame,
+    exclude_speakers,
+) -> pd.Series:
+    values = np.where(df["speaker"].isin(exclude_speakers), "NA", "")
+    return pd.Series(values, index=df.index, dtype=object)
 
 
 def _prepare_blank_reliability_subset(

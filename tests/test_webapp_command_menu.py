@@ -3,6 +3,7 @@ from __future__ import annotations
 import zipfile
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 pytest.importorskip("streamlit")
@@ -115,6 +116,38 @@ def test_examples_web_zip_contains_command_package(monkeypatch):
         )
     ]
     assert calls[0][0].name == "examples"
+
+
+@pytest.mark.parametrize(
+    ("command", "expected_outputs"),
+    [
+        (
+            "cus files",
+            [
+                "example_files_cus_files/example_output/cu_coding/cu_coding.xlsx",
+                "example_files_cus_files/example_output/cu_coding/cu_reliability_coding.xlsx",
+            ],
+        ),
+        (
+            "words files",
+            [
+                "example_files_words_files/example_output/word_counts/word_counting.xlsx",
+                "example_files_words_files/example_output/word_counts/word_count_reliability.xlsx",
+            ],
+        ),
+    ],
+)
+def test_examples_web_files_zip_contains_outputs_under_strict_string_inference(
+    command,
+    expected_outputs,
+):
+    with pd.option_context("future.infer_string", True):
+        zip_buffer = streamlit_app._run_examples_web([command])
+
+    with zipfile.ZipFile(zip_buffer) as zf:
+        names = set(zf.namelist())
+
+    assert set(expected_outputs) <= names
 
 
 def test_examples_zip_filename_uses_stable_slug():

@@ -53,6 +53,31 @@ def test_cu_file_helpers_accept_custom_sample_id(monkeypatch):
     assert "expanded_sample_id" in reliability.columns
 
 
+def test_cu_assignments_support_strict_string_inference(monkeypatch):
+    monkeypatch.setattr(files.random, "sample", lambda seq, k: list(seq)[:k])
+    cu_df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "speaker": ["PAR", "INV", "PAR"],
+            "utterance": ["one", "two", "three"],
+        }
+    )
+
+    with pd.option_context("future.infer_string", True):
+        primary, reliability = files._build_cu_assignments(
+            cu_df,
+            mode="two",
+            coder_ids=[1, 2],
+            frac=1.0,
+            cu_paradigms=[],
+            exclude_speakers=["INV"],
+        )
+
+    assert set(primary["id"]) == {1, 2}
+    assert reliability is not None
+    assert set(reliability["id"]) == {1, 2}
+
+
 def test_cu_analysis_and_rates_accept_custom_sample_id():
     cu_df = pd.DataFrame(
         {

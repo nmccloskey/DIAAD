@@ -381,6 +381,7 @@ def _assign_wc_coders(
 
     if "id" not in wc_df.columns:
         wc_df["id"] = ""
+    wc_df["id"] = wc_df["id"].astype(object)
     if sample_id_field not in wc_df.columns:
         raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
 
