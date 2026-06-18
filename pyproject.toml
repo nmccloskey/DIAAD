@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "diaad"
-version = "0.3.0"
+version = "0.3.1"
 description = "Database-native infrastructure for reproducible discourse analysis workflows"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
