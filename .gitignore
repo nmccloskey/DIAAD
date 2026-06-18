@@ -42,6 +42,9 @@ google_creds.json
 config.yaml
 project.yaml
 advanced.yaml
+!src/diaad/examples/assets/spec/configs/
+!src/diaad/examples/assets/spec/configs/project.yaml
+!src/diaad/examples/assets/spec/configs/advanced.yaml
 *.secrets.yaml
 
 # Cache dirs (used by tools)

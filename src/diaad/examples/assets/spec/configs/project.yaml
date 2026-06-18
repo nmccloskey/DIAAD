@@ -1,0 +1,22 @@
+input_dir: input
+output_dir: output
+random_seed: 99
+reliability_fraction: 0.34
+shuffle_samples: false
+strip_clan: true
+prefer_correction: true
+lowercase: true
+exclude_speakers:
+  - INV
+auto_tabularize: false
+num_bins: 2
+num_coders: 2
+stimulus_column: stimulus
+automate_powers: false
+metadata_fields:
+  participant_id: "P\\d+"
+  stimulus:
+    - picnic
+  timepoint:
+    - pre
+    - post

@@ -19,6 +19,7 @@ from psair.core.provenance import (
     write_json,
     write_manifest,
 )
+from psair.examples import long_path
 
 
 ENVIRONMENT_PACKAGES = [
@@ -126,15 +127,33 @@ def finalize_run_artifacts(ctx, context: dict[str, Any]) -> None:
 
 def _run_directory_snapshot(ctx) -> dict[str, Any]:
     return {
-        "input_contents": capture_directory_snapshot(
+        "input_contents": _capture_directory_snapshot(
             ctx.input_dir,
             root=ctx.project_root,
         ),
-        "output_contents": capture_directory_snapshot(
+        "output_contents": _capture_directory_snapshot(
             ctx.out_dir,
             root=ctx.out_dir,
         ),
     }
+
+
+def _capture_directory_snapshot(base, *, root) -> dict[str, Any]:
+    safe_base = long_path(base)
+    safe_root = long_path(root)
+    try:
+        return capture_directory_snapshot(safe_base, root=safe_root)
+    except OSError as exc:
+        snapshot = capture_directory_snapshot(
+            safe_base,
+            root=safe_root,
+            include_file_stats=False,
+        )
+        snapshot["snapshot_warning"] = (
+            "File stats were unavailable while capturing the directory snapshot: "
+            f"{exc}"
+        )
+        return snapshot
 
 
 def _compact_run_metadata(
