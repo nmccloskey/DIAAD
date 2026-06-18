@@ -160,8 +160,6 @@ This prevents the full-dataset atlas layout from being mistaken for ordinary DIA
 
 When example package behavior changes, update the specs, generator helpers, manifests, and tests together. Avoid hand-editing generated packages or generated Example I/O markdown.
 
-The current example command plan registry does not include `templates combine`, although `templates combine` exists in the CLI registry and dispatch. Decide whether to add an example plan for it, omit it intentionally, or change its user-facing status.
-
 ## Read Next
 
 - Generated Example I/O implementation notes: `docs/manual/05_functionalities/05_generated_example_io_manual_composition/04_implementation_notes.md`

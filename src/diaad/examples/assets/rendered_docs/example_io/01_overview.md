@@ -84,6 +84,11 @@ example_files/
         sample_subset_input.xlsx
       sample_resubset/
         sample_resubset_input.xlsx
+      template_combination/
+        site_a/
+          template_batch_a.xlsx
+        site_b/
+          template_batch_b.xlsx
     expected_outputs/
       blinding_module/
         blinding_encode/
@@ -118,6 +123,8 @@ example_files/
           sample_subset.xlsx
         templates_resubset/
           sample_subset.xlsx
+        templates_combine/
+          combined.xlsx
       cus_module/
         cus_files/
           cu_coding.xlsx

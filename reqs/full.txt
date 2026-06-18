@@ -174,7 +174,7 @@ preshed==3.0.12
     #   thinc
 protobuf==6.33.5
     # via streamlit
-psair==0.0.3a1
+psair==0.0.3a2
     # via diaad
 pyahocorasick==2.3.0
     # via textsearch

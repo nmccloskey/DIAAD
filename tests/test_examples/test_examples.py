@@ -164,6 +164,16 @@ def test_generate_synthetic_project(tmp_path):
     resubset_subset = pd.read_excel(long_path(resubset_workbook), sheet_name="subset")
     assert {"selected", "excluded"} <= set(resubset_samples.columns)
     assert not resubset_subset["excluded"].any()
+    combine_workbook = (
+        project_dir
+        / "expected_outputs"
+        / "templates_module"
+        / "templates_combine"
+        / "combined.xlsx"
+    )
+    assert _exists(combine_workbook)
+    with pd.ExcelFile(long_path(combine_workbook), engine="openpyxl") as xls:
+        assert {"ratings", "notes", "metadata"} <= set(xls.sheet_names)
     cu_coding_file = (
         project_dir
         / "expected_outputs"
@@ -543,6 +553,14 @@ def test_generate_templates_subset_must_be_individual(tmp_path):
         )
 
 
+def test_generate_templates_combine_must_be_individual(tmp_path):
+    with pytest.raises(ValueError, match="templates combine"):
+        generate_example_files(
+            tmp_path / "command_examples",
+            commands=["templates combine", "templates times"],
+        )
+
+
 @pytest.mark.parametrize(
     ("command", "expected_rel_path"),
     [
@@ -572,6 +590,7 @@ def test_generate_templates_subset_must_be_individual(tmp_path):
         ),
         ("templates times", "example_output/coding_templates/speaking_times.xlsx"),
         ("templates subset", "example_output/coding_templates/sample_subset.xlsx"),
+        ("templates combine", "example_output/coding_templates/combined.xlsx"),
         ("cus files", "example_output/cu_coding/cu_coding.xlsx"),
         (
             "cus reselect",
@@ -757,6 +776,7 @@ def test_render_example_docs():
     assert any(path.name == "samples.md" for path in paths)
     assert any(path.name == "times.md" for path in paths)
     assert any(path.name == "subset.md" and path.parent.name == "templates" for path in paths)
+    assert any(path.name == "combine.md" and path.parent.name == "templates" for path in paths)
     assert any(path.name == "files.md" and path.parent.name == "cus" for path in paths)
     assert any(path.name == "analyze.md" and path.parent.name == "cus" for path in paths)
     assert any(path.name == "rates.md" and path.parent.name == "cus" for path in paths)

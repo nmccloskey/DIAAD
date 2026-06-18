@@ -12,6 +12,7 @@ from diaad.examples.generate import (
     EXAMPLES_COMMAND_ID,
     FULL_DATASET_WORKFLOW_ID,
     EXAMPLE_COMMAND_PLANS,
+    TEMPLATE_COMBINATION_INPUT_DIR,
     TEMPLATE_OUTPUT_DIRS,
     TEMPLATE_SUBSET_INPUT_DIRS,
     TEMPLATES_MODULE_DIR,
@@ -283,6 +284,14 @@ def _project_tree(
         {filename}"""
         outputs = """        coding_templates/
           sample_subset.xlsx"""
+    elif command == "templates_combine":
+        input_files = """      template_combination/
+        site_a/
+          template_batch_a.xlsx
+        site_b/
+          template_batch_b.xlsx"""
+        outputs = """        coding_templates/
+          combined.xlsx"""
     elif command == "cus_files":
         input_files = f"""      transcript_tables/
         {transcript_table_filename}"""
@@ -489,6 +498,11 @@ def _example_files_tree() -> str:
         sample_subset_input.xlsx
       sample_resubset/
         sample_resubset_input.xlsx
+      template_combination/
+        site_a/
+          template_batch_a.xlsx
+        site_b/
+          template_batch_b.xlsx
     expected_outputs/
       blinding_module/
         blinding_encode/
@@ -522,7 +536,9 @@ def _example_files_tree() -> str:
         templates_subset/
           sample_subset.xlsx
         templates_resubset/
-          sample_subset.xlsx"""
+          sample_subset.xlsx
+        templates_combine/
+          combined.xlsx"""
         + """
       cus_module/
         cus_files/
@@ -1252,6 +1268,57 @@ The command has one user-facing command name. If the input `samples` sheet has o
 ## Notes
 
 Each `templates subset` run should point `input_dir` at a folder containing exactly one `.xlsx` workbook. The output workbook always contains `samples` and `subset` sheets. The `samples` sheet records all unique sample IDs with program-generated `selected` and `excluded` columns; the `subset` sheet contains only rows where `selected == 1`.
+"""
+
+
+def _template_combine_doc(project_dir: Path, specs: dict[str, dict[str, Any]]) -> str:
+    input_dir = (
+        project_dir
+        / specs["project_config"].get("input_dir", "input")
+        / TEMPLATE_COMBINATION_INPUT_DIR
+    )
+    first_input = input_dir / "site_a" / "template_batch_a.xlsx"
+    output = _output_file(project_dir, "templates combine", "combined.xlsx")
+    config = yaml.safe_dump(
+        {
+            "input_dir": f"diaad_data/input/{TEMPLATE_COMBINATION_INPUT_DIR}",
+            "output_dir": "diaad_data/output",
+        },
+        sort_keys=False,
+        allow_unicode=False,
+    ).rstrip()
+
+    return f"""# Template Combination Example
+
+This example demonstrates how `diaad templates combine` stacks same-schema Excel workbooks and records their source files.
+
+## Command
+
+{fenced("diaad templates combine --config config", "bash")}
+
+## Project Files
+
+{fenced(_project_tree("templates_combine"))}
+
+## Basic Config
+
+{fenced(config, "yaml")}
+
+## Input Snippet
+
+`diaad_data/input/{TEMPLATE_COMBINATION_INPUT_DIR}/site_a/template_batch_a.xlsx`
+
+{all_workbook_sheet_tables(first_input)}
+
+## Output Preview
+
+{_output_ref("templates combine", "combined.xlsx")}
+
+{workbook_sheet_tables(output, ["ratings", "notes", "metadata"])}
+
+## Notes
+
+All discovered `.xlsx` workbooks must have the same sheet names and matching columns within each sheet. The output adds `combined_id` and `source_file` columns to each combined data sheet, then writes a `metadata` sheet with source row counts.
 """
 
 
@@ -2246,6 +2313,7 @@ COMMAND_DOC_BUILDERS: tuple[tuple[str, DocBuilder], ...] = (
     ("templates samples", _sample_templates_doc),
     ("templates times", _time_templates_doc),
     ("templates subset", _sample_subset_doc),
+    ("templates combine", _template_combine_doc),
     ("cus files", _cu_files_doc),
     ("cus evaluate", _cu_evaluate_doc),
     ("cus reselect", _cu_reselect_doc),
