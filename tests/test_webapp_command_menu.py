@@ -188,6 +188,49 @@ def test_restore_default_config_ui_state_keeps_unrelated_state():
     del st.session_state["unrelated"]
 
 
+def test_web_config_builder_defaults_come_from_canonical_config():
+    defaults = config_builder.CANONICAL_CONFIG_DEFAULTS
+    represented_fields = {
+        "project": [
+            field["name"]
+            for _, fields in config_builder.PROJECT_SECTIONS
+            for field in fields
+        ],
+        "advanced": [
+            field["name"]
+            for _, fields in config_builder.ADVANCED_SECTIONS
+            for field in fields
+        ],
+    }
+
+    assert set(represented_fields["project"]) == set(defaults["project"]) - {
+        "input_dir",
+        "output_dir",
+        "metadata_fields",
+    }
+    assert set(represented_fields["advanced"]) == set(defaults["advanced"])
+
+    for section_name, sections in (
+        ("project", config_builder.PROJECT_SECTIONS),
+        ("advanced", config_builder.ADVANCED_SECTIONS),
+    ):
+        for _, fields in sections:
+            for field in fields:
+                assert field["default"] == defaults[section_name][field["name"]]
+
+
+def test_web_config_builder_metadata_defaults_to_canonical_empty_mapping():
+    st.session_state.pop("metadata_field_rows", None)
+
+    assert config_builder._metadata_field_rows() == []
+    assert (
+        config_builder._metadata_fields_from_rows(config_builder._metadata_field_rows())
+        == config_builder.CANONICAL_CONFIG_DEFAULTS["project"]["metadata_fields"]
+    )
+
+    st.session_state.pop("metadata_field_rows", None)
+
+
 def test_manual_sources_include_authored_and_generated_roots():
     repo_root = Path(streamlit_app.__file__).resolve().parents[3]
     package_root = Path(streamlit_app.__file__).resolve().parents[1]

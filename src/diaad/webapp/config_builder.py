@@ -2,11 +2,32 @@ from __future__ import annotations
 
 import re
 import zipfile
+from copy import deepcopy
 from io import BytesIO
 from typing import Any
 
 import streamlit as st
 import yaml
+
+from diaad.core.config import CONFIG_SECTIONS, ConfigManager
+
+
+def _load_canonical_defaults() -> dict[str, dict[str, Any]]:
+    """Load web config-builder defaults from the packaged DIAAD defaults."""
+    with ConfigManager.default_config_path().open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    return {
+        section: data.get(section, {})
+        for section in CONFIG_SECTIONS
+    }
+
+
+CANONICAL_CONFIG_DEFAULTS = _load_canonical_defaults()
+
+
+def _default(section: str, name: str) -> Any:
+    return deepcopy(CANONICAL_CONFIG_DEFAULTS[section][name])
 
 
 def _split_values(text: str) -> list[str]:
@@ -179,7 +200,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "random_seed",
                 "label": "Random seed",
                 "type": "int",
-                "default": 99,
+                "default": _default("project", "random_seed"),
                 "min_value": 0,
                 "help": "Random seed used for reproducible sampling and blinding.",
             },
@@ -187,7 +208,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "reliability_fraction",
                 "label": "Reliability fraction",
                 "type": "float",
-                "default": 0.2,
+                "default": _default("project", "reliability_fraction"),
                 "min_value": 0.0,
                 "max_value": 1.0,
                 "step": 0.05,
@@ -197,7 +218,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "shuffle_samples",
                 "label": "Shuffle samples",
                 "type": "bool",
-                "default": True,
+                "default": _default("project", "shuffle_samples"),
                 "help": "If true, shuffle sample order during selection / preparation steps.",
             },
         ],
@@ -209,28 +230,28 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "strip_clan",
                 "label": "Strip CLAN annotations",
                 "type": "bool",
-                "default": True,
+                "default": _default("project", "strip_clan"),
                 "help": "If true, remove CHAT markup that should not remain in plain-language text.",
             },
             {
                 "name": "prefer_correction",
                 "label": "Prefer correction over original",
                 "type": "bool",
-                "default": True,
+                "default": _default("project", "prefer_correction"),
                 "help": "If true, prefer corrected forms when CHAT provides revisions.",
             },
             {
                 "name": "lowercase",
                 "label": "Lowercase transcript text",
                 "type": "bool",
-                "default": True,
+                "default": _default("project", "lowercase"),
                 "help": "If true, lowercase transcript text during processing.",
             },
             {
                 "name": "exclude_speakers",
                 "label": "Speakers to exclude",
                 "type": "list",
-                "default": ["INV"],
+                "default": _default("project", "exclude_speakers"),
                 "help": "Speakers to exclude from transcript-derived analyses. Enter comma- or newline-separated speaker codes.",
             },
         ],
@@ -242,7 +263,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "auto_tabularize",
                 "label": "Auto-tabularize transcripts",
                 "type": "bool",
-                "default": False,
+                "default": _default("project", "auto_tabularize"),
                 "help": "If true, commands that require transcript tables automatically create them from input .cha transcripts when tables are absent.",
             },
         ],
@@ -254,7 +275,7 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "num_bins",
                 "label": "Number of sample bins",
                 "type": "int",
-                "default": 4,
+                "default": _default("project", "num_bins"),
                 "min_value": 1,
                 "help": "Number of bins for sample-level coding template generation.",
             },
@@ -262,21 +283,21 @@ PROJECT_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "num_coders",
                 "label": "Number of coders",
                 "type": "int",
-                "default": 3,
+                "default": _default("project", "num_coders"),
                 "min_value": 0,
                 "help": "Number of coders to assign in coding template workflows.",
             },
             {
                 "name": "stimulus_column",
                 "label": "Stimulus field",
-                "default": "narrative",
+                "default": _default("project", "stimulus_column"),
                 "help": "Column containing the elicitation stimulus / narrative label.",
             },
             {
                 "name": "automate_powers",
                 "label": "Automate POWERS support",
                 "type": "bool",
-                "default": True,
+                "default": _default("project", "automate_powers"),
                 "help": "If true, generate automated POWERS support where available.",
             },
         ],
@@ -291,7 +312,7 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "transcript_table_filename",
                 "label": "Transcript table file name",
-                "default": "transcript_tables.xlsx",
+                "default": _default("advanced", "transcript_table_filename"),
                 "help": "Expected transcript table workbook file name.",
             },
         ],
@@ -302,13 +323,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "sample_id_column",
                 "label": "Sample ID column",
-                "default": "sample_id",
+                "default": _default("advanced", "sample_id_column"),
                 "help": "Column DIAAD should use as the sample-level identifier where supported.",
             },
             {
                 "name": "utterance_id_column",
                 "label": "Utterance ID column",
-                "default": "utterance_id",
+                "default": _default("advanced", "utterance_id_column"),
                 "help": "Column DIAAD should use as the utterance-level identifier where supported.",
             },
         ],
@@ -319,13 +340,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "reliability_tag",
                 "label": "Reliability tag",
-                "default": "_reliability",
+                "default": _default("advanced", "reliability_tag"),
                 "help": "Tag used to identify transcription reliability files.",
             },
             {
                 "name": "reliability_dirname",
                 "label": "Reliability folder name",
-                "default": "reliability",
+                "default": _default("advanced", "reliability_dirname"),
                 "help": "Name of the folder containing transcription reliability files.",
             },
         ],
@@ -337,19 +358,19 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "cu_paradigms",
                 "label": "CU paradigms",
                 "type": "list",
-                "default": ["SAE", "AAE"],
+                "default": _default("advanced", "cu_paradigms"),
                 "help": "Complete Utterance paradigms to include. Leave empty to use no paradigm-specific expansion.",
             },
             {
                 "name": "cu_samples_filename",
                 "label": "CU sample-level coding file name",
-                "default": "cu_coding_by_sample_long.xlsx",
+                "default": _default("advanced", "cu_samples_filename"),
                 "help": "Expected CU sample-level coding file name.",
             },
             {
                 "name": "cu_utts_filename",
                 "label": "CU utterance-level coding file name",
-                "default": "cu_coding_by_utterance.xlsx",
+                "default": _default("advanced", "cu_utts_filename"),
                 "help": "Expected CU utterance-level coding file name.",
             },
         ],
@@ -360,19 +381,19 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "word_count_filename",
                 "label": "Word-count coding file name",
-                "default": "word_counting.xlsx",
+                "default": _default("advanced", "word_count_filename"),
                 "help": "Expected word-count coding file name.",
             },
             {
                 "name": "word_count_column",
                 "label": "Word-count column",
-                "default": "word_count",
+                "default": _default("advanced", "word_count_column"),
                 "help": "Column containing utterance-level word counts.",
             },
             {
                 "name": "wc_samples_filename",
                 "label": "Word-count sample summary file name",
-                "default": "word_counting_by_sample.xlsx",
+                "default": _default("advanced", "wc_samples_filename"),
                 "help": "Expected word-count sample-level summary file name.",
             },
         ],
@@ -383,14 +404,37 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "speaking_time_filename",
                 "label": "Speaking-time file name",
-                "default": "speaking_times.xlsx",
+                "default": _default("advanced", "speaking_time_filename"),
                 "help": "File containing speaking-time values for rate calculations.",
             },
             {
                 "name": "speaking_time_column",
                 "label": "Speaking-time column",
-                "default": "speaking_time",
+                "default": _default("advanced", "speaking_time_column"),
                 "help": "Column containing speaking-time values.",
+            },
+        ],
+    ),
+    (
+        "POWERS coding",
+        [
+            {
+                "name": "powers_coding_filename",
+                "label": "POWERS coding file name",
+                "default": _default("advanced", "powers_coding_filename"),
+                "help": "Expected POWERS primary coding workbook file name.",
+            },
+            {
+                "name": "powers_reliability_filename",
+                "label": "POWERS reliability file name",
+                "default": _default("advanced", "powers_reliability_filename"),
+                "help": "Expected POWERS reliability coding workbook file name.",
+            },
+            {
+                "name": "spacy_model_name",
+                "label": "spaCy model name",
+                "default": _default("advanced", "spacy_model_name"),
+                "help": "spaCy language model name for NLP-backed workflows.",
             },
         ],
     ),
@@ -400,7 +444,7 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "target_vocabulary_resource_path",
                 "label": "Target vocabulary resource path",
-                "default": "",
+                "default": _default("advanced", "target_vocabulary_resource_path"),
                 "help": "Leave blank to use built-in resources. Set to a JSON file or directory to use custom resources.",
             },
         ],
@@ -411,13 +455,13 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "dct_coding_filename",
                 "label": "DCT coding file name",
-                "default": "conversation_turns.xlsx",
+                "default": _default("advanced", "dct_coding_filename"),
                 "help": "Expected digital conversational turns primary coding workbook file name.",
             },
             {
                 "name": "dct_coding_reliability",
                 "label": "DCT reliability file name",
-                "default": "conversation_turns_reliability.xlsx",
+                "default": _default("advanced", "dct_coding_reliability"),
                 "help": "Expected digital conversational turns reliability coding workbook file name.",
             },
         ],
@@ -429,14 +473,14 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
                 "name": "auto_blind",
                 "label": "Automatically apply blinding",
                 "type": "bool",
-                "default": False,
+                "default": _default("advanced", "auto_blind"),
                 "help": "If true, DIAAD automatically blinds applicable coding files and analysis outputs.",
             },
             {
                 "name": "blind_columns",
                 "label": "Blind columns",
                 "type": "list",
-                "default": ["sample_id"],
+                "default": _default("advanced", "blind_columns"),
                 "help": "Columns to blind when blinding is requested. Missing columns are skipped with a warning.",
             },
         ],
@@ -447,20 +491,20 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
             {
                 "name": "metadata_source",
                 "label": "Metadata source",
-                "default": "transcript_tables.xlsx",
+                "default": _default("advanced", "metadata_source"),
                 "help": "Exact metadata workbook file name used for blinding / unblinding recovery.",
             },
             {
                 "name": "id_columns",
                 "label": "ID columns",
                 "type": "list",
-                "default": ["sample_id", "utterance_id"],
+                "default": _default("advanced", "id_columns"),
                 "help": "Exact join-key columns required in the metadata source when recovering metadata.",
             },
             {
                 "name": "codebook_filename",
                 "label": "Codebook filename",
-                "default": "",
+                "default": _default("advanced", "codebook_filename"),
                 "help": "Leave blank to search for *blind_codebook*.xlsx, or enter a specific codebook filename to require.",
             },
         ],
@@ -470,15 +514,7 @@ ADVANCED_SECTIONS: list[tuple[str, list[dict[str, Any]]]] = [
 
 def _metadata_field_rows() -> list[dict[str, str]]:
     if "metadata_field_rows" not in st.session_state:
-        st.session_state.metadata_field_rows = [
-            {"label": "site", "values": "AC, BU, TU"},
-            {"label": "test", "values": "Pre, Post, Maint"},
-            {"label": "study_id", "values": r"(AC|BU|TU)\d+"},
-            {
-                "label": "narrative",
-                "values": "CATGrandpa, BrokenWindow, RefusedUmbrella, CatRescue, BirthdayScene",
-            },
-        ]
+        st.session_state.metadata_field_rows = []
     return st.session_state.metadata_field_rows
 
 

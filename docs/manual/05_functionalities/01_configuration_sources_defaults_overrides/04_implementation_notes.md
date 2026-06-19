@@ -90,9 +90,7 @@ input
 output
 ```
 
-The config builder's UI defaults are declared in `src/diaad/webapp/config_builder.py`. Some are starter values for a usable interface and do not exactly match `default_config.yaml`.
-
-TODO: Review whether the web builder should explicitly label these as presets in the app and manual.
+The config builder's UI defaults are derived from `src/diaad/config/default_config.yaml` through `src/diaad/webapp/config_builder.py`. The builder exposes every canonical `advanced` setting and every canonical `project` setting except `input_dir`, `output_dir`, and `metadata_fields`. Input and output directories are controlled by the web session workspace, and metadata fields are edited through the builder's metadata-row UI with the canonical empty mapping as its initial state.
 
 ## Boundary With PSAIR
 

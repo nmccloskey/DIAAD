@@ -16,7 +16,7 @@ For CLI runs, the loading order is:
 
 If the CLI command does not include `--config`, DIAAD checks for a `config/` directory in the current working directory. If that directory exists, DIAAD uses it. If it does not exist, DIAAD uses only packaged defaults.
 
-The web app uses a temporary workspace for each run. It accepts split configuration files or a configuration built in the app, then sets input and output paths to the app's temporary folders for that session.
+The canonical packaged defaults are stored in `src/diaad/config/default_config.yaml`. The web app's configuration builder reads from that same file for its editable default values. The web app uses a temporary workspace for each run. It accepts split configuration files or a configuration built in the app, then sets input and output paths to the app's temporary folders for that session.
 
 ## Recommended Project Layout
 

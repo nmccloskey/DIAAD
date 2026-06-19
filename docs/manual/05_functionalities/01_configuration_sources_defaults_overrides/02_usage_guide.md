@@ -98,9 +98,7 @@ For repeated work, update YAML rather than accumulating long command lines.
 
 The web app accepts split `project.yaml` and `advanced.yaml` files or lets users build configuration in the app. During a web run, DIAAD rewrites `input_dir` and `output_dir` to temporary web-session folders. Other settings still affect processing.
 
-Inspect the web app's Config Preview before running. The web builder is a convenience interface, and some starter values are more workflow-friendly than the packaged CLI defaults. For example, the builder may prefill common speaker, coder, stimulus, CU paradigm, and metadata-field values so users can see expected shapes.
-
-TODO: Confirm whether the web config-builder starter values should be documented as intentional presets, or whether they should be aligned more strictly with packaged defaults before publication.
+Inspect the web app's Config Preview before running. The web builder is a convenience interface over the same canonical packaged defaults used by CLI runs: `src/diaad/config/default_config.yaml`. If that file changes, the web builder's editable default values should change with it. The path settings are the web-specific exception because browser sessions use temporary upload and output folders.
 
 ## When To Use Dry Run
 
