@@ -24,6 +24,12 @@ Multiple commands can be chained in one invocation by separating command names w
 diaad "transcripts tabularize, cus files, words files"
 ```
 
+To print the installed DIAAD version and exit:
+
+```bash
+diaad --version
+```
+
 ## Configuration
 
 DIAAD can run with packaged defaults, a split configuration directory, or a single nested configuration file.
@@ -62,6 +68,7 @@ The most commonly used CLI options are:
 
 | Option | Purpose |
 |---|---|
+| `--version` | Print the installed DIAAD version and exit. |
 | `--config PATH` | Load configuration from a split config directory or nested YAML file. |
 | `--input-dir PATH` | Override `project.input_dir` for the current run. |
 | `--output-dir PATH` | Override `project.output_dir` for the current run. |

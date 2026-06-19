@@ -95,7 +95,7 @@ This should start a Streamlit server and print a local URL.
 To confirm the installed package version:
 
 ```bash
-python -c "import diaad; print(diaad.__version__)"
+diaad --version
 ```
 
 ## Project Setup

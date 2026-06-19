@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from diaad import __version__
 from diaad.cli.parser import build_arg_parser
 
 
@@ -69,10 +70,21 @@ def test_parser_accepts_repeatable_examples_for_command_option() -> None:
     assert args.example_commands == ["cus analyze", "cus evaluate"]
 
 
+def test_parser_version_option_exits_without_command(capsys) -> None:
+    parser = build_arg_parser()
+
+    with pytest.raises(SystemExit) as exc_info:
+        parser.parse_args(["--version"])
+
+    assert exc_info.value.code == 0
+    assert capsys.readouterr().out.strip() == f"DIAAD {__version__}"
+
+
 def test_parser_help_lists_streamlit_launcher() -> None:
     parser = build_arg_parser()
 
     help_text = parser.format_help()
 
+    assert "--version" in help_text
     assert "diaad streamlit" in help_text
     assert "    - streamlit" in help_text

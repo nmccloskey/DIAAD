@@ -1,5 +1,6 @@
 import argparse
 
+from diaad import __version__
 from diaad.cli.commands import MODULE_COMMANDS
 
 
@@ -7,7 +8,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     """Construct and return the DIAAD CLI argument parser."""
     parser = argparse.ArgumentParser(
         description=(
-            "DIAAD command-line interface.\n\n"
+            f"DIAAD version {__version__} command-line interface.\n\n"
             "Commands are organized by module and follow the pattern:\n"
             "  diaad <module> <action>\n\n"
             "Examples:\n"
@@ -28,6 +29,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
             'Examples: "transcripts tabularize" or '
             '"transcripts tabularize, cus files"'
         ),
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"DIAAD {__version__}",
+        help="Print the installed version of DIAAD.",
     )
 
     parser.add_argument(

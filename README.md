@@ -88,6 +88,12 @@ Check the command-line interface:
 diaad --help
 ```
 
+Check the installed version:
+
+```bash
+diaad --version
+```
+
 Generate a full synthetic example dataset:
 
 ```bash
