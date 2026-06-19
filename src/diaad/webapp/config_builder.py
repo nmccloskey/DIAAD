@@ -518,6 +518,21 @@ def _metadata_field_rows() -> list[dict[str, str]]:
     return st.session_state.metadata_field_rows
 
 
+def _add_metadata_field_row() -> None:
+    _metadata_field_rows().append({"label": "", "values": ""})
+
+
+def _remove_metadata_field_row() -> None:
+    rows = _metadata_field_rows()
+    if not rows:
+        return
+
+    removed_index = len(rows) - 1
+    rows.pop()
+    st.session_state.pop(f"metadata_field_label_{removed_index}", None)
+    st.session_state.pop(f"metadata_field_values_{removed_index}", None)
+
+
 def _metadata_fields_from_rows(rows: list[dict[str, str]]) -> dict[str, str | list[str]]:
     metadata_fields: dict[str, str | list[str]] = {}
     for row in rows:
@@ -591,10 +606,12 @@ Example rows from one study-specific setup:
                 st.error(msg)
 
     col_add, col_remove = st.columns(2)
-    if col_add.button("Add metadata field"):
-        rows.append({"label": "", "values": ""})
-    if col_remove.button("Remove last metadata field") and rows:
-        rows.pop()
+    col_add.button("Add metadata field", on_click=_add_metadata_field_row)
+    col_remove.button(
+        "Remove last metadata field",
+        disabled=not rows,
+        on_click=_remove_metadata_field_row,
+    )
 
     return _metadata_fields_from_rows(rows), regex_errors
 

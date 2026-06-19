@@ -231,6 +231,33 @@ def test_web_config_builder_metadata_defaults_to_canonical_empty_mapping():
     st.session_state.pop("metadata_field_rows", None)
 
 
+def test_web_config_builder_metadata_row_controls_update_state_immediately():
+    st.session_state.pop("metadata_field_rows", None)
+
+    config_builder._add_metadata_field_row()
+    assert config_builder._metadata_field_rows() == [{"label": "", "values": ""}]
+
+    config_builder._add_metadata_field_row()
+    assert config_builder._metadata_field_rows() == [
+        {"label": "", "values": ""},
+        {"label": "", "values": ""},
+    ]
+
+    st.session_state["metadata_field_label_1"] = "old"
+    st.session_state["metadata_field_values_1"] = "AC, BU"
+    config_builder._remove_metadata_field_row()
+
+    assert config_builder._metadata_field_rows() == [{"label": "", "values": ""}]
+    assert "metadata_field_label_1" not in st.session_state
+    assert "metadata_field_values_1" not in st.session_state
+
+    config_builder._remove_metadata_field_row()
+    config_builder._remove_metadata_field_row()
+    assert config_builder._metadata_field_rows() == []
+
+    st.session_state.pop("metadata_field_rows", None)
+
+
 def test_manual_sources_include_authored_and_generated_roots():
     repo_root = Path(streamlit_app.__file__).resolve().parents[3]
     package_root = Path(streamlit_app.__file__).resolve().parents[1]
