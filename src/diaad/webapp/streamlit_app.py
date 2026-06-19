@@ -266,15 +266,20 @@ def _render_restore_defaults_controls() -> None:
 def _render_overview() -> None:
     with st.expander("Overview", expanded=True):
         st.markdown(
-            """
-Welcome to the DIAAD web app.
+            f"""
+Welcome to the DIAAD web app!
 
 Use this page to build or upload configuration files, upload your DIAAD input
-files, choose one or more DIAAD commands, and download the resulting output ZIP.
+files, choose one or more commands, and download the resulting output ZIP.
 
-The manual menu below provides command-specific guidance and generated Example
-I/O views. DIAAD runs in a temporary workspace for each web run, so uploaded
-inputs are processed only within that run.
+The manual menu below provides command-specific guidance and synthetic Example
+I/O views. If new to the program, the overview section is recommended before use.
+
+DIAAD runs in a temporary workspace for each web run, so uploaded
+inputs are processed only within that run. Despite this safety, de-identifying
+data prior to upload is strongly recommended.
+
+Version: DIAAD {__version__}
 
 Source code: [nmccloskey/DIAAD](https://github.com/nmccloskey/DIAAD)
             """.strip()
