@@ -546,9 +546,18 @@ searches each file's path relative to the web input area, including any folders
 and the file name. Use one row per field you want in downstream tables.
 
 Enter multiple comma- or newline-separated values when the field has a fixed set
-of choices, such as `AC, BU, TU`. Enter one regular expression when the field
-should be captured by a pattern, such as `(AC|BU|TU)\\d+`. Leave this section
-empty if you do not want DIAAD to extract metadata from paths.
+of choices, such as `Tx1, Tx2, Control`. Enter one regular expression when the field
+should be captured by a pattern, such as `\\d+`, which matches any sequence of digits.
+Leave this section empty if you do not want DIAAD to extract metadata from paths.
+
+Example rows from one study-specific setup:
+
+| Field | Values or regex |
+|---|---|
+| `site` | `AC, BU, TU` |
+| `test` | `Pre, Post, Maint` |
+| `study_id` | `\\d+` |
+| `narrative` | `CATGrandpa, BrokenWindow, RefusedUmbrella, CatRescue, BirthdayScene` |
         """
     )
 
