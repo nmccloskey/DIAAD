@@ -43,6 +43,21 @@ def test_web_command_menu_uses_readable_module_labels():
     assert streamlit_app.MODULE_LABELS["turns"] == "Digital Conversational Turns"
 
 
+def test_web_command_helpers_cover_selectable_commands():
+    selectable_commands = set(streamlit_app._command_options())
+
+    assert set(streamlit_app.COMMAND_HELP) == selectable_commands
+
+    for command, help_text in streamlit_app.COMMAND_HELP.items():
+        assert "Select this canonical DIAAD command" not in help_text
+        assert help_text.endswith(".")
+        assert "For full details, see docs\\manual\\" in help_text
+
+        section_path = help_text.removesuffix(".").split("For full details, see ")[1]
+        section_dir = Path(section_path.replace("\\", "/"))
+        assert (section_dir / "01_quickstart.md").exists(), command
+
+
 def test_uploaded_relative_path_preserves_nested_directories():
     assert streamlit_app._safe_uploaded_relative_path(
         "site_a/session_1/sample.cha"

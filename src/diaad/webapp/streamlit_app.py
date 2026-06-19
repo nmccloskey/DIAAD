@@ -45,6 +45,141 @@ MODULE_LABELS = {
     "turns": "Digital Conversational Turns",
 }
 
+COMMAND_HELP = {
+    "blinding encode": (
+        "Replace identifiers with blind codes. For full details, see "
+        "docs\\manual\\04_modules\\08_blinding\\05_commands\\01_encode."
+    ),
+    "blinding decode": (
+        "Restore identifiers from blind codebooks. For full details, see "
+        "docs\\manual\\04_modules\\08_blinding\\05_commands\\02_decode."
+    ),
+    "transcripts select": (
+        "Select transcript reliability samples. For full details, see "
+        "docs\\manual\\04_modules\\01_transcripts\\05_commands\\03_select."
+    ),
+    "transcripts evaluate": (
+        "Evaluate transcript reliability coding. For full details, see "
+        "docs\\manual\\04_modules\\01_transcripts\\05_commands\\04_evaluate."
+    ),
+    "transcripts reselect": (
+        "Select replacement transcript reliability material. For full details, see "
+        "docs\\manual\\04_modules\\01_transcripts\\05_commands\\05_reselect."
+    ),
+    "transcripts tabularize": (
+        "Tabulate CHAT transcript content and metadata. For full details, see "
+        "docs\\manual\\04_modules\\01_transcripts\\05_commands\\01_tabularize."
+    ),
+    "transcripts chats": (
+        "Export CHAT files from transcript tables. For full details, see "
+        "docs\\manual\\04_modules\\01_transcripts\\05_commands\\02_chats."
+    ),
+    "templates utterances": (
+        "Create blank utterance-level coding workbooks. For full details, see "
+        "docs\\manual\\04_modules\\02_templates\\05_commands\\01_utterances."
+    ),
+    "templates samples": (
+        "Create blank sample-level coding workbooks. For full details, see "
+        "docs\\manual\\04_modules\\02_templates\\05_commands\\02_samples."
+    ),
+    "templates times": (
+        "Create speaking-time denominator workbooks. For full details, see "
+        "docs\\manual\\04_modules\\02_templates\\05_commands\\03_times."
+    ),
+    "templates subset": (
+        "Select rows from template workbooks. For full details, see "
+        "docs\\manual\\04_modules\\02_templates\\05_commands\\04_subset."
+    ),
+    "templates combine": (
+        "Stack same-schema template workbooks. For full details, see "
+        "docs\\manual\\04_modules\\02_templates\\05_commands\\05_combine."
+    ),
+    "cus files": (
+        "Create Complete Utterance coding workbooks. For full details, see "
+        "docs\\manual\\04_modules\\03_complete_utterances\\05_commands\\01_files."
+    ),
+    "cus evaluate": (
+        "Evaluate Complete Utterance reliability. For full details, see "
+        "docs\\manual\\04_modules\\03_complete_utterances\\05_commands\\02_evaluate."
+    ),
+    "cus reselect": (
+        "Select replacement CU reliability material. For full details, see "
+        "docs\\manual\\04_modules\\03_complete_utterances\\05_commands\\03_reselect."
+    ),
+    "cus analyze": (
+        "Summarize completed Complete Utterance coding. For full details, see "
+        "docs\\manual\\04_modules\\03_complete_utterances\\05_commands\\04_analyze."
+    ),
+    "cus rates": (
+        "Calculate Complete Utterance rates. For full details, see "
+        "docs\\manual\\04_modules\\03_complete_utterances\\05_commands\\05_rates."
+    ),
+    "words files": (
+        "Create word-count coding workbooks. For full details, see "
+        "docs\\manual\\04_modules\\04_word_counting\\05_commands\\01_files."
+    ),
+    "words evaluate": (
+        "Evaluate word-count reliability. For full details, see "
+        "docs\\manual\\04_modules\\04_word_counting\\05_commands\\02_evaluate."
+    ),
+    "words reselect": (
+        "Select replacement word-count material. For full details, see "
+        "docs\\manual\\04_modules\\04_word_counting\\05_commands\\03_reselect."
+    ),
+    "words analyze": (
+        "Summarize completed word counts. For full details, see "
+        "docs\\manual\\04_modules\\04_word_counting\\05_commands\\04_analyze."
+    ),
+    "words rates": (
+        "Calculate words per minute. For full details, see "
+        "docs\\manual\\04_modules\\04_word_counting\\05_commands\\05_rates."
+    ),
+    "powers files": (
+        "Create POWERS coding workbooks. For full details, see "
+        "docs\\manual\\04_modules\\05_powers\\05_commands\\01_files."
+    ),
+    "powers analyze": (
+        "Summarize completed POWERS coding. For full details, see "
+        "docs\\manual\\04_modules\\05_powers\\05_commands\\02_analyze."
+    ),
+    "powers rates": (
+        "Calculate POWERS rates. For full details, see "
+        "docs\\manual\\04_modules\\05_powers\\05_commands\\03_rates."
+    ),
+    "powers evaluate": (
+        "Evaluate POWERS reliability. For full details, see "
+        "docs\\manual\\04_modules\\05_powers\\05_commands\\04_evaluate."
+    ),
+    "powers reselect": (
+        "Select replacement POWERS reliability material. For full details, see "
+        "docs\\manual\\04_modules\\05_powers\\05_commands\\05_reselect."
+    ),
+    "vocab file": (
+        "Create target-vocabulary resource files. For full details, see "
+        "docs\\manual\\04_modules\\06_target_vocabulary_coverage\\05_commands\\01_file."
+    ),
+    "vocab check": (
+        "Check target-vocabulary coverage inputs. For full details, see "
+        "docs\\manual\\04_modules\\06_target_vocabulary_coverage\\05_commands\\02_check."
+    ),
+    "vocab analyze": (
+        "Analyze target-vocabulary coverage. For full details, see "
+        "docs\\manual\\04_modules\\06_target_vocabulary_coverage\\05_commands\\03_analyze."
+    ),
+    "vocab rates": (
+        "Calculate target-vocabulary coverage rates. For full details, see "
+        "docs\\manual\\04_modules\\06_target_vocabulary_coverage\\05_commands\\04_rates."
+    ),
+    "turns evaluate": (
+        "Evaluate digital turn reliability. For full details, see "
+        "docs\\manual\\04_modules\\07_digital_conversational_turns\\05_commands\\02_evaluate."
+    ),
+    "turns analyze": (
+        "Summarize digital conversational turns. For full details, see "
+        "docs\\manual\\04_modules\\07_digital_conversational_turns\\05_commands\\04_analyze."
+    ),
+}
+
 
 def zip_folder(folder_path: Path) -> BytesIO:
     """Compress a folder into an in-memory ZIP buffer."""
@@ -208,7 +343,7 @@ def _render_command_menu() -> list[str]:
                     st.checkbox(
                         command,
                         key=_command_checkbox_key(command),
-                        help="Select this canonical DIAAD command for the next run.",
+                        help=COMMAND_HELP[command],
                     )
 
     selected = [
