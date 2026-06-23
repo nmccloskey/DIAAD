@@ -28,7 +28,7 @@ Relevant tests:
 `resources.py` requires:
 
 ```text
-id
+resource_id
 display_name
 language
 task_type
@@ -52,7 +52,7 @@ Only CSV norm specifications are supported. Norm column mappings must include `r
 
 `load_target_vocabulary_resources()` loads built-ins from `src/diaad/coding/target_vocab/resources/`. If `advanced.target_vocabulary_resource_path` is blank, the built-in set is the active set.
 
-If a custom path is configured, DIAAD loads built-ins first and then custom resources. Custom IDs override built-in IDs. A custom path can be one JSON file or a directory of JSON files. Duplicate resource IDs inside the custom path raise an error.
+If a custom path is configured, DIAAD loads built-ins first and then custom resources. Custom resource IDs override built-in resource IDs. A custom path can be one JSON file or a directory of JSON files. Duplicate resource IDs inside the custom path raise an error.
 
 ## Command Outputs
 

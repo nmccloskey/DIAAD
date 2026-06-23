@@ -65,7 +65,7 @@ target_vocabulary_resource_path: diaad_data/input/target_vocab/resources/picnic_
 
 ```json
 {
-  "id": "picnic",
+  "resource_id": "picnic",
   "display_name": "Synthetic Picnic",
   "base_forms": [
     "apple",
@@ -99,9 +99,9 @@ target_vocabulary_resource_path: diaad_data/input/target_vocab/resources/picnic_
 Target vocabulary resource check
 
 Custom resource path: input/target_vocab/resources/picnic_target_vocab.json
-Custom resource id: picnic
+Custom resource ID: picnic
 Active resource count: 6
-Active resource ids:
+Active resource IDs:
 - BrokenWindow
 - CatRescue
 - Cinderella

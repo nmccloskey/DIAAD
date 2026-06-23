@@ -50,7 +50,7 @@ time_seconds
 
 ## Resource Matching
 
-Only rows whose stimulus or narrative value matches an active resource ID are analyzed. Built-in IDs include:
+Only rows whose stimulus or narrative value matches an active resource ID are analyzed. Built-in resource IDs include:
 
 ```text
 BrokenWindow

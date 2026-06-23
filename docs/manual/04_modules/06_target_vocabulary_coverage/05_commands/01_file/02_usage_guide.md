@@ -7,7 +7,7 @@ Use `diaad vocab file` when a project needs to author a custom target-vocabulary
 The template follows the resource shape used by bundled target-vocabulary resources:
 
 ```text
-id
+resource_id
 display_name
 language
 task_type
@@ -45,8 +45,8 @@ After editing the template:
 
 ## Common Problems
 
-If a resource uses a custom `id`, the input data must contain that same value in the configured stimulus or narrative column.
+If a resource uses a custom `resource_id`, the input data must contain that same value in the configured stimulus or narrative column.
 
-If a resource reuses a bundled ID, the custom resource overrides the bundled definition for that run.
+If a resource reuses a bundled resource ID, the custom resource overrides the bundled definition for that run.
 
 If a resource declares norms, the norm specification must be structurally valid, but structural validity does not establish that the norms are appropriate for the project.

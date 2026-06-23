@@ -39,7 +39,7 @@ def build_target_vocab_template() -> dict[str, Any]:
     sample_resource = next(iter(resources.values()))
 
     return {
-        "id": "",
+        "resource_id": "",
         "display_name": "",
         "language": "",
         "task_type": "",
@@ -88,7 +88,7 @@ def _format_resource_check_report(
         lines.extend(
             [
                 "Custom resource path: none",
-                "Custom resource id: none",
+                "Custom resource ID: none",
             ]
         )
     else:
@@ -98,17 +98,17 @@ def _format_resource_check_report(
         lines.append(f"Custom resource path: {resource_display.as_posix()}")
         if len(custom_resources) == 1:
             custom_id = next(iter(custom_resources))
-            lines.append(f"Custom resource id: {custom_id}")
+            lines.append(f"Custom resource ID: {custom_id}")
         else:
             lines.append(f"Custom resource count: {len(custom_resources)}")
             if custom_resources:
-                lines.append("Custom resource ids:")
+                lines.append("Custom resource IDs:")
                 lines.extend(f"- {resource_id}" for resource_id in sorted(custom_resources))
 
     lines.extend(
         [
             f"Active resource count: {len(resources)}",
-            "Active resource ids:",
+            "Active resource IDs:",
             *[f"- {resource_id}" for resource_id in sorted(resources)],
             "",
             "Built-in narrative resources remain available when a custom JSON path is configured.",
@@ -144,7 +144,7 @@ def check_target_vocab_resources(
             "No custom target vocabulary resource path configured; validated %d bundled resources.",
             len(resources),
         )
-        logger.info("Bundled target vocabulary ids: %s", sorted(resources))
+        logger.info("Bundled target vocabulary resource IDs: %s", sorted(resources))
         if output_dir is not None:
             _write_resource_check_report(
                 output_dir=output_dir,
@@ -162,18 +162,18 @@ def check_target_vocab_resources(
     custom_only_ids = sorted(set(custom_resources) - builtin_ids)
 
     logger.info("Validated %d custom target vocabulary resource(s).", len(custom_resources))
-    logger.info("Custom target vocabulary ids: %s", sorted(custom_resources))
+    logger.info("Custom target vocabulary resource IDs: %s", sorted(custom_resources))
     if override_ids:
         logger.warning(
-            "Custom target vocabulary resources override bundled defaults for ids: %s",
+            "Custom target vocabulary resources override bundled defaults for resource IDs: %s",
             override_ids,
         )
     if custom_only_ids:
         logger.info(
-            "Custom target vocabulary resources add non-bundled ids: %s",
+            "Custom target vocabulary resources add non-bundled resource IDs: %s",
             custom_only_ids,
         )
-    logger.info("Active target vocabulary ids after merge: %s", sorted(merged_resources))
+    logger.info("Active target vocabulary resource IDs after merge: %s", sorted(merged_resources))
     if output_dir is not None:
         _write_resource_check_report(
             output_dir=output_dir,

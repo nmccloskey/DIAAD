@@ -10,7 +10,7 @@ from typing import Any
 
 BUILTIN_RESOURCE_DIR = Path(__file__).with_name("resources")
 REQUIRED_RESOURCE_KEYS = {
-    "id",
+    "resource_id",
     "display_name",
     "language",
     "task_type",
@@ -27,7 +27,7 @@ REQUIRED_NORM_COLUMN_KEYS = {
 
 
 def _resource_label(resource: dict[str, Any], source: str | Path | None = None) -> str:
-    resource_id = resource.get("id", "<unknown>")
+    resource_id = resource.get("resource_id", "<unknown>")
     return f"{resource_id} ({source})" if source else str(resource_id)
 
 
@@ -93,13 +93,13 @@ def validate_resource(resource: dict[str, Any], source: str | Path | None = None
 
     missing = REQUIRED_RESOURCE_KEYS - set(resource)
     if missing:
-        resource_id = resource.get("id", "<unknown>")
+        resource_id = resource.get("resource_id", "<unknown>")
         raise ValueError(
             f"Resource {resource_id} ({source or '<unknown source>'}) missing required "
             f"keys: {sorted(missing)}."
         )
 
-    for key in ("id", "display_name", "language", "task_type"):
+    for key in ("resource_id", "display_name", "language", "task_type"):
         _require_str(resource, key, source)
 
     label = _resource_label(resource, source)
@@ -207,10 +207,10 @@ def load_resources_from_path(resource_path: str | Path) -> dict[str, dict[str, A
         with path.open("r", encoding="utf-8") as f:
             resource = json.load(f)
         validate_resource(resource, source=path)
-        resource_id = resource["id"]
+        resource_id = resource["resource_id"]
         if resource_id in resources:
             raise ValueError(
-                f"Duplicate target vocabulary resource id {resource_id!r} in {resource_path}."
+                f"Duplicate target vocabulary resource ID {resource_id!r} in {resource_path}."
             )
         resources[resource_id] = _with_runtime_fields(resource)
     return resources
@@ -218,7 +218,7 @@ def load_resources_from_path(resource_path: str | Path) -> dict[str, dict[str, A
 
 @lru_cache(maxsize=1)
 def load_builtin_resources() -> dict[str, dict[str, Any]]:
-    """Load bundled target vocabulary resources keyed by resource id."""
+    """Load bundled target vocabulary resources keyed by resource ID."""
     resources = load_resources_from_path(BUILTIN_RESOURCE_DIR)
     if not resources:
         raise RuntimeError(f"No built-in target vocabulary resources found in {BUILTIN_RESOURCE_DIR}")
@@ -238,7 +238,7 @@ def load_target_vocabulary_resources(
 
     Without a path, bundled resources are used. With a path, bundled resources
     remain available and custom resources are merged in. If a custom resource
-    reuses a bundled id, the custom definition overrides the bundled one.
+    reuses a bundled resource ID, the custom definition overrides the bundled one.
     """
     if resource_path is None or str(resource_path).strip() == "":
         return load_builtin_resources()
@@ -249,7 +249,7 @@ def load_target_vocabulary_resources(
 
     if overlapping_ids:
         logger_msg = (
-            "Custom target vocabulary resources override bundled defaults for ids: "
+            "Custom target vocabulary resources override bundled defaults for resource IDs: "
             f"{overlapping_ids}"
         )
         try:
@@ -267,20 +267,20 @@ def get_resource(
     resource_id: str,
     resources: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
-    """Return one target vocabulary resource by id, if present."""
+    """Return one target vocabulary resource by resource ID, if present."""
     return (resources or load_builtin_resources()).get(resource_id)
 
 
 def get_resource_ids(resources: dict[str, dict[str, Any]] | None = None) -> set[str]:
-    """Return ids for the active target vocabulary resources."""
+    """Return resource IDs for the active target vocabulary resources."""
     return set(resources or load_builtin_resources())
 
 
 def get_builtin_resource(resource_id: str) -> dict[str, Any] | None:
-    """Return one bundled target vocabulary resource by id, if present."""
+    """Return one bundled target vocabulary resource by resource ID, if present."""
     return get_resource(resource_id, load_builtin_resources())
 
 
 def get_builtin_resource_ids() -> set[str]:
-    """Return ids for bundled target vocabulary resources."""
+    """Return resource IDs for bundled target vocabulary resources."""
     return get_resource_ids(load_builtin_resources())

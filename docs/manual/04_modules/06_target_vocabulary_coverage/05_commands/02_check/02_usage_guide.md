@@ -14,7 +14,7 @@ RefusedUmbrella
 Sandwich
 ```
 
-When `advanced.target_vocabulary_resource_path` is configured, DIAAD loads the bundled resources and the custom resources. Custom resources add to the active set unless they reuse a bundled resource ID. If a custom resource uses the same ID as a bundled resource, the custom resource overrides the bundled one for that run.
+When `advanced.target_vocabulary_resource_path` is configured, DIAAD loads the bundled resources and the custom resources. Custom resources add to the active set unless they reuse a bundled resource ID. If a custom resource uses the same resource ID as a bundled resource, the custom resource overrides the bundled one for that run.
 
 ## What Is Validated
 
@@ -40,12 +40,12 @@ The report lists:
 
 ```text
 Custom resource path
-Custom resource id or count
+Custom resource ID or count
 Active resource count
-Active resource ids
+Active resource IDs
 ```
 
-Use this output to catch misspelled IDs, wrong paths, duplicate resource definitions, and unexpected overrides before running analysis.
+Use this output to catch misspelled resource IDs, wrong paths, duplicate resource definitions, and unexpected overrides before running analysis.
 
 ## Common Problems
 

@@ -2006,7 +2006,7 @@ Speaking times are synthetic seconds added to the generated speaking-time templa
 def _vocab_resource_snippet(specs: dict[str, dict[str, Any]]) -> str:
     resource = specs["vocab_resource"]
     subset = {
-        "id": resource.get("id"),
+        "resource_id": resource.get("resource_id"),
         "display_name": resource.get("display_name"),
         "base_forms": resource.get("base_forms", [])[:8],
         "variant_map": {

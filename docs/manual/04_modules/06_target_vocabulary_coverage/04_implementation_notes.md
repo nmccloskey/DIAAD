@@ -4,7 +4,7 @@ The Target Vocabulary Coverage module is implemented under `src/diaad/coding/tar
 
 ## Resources
 
-Resource loading starts with bundled JSON resources. If `advanced.target_vocabulary_resource_path` is configured, DIAAD loads custom JSON resources as well. A custom resource with the same ID as a built-in resource can override the bundled version.
+Resource loading starts with bundled JSON resources. If `advanced.target_vocabulary_resource_path` is configured, DIAAD loads custom JSON resources as well. A custom resource with the same resource ID as a built-in resource can override the bundled version.
 
 Resources declare required metadata, base forms, variant maps, and optional norm specifications. Runtime fields include reverse variant lookups used during token matching.
 

@@ -1,5 +1,5 @@
 {
-  "id": "Sandwich",
+  "resource_id": "Sandwich",
   "display_name": "Sandwich",
   "language": "en",
   "task_type": "procedural_description",

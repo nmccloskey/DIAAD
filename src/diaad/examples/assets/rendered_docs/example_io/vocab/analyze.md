@@ -76,7 +76,7 @@ target_vocabulary_resource_path: diaad_data/input/target_vocab/resources/picnic_
 
 ```json
 {
-  "id": "picnic",
+  "resource_id": "picnic",
   "display_name": "Synthetic Picnic",
   "base_forms": [
     "apple",

@@ -58,7 +58,7 @@ output_dir: diaad_data/output
 
 ```json
 {
-  "id": "",
+  "resource_id": "",
   "display_name": "",
   "language": "",
   "task_type": "",

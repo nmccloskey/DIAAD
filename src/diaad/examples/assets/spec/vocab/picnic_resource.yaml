@@ -1,4 +1,4 @@
-id: picnic
+resource_id: picnic
 display_name: Synthetic Picnic
 language: en
 task_type: picture_description

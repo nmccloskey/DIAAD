@@ -47,7 +47,7 @@ Those figures support DIAAD's implementation for the validated CoreLex-style use
 Built-in resources require no user JSON. Custom resources let a project define:
 
 ```text
-id
+resource_id
 display_name
 language
 task_type
@@ -58,7 +58,7 @@ norms
 
 DIAAD validates resource structure and consistency. It checks that required fields are present, base forms are unique, variants map cleanly to base forms, and declared norm specifications have the expected shape. This is format validation, not evidence that the resource is clinically or psychometrically valid.
 
-When a custom resource path is configured, built-in resources remain available. If a custom resource uses the same ID as a built-in resource, the custom resource overrides that built-in definition for the run.
+When a custom resource path is configured, built-in resources remain available. If a custom resource uses the same resource ID as a built-in resource, the custom resource overrides that built-in definition for the run.
 
 ## Rates And Norms
 

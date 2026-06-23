@@ -24,7 +24,7 @@ If that file is unavailable, it uses the configured transcript table filename.
 
 ## Resource Loading
 
-Resources are loaded with `load_target_vocabulary_resources()`. Built-ins are loaded first. Custom resources are merged in when configured, and custom IDs override built-in IDs when they overlap.
+Resources are loaded with `load_target_vocabulary_resources()`. Built-ins are loaded first. Custom resources are merged in when configured, and custom resource IDs override built-in resource IDs when they overlap.
 
 Only input rows whose stimulus or narrative value is in the active resource ID set are analyzed.
 

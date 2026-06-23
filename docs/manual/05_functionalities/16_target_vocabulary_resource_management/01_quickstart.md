@@ -2,7 +2,7 @@
 
 Target Vocabulary Coverage depends on resources. A resource defines the target words for a stimulus or task, accepted variants for those words, and optional norm-table metadata.
 
-Use the built-in resources when your data use the bundled CoreLex-style narrative IDs:
+Use the built-in resources when your data use the bundled CoreLex-style narrative resource IDs:
 
 ```text
 BrokenWindow
@@ -22,7 +22,7 @@ Use a custom resource when the project has its own prompt, task vocabulary, acce
 diaad vocab file
 ```
 
-2. Edit the JSON resource so its `id` matches the stimulus or narrative value in the analysis input.
+2. Edit the JSON resource so its `resource_id` matches the stimulus or narrative value in the analysis input.
 
 3. Point DIAAD to the custom resource file or directory:
 
@@ -50,7 +50,7 @@ The resource controls which words can count as target-vocabulary matches. It doe
 The most important fields are:
 
 ```text
-id
+resource_id
 display_name
 language
 task_type

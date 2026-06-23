@@ -20,7 +20,7 @@ Resource loading starts with bundled JSON files under:
 src/diaad/coding/target_vocab/resources/
 ```
 
-If `advanced.target_vocabulary_resource_path` is configured, DIAAD loads custom resources from that file or directory and merges them with the built-ins. Custom resources with IDs matching bundled resources override those bundled definitions.
+If `advanced.target_vocabulary_resource_path` is configured, DIAAD loads custom resources from that file or directory and merges them with the built-ins. Custom resources with resource IDs matching bundled resources override those bundled definitions.
 
 ## Validation Boundary
 

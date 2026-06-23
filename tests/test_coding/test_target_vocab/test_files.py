@@ -23,13 +23,13 @@ def test_make_target_vocab_file_writes_json(monkeypatch, tmp_path):
     monkeypatch.setattr(
         files,
         "build_target_vocab_template",
-        lambda: {"id": "", "display_name": "", "language": "", "task_type": "", "base_forms": [], "variant_map": {}, "norms": {}},
+        lambda: {"resource_id": "", "display_name": "", "language": "", "task_type": "", "base_forms": [], "variant_map": {}, "norms": {}},
     )
 
     path = files.make_target_vocab_file(input_dir=tmp_path / "input", output_dir=tmp_path)
 
     assert path.exists()
-    assert json.loads(path.read_text(encoding="utf-8"))["id"] == ""
+    assert json.loads(path.read_text(encoding="utf-8"))["resource_id"] == ""
 
 
 def test_check_target_vocab_resources_writes_report(monkeypatch, tmp_path):
@@ -44,4 +44,4 @@ def test_check_target_vocab_resources_writes_report(monkeypatch, tmp_path):
     report = tmp_path / "target_vocab" / "target_vocab_resource_check.txt"
     assert resources.keys() == {"StoryA"}
     assert report.exists()
-    assert "Active resource ids:" in report.read_text(encoding="utf-8")
+    assert "Active resource IDs:" in report.read_text(encoding="utf-8")

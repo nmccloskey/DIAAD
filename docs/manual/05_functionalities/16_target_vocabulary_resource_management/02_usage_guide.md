@@ -14,7 +14,7 @@ RefusedUmbrella
 Sandwich
 ```
 
-When `advanced.target_vocabulary_resource_path` is configured, DIAAD loads the built-ins first and then merges the custom resources. A custom resource with a new `id` adds another available stimulus. A custom resource with the same `id` as a built-in resource overrides that built-in definition for the run.
+When `advanced.target_vocabulary_resource_path` is configured, DIAAD loads the built-ins first and then merges the custom resources. A custom resource with a new `resource_id` adds another available stimulus. A custom resource with the same `resource_id` as a built-in resource overrides that built-in definition for the run.
 
 The configured path can point to one JSON file or to a directory of JSON files.
 
@@ -24,7 +24,7 @@ Each resource requires:
 
 | Field | Purpose |
 |---|---|
-| `id` | Machine-readable resource identifier. Input stimulus or narrative values must match this value. |
+| `resource_id` | Machine-readable resource identifier. Input stimulus or narrative values must match this value. |
 | `display_name` | Human-readable label for the task or resource. |
 | `language` | Resource language label. |
 | `task_type` | Task or elicitation type label. |
@@ -53,7 +53,7 @@ RefusedUmbrella
 Sandwich
 ```
 
-For custom resources, the identifier is whatever the project sets in the resource's `id` field.
+For custom resources, the identifier is whatever the project sets in the resource's `resource_id` field.
 
 ## Checking Resources
 
@@ -63,7 +63,7 @@ Run:
 diaad vocab check
 ```
 
-The check report lists the configured custom path, active resource count, and active IDs. It also catches structural errors such as missing required fields, duplicate base forms, variants that point to nonexistent base forms, variants mapped to multiple base forms, and malformed norm specifications.
+The check report lists the configured custom path, active resource count, and active resource IDs. It also catches structural errors such as missing required fields, duplicate base forms, variants that point to nonexistent base forms, variants mapped to multiple base forms, and malformed norm specifications.
 
 `vocab check` is structural validation. It does not prove that a custom target vocabulary is clinically, psychometrically, or theoretically valid.
 

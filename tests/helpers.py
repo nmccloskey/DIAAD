@@ -12,7 +12,7 @@ def write_yaml(path: Path, data: dict) -> None:
 
 def sample_target_vocab_resource(resource_id: str = "StoryA") -> dict:
     return {
-        "id": resource_id,
+        "resource_id": resource_id,
         "display_name": f"{resource_id} Display",
         "language": "en",
         "task_type": "narrative",
