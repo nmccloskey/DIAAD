@@ -30,6 +30,7 @@ tmp*/
 _dx_*/
 manual_prep/
 
+# Google creds
 google_creds.json
 
 # Jupyter notebooks checkpoints
@@ -39,6 +40,7 @@ google_creds.json
 *.log
 
 # Configs
+config/
 config.yaml
 project.yaml
 advanced.yaml
