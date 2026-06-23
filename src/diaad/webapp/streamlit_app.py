@@ -487,6 +487,7 @@ def _render_manual() -> None:
         manual_sources=manual_sources,
         expander_label="Show / Hide DIAAD Manual Menu",
         ui_key="diaad_manual",
+        enable_docx_export=False,
         compose_infer_from_paths=True,
         compose_path_module_aliases=_MANUAL_PATH_MODULE_ALIASES,
         compose_unmatched_policy="generated_root",
