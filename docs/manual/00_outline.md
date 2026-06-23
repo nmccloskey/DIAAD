@@ -292,11 +292,16 @@
 │   │   ├── 02_usage_guide.md — Target Vocabulary Resource Management Usage Guide
 │   │   ├── 03_research_context.md — Target Vocabulary Resource Management Research Context
 │   │   └── 04_implementation_notes.md — Target Vocabulary Resource Management Implementation Notes
-│   └── 17_powers_automation_support/
-│       ├── 01_quickstart.md — POWERS Automation Support Quickstart
-│       ├── 02_usage_guide.md — POWERS Automation Support Usage Guide
-│       ├── 03_research_context.md — POWERS Automation Support Research Context
-│       └── 04_implementation_notes.md — POWERS Automation Support Implementation Notes
+│   ├── 17_powers_automation_support/
+│   │   ├── 01_quickstart.md — POWERS Automation Support Quickstart
+│   │   ├── 02_usage_guide.md — POWERS Automation Support Usage Guide
+│   │   ├── 03_research_context.md — POWERS Automation Support Research Context
+│   │   └── 04_implementation_notes.md — POWERS Automation Support Implementation Notes
+│   └── 18_coder_identifier_columns/
+│       ├── 01_quickstart.md — Coder Identifier Columns Quickstart
+│       ├── 02_usage_guide.md — Coder Identifier Columns Usage Guide
+│       ├── 03_research_context.md — Coder Identifier Columns Research Context
+│       └── 04_implementation_notes.md — Coder Identifier Columns Implementation Notes
 ├── 06_workflows/
 │   ├── 01_cli_project_setup_first_run/
 │   │   ├── 01_quickstart.md — CLI Project Setup and First Run Quickstart
@@ -695,6 +700,12 @@
 - [02_usage_guide.md — POWERS Automation Support Usage Guide](05_functionalities/17_powers_automation_support/02_usage_guide.md)
 - [03_research_context.md — POWERS Automation Support Research Context](05_functionalities/17_powers_automation_support/03_research_context.md)
 - [04_implementation_notes.md — POWERS Automation Support Implementation Notes](05_functionalities/17_powers_automation_support/04_implementation_notes.md)
+
+### 05_functionalities/18_coder_identifier_columns/
+- [01_quickstart.md — Coder Identifier Columns Quickstart](05_functionalities/18_coder_identifier_columns/01_quickstart.md)
+- [02_usage_guide.md — Coder Identifier Columns Usage Guide](05_functionalities/18_coder_identifier_columns/02_usage_guide.md)
+- [03_research_context.md — Coder Identifier Columns Research Context](05_functionalities/18_coder_identifier_columns/03_research_context.md)
+- [04_implementation_notes.md — Coder Identifier Columns Implementation Notes](05_functionalities/18_coder_identifier_columns/04_implementation_notes.md)
 
 ### 06_workflows/01_cli_project_setup_first_run/
 - [01_quickstart.md — CLI Project Setup and First Run Quickstart](06_workflows/01_cli_project_setup_first_run/01_quickstart.md)
