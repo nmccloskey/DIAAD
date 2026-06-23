@@ -225,7 +225,23 @@ def _drop_coder_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
     df.drop(
         columns=[
             c for c in
-            ["id", "comment", "c1_id", "c1_comment", "c2_id", "c2_comment", "c3_id", "c3_comment"]
+            [
+                "id",
+                "coder_id",
+                "comment",
+                "c1_id",
+                "c1_coder_id",
+                "coder1_id",
+                "c1_comment",
+                "c2_id",
+                "c2_coder_id",
+                "coder2_id",
+                "c2_comment",
+                "c3_id",
+                "c3_coder_id",
+                "coder3_id",
+                "c3_comment",
+            ]
             if c in df.columns
         ],
         inplace=True,

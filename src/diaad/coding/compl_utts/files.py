@@ -73,7 +73,7 @@ def _assign_single_coding_columns(
     exclude_speakers,
 ) -> pd.DataFrame:
     """Add one unprefixed coding layer."""
-    base_cols = ["id", "sv", "rel", "comment"]
+    base_cols = ["coder_id", "sv", "rel", "comment"]
     for col in base_cols:
         df[col] = _neutral_string_column(df, exclude_speakers)
 
@@ -96,8 +96,8 @@ def _assign_three_coding_columns(
 ) -> pd.DataFrame:
     """Add c1/c2 coding layers."""
     base_cols = [
-        "c1_id", "c1_sv", "c1_rel", "c1_comment",
-        "c2_id", "c2_sv", "c2_rel", "c2_comment",
+        "coder1_id", "c1_sv", "c1_rel", "c1_comment",
+        "coder2_id", "c2_sv", "c2_rel", "c2_comment",
     ]
     for col in base_cols:
         df[col] = _neutral_string_column(df, exclude_speakers)
@@ -156,7 +156,7 @@ def _prepare_two_coder_reliability_subset(
 
     rel_samples = random.sample(seg, k=n_rel_samples)
     relsegdf = cu_df[cu_df[sample_id_field].isin(rel_samples)].copy()
-    relsegdf["id"] = rel_coder
+    relsegdf["coder_id"] = rel_coder
     return relsegdf
 
 
@@ -175,7 +175,11 @@ def _prepare_three_coder_reliability_subset(
 
     rel_samples = random.sample(seg, k=n_rel_samples)
     relsegdf = cu_df[cu_df[sample_id_field].isin(rel_samples)].copy()
-    relsegdf.drop(columns=["c1_id", "c1_comment"], inplace=True, errors="ignore")
+    relsegdf.drop(
+        columns=["coder1_id", "c1_comment"],
+        inplace=True,
+        errors="ignore",
+    )
 
     if len(cu_paradigms) >= 2:
         for tag in ["sv", "rel"]:
@@ -207,8 +211,12 @@ def _prepare_three_coder_reliability_subset(
             if col not in relsegdf.columns:
                 relsegdf[col] = ""
 
-    relsegdf.drop(columns=["c2_id"], inplace=True, errors="ignore")
-    relsegdf.insert(relsegdf.columns.get_loc("c3_comment"), "c3_id", assn[2])
+    relsegdf.drop(columns=["coder2_id"], inplace=True, errors="ignore")
+    relsegdf.insert(
+        relsegdf.columns.get_loc("c3_comment"),
+        "coder3_id",
+        assn[2],
+    )
 
     return relsegdf
 
@@ -303,7 +311,7 @@ def _build_cu_assignments(
 
     if mode in {"single", "zero"}:
         coder = coder_ids[0] if coder_ids else ""
-        cu_df["id"] = np.where(
+        cu_df["coder_id"] = np.where(
             cu_df["speaker"].isin(exclude_speakers),
             "NA",
             coder,
@@ -323,7 +331,7 @@ def _build_cu_assignments(
         segments = segment(unique_ids, n=2)
 
         for seg, coder in zip(segments, coder_ids):
-            cu_df.loc[cu_df[sample_id_field].isin(seg), "id"] = coder
+            cu_df.loc[cu_df[sample_id_field].isin(seg), "coder_id"] = coder
 
         if frac > 0:
             rel_subsets.extend(
@@ -350,7 +358,10 @@ def _build_cu_assignments(
         assignments = assign_coders(coder_ids)
 
         for seg, assn in zip(segments, assignments):
-            cu_df.loc[cu_df[sample_id_field].isin(seg), ["c1_id", "c2_id"]] = assn[:2]
+            cu_df.loc[
+                cu_df[sample_id_field].isin(seg),
+                ["coder1_id", "coder2_id"],
+            ] = assn[:2]
 
             if frac > 0:
                 rel_subsets.append(
@@ -465,11 +476,11 @@ def make_cu_coding_files(
     Modes
     -----
     0 coders:
-        One unprefixed coding layer (id, sv, rel, comment) with blank coder IDs.
+        One unprefixed coding layer (coder_id, sv, rel, comment) with blank coder IDs.
         If frac > 0, a blank reliability subset may also be generated.
 
     1 coder:
-        One unprefixed coding layer with coder ID 1 in the id column.
+        One unprefixed coding layer with coder ID 1 in the coder_id column.
         Reliability, if requested, is generated as a blank subset rather than as an
         independent coder assignment.
 

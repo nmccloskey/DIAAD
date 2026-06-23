@@ -69,7 +69,7 @@ The command reads `diaad_data/input/word_counts/word_counting.xlsx` and `diaad_d
 
 `diaad_data/output/diaad_YYMMDD_HHMM/word_count_reliability/word_count_reliability_results.xlsx`
 
-| sample_id | utterance_id | speaker | utterance | comment | id | word_count_org | wc_comment | word_count_rel | abs_diff | perc_diff | perc_sim | agmt |
+| sample_id | utterance_id | speaker | utterance | comment | coder_id | word_count_org | wc_comment | word_count_rel | abs_diff | perc_diff | perc_sim | agmt |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | U0002 | PAR | The family brought food to the park. |  | 1 | 7 |  | 6 | 1 | 15.38 | 84.62 | 1 |
 | 1 | U0003 | PAR | The little girl [/] the little girl pours juice. |  | 1 | 8 |  | 8 | 0 | 0.0 | 100.0 | 1 |

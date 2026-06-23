@@ -24,7 +24,7 @@ def _ensure_cu_reliability_columns(df):
     - preserve template columns whenever available
     - add a few common reliability admin columns if absent
     """
-    for col in ["c3_id", "c3_comment"]:
+    for col in ["coder3_id", "c3_comment"]:
         if col not in df.columns:
             df[col] = ""
     return df

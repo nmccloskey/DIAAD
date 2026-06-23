@@ -78,7 +78,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 `diaad_data/output/diaad_YYMMDD_HHMM/word_counts/word_counting.xlsx`
 
-| sample_id | utterance_id | speaker | utterance | comment | id | word_count | wc_comment |
+| sample_id | utterance_id | speaker | utterance | comment | coder_id | word_count | wc_comment |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | U0001 | INV | Please tell the picnic story again. |  | 1 |  |  |
 | 1 | U0002 | PAR | The family brought food to the park. |  | 1 | 7.0 |  |
@@ -91,7 +91,7 @@ The command uses `diaad_data/input/transcript_tables/transcript_tables.xlsx`.
 
 `diaad_data/output/diaad_YYMMDD_HHMM/word_counts/word_count_reliability.xlsx`
 
-| sample_id | utterance_id | speaker | utterance | comment | id | word_count | wc_comment |
+| sample_id | utterance_id | speaker | utterance | comment | coder_id | word_count | wc_comment |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | U0001 | INV | Please tell the picnic story again. |  | 2 |  |  |
 | 1 | U0002 | PAR | The family brought food to the park. |  | 2 | 6.0 |  |

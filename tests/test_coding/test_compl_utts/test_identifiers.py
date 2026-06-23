@@ -48,7 +48,7 @@ def test_cu_file_helpers_accept_custom_sample_id(monkeypatch):
     )
 
     assert "expanded_sample_id" in primary.columns
-    assert set(primary["id"]) == {1, 2}
+    assert set(primary["coder_id"]) == {1, 2}
     assert reliability is not None
     assert "expanded_sample_id" in reliability.columns
 
@@ -73,9 +73,38 @@ def test_cu_assignments_support_strict_string_inference(monkeypatch):
             exclude_speakers=["INV"],
         )
 
-    assert set(primary["id"]) == {1, 2}
+    assert set(primary["coder_id"]) == {1, 2}
     assert reliability is not None
-    assert set(reliability["id"]) == {1, 2}
+    assert set(reliability["coder_id"]) == {1, 2}
+
+
+def test_cu_three_coder_schema_uses_coder_number_id_columns(monkeypatch):
+    monkeypatch.setattr(files.random, "sample", lambda seq, k: list(seq)[:k])
+    monkeypatch.setattr(files, "assign_coders", lambda coders: [tuple(coders)])
+    cu_df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "speaker": ["PAR", "INV", "PAR"],
+            "utterance": ["one", "two", "three"],
+        }
+    )
+
+    primary, reliability = files._build_cu_assignments(
+        cu_df,
+        mode="three",
+        coder_ids=[1, 2, 3],
+        frac=1.0,
+        cu_paradigms=[],
+        exclude_speakers=[],
+    )
+
+    assert {"coder1_id", "coder2_id"} <= set(primary.columns)
+    assert {"c1_id", "c2_id", "c1_coder_id", "c2_coder_id"}.isdisjoint(
+        primary.columns
+    )
+    assert reliability is not None
+    assert "coder3_id" in reliability.columns
+    assert {"c3_id", "c3_coder_id"}.isdisjoint(reliability.columns)
 
 
 def test_cu_analysis_and_rates_accept_custom_sample_id():
@@ -116,6 +145,24 @@ def test_cu_analysis_and_rates_accept_custom_sample_id():
     )
 
     assert final.columns[0] == "expanded_sample_id"
+
+
+def test_cu_analysis_does_not_require_coder_id_column():
+    cu_df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "sv": [1, 0, 1],
+            "rel": [1, 1, 1],
+        }
+    )
+
+    cleaned = analysis._drop_coder_admin_cols(cu_df)
+    pairs = analysis._detect_coder_paradigm_pairs(cleaned.columns)
+    summary_long, summary_wide, _ = analysis._summarize_pair(cleaned, pairs[0])
+
+    assert "coder_id" not in cleaned.columns
+    assert set(summary_long["sample_id"]) == {"S1", "S2"}
+    assert set(summary_wide["sample_id"]) == {"S1", "S2"}
 
 
 def test_cu_analysis_drops_excluded_speakers_before_summary():

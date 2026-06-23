@@ -36,7 +36,7 @@ Important configuration:
 With no multi-paradigm configuration, the primary coding columns are:
 
 ```text
-id
+coder_id
 sv
 rel
 comment
@@ -50,6 +50,10 @@ When two or more `advanced.cu_paradigms` are configured, DIAAD creates paradigm-
 sv_AAE
 rel_AAE
 ```
+
+For the three-coder schema, coder assignment columns are named `coder1_id`,
+`coder2_id`, and `coder3_id` alongside the corresponding `c1_`, `c2_`, and
+`c3_` coding fields.
 
 The exact coding interpretation belongs to the project's CU protocol. DIAAD creates the workbook structure; it does not decide ambiguous CU cases.
 

@@ -72,13 +72,13 @@ The command reads prior POWERS coding and reliability workbooks from `diaad_data
 
 | sample_id | utterance_id | speaker | utterance | comment | coder_id | POWERS_comment | speech_units | turn_type | content_words | num_nouns | circumlocutions | sem_paras | phon_errs | neologisms | comments | lg_pauses | filled_pauses | collab_repair |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2 | U0001 | INV | What do you notice first? |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 | U0002 | PAR | A picnic. |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 | U0003 | PAR | The dad is opening the basket. |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 | U0004 | PAR | The dog wants food! |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 | U0005 | INV | What might happen next? |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 | U0006 | PAR | They will eat lunch. |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
-| 2 | U0007 | PAR | Maybe the dog gets a cracker. |  | 1 |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0001 | INV | What do you notice first? |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0002 | PAR | A picnic. |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0003 | PAR | The dad is opening the basket. |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0004 | PAR | The dog wants food! |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0005 | INV | What might happen next? |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0006 | PAR | They will eat lunch. |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+| 2 | U0007 | PAR | Maybe the dog gets a cracker. |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
 ## Notes
 

@@ -19,7 +19,7 @@ from diaad.coding.utils.reselection_utils import (
 
 def _ensure_powers_reliability_columns(df):
     """Ensure likely POWERS reliability-side administrative columns exist."""
-    for col in ["POWERS_comment", "coder_id", "id"]:
+    for col in ["POWERS_comment", "coder_id"]:
         if col not in df.columns:
             df[col] = ""
     return df
@@ -34,6 +34,7 @@ def _clear_manual_powers_fields(df):
     """
     manual_cols = [
         "id",
+        "coder_id",
         "POWERS_comment",
         "speech_units",
         "turn_type",

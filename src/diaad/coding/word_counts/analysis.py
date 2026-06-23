@@ -27,7 +27,10 @@ def _drop_admin_cols(df: pd.DataFrame) -> pd.DataFrame:
     """Drop coder/admin columns not needed in analysis outputs."""
     df = df.copy()
     df.drop(
-        columns=[c for c in ["id", "comment", "wc_comment"] if c in df.columns],
+        columns=[
+            c for c in ["id", "coder_id", "comment", "wc_comment"]
+            if c in df.columns
+        ],
         inplace=True,
         errors="ignore",
     )
@@ -275,7 +278,7 @@ def analyze_word_counts(
     Expected input
     --------------
     A workbook such as `word_counting.xlsx` with columns like:
-        sample_id, utterance_id, speaker, utterance, comment, id,
+        sample_id, utterance_id, speaker, utterance, comment, coder_id,
         word_count, wc_comment
 
     Behavior

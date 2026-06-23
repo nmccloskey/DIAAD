@@ -250,7 +250,7 @@ BLINDED_COLUMNS = [
     "speaker",
     "utterance",
     "comment",
-    "id",
+    "coder_id",
     "word_count",
     "wc_comment",
 ]
@@ -266,7 +266,7 @@ def _blinded_columns(
         "speaker",
         "utterance",
         "comment",
-        "id",
+        "coder_id",
         "word_count",
         "wc_comment",
     ]
@@ -370,7 +370,7 @@ def _assign_wc_coders(
     frac == 0:
         no reliability subset
     num_coders == 0:
-        blank id in both primary and reliability
+        blank coder_id in both primary and reliability
     num_coders == 1:
         coder 1 in both primary and reliability
     num_coders >= 2:
@@ -379,21 +379,21 @@ def _assign_wc_coders(
     wc_df = wc_df.copy()
     coder_ids = _coder_ids(num_coders)
 
-    if "id" not in wc_df.columns:
-        wc_df["id"] = ""
-    wc_df["id"] = wc_df["id"].astype(object)
+    if "coder_id" not in wc_df.columns:
+        wc_df["coder_id"] = ""
+    wc_df["coder_id"] = wc_df["coder_id"].astype(object)
     if sample_id_field not in wc_df.columns:
         raise KeyError(f"Missing required sample identifier column: {sample_id_field}")
 
     # frac = 0 -> empty reliability workbook
     if frac == 0:
         if num_coders == 1:
-            wc_df["id"] = 1
+            wc_df["coder_id"] = 1
         elif num_coders >= 2:
             unique_ids = list(wc_df[sample_id_field].drop_duplicates())
             sample_segments = segment(unique_ids, n=len(coder_ids))
             for seg, coder in zip(sample_segments, coder_ids):
-                wc_df.loc[wc_df[sample_id_field].isin(seg), "id"] = coder
+                wc_df.loc[wc_df[sample_id_field].isin(seg), "coder_id"] = coder
 
         wc_rel_df = wc_df.iloc[0:0].copy()
         logger.info("frac=0, so no reliability subset was created.")
@@ -401,25 +401,27 @@ def _assign_wc_coders(
 
     # 0 coders -> blank IDs
     if num_coders == 0:
-        wc_df["id"] = ""
+        wc_df["coder_id"] = ""
         wc_rel_df = _sample_reliability_subset(
             wc_df,
             frac=frac,
             sample_id_field=sample_id_field,
         )
-        wc_rel_df["id"] = ""
-        logger.info("num_coders=0; created primary/reliability files with blank ID column.")
+        wc_rel_df["coder_id"] = ""
+        logger.info(
+            "num_coders=0; created primary/reliability files with blank coder_id column."
+        )
         return wc_df, wc_rel_df
 
     # 1 coder -> same ID everywhere
     if num_coders == 1:
-        wc_df["id"] = 1
+        wc_df["coder_id"] = 1
         wc_rel_df = _sample_reliability_subset(
             wc_df,
             frac=frac,
             sample_id_field=sample_id_field,
         )
-        wc_rel_df["id"] = 1
+        wc_rel_df["coder_id"] = 1
         logger.info("num_coders=1; created reliability subset with coder ID 1.")
         return wc_df, wc_rel_df
 
@@ -437,7 +439,7 @@ def _assign_wc_coders(
         primary_coder = assn[0]
         rel_coder = assn[1]
 
-        wc_df.loc[wc_df[sample_id_field].isin(seg), "id"] = primary_coder
+        wc_df.loc[wc_df[sample_id_field].isin(seg), "coder_id"] = primary_coder
 
         seg_df = wc_df[wc_df[sample_id_field].isin(seg)].copy()
         rel_df = _sample_reliability_subset(
@@ -445,7 +447,7 @@ def _assign_wc_coders(
             frac=frac,
             sample_id_field=sample_id_field,
         )
-        rel_df["id"] = rel_coder
+        rel_df["coder_id"] = rel_coder
         rel_subsets.append(rel_df)
 
     wc_rel_df = (
@@ -564,14 +566,14 @@ def make_word_count_files(
     - If no CU files are found, transcript tables are used for automated first-pass counts.
     - If multiple exact candidate input files are found, DIAAD raises an error.
     - Output columns are restricted to:
-        sample_id, utterance_id, speaker, utterance, comment, id, word_count, wc_comment
+        sample_id, utterance_id, speaker, utterance, comment, coder_id, word_count, wc_comment
     - Any utterance from exclude_speakers gets word_count = 'NA'.
     - For CU files, if all CU columns for an utterance are neutral, word_count = 'NA'.
 
     Reliability behavior
     --------------------
     - frac == 0      -> empty reliability workbook
-    - num_coders == 0 -> blank id column
+    - num_coders == 0 -> blank coder_id column
     - num_coders == 1 -> coder ID 1 in primary and reliability
     - num_coders >= 2 -> segmented sample assignment using integer coder IDs
 

@@ -28,7 +28,7 @@ If fewer unused samples remain than the target count, DIAAD selects what is avai
 
 ## Output Shape
 
-The reselected workbook keeps the original coding columns through the first comment-like boundary column, then preserves reliability-side columns from the prior reliability template when available. If expected reliability admin columns such as `c3_id` or `c3_comment` are absent, DIAAD adds them.
+The reselected workbook keeps the original coding columns through the first comment-like boundary column, then preserves reliability-side columns from the prior reliability template when available. If expected reliability admin columns such as `coder3_id` or `c3_comment` are absent, DIAAD adds them.
 
 ## Common Problems
 

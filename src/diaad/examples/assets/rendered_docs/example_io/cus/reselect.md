@@ -69,7 +69,7 @@ The command reads prior CU coding and reliability workbooks from `diaad_data/inp
 
 `diaad_data/output/diaad_YYMMDD_HHMM/reselected_cu_coding_reliability/reselected_cu_reliability_coding.xlsx`
 
-| sample_id | stimulus | utterance_id | speaker | utterance | comment | id | sv | rel |
+| sample_id | stimulus | utterance_id | speaker | utterance | comment | coder_id | sv | rel |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2 | picnic | U0001 | INV | What do you notice first? |  | 1 |  |  |
 | 2 | picnic | U0002 | PAR | A picnic. |  | 1 | 1.0 | 1.0 |

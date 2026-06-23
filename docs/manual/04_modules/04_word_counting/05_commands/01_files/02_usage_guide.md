@@ -43,7 +43,7 @@ Rows from excluded speakers are assigned `NA`. When the input is CU-derived, row
 
 ## Coder Modes
 
-`num_coders` controls the generated `id` values:
+`num_coders` controls the generated `coder_id` values:
 
 | `num_coders` | Behavior |
 |---|---|

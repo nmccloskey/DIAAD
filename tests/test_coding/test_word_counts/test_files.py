@@ -31,24 +31,26 @@ def test_cu_neutrality_and_word_count_preparation():
 
 def test_assign_wc_coders_for_one_coder(monkeypatch):
     monkeypatch.setattr(files.random, "sample", lambda seq, k: list(seq)[:k])
-    wc_df = pd.DataFrame({"sample_id": ["S1", "S1", "S2"], "id": ["", "", ""]})
+    wc_df = pd.DataFrame({"sample_id": ["S1", "S1", "S2"], "coder_id": ["", "", ""]})
 
     primary, reliability = files._assign_wc_coders(wc_df, num_coders=1, frac=0.5)
 
-    assert set(primary["id"]) == {1}
-    assert set(reliability["id"]) == {1}
+    assert set(primary["coder_id"]) == {1}
+    assert set(reliability["coder_id"]) == {1}
 
 
 def test_assign_wc_coders_supports_strict_string_inference(monkeypatch):
     monkeypatch.setattr(files.random, "sample", lambda seq, k: list(seq)[:k])
 
     with pd.option_context("future.infer_string", True):
-        wc_df = pd.DataFrame({"sample_id": ["S1", "S1", "S2"], "id": ["", "", ""]})
+        wc_df = pd.DataFrame(
+            {"sample_id": ["S1", "S1", "S2"], "coder_id": ["", "", ""]}
+        )
         primary, reliability = files._assign_wc_coders(
             wc_df,
             num_coders=2,
             frac=1.0,
         )
 
-    assert set(primary["id"]) == {1, 2}
-    assert set(reliability["id"]) == {1, 2}
+    assert set(primary["coder_id"]) == {1, 2}
+    assert set(reliability["coder_id"]) == {1, 2}

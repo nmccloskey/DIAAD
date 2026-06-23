@@ -132,13 +132,24 @@ def test_powers_reselection_uses_custom_sample_id():
 
     out = rel_reselection._build_powers_reliability_frame(
         df_org=df_org,
-        rel_template=pd.DataFrame(columns=["expanded_sample_id", "utterance", "comment", "speech_units"]),
+        rel_template=pd.DataFrame(
+            columns=[
+                "expanded_sample_id",
+                "utterance",
+                "comment",
+                "coder_id",
+                "speech_units",
+            ]
+        ),
         re_ids=["B"],
         automate_powers=False,
         sample_id_field="expanded_sample_id",
     )
 
     assert list(out["expanded_sample_id"]) == ["B"]
+    assert "coder_id" in out.columns
+    assert "id" not in out.columns
+    assert out.iloc[0]["coder_id"] == ""
     assert out.iloc[0]["speech_units"] == ""
 
 

@@ -40,12 +40,12 @@ def test_word_count_file_helpers_accept_custom_ids(monkeypatch):
         "speaker",
         "utterance",
         "comment",
-        "id",
+        "coder_id",
         "word_count",
         "wc_comment",
     ]
     assert list(prepared["word_count"]) == [2, "NA", 2]
-    assert set(primary["id"]) == {1}
+    assert set(primary["coder_id"]) == {1}
     assert set(reliability["expanded_sample_id"]) == {"S1", "S2"}
 
 
@@ -87,6 +87,24 @@ def test_word_count_analysis_and_rates_accept_custom_sample_id():
     )
 
     assert final.columns[0] == "expanded_sample_id"
+
+
+def test_word_count_analysis_does_not_require_coder_id_column():
+    wc_df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "word_count": [2, None, 5],
+        }
+    )
+
+    cleaned = analysis._drop_admin_cols(wc_df)
+    summary = analysis._summarize_word_counts(cleaned, word_count_field="word_count")
+
+    assert "coder_id" not in cleaned.columns
+    assert dict(zip(summary["sample_id"], summary["total_words"])) == {
+        "S1": 2.0,
+        "S2": 5.0,
+    }
 
 
 def test_word_count_analysis_drops_excluded_speakers_before_summary():

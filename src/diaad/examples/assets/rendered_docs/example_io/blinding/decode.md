@@ -57,7 +57,7 @@ output_dir: diaad_data/output
 
 `diaad_data/input/cu_coding/cu_coding.xlsx`
 
-| sample_id | stimulus | utterance_id | speaker | utterance | comment | id | sv | rel |
+| sample_id | stimulus | utterance_id | speaker | utterance | comment | coder_id | sv | rel |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | picnic | U0001 | INV | Please tell the picnic story again. |  | 1 |  |  |
 | 1 | picnic | U0002 | PAR | The family brought food to the park. |  | 1 | 1.0 | 1.0 |
@@ -80,7 +80,7 @@ output_dir: diaad_data/output
 
 `diaad_data/output/diaad_YYMMDD_HHMM/blinding/cu_coding_decoded.xlsx`
 
-| sample_id | stimulus | utterance_id | speaker | utterance | comment | id | sv | rel |
+| sample_id | stimulus | utterance_id | speaker | utterance | comment | coder_id | sv | rel |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | S001 | picnic | U0001 | INV | Please tell the picnic story again. |  | 1 |  |  |
 | S001 | picnic | U0002 | PAR | The family brought food to the park. |  | 1 | 1.0 | 1.0 |

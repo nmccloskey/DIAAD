@@ -32,7 +32,7 @@ utterance_id
 speaker
 utterance
 comment
-id
+coder_id
 word_count
 wc_comment
 ```

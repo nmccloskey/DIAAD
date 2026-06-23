@@ -69,7 +69,7 @@ The command reads prior word-count coding and reliability workbooks from `diaad_
 
 `diaad_data/output/diaad_YYMMDD_HHMM/reselected_word_count_reliability/reselected_word_count_reliability.xlsx`
 
-| sample_id | utterance_id | speaker | utterance | comment | id | word_count | wc_comment |
+| sample_id | utterance_id | speaker | utterance | comment | coder_id | word_count | wc_comment |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2 | U0001 | INV | What do you notice first? |  | 1 | 5 |  |
 | 2 | U0002 | PAR | A picnic. |  | 1 | 2 |  |

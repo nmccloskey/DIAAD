@@ -28,7 +28,7 @@ word_count
 
 ## Summary Logic
 
-Administrative columns such as `id`, `comment`, and `wc_comment` are removed from the utterance-level output when present.
+Administrative columns such as `coder_id`, legacy `id`, `comment`, and `wc_comment` are removed from the utterance-level output when present.
 
 The configured word-count column is coerced to numeric values. Sample-level summaries count nonmissing and missing values separately, then calculate total, mean, standard deviation, minimum, and maximum word counts per sample.
 
