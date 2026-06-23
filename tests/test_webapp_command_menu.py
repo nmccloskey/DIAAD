@@ -172,6 +172,125 @@ def test_examples_zip_filename_uses_stable_slug():
     ) == "diaad_example_files_cus_analyze_cus_evaluate_260101_0000.zip"
 
 
+def test_run_diaad_web_prepares_each_command_and_finalizes_completed(monkeypatch):
+    events = []
+
+    class FakeContext:
+        def __init__(self, config_dir, project_root, start_time):
+            self.config_dir = config_dir
+            self.project_root = Path(project_root)
+            self.start_time = start_time
+            self.input_dir = self.project_root / "input"
+            self.out_dir = self.project_root / "output" / "diaad_test"
+            self.out_dir.mkdir(parents=True)
+            self.commands = []
+
+        def set_commands(self, commands):
+            self.commands = list(commands)
+
+        def termination_kwargs(self):
+            return {"output_dir": self.out_dir}
+
+    def fake_dispatch(ctx):
+        def run(command):
+            events.append(("run", command))
+            (ctx.out_dir / f"{command}.txt").write_text(command, encoding="utf-8")
+
+        return {
+            "first": lambda: run("first"),
+            "second": lambda: run("second"),
+        }
+
+    monkeypatch.setattr(streamlit_app, "RunContext", FakeContext)
+    monkeypatch.setattr(streamlit_app, "set_root", lambda path: None)
+    monkeypatch.setattr(streamlit_app, "initialize_logger", lambda *a, **k: None)
+    monkeypatch.setattr(
+        streamlit_app,
+        "prepare_dispatch_prerequisites",
+        lambda ctx, commands: events.append(("prep", list(commands))),
+    )
+    monkeypatch.setattr(streamlit_app, "build_dispatch", fake_dispatch)
+    monkeypatch.setattr(
+        streamlit_app,
+        "terminate_logger",
+        lambda **kwargs: events.append(("terminate", kwargs)),
+    )
+
+    streamlit_app._run_diaad_web(
+        {"project": {}, "advanced": {}},
+        [],
+        ["first", "second"],
+    )
+
+    assert [event for event in events if event[0] in {"prep", "run"}] == [
+        ("prep", ["first"]),
+        ("run", "first"),
+        ("prep", ["second"]),
+        ("run", "second"),
+    ]
+    assert events[-1][0] == "terminate"
+    assert events[-1][1]["status"] == "completed"
+
+
+def test_run_diaad_web_finalizes_failed_status(monkeypatch):
+    events = []
+
+    class FakeContext:
+        def __init__(self, config_dir, project_root, start_time):
+            self.config_dir = config_dir
+            self.project_root = Path(project_root)
+            self.start_time = start_time
+            self.input_dir = self.project_root / "input"
+            self.out_dir = self.project_root / "output" / "diaad_test"
+            self.out_dir.mkdir(parents=True)
+
+        def set_commands(self, commands):
+            self.commands = list(commands)
+
+        def termination_kwargs(self):
+            return {"output_dir": self.out_dir}
+
+    def fail_first():
+        events.append(("run", "first"))
+        raise FileNotFoundError("missing workbook")
+
+    monkeypatch.setattr(streamlit_app, "RunContext", FakeContext)
+    monkeypatch.setattr(streamlit_app, "set_root", lambda path: None)
+    monkeypatch.setattr(streamlit_app, "initialize_logger", lambda *a, **k: None)
+    monkeypatch.setattr(
+        streamlit_app,
+        "prepare_dispatch_prerequisites",
+        lambda ctx, commands: events.append(("prep", list(commands))),
+    )
+    monkeypatch.setattr(
+        streamlit_app,
+        "build_dispatch",
+        lambda ctx: {
+            "first": fail_first,
+            "second": lambda: events.append(("run", "second")),
+        },
+    )
+    monkeypatch.setattr(
+        streamlit_app,
+        "terminate_logger",
+        lambda **kwargs: events.append(("terminate", kwargs)),
+    )
+
+    with pytest.raises(FileNotFoundError, match="missing workbook"):
+        streamlit_app._run_diaad_web(
+            {"project": {}, "advanced": {}},
+            [],
+            ["first", "second"],
+        )
+
+    assert [event for event in events if event[0] in {"prep", "run"}] == [
+        ("prep", ["first"]),
+        ("run", "first"),
+    ]
+    assert events[-1][0] == "terminate"
+    assert events[-1][1]["status"] == "failed"
+
+
 def test_restore_default_config_ui_state_keeps_unrelated_state():
     st.session_state["project_random_seed"] = 123
     st.session_state["metadata_field_rows"] = [{"label": "custom", "values": "x"}]

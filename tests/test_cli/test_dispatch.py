@@ -9,6 +9,7 @@ def test_command_requirement_helpers():
     assert dispatch_module.commands_require_chats(["transcripts tabularize"])
     assert not dispatch_module.commands_require_chats(["cus analyze"])
     assert dispatch_module.commands_require_transcript_tables(["templates samples"])
+    assert dispatch_module.commands_require_transcript_tables(["words files"])
     assert not dispatch_module.commands_require_transcript_tables(["templates subset"])
     assert not dispatch_module.commands_require_transcript_tables(["words evaluate"])
 

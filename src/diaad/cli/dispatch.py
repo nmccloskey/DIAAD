@@ -59,6 +59,7 @@ TRANSCRIPT_TABLE_REQUIRED_COMMANDS = {
     "templates utterances",
     "templates samples",
     "templates times",
+    "words files",
 }
 
 def commands_require_chats(commands: Iterable[str]) -> bool:

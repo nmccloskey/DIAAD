@@ -16,11 +16,11 @@ MODULE_COMMANDS = {
     ],
 
     "transcripts": [
+        "transcripts tabularize",
+        "transcripts chats",
         "transcripts select",
         "transcripts evaluate",
         "transcripts reselect",
-        "transcripts tabularize",
-        "transcripts chats",
     ],
 
     "templates": [
@@ -49,10 +49,10 @@ MODULE_COMMANDS = {
 
     "powers": [
         "powers files",
-        "powers analyze",
-        "powers rates",
         "powers evaluate",
         "powers reselect",
+        "powers analyze",
+        "powers rates",
     ],
 
     "vocab": [

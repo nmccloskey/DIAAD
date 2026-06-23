@@ -15,6 +15,7 @@ from diaad.cli.commands import MODULE_COMMANDS
 from diaad.cli.dispatch import build_dispatch, prepare_dispatch_prerequisites
 from psair.core.logger import initialize_logger, logger, set_root, terminate_logger
 from diaad.core.run_context import RunContext
+from diaad.metadata.discovery import MultipleFilesFoundError
 from diaad.webapp.config_builder import (
     build_config_ui,
     restore_default_config_ui_state,
@@ -355,6 +356,10 @@ def _render_command_menu() -> list[str]:
     if selected:
         st.markdown("Selected commands:")
         st.code(", ".join(selected), language="text")
+        st.caption(
+            "Selected commands run in the order shown. The examples button only "
+            "generates synthetic input/output files for those commands."
+        )
     else:
         st.caption("No DIAAD commands selected.")
 
@@ -514,13 +519,14 @@ def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str
         logger.info("DIAAD web run initialized.")
         logger.info("Executing command(s): %s", ", ".join(commands))
 
+        status = "completed"
         try:
             ctx.set_commands(commands)
-            prepare_dispatch_prerequisites(ctx, commands)
             dispatch = build_dispatch(ctx)
 
             executed: list[str] = []
             for command in commands:
+                prepare_dispatch_prerequisites(ctx, [command])
                 func = dispatch.get(command)
                 if func is None:
                     logger.error("Unknown command: %s", command)
@@ -530,10 +536,21 @@ def _run_diaad_web(configs: dict[str, dict], uploaded_inputs, commands: list[str
 
             if executed:
                 logger.info("Completed: %s", ", ".join(executed))
+        except Exception:
+            status = "failed"
+            raise
         finally:
-            terminate_logger(**ctx.termination_kwargs())
+            terminate_logger(**ctx.termination_kwargs(), status=status)
 
         return zip_folder(ctx.out_dir)
+
+
+DIAAD_WEB_USER_ERRORS = (
+    FileNotFoundError,
+    MultipleFilesFoundError,
+    RuntimeError,
+    ValueError,
+)
 
 
 def _run_examples_web(commands: list[str] | None = None) -> BytesIO:
@@ -675,11 +692,15 @@ def render_app() -> None:
                 file_name=f"diaad_web_output_{timestamp}.zip",
                 mime="application/zip",
             )
+        except DIAAD_WEB_USER_ERRORS as e:
+            logger.warning("DIAAD web run stopped: %s", e)
+            st.error("DIAAD could not complete this command selection.")
+            st.code(str(e), language="text")
         except Exception:
             logger.exception("Unhandled error during DIAAD web run.")
             st.error(
                 "An unexpected error occurred while running DIAAD. "
-                "Please check the logs in the downloaded ZIP if one was created."
+                "The run stopped before a results ZIP could be created."
             )
 
     if commands:
