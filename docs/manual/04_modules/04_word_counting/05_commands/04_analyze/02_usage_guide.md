@@ -17,6 +17,9 @@ sample_id
 word_count
 ```
 
+Coder identifier columns (`coder_id`) are not required.
+
+
 ## Word-Count Coercion
 
 DIAAD coerces the configured word-count column to numeric values. Numeric values are summarized. Blank values, `NA`, and other nonnumeric entries are treated as missing for the summary.

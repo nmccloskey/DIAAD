@@ -55,6 +55,8 @@ For the three-coder schema, coder assignment columns are named `coder1_id`,
 `coder2_id`, and `coder3_id` alongside the corresponding `c1_`, `c2_`, and
 `c3_` coding fields.
 
+Coder identifier columns (`coder_id`) are not required for analysis steps, but are provided to help users manage workflows.
+
 The exact coding interpretation belongs to the project's CU protocol. DIAAD creates the workbook structure; it does not decide ambiguous CU cases.
 
 ## Blinding

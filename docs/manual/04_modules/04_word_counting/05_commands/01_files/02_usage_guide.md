@@ -53,6 +53,8 @@ Rows from excluded speakers are assigned `NA`. When the input is CU-derived, row
 
 Reliability selection is sample-based. If a sample is selected for reliability, all of its utterance rows are included in the reliability workbook.
 
+Coder identifier columns (`coder_id`) are not required for analysis steps, but are provided to help users manage workflows.
+
 ## Blinding
 
 When `advanced.auto_blind` is true, generated word-count workbooks can blind configured identifier columns and write `word_count_blind_codebook.xlsx`. Protect this codebook because later analysis may need it to reconnect blinded sample identifiers.

@@ -79,6 +79,8 @@ Review automated fields before treating them as coded values. If the spaCy model
 
 Reliability selection is sample-based. If a sample is selected for reliability, all of its utterance rows are included.
 
+Coder identifier columns (`coder_id`) are not required for analysis steps, but are provided to help users manage workflows.
+
 ## Common Problems
 
 If the command cannot find transcript tables, run `diaad transcripts tabularize` first or check `advanced.transcript_table_filename`.

@@ -31,6 +31,8 @@ NV
 
 Blank or invalid `turn_type` values inherit the prior turn label when possible; if the first value is invalid, DIAAD marks it `X`.
 
+Coder identifier columns (`coder_id`) are not required.
+
 ## Summarized Metrics
 
 The analysis summaries aggregate these utterance-level numeric fields when present:

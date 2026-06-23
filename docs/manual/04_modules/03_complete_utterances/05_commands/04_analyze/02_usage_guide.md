@@ -27,6 +27,8 @@ c2_rel_<PARADIGM>
 
 Additional prefixed coder columns following the `cN_sv` and `cN_rel` pattern can also be detected.
 
+Coder identifier columns (`coder_id`) are not required.
+
 ## CU Derivation
 
 For each detected SV/REL pair, DIAAD derives CU as:
