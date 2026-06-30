@@ -15,6 +15,7 @@ from psair.core.logger import logger, get_rel_path
 
 
 ALIGNMENTS_SUBDIR = "global_alignments"
+DEFAULT_METADATA_FIELD_NAME = "file_name"
 
 
 def percent_difference(a, b):
@@ -440,15 +441,48 @@ def _path_parts_for_metadata(path: Path, input_dir: Path | None = None) -> list[
     return [part for part in scoped_path.parts if part not in ("", ".")] or [path.name]
 
 
+def _metadata_field_names(metadata_fields) -> list[str]:
+    """Return output metadata column names, including the implicit file-name field."""
+    if not metadata_fields:
+        return [DEFAULT_METADATA_FIELD_NAME]
+    return [field.name for field in metadata_fields.values()]
+
+
+def _is_default_file_name_field(field) -> bool:
+    """Return whether a metadata field is the default filename-derived field."""
+    return (
+        getattr(field, "name", None) == DEFAULT_METADATA_FIELD_NAME
+        and getattr(field, "kind", None) == "default"
+    )
+
+
+def _strip_reliability_tag(value, reliability_tag: str | None) -> str:
+    """Strip a trailing reliability tag from a metadata value when present."""
+    value_str = "" if value is None else str(value)
+    if not reliability_tag:
+        return value_str
+
+    value_lower = value_str.lower()
+    tag_lower = reliability_tag.lower()
+    if value_lower.endswith(tag_lower):
+        return value_str[: -len(reliability_tag)]
+    return value_str
+
+
 def _metadata_values_for(
     path: Path,
     metadata_fields,
     *,
     input_dir: Path | None = None,
+    reliability_tag: str | None = None,
+    strip_reliability_tag: bool = False,
 ) -> tuple:
     """Return ordered metadata field matches for a file path."""
     if not metadata_fields:
-        return (path.stem,)
+        file_name = path.stem
+        if strip_reliability_tag:
+            file_name = _strip_reliability_tag(file_name, reliability_tag)
+        return (file_name,)
 
     parts = _path_parts_for_metadata(path, input_dir=input_dir)
     source = str(Path(*parts)) if parts else str(path)
@@ -456,9 +490,12 @@ def _metadata_values_for(
     values = []
     for field in metadata_fields.values():
         if hasattr(field, "match_path_parts"):
-            values.append(field.match_path_parts(parts, source=source))
+            value = field.match_path_parts(parts, source=source)
         else:
-            values.append(field.match(source))
+            value = field.match(source)
+        if strip_reliability_tag and _is_default_file_name_field(field):
+            value = _strip_reliability_tag(value, reliability_tag)
+        values.append(value)
     return tuple(values)
 
 
@@ -468,6 +505,8 @@ def _build_file_index(
     *,
     label: str,
     input_dir: Path | None = None,
+    reliability_tag: str | None = None,
+    strip_reliability_tag: bool = False,
 ) -> dict[tuple, Path]:
     """
     Build a metadata-value index for files, logging duplicate-key collisions.
@@ -499,6 +538,8 @@ def _build_file_index(
                 path,
                 metadata_fields,
                 input_dir=input_dir,
+                reliability_tag=reliability_tag,
+                strip_reliability_tag=strip_reliability_tag,
             )
             if key in index:
                 logger.error(
@@ -630,7 +671,7 @@ def _analyze_reliability_pairs(
     """
     records: list[dict] = []
 
-    field_names = [field.name for field in metadata_fields.values()]
+    field_names = _metadata_field_names(metadata_fields)
 
     for metadata_values, org_cha, rel_cha in tqdm(
         matched_pairs,
@@ -660,11 +701,6 @@ def _analyze_reliability_pairs(
             nw = _needleman_wunsch_global(org_text, rel_text)
 
             _save_alignment(metadata_values, transc_rel_dir, nw)
-            metadata_values = _metadata_values_for(
-                rel_cha,
-                metadata_fields,
-                input_dir=input_dir,
-            )
 
             record = {
                 **dict(zip(field_names, metadata_values)),
@@ -787,6 +823,8 @@ def evaluate_transcription_reliability(
         metadata_fields,
         label="reliability",
         input_dir=input_dir,
+        reliability_tag=reliability_tag,
+        strip_reliability_tag=True,
     )
 
     matched_pairs = _match_reliability_pairs(org_index, rel_index)
