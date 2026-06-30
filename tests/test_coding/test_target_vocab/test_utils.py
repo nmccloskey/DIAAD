@@ -76,3 +76,67 @@ def test_prepare_target_vocab_inputs_accepts_custom_sample_id(monkeypatch):
 
     assert list(utt_df["expanded_sample_id"]) == ["S1"]
     assert present == {"StoryA"}
+
+
+def test_prepare_target_vocab_inputs_transcript_mode_allows_missing_time(monkeypatch, caplog):
+    df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S1", "S2"],
+            "speaker": ["PAR", "INV", "PAR"],
+            "story": ["StoryA", "StoryA", "Other"],
+            "text": ["cat", "dog", "dog"],
+        }
+    )
+    monkeypatch.setattr(
+        utils,
+        "find_target_vocab_inputs",
+        lambda *args, **kwargs: ("transcripts", df),
+    )
+
+    utt_df, present = utils.prepare_target_vocab_inputs(
+        "input",
+        "output",
+        exclude_speakers=["INV"],
+        stimulus_field="story",
+        resources=_resources(),
+    )
+
+    assert list(utt_df["sample_id"]) == ["S1"]
+    assert list(utt_df["narrative"]) == ["StoryA"]
+    assert list(utt_df["utterance"]) == ["cat"]
+    assert "speaking_time" not in utt_df.columns
+    assert present == {"StoryA"}
+    assert "Optional speaking-time column missing" in caplog.text
+    assert "Rate and efficiency outputs will be blank" in caplog.text
+
+
+def test_prepare_target_vocab_inputs_reports_missing_column_type_and_defaults(
+    monkeypatch,
+    caplog,
+):
+    df = pd.DataFrame(
+        {
+            "sample_id": ["S1"],
+            "story": ["StoryA"],
+        }
+    )
+    monkeypatch.setattr(
+        utils,
+        "find_target_vocab_inputs",
+        lambda *args, **kwargs: ("transcripts", df),
+    )
+
+    utt_df, present = utils.prepare_target_vocab_inputs(
+        "input",
+        "output",
+        exclude_speakers=[],
+        stimulus_field="story",
+        resources=_resources(),
+    )
+
+    assert utt_df is None
+    assert present is None
+    assert "utterance text column missing" in caplog.text
+    assert "Expected default 'utterance'" in caplog.text
+    assert "utterance, text, tokens" in caplog.text
+

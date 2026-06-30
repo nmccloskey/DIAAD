@@ -46,6 +46,31 @@ def _col(df, candidates):
     return None
 
 
+UTTERANCE_COLUMN_CANDIDATES = ["utterance", "text", "tokens"]
+SPEAKING_TIME_COLUMN_CANDIDATES = [
+    "speaking_time",
+    "client_time",
+    "speech_time",
+    "time_s",
+    "time_sec",
+    "time_seconds",
+]
+
+
+def _column_expectation(label: str, candidates: list[str]) -> str:
+    default = candidates[0]
+    aliases = ", ".join(candidates)
+    return f"{label} column missing. Expected default '{default}' or one of: {aliases}."
+
+
+def _log_missing_target_vocab_columns(missing: list[str], *, mode: str) -> None:
+    logger.error(
+        "Required columns missing in target vocabulary %s input: %s",
+        mode,
+        " ".join(missing),
+    )
+
+
 def find_target_vocab_inputs(
     input_dir: str,
     output_dir: str,
@@ -124,8 +149,14 @@ def prepare_target_vocab_inputs(
         if utt_df is None:
             return None, None
         if sample_id_field not in utt_df.columns:
-            logger.error(
-                f"Required sample identifier column missing in target vocabulary input: {sample_id_field}"
+            _log_missing_target_vocab_columns(
+                [
+                    _column_expectation(
+                        "sample identifier",
+                        [sample_id_field, "sample_id"],
+                    )
+                ],
+                mode=mode or "unknown",
             )
             return None, None
 
@@ -135,7 +166,10 @@ def prepare_target_vocab_inputs(
         if mode == "unblind":
             narr_col = _col(utt_df, stim_cols)
             if narr_col is None:
-                logger.error("Required stimulus/narrative column missing in unblind input.")
+                _log_missing_target_vocab_columns(
+                    [_column_expectation("stimulus/narrative", stim_cols)],
+                    mode="unblind",
+                )
                 return None, None
 
             utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
@@ -159,22 +193,32 @@ def prepare_target_vocab_inputs(
 
         else:
             narr_col = _col(utt_df, stim_cols)
-            utt_col = _col(utt_df, ["utterance", "text", "tokens"])
-            time_col = _col(
-                utt_df,
-                [
-                    "speaking_time",
-                    "client_time",
-                    "speech_time",
-                    "time_s",
-                    "time_sec",
-                    "time_seconds",
-                ],
-            )
+            utt_col = _col(utt_df, UTTERANCE_COLUMN_CANDIDATES)
+            time_col = _col(utt_df, SPEAKING_TIME_COLUMN_CANDIDATES)
 
-            if not all([narr_col, utt_col, time_col]):
-                logger.error("Required columns missing in transcript table input.")
+            missing_required = []
+            if narr_col is None:
+                missing_required.append(
+                    _column_expectation("stimulus/narrative", stim_cols)
+                )
+            if utt_col is None:
+                missing_required.append(
+                    _column_expectation("utterance text", UTTERANCE_COLUMN_CANDIDATES)
+                )
+            if missing_required:
+                _log_missing_target_vocab_columns(
+                    missing_required,
+                    mode="transcript table",
+                )
                 return None, None
+
+            if time_col is None:
+                logger.warning(
+                    "Optional speaking-time column missing in target vocabulary "
+                    "transcript table input. Expected default 'speaking_time' or "
+                    "one of: %s. Rate and efficiency outputs will be blank.",
+                    ", ".join(SPEAKING_TIME_COLUMN_CANDIDATES),
+                )
 
             utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
             utt_df = drop_excluded_speaker_rows(
@@ -187,7 +231,7 @@ def prepare_target_vocab_inputs(
             utt_df = utt_df.rename(columns={narr_col: "narrative"})
             if utt_col != "utterance":
                 utt_df = utt_df.rename(columns={utt_col: "utterance"})
-            if time_col != "speaking_time":
+            if time_col and time_col != "speaking_time":
                 utt_df = utt_df.rename(columns={time_col: "speaking_time"})
 
         return utt_df, present_narratives
