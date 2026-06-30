@@ -3,6 +3,7 @@ from __future__ import annotations
 import pandas as pd
 
 from diaad.coding.target_vocab import analysis
+from diaad.coding.target_vocab.resources import load_builtin_resources
 from ...helpers import sample_target_vocab_resource
 
 
@@ -85,3 +86,19 @@ def test_target_vocab_analysis_accepts_custom_sample_id():
     assert row["expanded_sample_id"] == "S1"
     assert details[0]["expanded_sample_id"] == "S1"
     assert ordered[:2] == ["expanded_sample_id", "narrative"]
+
+
+def test_compute_target_vocabulary_coverage_for_builtin_sandwich():
+    summary, detail_rows = analysis.compute_target_vocabulary_coverage_for_text(
+        text="put peanut butter on the bread",
+        speaking_time=None,
+        narrative="Sandwich",
+        norm_lookup={},
+        sample_id="S1",
+        resources=load_builtin_resources(),
+    )
+
+    assert summary["num_base_forms_produced"] >= 5
+    assert summary["num_core_token_matches"] >= 5
+    assert pd.isna(summary["core_tokens_per_min"])
+    assert any(row["base_form"] == "peanut" and row["score"] == 1 for row in detail_rows)

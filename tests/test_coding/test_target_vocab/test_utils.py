@@ -140,3 +140,37 @@ def test_prepare_target_vocab_inputs_reports_missing_column_type_and_defaults(
     assert "Expected default 'utterance'" in caplog.text
     assert "utterance, text, tokens" in caplog.text
 
+
+
+def test_prepare_target_vocab_inputs_keeps_exact_sandwich_resource(monkeypatch, caplog):
+    resources = {
+        "BrokenWindow": sample_target_vocab_resource("BrokenWindow"),
+        "Sandwich": sample_target_vocab_resource("Sandwich"),
+    }
+    df = pd.DataFrame(
+        {
+            "sample_id": ["S1", "S2", "S3"],
+            "narrative": ["BrokenWindow", "Sandwich", "sandwich"],
+            "utterance": ["boy kicks ball", "put peanut butter", "put peanut butter"],
+        }
+    )
+    monkeypatch.setattr(
+        utils,
+        "find_target_vocab_inputs",
+        lambda *args, **kwargs: ("transcripts", df),
+    )
+
+    utt_df, present = utils.prepare_target_vocab_inputs(
+        "input",
+        "output",
+        exclude_speakers=[],
+        resources=resources,
+    )
+
+    assert list(utt_df["sample_id"]) == ["S1", "S2"]
+    assert list(utt_df["narrative"]) == ["BrokenWindow", "Sandwich"]
+    assert present == {"BrokenWindow", "Sandwich"}
+    assert "without active resource IDs" in caplog.text
+    assert "sandwich" in caplog.text
+
+

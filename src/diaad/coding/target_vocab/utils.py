@@ -71,6 +71,27 @@ def _log_missing_target_vocab_columns(missing: list[str], *, mode: str) -> None:
     )
 
 
+def _filter_to_target_vocab_resources(
+    df: pd.DataFrame,
+    narr_col: str,
+    resource_ids: set[str],
+    *,
+    mode: str,
+) -> pd.DataFrame:
+    """Keep rows whose stimulus value exactly matches an active resource ID."""
+    values = df[narr_col].dropna().unique()
+    unmatched = sorted(str(value) for value in values if value not in resource_ids)
+    if unmatched:
+        logger.warning(
+            "Target vocabulary %s input contains stimulus values without active "
+            "resource IDs and these rows will be skipped: %s. Active resource IDs: %s",
+            mode,
+            unmatched,
+            sorted(resource_ids),
+        )
+    return df[df[narr_col].isin(resource_ids)].copy()
+
+
 def find_target_vocab_inputs(
     input_dir: str,
     output_dir: str,
@@ -172,7 +193,12 @@ def prepare_target_vocab_inputs(
                 )
                 return None, None
 
-            utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
+            utt_df = _filter_to_target_vocab_resources(
+                utt_df,
+                narr_col,
+                resource_ids,
+                mode="unblind",
+            )
             if narr_col != "narrative":
                 utt_df = utt_df.rename(columns={narr_col: "narrative"})
 
@@ -220,7 +246,12 @@ def prepare_target_vocab_inputs(
                     ", ".join(SPEAKING_TIME_COLUMN_CANDIDATES),
                 )
 
-            utt_df = utt_df[utt_df[narr_col].isin(resource_ids)].copy()
+            utt_df = _filter_to_target_vocab_resources(
+                utt_df,
+                narr_col,
+                resource_ids,
+                mode="transcript table",
+            )
             utt_df = drop_excluded_speaker_rows(
                 utt_df,
                 exclude_speakers,

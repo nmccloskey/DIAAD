@@ -164,3 +164,33 @@ def test_extract_transcript_data_rejects_bad_kind(tmp_path):
 
     with pytest.raises(ValueError, match="Invalid kind"):
         transcript_tables.extract_transcript_data(path, kind="bad")
+
+
+def test_tabularize_transcripts_extracts_exact_sandwich_narrative(tmp_path):
+    chats = {
+        "P1_BrokenWindow_post.cha": SimpleNamespace(
+            utterances=lambda: [SimpleNamespace(participant="PAR", tiers={"PAR": "window"})]
+        ),
+        "P1_Sandwich_post.cha": SimpleNamespace(
+            utterances=lambda: [SimpleNamespace(participant="PAR", tiers={"PAR": "sandwich"})]
+        ),
+        "P1_sandwich_post.cha": SimpleNamespace(
+            utterances=lambda: [SimpleNamespace(participant="PAR", tiers={"PAR": "lowercase"})]
+        ),
+    }
+    metadata_fields = MetadataManager(
+        {"tiers": {"narrative": ["Sandwich", "BrokenWindow"]}}
+    ).metadata_fields
+
+    written = transcript_tables.tabularize_transcripts(
+        metadata_fields=metadata_fields,
+        chats=chats,
+        output_dir=tmp_path,
+    )
+
+    samples = transcript_tables.extract_transcript_data(written[0], kind="sample")
+    by_file = samples.set_index("file")
+
+    assert by_file.loc["P1_BrokenWindow_post", "narrative"] == "BrokenWindow"
+    assert by_file.loc["P1_Sandwich_post", "narrative"] == "Sandwich"
+    assert pd.isna(by_file.loc["P1_sandwich_post", "narrative"])
